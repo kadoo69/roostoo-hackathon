@@ -774,3 +774,70 @@ Tokenized gold is not a cryptocurrency trend candidate and its presence contradi
 The fix filters `STABLES` and leveraged tokens inside `pit_top_n`, and no leveraged token was present in the panel to begin with.
 The impact is immaterial and is recorded as such rather than left implied: on the selected configuration the Sharpe moved from 1.71 to 1.70 and the Screen 3 score from 2.625 to 2.611.
 A correctness defect that changes nothing is still a correctness defect, and the reason for recording the size of it is that the next such leak may not be immaterial.
+
+## roostoo-coin-selection-does-not-persist
+
+The operator asked which coins are best suited to the channel strategy, and the answer is that the question has no stable answer: coin-level performance carries no information from one period to the next.
+
+The 4h channel was run standalone on each of the 66 tradable Roostoo cryptocurrencies, split into a fit period of 2023-01-01 to 2025-01-01 and a test period running to 2026-09-19.
+Across the 43 coins with a full record in both, the Spearman rank correlation between the two periods was -0.018 for Sharpe at p=0.907, +0.021 for the Screen 3 composite at p=0.894, and +0.031 for annual return at p=0.843.
+There is no relationship at all, and none of the three is distinguishable from noise.
+
+The direction of the residual is worth stating because it is the opposite of the intuition behind the question.
+The ten best coins of the fit period returned a mean test-period Sharpe of 0.099 and an annual return of -0.4%, while the ten worst returned 0.262 and +44.2%, against a full-sample mean of 0.196 and +7.8%.
+Selecting the historical winners would have been worse than selecting the historical losers and worse than taking every coin.
+
+The cherry-picked list makes the mechanism obvious: the top ten by fit-period Screen 3 were PEPE, FLOKI, FET, SOL, POL, BTC, CAKE, SHIB, CFX and XLM, which is a list of what ran in the 2023-24 memecoin cycle.
+Deployed into the test period that book returned 7.4% a year at a Screen 3 of 0.433, against 2.622 for the liquidity rule over the same window.
+Selecting coins on history destroyed roughly 80% of the strategy.
+
+No coin property predicted test-period performance either.
+Fit-period annualised volatility, median daily dollar volume, time in market, daily return autocorrelation and length of history produced rank correlations against test-period Sharpe of 0.091, 0.037, 0.151, 0.260 and 0.216, with p-values of 0.558, 0.766, 0.227, 0.088 and 0.081.
+The two closest are not significant at conventional thresholds and do not survive correction for having tested five properties.
+
+The conclusion is that the universe rule must be mechanical and forward-looking, not a list of names chosen from a backtest.
+
+## roostoo-universe-pool-size
+
+Ranking by liquidity inside Roostoo's own list is the wrong construction, and the reason is that the venue list is already a liquidity filter.
+
+Taking the top twenty of Roostoo's 66 names by trailing dollar volume produced a test-period Sharpe of -0.15 and a Screen 3 of -0.213.
+Ranking the full 264-name survivorship-free Binance universe and trading whichever of the top names Roostoo lists produced 1.56 and 2.622 over the same window with the same signal.
+A rank cut at twenty out of 66 admits the venue's thinnest names; the same cut out of 264 does not. The bar has to be absolute, not relative to a pre-filtered list.
+
+A maturity gate was tested as the alternative explanation and rejected.
+Requiring 0, 90 or 180 days of history before a name becomes eligible moved the test-period Sharpe of the Roostoo-ranked book between -0.15 and +0.23, nowhere near closing the gap, so new listings entering at peak volume are not what is driving it.
+
+The edge does not depend on coins Roostoo cannot trade, which was the obvious worry once the research universe turned out to hold names like FUN, OM and VANRY that fell more than 90% in the test period.
+Decomposing the research book's profit and loss by venue availability, names absent from Roostoo contributed 20.0% of test-period gross profit while holding 11.7% of book exposure, and restricting the attribution to Roostoo-listed names alone still leaves a gross Sharpe of 1.46 against 1.56 for the full book.
+The selection pool needs the breadth; the traded set does not.
+
+One caveat is unavoidable and is recorded rather than hidden.
+Intersecting with Roostoo's listing as it stands today is survivorship-conditioned when applied to history, because a name delisted in 2024 is absent from the historical book even though it would have been traded at the time.
+The decomposition above bounds how much this can matter, and in live trading the intersection is taken against the listing of the day, which carries no such conditioning.
+
+## roostoo-gross-exposure-breach
+
+The selected construction produced 1.45 times gross exposure on live data and would have breached the no-leverage rule, which the historical average concealed.
+
+Weighting each name at a twentieth of equity while selecting from the top thirty is bounded above by 1.5, and over the test period it averaged 6.0 names and 0.30 gross, so nothing in the backtest summary revealed the problem.
+On 2026-09-19 all thirty of the Binance top-thirty are listed on Roostoo and twenty-nine carry a long signal, which is exactly the broad-breakout state the bound is reached in.
+
+A hard cap at 1.0 gross is applied and costs little: test-period Screen 3 falls from 2.859 to 2.622 and Sharpe from 1.61 to 1.56.
+The cap is a rules constraint rather than a tuned parameter and is not swept.
+The general lesson is that a mean exposure of 0.30 across a backtest says nothing about the maximum, and the maximum is what a compliance rule binds on.
+
+## roostoo-selected-construction
+
+The deployable configuration is the 4h channel on a mechanically selected liquid subset of the Roostoo venue, with a hard gross cap.
+
+Rank the full Binance USDT universe by trailing 30-day median dollar volume, point in time, take the top thirty, and trade whichever of them Roostoo lists.
+Each holding is a twentieth of equity, the remainder sits in cash, and total gross exposure is capped at 1.0.
+Entry and exit are unchanged: long when the 4h close exceeds the highest close of the prior 20 bars, out when it falls below the lowest close of the prior 10 bars.
+
+Test period 2025-01-01 to 2026-09-19, net of the 5 bps maker fee: 56.5% a year at a Sharpe of 1.56, a Sortino of 2.99, a Calmar of 3.20 and a maximum drawdown of 17.7%, for a Screen 3 of 2.622.
+BTC buy-and-hold over the same window returned -8.1% at a Sharpe of 0.02 and a Screen 3 of -0.025.
+Fit period 2023-01-01 to 2025-01-01 gave 105.7% a year at a Sharpe of 2.94 and a Screen 3 of 4.381, against buy-and-hold at 138.6%, 2.03 and 3.459.
+
+This is the first configuration in the repo that beats the benchmark on the composite in both halves of the out-of-sample record.
+Deflation against the trial ledger has not been rerun and the count has risen materially, so the Gate 4 verdict at `DECISIONS.md#paper-ensemble-trial-count` should be recomputed before this is treated as established.
