@@ -1,0 +1,1534 @@
+{
+  "source": "Zarattini, Pagani & Barbon (2025), SSRN 5209907",
+  "lookbacks": [
+    5,
+    10,
+    20,
+    30,
+    60,
+    90,
+    150,
+    250,
+    360
+  ],
+  "vol_target_annual": 0.25,
+  "vol_lookback_days": 90,
+  "leverage_cap": 1.0,
+  "universe": "pit_top20_monthly_snapshot",
+  "parameters_fitted_on_this_data": false,
+  "is_end": "2023-01-01",
+  "published": "2025-04-01",
+  "headline": "btc_voltgt_port_LIMIT",
+  "deflated_sharpe": {
+    "n_trials_1": {
+      "expected_max_sharpe_null_annual": 0.0,
+      "btc_voltgt_port_LIMIT": {
+        "dsr": 0.993828,
+        "passes": true,
+        "sharpe_annual": 1.2478,
+        "skew": 1.3446,
+        "kurtosis": 12.5726
+      },
+      "btc_hold": {
+        "dsr": 0.98743,
+        "passes": true,
+        "sharpe_annual": 1.1492,
+        "skew": 0.4267,
+        "kurtosis": 6.4105
+      },
+      "min_track_record_obs": 587.4
+    },
+    "n_trials_2": {
+      "expected_max_sharpe_null_annual": 0.2957,
+      "btc_voltgt_port_LIMIT": {
+        "dsr": 0.971884,
+        "passes": true,
+        "sharpe_annual": 1.2478,
+        "skew": 1.3446,
+        "kurtosis": 12.5726
+      },
+      "btc_hold": {
+        "dsr": 0.951855,
+        "passes": true,
+        "sharpe_annual": 1.1492,
+        "skew": 0.4267,
+        "kurtosis": 6.4105
+      },
+      "min_track_record_obs": 1008.2
+    },
+    "n_trials_27": {
+      "expected_max_sharpe_null_annual": 1.1546,
+      "btc_voltgt_port_LIMIT": {
+        "dsr": 0.574105,
+        "passes": false,
+        "sharpe_annual": 1.2478,
+        "skew": 1.3446,
+        "kurtosis": 12.5726
+      },
+      "btc_hold": {
+        "dsr": 0.495815,
+        "passes": false,
+        "sharpe_annual": 1.1492,
+        "skew": 0.4267,
+        "kurtosis": 6.4105
+      },
+      "min_track_record_obs": 105176.8
+    },
+    "n_trials_131": {
+      "expected_max_sharpe_null_annual": 1.4928,
+      "btc_voltgt_port_LIMIT": {
+        "dsr": 0.311551,
+        "passes": false,
+        "sharpe_annual": 1.2478,
+        "skew": 1.3446,
+        "kurtosis": 12.5726
+      },
+      "btc_hold": {
+        "dsr": 0.251567,
+        "passes": false,
+        "sharpe_annual": 1.1492,
+        "skew": 0.4267,
+        "kurtosis": 6.4105
+      },
+      "min_track_record_obs": null
+    },
+    "n_trials_158": {
+      "expected_max_sharpe_null_annual": 1.5289,
+      "btc_voltgt_port_LIMIT": {
+        "dsr": 0.286466,
+        "passes": false,
+        "sharpe_annual": 1.2478,
+        "skew": 1.3446,
+        "kurtosis": 12.5726
+      },
+      "btc_hold": {
+        "dsr": 0.229711,
+        "passes": false,
+        "sharpe_annual": 1.1492,
+        "skew": 0.4267,
+        "kurtosis": 6.4105
+      },
+      "min_track_record_obs": null
+    }
+  },
+  "results": [
+    {
+      "label": "top20_unsized_LIMIT",
+      "full": {
+        "annual_return": 0.203718,
+        "sharpe": 0.91248,
+        "sortino": 1.300877,
+        "calmar": 0.470231,
+        "max_drawdown": -0.43323,
+        "days": 3320.0,
+        "screen3": 0.9352
+      },
+      "is": {
+        "annual_return": 0.252523,
+        "sharpe": 1.084085,
+        "sortino": 1.52183,
+        "calmar": 0.757792,
+        "max_drawdown": -0.333235,
+        "days": 1963.0,
+        "screen3": 1.1613
+      },
+      "oos": {
+        "annual_return": 0.136341,
+        "sharpe": 0.664291,
+        "sortino": 0.969432,
+        "calmar": 0.41184,
+        "max_drawdown": -0.331053,
+        "days": 1358.0,
+        "screen3": 0.7106
+      },
+      "post_pub": {
+        "annual_return": 0.013068,
+        "sharpe": 0.161265,
+        "sortino": 0.229407,
+        "calmar": 0.056853,
+        "max_drawdown": -0.229863,
+        "days": 537.0,
+        "screen3": 0.1572
+      },
+      "bootstrap_oos_14d": {
+        "median_return_14d": -0.004614936566239292,
+        "p05_return_14d": -0.05523086310048575,
+        "p95_return_14d": 0.11612106264933186,
+        "p_return_positive": 0.41,
+        "p_clears_screen2": 0.141,
+        "median_screen3_14d": -3.8709282264887808,
+        "median_screen3_given_screen2": 5.0,
+        "median_maxdd_14d": -0.02337800858428507
+      },
+      "mean_gross_exposure": 0.213547,
+      "annual_turnover": 12.46891,
+      "annual_cost_drag": 0.006234,
+      "holding_period_days": 12.56,
+      "mean_names_held": 9.81,
+      "gross_sharpe": 0.939124
+    },
+    {
+      "label": "top20_unsized_LIMIT_band",
+      "full": {
+        "annual_return": 0.201517,
+        "sharpe": 0.898133,
+        "sortino": 1.276338,
+        "calmar": 0.456527,
+        "max_drawdown": -0.441412,
+        "days": 3320.0,
+        "screen3": 0.9169
+      },
+      "is": {
+        "annual_return": 0.248511,
+        "sharpe": 1.063668,
+        "sortino": 1.481782,
+        "calmar": 0.720916,
+        "max_drawdown": -0.344715,
+        "days": 1963.0,
+        "screen3": 1.1281
+      },
+      "oos": {
+        "annual_return": 0.136526,
+        "sharpe": 0.659661,
+        "sortino": 0.966135,
+        "calmar": 0.411236,
+        "max_drawdown": -0.331989,
+        "days": 1358.0,
+        "screen3": 0.7077
+      },
+      "post_pub": {
+        "annual_return": 0.015393,
+        "sharpe": 0.176462,
+        "sortino": 0.25001,
+        "calmar": 0.070407,
+        "max_drawdown": -0.218632,
+        "days": 537.0,
+        "screen3": 0.1741
+      },
+      "bootstrap_oos_14d": {
+        "median_return_14d": -0.0041577187663651705,
+        "p05_return_14d": -0.057569424107639655,
+        "p95_return_14d": 0.11227998040544351,
+        "p_return_positive": 0.42325,
+        "p_clears_screen2": 0.1455,
+        "median_screen3_14d": -3.7817440917014533,
+        "median_screen3_given_screen2": 5.0,
+        "median_maxdd_14d": -0.02394864763971616
+      },
+      "mean_gross_exposure": 0.213689,
+      "annual_turnover": 10.535163,
+      "annual_cost_drag": 0.005268,
+      "holding_period_days": 12.56,
+      "mean_names_held": 9.81,
+      "gross_sharpe": 0.92043
+    },
+    {
+      "label": "top20_voltgt_port_LIMIT",
+      "full": {
+        "annual_return": 0.262705,
+        "sharpe": 0.911893,
+        "sortino": 1.353887,
+        "calmar": 0.481106,
+        "max_drawdown": -0.546044,
+        "days": 3320.0,
+        "screen3": 0.9595
+      },
+      "is": {
+        "annual_return": 0.345696,
+        "sharpe": 1.080666,
+        "sortino": 1.608066,
+        "calmar": 0.821461,
+        "max_drawdown": -0.420831,
+        "days": 1963.0,
+        "screen3": 1.2139
+      },
+      "oos": {
+        "annual_return": 0.151478,
+        "sharpe": 0.638466,
+        "sortino": 0.944107,
+        "calmar": 0.335303,
+        "max_drawdown": -0.451763,
+        "days": 1358.0,
+        "screen3": 0.6698
+      },
+      "post_pub": {
+        "annual_return": -0.053476,
+        "sharpe": -0.060126,
+        "sortino": -0.085854,
+        "calmar": -0.118372,
+        "max_drawdown": -0.451763,
+        "days": 537.0,
+        "screen3": -0.0879
+      },
+      "bootstrap_oos_14d": {
+        "median_return_14d": -0.007794637014484351,
+        "p05_return_14d": -0.07167278514309239,
+        "p95_return_14d": 0.1519428348362513,
+        "p_return_positive": 0.41375,
+        "p_clears_screen2": 0.178,
+        "median_screen3_14d": -3.8312567795872052,
+        "median_screen3_given_screen2": 5.0,
+        "median_maxdd_14d": -0.03341527891747609
+      },
+      "mean_gross_exposure": 0.309016,
+      "annual_turnover": 22.609201,
+      "annual_cost_drag": 0.011305,
+      "holding_period_days": 12.56,
+      "mean_names_held": 9.81,
+      "gross_sharpe": 0.948581
+    },
+    {
+      "label": "top20_voltgt_port_LIMIT_band",
+      "full": {
+        "annual_return": 0.264285,
+        "sharpe": 0.907725,
+        "sortino": 1.351127,
+        "calmar": 0.471561,
+        "max_drawdown": -0.560446,
+        "days": 3320.0,
+        "screen3": 0.9542
+      },
+      "is": {
+        "annual_return": 0.346498,
+        "sharpe": 1.07185,
+        "sortino": 1.600536,
+        "calmar": 0.776107,
+        "max_drawdown": -0.446456,
+        "days": 1963.0,
+        "screen3": 1.1946
+      },
+      "oos": {
+        "annual_return": 0.154009,
+        "sharpe": 0.641684,
+        "sortino": 0.9496,
+        "calmar": 0.339635,
+        "max_drawdown": -0.453455,
+        "days": 1358.0,
+        "screen3": 0.6742
+      },
+      "post_pub": {
+        "annual_return": -0.057158,
+        "sharpe": -0.071185,
+        "sortino": -0.102355,
+        "calmar": -0.126049,
+        "max_drawdown": -0.453455,
+        "days": 537.0,
+        "screen3": -0.1001
+      },
+      "bootstrap_oos_14d": {
+        "median_return_14d": -0.006999420536872858,
+        "p05_return_14d": -0.07307977105455687,
+        "p95_return_14d": 0.1587168628814155,
+        "p_return_positive": 0.412,
+        "p_clears_screen2": 0.1775,
+        "median_screen3_14d": -3.8040277096553816,
+        "median_screen3_given_screen2": 5.0,
+        "median_maxdd_14d": -0.03337778324622165
+      },
+      "mean_gross_exposure": 0.312416,
+      "annual_turnover": 19.618343,
+      "annual_cost_drag": 0.009809,
+      "holding_period_days": 12.56,
+      "mean_names_held": 9.81,
+      "gross_sharpe": 0.939184
+    },
+    {
+      "label": "top20_voltgt_asset_LIMIT",
+      "full": {
+        "annual_return": 0.061828,
+        "sharpe": 1.094765,
+        "sortino": 1.626133,
+        "calmar": 0.584973,
+        "max_drawdown": -0.105694,
+        "days": 3320.0,
+        "screen3": 1.1544
+      },
+      "is": {
+        "annual_return": 0.057154,
+        "sharpe": 1.181772,
+        "sortino": 1.684265,
+        "calmar": 0.799269,
+        "max_drawdown": -0.071507,
+        "days": 1963.0,
+        "screen3": 1.268
+      },
+      "oos": {
+        "annual_return": 0.068583,
+        "sharpe": 1.032618,
+        "sortino": 1.586881,
+        "calmar": 0.907986,
+        "max_drawdown": -0.075533,
+        "days": 1358.0,
+        "screen3": 1.2169
+      },
+      "post_pub": {
+        "annual_return": 0.019905,
+        "sharpe": 0.432101,
+        "sortino": 0.638752,
+        "calmar": 0.312066,
+        "max_drawdown": -0.063786,
+        "days": 537.0,
+        "screen3": 0.4788
+      },
+      "bootstrap_oos_14d": {
+        "median_return_14d": -0.001211103624067622,
+        "p05_return_14d": -0.013315588458429839,
+        "p95_return_14d": 0.03579835026845757,
+        "p_return_positive": 0.41725,
+        "p_clears_screen2": 0.02975,
+        "median_screen3_14d": -3.820118113294493,
+        "median_screen3_given_screen2": 5.0,
+        "median_maxdd_14d": -0.0059424392412425475
+      },
+      "mean_gross_exposure": 0.066735,
+      "annual_turnover": 4.027586,
+      "annual_cost_drag": 0.002014,
+      "holding_period_days": 12.56,
+      "mean_names_held": 9.81,
+      "gross_sharpe": 1.130423
+    },
+    {
+      "label": "top20_voltgt_asset_LIMIT_band",
+      "full": {
+        "annual_return": 0.062399,
+        "sharpe": 1.089784,
+        "sortino": 1.6115,
+        "calmar": 0.608349,
+        "max_drawdown": -0.102571,
+        "days": 3320.0,
+        "screen3": 1.154
+      },
+      "is": {
+        "annual_return": 0.058214,
+        "sharpe": 1.181263,
+        "sortino": 1.682352,
+        "calmar": 0.824073,
+        "max_drawdown": -0.070642,
+        "days": 1963.0,
+        "screen3": 1.2745
+      },
+      "oos": {
+        "annual_return": 0.068438,
+        "sharpe": 1.02064,
+        "sortino": 1.557161,
+        "calmar": 0.870517,
+        "max_drawdown": -0.078617,
+        "days": 1358.0,
+        "screen3": 1.1902
+      },
+      "post_pub": {
+        "annual_return": 0.018774,
+        "sharpe": 0.409254,
+        "sortino": 0.602954,
+        "calmar": 0.288787,
+        "max_drawdown": -0.065009,
+        "days": 537.0,
+        "screen3": 0.4506
+      },
+      "bootstrap_oos_14d": {
+        "median_return_14d": -0.001163563304632187,
+        "p05_return_14d": -0.01330546143878042,
+        "p95_return_14d": 0.03593137876457554,
+        "p_return_positive": 0.413,
+        "p_clears_screen2": 0.02975,
+        "median_screen3_14d": -3.8353447785769643,
+        "median_screen3_given_screen2": 5.0,
+        "median_maxdd_14d": -0.006041128700445264
+      },
+      "mean_gross_exposure": 0.067019,
+      "annual_turnover": 3.399691,
+      "annual_cost_drag": 0.0017,
+      "holding_period_days": 12.56,
+      "mean_names_held": 9.81,
+      "gross_sharpe": 1.119458
+    },
+    {
+      "label": "btc_unsized_LIMIT",
+      "full": {
+        "annual_return": 0.371654,
+        "sharpe": 1.143228,
+        "sortino": 1.863182,
+        "calmar": 0.813067,
+        "max_drawdown": -0.457101,
+        "days": 3320.0,
+        "screen3": 1.3322
+      },
+      "is": {
+        "annual_return": 0.456492,
+        "sharpe": 1.236095,
+        "sortino": 2.036142,
+        "calmar": 0.998715,
+        "max_drawdown": -0.457079,
+        "days": 1963.0,
+        "screen3": 1.4849
+      },
+      "oos": {
+        "annual_return": 0.257386,
+        "sharpe": 0.994905,
+        "sortino": 1.579241,
+        "calmar": 1.249524,
+        "max_drawdown": -0.205987,
+        "days": 1358.0,
+        "screen3": 1.305
+      },
+      "post_pub": {
+        "annual_return": 0.040144,
+        "sharpe": 0.331092,
+        "sortino": 0.474396,
+        "calmar": 0.205534,
+        "max_drawdown": -0.195317,
+        "days": 537.0,
+        "screen3": 0.3507
+      },
+      "bootstrap_oos_14d": {
+        "median_return_14d": -0.001699758086962433,
+        "p05_return_14d": -0.05160537435153556,
+        "p95_return_14d": 0.1311534272008208,
+        "p_return_positive": 0.445,
+        "p_clears_screen2": 0.151,
+        "median_screen3_14d": -3.009509586577982,
+        "median_screen3_given_screen2": 5.0,
+        "median_maxdd_14d": -0.02652165546983365
+      },
+      "mean_gross_exposure": 0.388002,
+      "annual_turnover": 14.275653,
+      "annual_cost_drag": 0.007138,
+      "holding_period_days": 26.67,
+      "mean_names_held": 0.78,
+      "gross_sharpe": 1.165426
+    },
+    {
+      "label": "btc_unsized_LIMIT_band",
+      "full": {
+        "annual_return": 0.350236,
+        "sharpe": 1.13652,
+        "sortino": 1.836243,
+        "calmar": 0.789105,
+        "max_drawdown": -0.443839,
+        "days": 3320.0,
+        "screen3": 1.3122
+      },
+      "is": {
+        "annual_return": 0.392585,
+        "sharpe": 1.170851,
+        "sortino": 1.902949,
+        "calmar": 0.884566,
+        "max_drawdown": -0.443817,
+        "days": 1963.0,
+        "screen3": 1.3778
+      },
+      "oos": {
+        "annual_return": 0.290999,
+        "sharpe": 1.090384,
+        "sortino": 1.739975,
+        "calmar": 1.40854,
+        "max_drawdown": -0.206596,
+        "days": 1358.0,
+        "screen3": 1.4457
+      },
+      "post_pub": {
+        "annual_return": 0.048387,
+        "sharpe": 0.386697,
+        "sortino": 0.560828,
+        "calmar": 0.250446,
+        "max_drawdown": -0.193203,
+        "days": 537.0,
+        "screen3": 0.4155
+      },
+      "bootstrap_oos_14d": {
+        "median_return_14d": -0.00023594016821248953,
+        "p05_return_14d": -0.05334433421332651,
+        "p95_return_14d": 0.1225890091508064,
+        "p_return_positive": 0.46825,
+        "p_clears_screen2": 0.16425,
+        "median_screen3_14d": -0.4226625469601257,
+        "median_screen3_given_screen2": 5.0,
+        "median_maxdd_14d": -0.026186901397297513
+      },
+      "mean_gross_exposure": 0.38285,
+      "annual_turnover": 10.025929,
+      "annual_cost_drag": 0.005013,
+      "holding_period_days": 26.67,
+      "mean_names_held": 0.78,
+      "gross_sharpe": 1.152945
+    },
+    {
+      "label": "btc_voltgt_port_LIMIT",
+      "full": {
+        "annual_return": 0.271782,
+        "sharpe": 1.015127,
+        "sortino": 1.655761,
+        "calmar": 0.520508,
+        "max_drawdown": -0.522148,
+        "days": 3320.0,
+        "screen3": 1.123
+      },
+      "is": {
+        "annual_return": 0.224817,
+        "sharpe": 0.863536,
+        "sortino": 1.382077,
+        "calmar": 0.430608,
+        "max_drawdown": -0.522093,
+        "days": 1963.0,
+        "screen3": 0.9411
+      },
+      "oos": {
+        "annual_return": 0.342633,
+        "sharpe": 1.247761,
+        "sortino": 2.102849,
+        "calmar": 1.387891,
+        "max_drawdown": -0.246873,
+        "days": 1358.0,
+        "screen3": 1.6318
+      },
+      "post_pub": {
+        "annual_return": 0.11364,
+        "sharpe": 0.573941,
+        "sortino": 0.891118,
+        "calmar": 0.460315,
+        "max_drawdown": -0.246873,
+        "days": 537.0,
+        "screen3": 0.6667
+      },
+      "bootstrap_oos_14d": {
+        "median_return_14d": -0.0016732805960714137,
+        "p05_return_14d": -0.05662604015858963,
+        "p95_return_14d": 0.13757910381740138,
+        "p_return_positive": 0.4515,
+        "p_clears_screen2": 0.16775,
+        "median_screen3_14d": -2.7028782102372455,
+        "median_screen3_given_screen2": 5.0,
+        "median_maxdd_14d": -0.028617373594067297
+      },
+      "mean_gross_exposure": 0.380399,
+      "annual_turnover": 17.624583,
+      "annual_cost_drag": 0.008812,
+      "holding_period_days": 26.83,
+      "mean_names_held": 0.76,
+      "gross_sharpe": 1.047333
+    },
+    {
+      "label": "btc_voltgt_port_LIMIT_band",
+      "full": {
+        "annual_return": 0.282966,
+        "sharpe": 1.044027,
+        "sortino": 1.706666,
+        "calmar": 0.545432,
+        "max_drawdown": -0.518794,
+        "days": 3320.0,
+        "screen3": 1.1595
+      },
+      "is": {
+        "annual_return": 0.233228,
+        "sharpe": 0.88977,
+        "sortino": 1.42922,
+        "calmar": 0.449606,
+        "max_drawdown": -0.518738,
+        "days": 1963.0,
+        "screen3": 0.9735
+      },
+      "oos": {
+        "annual_return": 0.358182,
+        "sharpe": 1.275994,
+        "sortino": 2.147396,
+        "calmar": 1.441458,
+        "max_drawdown": -0.248486,
+        "days": 1358.0,
+        "screen3": 1.6742
+      },
+      "post_pub": {
+        "annual_return": 0.115492,
+        "sharpe": 0.583256,
+        "sortino": 0.909424,
+        "calmar": 0.464784,
+        "max_drawdown": -0.248486,
+        "days": 537.0,
+        "screen3": 0.6782
+      },
+      "bootstrap_oos_14d": {
+        "median_return_14d": -0.0018394286372469537,
+        "p05_return_14d": -0.05705233035546575,
+        "p95_return_14d": 0.1453766373623367,
+        "p_return_positive": 0.45575,
+        "p_clears_screen2": 0.1695,
+        "median_screen3_14d": -2.5687042802928897,
+        "median_screen3_given_screen2": 5.0,
+        "median_maxdd_14d": -0.028909183515729076
+      },
+      "mean_gross_exposure": 0.383281,
+      "annual_turnover": 14.194649,
+      "annual_cost_drag": 0.007097,
+      "holding_period_days": 26.83,
+      "mean_names_held": 0.76,
+      "gross_sharpe": 1.069895
+    },
+    {
+      "label": "btc_voltgt_asset_LIMIT",
+      "full": {
+        "annual_return": 0.160226,
+        "sharpe": 1.147605,
+        "sortino": 1.886331,
+        "calmar": 0.849692,
+        "max_drawdown": -0.18857,
+        "days": 3320.0,
+        "screen3": 1.3537
+      },
+      "is": {
+        "annual_return": 0.171493,
+        "sharpe": 1.289877,
+        "sortino": 2.199616,
+        "calmar": 0.909516,
+        "max_drawdown": -0.188554,
+        "days": 1963.0,
+        "screen3": 1.5397
+      },
+      "oos": {
+        "annual_return": 0.144006,
+        "sharpe": 0.975606,
+        "sortino": 1.545878,
+        "calmar": 0.948145,
+        "max_drawdown": -0.151882,
+        "days": 1358.0,
+        "screen3": 1.1955
+      },
+      "post_pub": {
+        "annual_return": 0.007986,
+        "sharpe": 0.128239,
+        "sortino": 0.174415,
+        "calmar": 0.052578,
+        "max_drawdown": -0.151882,
+        "days": 537.0,
+        "screen3": 0.124
+      },
+      "bootstrap_oos_14d": {
+        "median_return_14d": -0.0008332186595000346,
+        "p05_return_14d": -0.028605804553574865,
+        "p95_return_14d": 0.07144810343802051,
+        "p_return_positive": 0.442,
+        "p_clears_screen2": 0.084,
+        "median_screen3_14d": -3.0213116527993553,
+        "median_screen3_given_screen2": 5.0,
+        "median_maxdd_14d": -0.014657651803151928
+      },
+      "mean_gross_exposure": 0.179076,
+      "annual_turnover": 6.93657,
+      "annual_cost_drag": 0.003468,
+      "holding_period_days": 26.83,
+      "mean_names_held": 0.76,
+      "gross_sharpe": 1.172694
+    },
+    {
+      "label": "btc_voltgt_asset_LIMIT_band",
+      "full": {
+        "annual_return": 0.161,
+        "sharpe": 1.139675,
+        "sortino": 1.847582,
+        "calmar": 0.862013,
+        "max_drawdown": -0.186773,
+        "days": 3320.0,
+        "screen3": 1.3395
+      },
+      "is": {
+        "annual_return": 0.162685,
+        "sharpe": 1.215219,
+        "sortino": 2.017706,
+        "calmar": 0.871106,
+        "max_drawdown": -0.186757,
+        "days": 1963.0,
+        "screen3": 1.433
+      },
+      "oos": {
+        "annual_return": 0.158442,
+        "sharpe": 1.050244,
+        "sortino": 1.661341,
+        "calmar": 1.071375,
+        "max_drawdown": -0.147887,
+        "days": 1358.0,
+        "screen3": 1.301
+      },
+      "post_pub": {
+        "annual_return": 0.018349,
+        "sharpe": 0.227289,
+        "sortino": 0.315301,
+        "calmar": 0.124076,
+        "max_drawdown": -0.147887,
+        "days": 537.0,
+        "screen3": 0.2315
+      },
+      "bootstrap_oos_14d": {
+        "median_return_14d": -0.000691550995062129,
+        "p05_return_14d": -0.028810286493415993,
+        "p95_return_14d": 0.07558973209109114,
+        "p_return_positive": 0.45625,
+        "p_clears_screen2": 0.08375,
+        "median_screen3_14d": -2.576587107689618,
+        "median_screen3_given_screen2": 5.0,
+        "median_maxdd_14d": -0.01434048143041805
+      },
+      "mean_gross_exposure": 0.18278,
+      "annual_turnover": 4.92906,
+      "annual_cost_drag": 0.002465,
+      "holding_period_days": 26.83,
+      "mean_names_held": 0.76,
+      "gross_sharpe": 1.15724
+    },
+    {
+      "label": "top20_unsized_MARKET",
+      "full": {
+        "annual_return": 0.193666,
+        "sharpe": 0.87659,
+        "sortino": 1.248024,
+        "calmar": 0.433059,
+        "max_drawdown": -0.447206,
+        "days": 3320.0,
+        "screen3": 0.8921
+      },
+      "is": {
+        "annual_return": 0.244039,
+        "sharpe": 1.054989,
+        "sortino": 1.479426,
+        "calmar": 0.709527,
+        "max_drawdown": -0.343946,
+        "days": 1963.0,
+        "screen3": 1.1211
+      },
+      "oos": {
+        "annual_return": 0.124274,
+        "sharpe": 0.618619,
+        "sortino": 0.901137,
+        "calmar": 0.363797,
+        "max_drawdown": -0.341601,
+        "days": 1358.0,
+        "screen3": 0.6552
+      },
+      "post_pub": {
+        "annual_return": 0.003611,
+        "sharpe": 0.099816,
+        "sortino": 0.141646,
+        "calmar": 0.015233,
+        "max_drawdown": -0.237071,
+        "days": 537.0,
+        "screen3": 0.0912
+      },
+      "bootstrap_oos_14d": {
+        "median_return_14d": -0.00498277198372199,
+        "p05_return_14d": -0.05558118396505596,
+        "p95_return_14d": 0.11551016500829459,
+        "p_return_positive": 0.39975,
+        "p_clears_screen2": 0.141,
+        "median_screen3_14d": -3.8883567444696223,
+        "median_screen3_given_screen2": 5.0,
+        "median_maxdd_14d": -0.023487044039400162
+      },
+      "mean_gross_exposure": 0.213547,
+      "annual_turnover": 12.46891,
+      "annual_cost_drag": 0.014627,
+      "holding_period_days": 12.56,
+      "mean_names_held": 9.81,
+      "gross_sharpe": 0.939124
+    },
+    {
+      "label": "top20_unsized_MARKET_band",
+      "full": {
+        "annual_return": 0.192923,
+        "sharpe": 0.867705,
+        "sortino": 1.231813,
+        "calmar": 0.425184,
+        "max_drawdown": -0.453739,
+        "days": 3320.0,
+        "screen3": 0.8806
+      },
+      "is": {
+        "annual_return": 0.241195,
+        "sharpe": 1.038723,
+        "sortino": 1.445881,
+        "calmar": 0.68075,
+        "max_drawdown": -0.354307,
+        "days": 1963.0,
+        "screen3": 1.0942
+      },
+      "oos": {
+        "annual_return": 0.126282,
+        "sharpe": 0.621381,
+        "sortino": 0.908763,
+        "calmar": 0.369912,
+        "max_drawdown": -0.341384,
+        "days": 1358.0,
+        "screen3": 0.6609
+      },
+      "post_pub": {
+        "annual_return": 0.006973,
+        "sharpe": 0.121589,
+        "sortino": 0.171911,
+        "calmar": 0.030958,
+        "max_drawdown": -0.225252,
+        "days": 537.0,
+        "screen3": 0.1145
+      },
+      "bootstrap_oos_14d": {
+        "median_return_14d": -0.004312454292487611,
+        "p05_return_14d": -0.05792749776574879,
+        "p95_return_14d": 0.11210725997051951,
+        "p_return_positive": 0.4155,
+        "p_clears_screen2": 0.142,
+        "median_screen3_14d": -3.802447474486179,
+        "median_screen3_given_screen2": 5.0,
+        "median_maxdd_14d": -0.024065067763778702
+      },
+      "mean_gross_exposure": 0.213689,
+      "annual_turnover": 10.535163,
+      "annual_cost_drag": 0.012452,
+      "holding_period_days": 12.56,
+      "mean_names_held": 9.81,
+      "gross_sharpe": 0.92043
+    },
+    {
+      "label": "top20_voltgt_port_MARKET",
+      "full": {
+        "annual_return": 0.243841,
+        "sharpe": 0.863023,
+        "sortino": 1.278533,
+        "calmar": 0.433038,
+        "max_drawdown": -0.563094,
+        "days": 3320.0,
+        "screen3": 0.9002
+      },
+      "is": {
+        "annual_return": 0.327467,
+        "sharpe": 1.03851,
+        "sortino": 1.54245,
+        "calmar": 0.753312,
+        "max_drawdown": -0.434703,
+        "days": 1963.0,
+        "screen3": 1.1545
+      },
+      "oos": {
+        "annual_return": 0.131974,
+        "sharpe": 0.578337,
+        "sortino": 0.852821,
+        "calmar": 0.28487,
+        "max_drawdown": -0.463278,
+        "days": 1358.0,
+        "screen3": 0.6001
+      },
+      "post_pub": {
+        "annual_return": -0.07198,
+        "sharpe": -0.131322,
+        "sortino": -0.186929,
+        "calmar": -0.155372,
+        "max_drawdown": -0.463278,
+        "days": 537.0,
+        "screen3": -0.1608
+      },
+      "bootstrap_oos_14d": {
+        "median_return_14d": -0.00828612683879365,
+        "p05_return_14d": -0.07209980730040044,
+        "p95_return_14d": 0.1501867284507313,
+        "p_return_positive": 0.40325,
+        "p_clears_screen2": 0.177,
+        "median_screen3_14d": -3.8728568977676,
+        "median_screen3_given_screen2": 5.0,
+        "median_maxdd_14d": -0.03374043708720853
+      },
+      "mean_gross_exposure": 0.308992,
+      "annual_turnover": 22.604575,
+      "annual_cost_drag": 0.026368,
+      "holding_period_days": 12.56,
+      "mean_names_held": 9.81,
+      "gross_sharpe": 0.948642
+    },
+    {
+      "label": "top20_voltgt_port_MARKET_band",
+      "full": {
+        "annual_return": 0.247818,
+        "sharpe": 0.865742,
+        "sortino": 1.286378,
+        "calmar": 0.430703,
+        "max_drawdown": -0.57538,
+        "days": 3320.0,
+        "screen3": 0.9035
+      },
+      "is": {
+        "annual_return": 0.330303,
+        "sharpe": 1.034945,
+        "sortino": 1.543104,
+        "calmar": 0.720049,
+        "max_drawdown": -0.458722,
+        "days": 1963.0,
+        "screen3": 1.1437
+      },
+      "oos": {
+        "annual_return": 0.137328,
+        "sharpe": 0.591116,
+        "sortino": 0.872825,
+        "calmar": 0.295934,
+        "max_drawdown": -0.46405,
+        "days": 1358.0,
+        "screen3": 0.6152
+      },
+      "post_pub": {
+        "annual_return": -0.073689,
+        "sharpe": -0.134365,
+        "sortino": -0.192654,
+        "calmar": -0.158795,
+        "max_drawdown": -0.46405,
+        "days": 537.0,
+        "screen3": -0.165
+      },
+      "bootstrap_oos_14d": {
+        "median_return_14d": -0.007491375896534147,
+        "p05_return_14d": -0.07362450163600828,
+        "p95_return_14d": 0.15748283484637637,
+        "p_return_positive": 0.4085,
+        "p_clears_screen2": 0.176,
+        "median_screen3_14d": -3.8289334416384806,
+        "median_screen3_given_screen2": 5.0,
+        "median_maxdd_14d": -0.033676756280600406
+      },
+      "mean_gross_exposure": 0.312373,
+      "annual_turnover": 19.610477,
+      "annual_cost_drag": 0.022987,
+      "holding_period_days": 12.56,
+      "mean_names_held": 9.81,
+      "gross_sharpe": 0.939492
+    },
+    {
+      "label": "top20_voltgt_asset_MARKET",
+      "full": {
+        "annual_return": 0.059065,
+        "sharpe": 1.04859,
+        "sortino": 1.554503,
+        "calmar": 0.53005,
+        "max_drawdown": -0.111433,
+        "days": 3320.0,
+        "screen3": 1.0954
+      },
+      "is": {
+        "annual_return": 0.055104,
+        "sharpe": 1.141394,
+        "sortino": 1.624121,
+        "calmar": 0.736768,
+        "max_drawdown": -0.074791,
+        "days": 1963.0,
+        "screen3": 1.2131
+      },
+      "oos": {
+        "annual_return": 0.064781,
+        "sharpe": 0.979117,
+        "sortino": 1.50128,
+        "calmar": 0.803168,
+        "max_drawdown": -0.080657,
+        "days": 1358.0,
+        "screen3": 1.1352
+      },
+      "post_pub": {
+        "annual_return": 0.016272,
+        "sharpe": 0.358314,
+        "sortino": 0.528069,
+        "calmar": 0.242436,
+        "max_drawdown": -0.067118,
+        "days": 537.0,
+        "screen3": 0.3915
+      },
+      "bootstrap_oos_14d": {
+        "median_return_14d": -0.0013301846137420137,
+        "p05_return_14d": -0.01345588371435158,
+        "p95_return_14d": 0.035600053037373236,
+        "p_return_positive": 0.411,
+        "p_clears_screen2": 0.02975,
+        "median_screen3_14d": -3.866486295686827,
+        "median_screen3_given_screen2": 5.0,
+        "median_maxdd_14d": -0.006016920806413473
+      },
+      "mean_gross_exposure": 0.066735,
+      "annual_turnover": 4.027586,
+      "annual_cost_drag": 0.00462,
+      "holding_period_days": 12.56,
+      "mean_names_held": 9.81,
+      "gross_sharpe": 1.130423
+    },
+    {
+      "label": "top20_voltgt_asset_MARKET_band",
+      "full": {
+        "annual_return": 0.06004,
+        "sharpe": 1.050947,
+        "sortino": 1.551715,
+        "calmar": 0.554459,
+        "max_drawdown": -0.108286,
+        "days": 3320.0,
+        "screen3": 1.1023
+      },
+      "is": {
+        "annual_return": 0.056444,
+        "sharpe": 1.147105,
+        "sortino": 1.631736,
+        "calmar": 0.760598,
+        "max_drawdown": -0.07421,
+        "days": 1963.0,
+        "screen3": 1.225
+      },
+      "oos": {
+        "annual_return": 0.065221,
+        "sharpe": 0.97586,
+        "sortino": 1.486195,
+        "calmar": 0.785223,
+        "max_drawdown": -0.083061,
+        "days": 1358.0,
+        "screen3": 1.1228
+      },
+      "post_pub": {
+        "annual_return": 0.015619,
+        "sharpe": 0.345112,
+        "sortino": 0.507199,
+        "calmar": 0.22992,
+        "max_drawdown": -0.067933,
+        "days": 537.0,
+        "screen3": 0.3754
+      },
+      "bootstrap_oos_14d": {
+        "median_return_14d": -0.0012787172725898799,
+        "p05_return_14d": -0.013413537125565256,
+        "p95_return_14d": 0.03574433196245589,
+        "p_return_positive": 0.40875,
+        "p_clears_screen2": 0.02975,
+        "median_screen3_14d": -3.8603958247402472,
+        "median_screen3_given_screen2": 5.0,
+        "median_maxdd_14d": -0.006092462176324753
+      },
+      "mean_gross_exposure": 0.067019,
+      "annual_turnover": 3.399691,
+      "annual_cost_drag": 0.003923,
+      "holding_period_days": 12.56,
+      "mean_names_held": 9.81,
+      "gross_sharpe": 1.119458
+    },
+    {
+      "label": "btc_unsized_MARKET",
+      "full": {
+        "annual_return": 0.359085,
+        "sharpe": 1.114545,
+        "sortino": 1.814784,
+        "calmar": 0.770406,
+        "max_drawdown": -0.466098,
+        "days": 3320.0,
+        "screen3": 1.2914
+      },
+      "is": {
+        "annual_return": 0.443246,
+        "sharpe": 1.210267,
+        "sortino": 1.992189,
+        "calmar": 0.951076,
+        "max_drawdown": -0.466047,
+        "days": 1963.0,
+        "screen3": 1.4453
+      },
+      "oos": {
+        "annual_return": 0.245746,
+        "sharpe": 0.959939,
+        "sortino": 1.521602,
+        "calmar": 1.126818,
+        "max_drawdown": -0.218089,
+        "days": 1358.0,
+        "screen3": 1.2347
+      },
+      "post_pub": {
+        "annual_return": 0.03061,
+        "sharpe": 0.271903,
+        "sortino": 0.388772,
+        "calmar": 0.150865,
+        "max_drawdown": -0.202898,
+        "days": 537.0,
+        "screen3": 0.2823
+      },
+      "bootstrap_oos_14d": {
+        "median_return_14d": -0.0020368626394702827,
+        "p05_return_14d": -0.052038532092254286,
+        "p95_return_14d": 0.130739918244148,
+        "p_return_positive": 0.43925,
+        "p_clears_screen2": 0.15025,
+        "median_screen3_14d": -3.141521240575029,
+        "median_screen3_given_screen2": 5.0,
+        "median_maxdd_14d": -0.026577002498039792
+      },
+      "mean_gross_exposure": 0.388002,
+      "annual_turnover": 14.275653,
+      "annual_cost_drag": 0.016349,
+      "holding_period_days": 26.67,
+      "mean_names_held": 0.78,
+      "gross_sharpe": 1.165426
+    },
+    {
+      "label": "btc_unsized_MARKET_band",
+      "full": {
+        "annual_return": 0.341173,
+        "sharpe": 1.114404,
+        "sortino": 1.799543,
+        "calmar": 0.755805,
+        "max_drawdown": -0.451403,
+        "days": 3320.0,
+        "screen3": 1.2809
+      },
+      "is": {
+        "annual_return": 0.382231,
+        "sharpe": 1.148068,
+        "sortino": 1.865059,
+        "calmar": 0.846862,
+        "max_drawdown": -0.45135,
+        "days": 1963.0,
+        "screen3": 1.3445
+      },
+      "oos": {
+        "annual_return": 0.283691,
+        "sharpe": 1.069174,
+        "sortino": 1.704943,
+        "calmar": 1.315481,
+        "max_drawdown": -0.215656,
+        "days": 1358.0,
+        "screen3": 1.3974
+      },
+      "post_pub": {
+        "annual_return": 0.040964,
+        "sharpe": 0.340069,
+        "sortino": 0.492455,
+        "calmar": 0.205019,
+        "max_drawdown": -0.199806,
+        "days": 537.0,
+        "screen3": 0.3605
+      },
+      "bootstrap_oos_14d": {
+        "median_return_14d": -0.0005364329691407432,
+        "p05_return_14d": -0.05334433421332651,
+        "p95_return_14d": 0.12246349849322691,
+        "p_return_positive": 0.467,
+        "p_clears_screen2": 0.16275,
+        "median_screen3_14d": -0.849171326067734,
+        "median_screen3_given_screen2": 5.0,
+        "median_maxdd_14d": -0.02625782003792959
+      },
+      "mean_gross_exposure": 0.38285,
+      "annual_turnover": 10.025929,
+      "annual_cost_drag": 0.011751,
+      "holding_period_days": 26.67,
+      "mean_names_held": 0.78,
+      "gross_sharpe": 1.152945
+    },
+    {
+      "label": "btc_voltgt_port_MARKET",
+      "full": {
+        "annual_return": 0.257327,
+        "sharpe": 0.973237,
+        "sortino": 1.58496,
+        "calmar": 0.483848,
+        "max_drawdown": -0.531835,
+        "days": 3320.0,
+        "screen3": 1.0711
+      },
+      "is": {
+        "annual_return": 0.210592,
+        "sharpe": 0.821692,
+        "sortino": 1.31309,
+        "calmar": 0.396068,
+        "max_drawdown": -0.531705,
+        "days": 1963.0,
+        "screen3": 0.8906
+      },
+      "oos": {
+        "annual_return": 0.327868,
+        "sharpe": 1.205806,
+        "sortino": 2.02889,
+        "calmar": 1.289513,
+        "max_drawdown": -0.254257,
+        "days": 1358.0,
+        "screen3": 1.5602
+      },
+      "post_pub": {
+        "annual_return": 0.09772,
+        "sharpe": 0.512828,
+        "sortino": 0.794849,
+        "calmar": 0.384336,
+        "max_drawdown": -0.254257,
+        "days": 537.0,
+        "screen3": 0.5871
+      },
+      "bootstrap_oos_14d": {
+        "median_return_14d": -0.0018853065903676747,
+        "p05_return_14d": -0.05709334244587083,
+        "p95_return_14d": 0.13757170182498704,
+        "p_return_positive": 0.44875,
+        "p_clears_screen2": 0.1665,
+        "median_screen3_14d": -2.9017402181725775,
+        "median_screen3_given_screen2": 5.0,
+        "median_maxdd_14d": -0.028762403551650162
+      },
+      "mean_gross_exposure": 0.38043,
+      "annual_turnover": 17.623228,
+      "annual_cost_drag": 0.020205,
+      "holding_period_days": 26.83,
+      "mean_names_held": 0.76,
+      "gross_sharpe": 1.04714
+    },
+    {
+      "label": "btc_voltgt_port_MARKET_band",
+      "full": {
+        "annual_return": 0.270837,
+        "sharpe": 1.009488,
+        "sortino": 1.648258,
+        "calmar": 0.513199,
+        "max_drawdown": -0.527743,
+        "days": 3320.0,
+        "screen3": 1.1161
+      },
+      "is": {
+        "annual_return": 0.220889,
+        "sharpe": 0.85369,
+        "sortino": 1.369738,
+        "calmar": 0.418657,
+        "max_drawdown": -0.527612,
+        "days": 1963.0,
+        "screen3": 0.9296
+      },
+      "oos": {
+        "annual_return": 0.346433,
+        "sharpe": 1.243867,
+        "sortino": 2.090657,
+        "calmar": 1.356704,
+        "max_drawdown": -0.255349,
+        "days": 1358.0,
+        "screen3": 1.6164
+      },
+      "post_pub": {
+        "annual_return": 0.101896,
+        "sharpe": 0.530863,
+        "sortino": 0.826503,
+        "calmar": 0.399044,
+        "max_drawdown": -0.255349,
+        "days": 537.0,
+        "screen3": 0.6096
+      },
+      "bootstrap_oos_14d": {
+        "median_return_14d": -0.0019559271175235704,
+        "p05_return_14d": -0.05838525961717442,
+        "p95_return_14d": 0.14402746971266864,
+        "p_return_positive": 0.4525,
+        "p_clears_screen2": 0.16925,
+        "median_screen3_14d": -2.5964739746085215,
+        "median_screen3_given_screen2": 5.0,
+        "median_maxdd_14d": -0.02897324785908184
+      },
+      "mean_gross_exposure": 0.383268,
+      "annual_turnover": 14.195638,
+      "annual_cost_drag": 0.016425,
+      "holding_period_days": 26.83,
+      "mean_names_held": 0.76,
+      "gross_sharpe": 1.069419
+    },
+    {
+      "label": "btc_voltgt_asset_MARKET",
+      "full": {
+        "annual_return": 0.155333,
+        "sharpe": 1.11698,
+        "sortino": 1.833645,
+        "calmar": 0.803215,
+        "max_drawdown": -0.193389,
+        "days": 3320.0,
+        "screen3": 1.3095
+      },
+      "is": {
+        "annual_return": 0.167786,
+        "sharpe": 1.265334,
+        "sortino": 2.155798,
+        "calmar": 0.867775,
+        "max_drawdown": -0.193352,
+        "days": 1963.0,
+        "screen3": 1.5023
+      },
+      "oos": {
+        "annual_return": 0.137446,
+        "sharpe": 0.937185,
+        "sortino": 1.482573,
+        "calmar": 0.874986,
+        "max_drawdown": -0.157084,
+        "days": 1358.0,
+        "screen3": 1.1367
+      },
+      "post_pub": {
+        "annual_return": 0.001904,
+        "sharpe": 0.071222,
+        "sortino": 0.096671,
+        "calmar": 0.012118,
+        "max_drawdown": -0.157084,
+        "days": 537.0,
+        "screen3": 0.0637
+      },
+      "bootstrap_oos_14d": {
+        "median_return_14d": -0.001044395693490463,
+        "p05_return_14d": -0.02890095900070866,
+        "p95_return_14d": 0.0713099187713781,
+        "p_return_positive": 0.44,
+        "p_clears_screen2": 0.0835,
+        "median_screen3_14d": -3.145632217998343,
+        "median_screen3_given_screen2": 5.0,
+        "median_maxdd_14d": -0.014661909444802723
+      },
+      "mean_gross_exposure": 0.179076,
+      "annual_turnover": 6.93657,
+      "annual_cost_drag": 0.007697,
+      "holding_period_days": 26.83,
+      "mean_names_held": 0.76,
+      "gross_sharpe": 1.172694
+    },
+    {
+      "label": "btc_voltgt_asset_MARKET_band",
+      "full": {
+        "annual_return": 0.157425,
+        "sharpe": 1.11763,
+        "sortino": 1.810568,
+        "calmar": 0.823782,
+        "max_drawdown": -0.1911,
+        "days": 3320.0,
+        "screen3": 1.3067
+      },
+      "is": {
+        "annual_return": 0.159747,
+        "sharpe": 1.195952,
+        "sortino": 1.984927,
+        "calmar": 0.836098,
+        "max_drawdown": -0.191062,
+        "days": 1963.0,
+        "screen3": 1.4036
+      },
+      "oos": {
+        "annual_return": 0.153952,
+        "sharpe": 1.02459,
+        "sortino": 1.619122,
+        "calmar": 1.009334,
+        "max_drawdown": -0.152528,
+        "days": 1358.0,
+        "screen3": 1.2578
+      },
+      "post_pub": {
+        "annual_return": 0.013486,
+        "sharpe": 0.181181,
+        "sortino": 0.250927,
+        "calmar": 0.088417,
+        "max_drawdown": -0.152528,
+        "days": 537.0,
+        "screen3": 0.1813
+      },
+      "bootstrap_oos_14d": {
+        "median_return_14d": -0.0008461039820097938,
+        "p05_return_14d": -0.029121033795044826,
+        "p95_return_14d": 0.07553452380841055,
+        "p_return_positive": 0.45475,
+        "p_clears_screen2": 0.083,
+        "median_screen3_14d": -2.730837312355535,
+        "median_screen3_given_screen2": 5.0,
+        "median_maxdd_14d": -0.014345740381169647
+      },
+      "mean_gross_exposure": 0.18278,
+      "annual_turnover": 4.92906,
+      "annual_cost_drag": 0.005551,
+      "holding_period_days": 26.83,
+      "mean_names_held": 0.76,
+      "gross_sharpe": 1.15724
+    },
+    {
+      "label": "btc_hold",
+      "full": {
+        "annual_return": 0.38136,
+        "sharpe": 0.821416,
+        "sortino": 1.204082,
+        "calmar": 0.458436,
+        "max_drawdown": -0.831871,
+        "days": 3320.0,
+        "screen3": 0.8656
+      },
+      "is": {
+        "annual_return": 0.286595,
+        "sharpe": 0.719368,
+        "sortino": 1.039571,
+        "calmar": 0.344519,
+        "max_drawdown": -0.831871,
+        "days": 1963.0,
+        "screen3": 0.735
+      },
+      "oos": {
+        "annual_return": 0.532295,
+        "sharpe": 1.149208,
+        "sortino": 1.794685,
+        "calmar": 1.004866,
+        "max_drawdown": -0.529718,
+        "days": 1358.0,
+        "screen3": 1.3641
+      },
+      "post_pub": {
+        "annual_return": -0.013282,
+        "sharpe": 0.179206,
+        "sortino": 0.259659,
+        "calmar": -0.025073,
+        "max_drawdown": -0.529718,
+        "days": 537.0,
+        "screen3": 0.1501
+      },
+      "bootstrap_oos_14d": {
+        "median_return_14d": 0.008583505238037192,
+        "p05_return_14d": -0.11633080954460533,
+        "p95_return_14d": 0.21770855124813848,
+        "p_return_positive": 0.55475,
+        "p_clears_screen2": 0.29775,
+        "median_screen3_14d": 3.7205269348391354,
+        "median_screen3_given_screen2": 5.0,
+        "median_maxdd_14d": -0.05526904289149881
+      }
+    },
+    {
+      "label": "ew_top20_hold",
+      "full": {
+        "annual_return": 0.050784,
+        "sharpe": 0.476812,
+        "sortino": 0.656384,
+        "calmar": 0.057133,
+        "max_drawdown": -0.888872,
+        "days": 3215.0,
+        "screen3": 0.4227
+      },
+      "is": {
+        "annual_return": 0.048504,
+        "sharpe": 0.521646,
+        "sortino": 0.706652,
+        "calmar": 0.054569,
+        "max_drawdown": -0.888872,
+        "days": 1858.0,
+        "screen3": 0.4555
+      },
+      "oos": {
+        "annual_return": 0.056067,
+        "sharpe": 0.411128,
+        "sortino": 0.591908,
+        "calmar": 0.070146,
+        "max_drawdown": -0.799301,
+        "days": 1358.0,
+        "screen3": 0.3811
+      },
+      "post_pub": {
+        "annual_return": -0.264292,
+        "sharpe": -0.156324,
+        "sortino": -0.228923,
+        "calmar": -0.390423,
+        "max_drawdown": -0.676938,
+        "days": 537.0,
+        "screen3": -0.2556
+      },
+      "bootstrap_oos_14d": {
+        "median_return_14d": -0.0032303936905417885,
+        "p05_return_14d": -0.19249311832817417,
+        "p95_return_14d": 0.22694285520259302,
+        "p_return_positive": 0.48975,
+        "p_clears_screen2": 0.3235,
+        "median_screen3_14d": 1.3436673231176215,
+        "median_screen3_given_screen2": 5.0,
+        "median_maxdd_14d": -0.08805562902549957
+      }
+    }
+  ]
+}

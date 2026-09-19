@@ -520,3 +520,84 @@ Observed kurtosis ran 5.98 for plain trend, 13.10 for volume-gated trend, 21.29 
 The Deflated Sharpe Ratio penalises kurtosis through its denominator, so cross-sectional momentum needed an annualised Sharpe of 3.405 to pass against 2.353 for volume-gated trend, despite a similar observed Sharpe.
 
 A strategy whose returns arrive in rare large moves requires substantially more evidence to establish the same claim, which is an argument for preferring smoother return streams at equal Sharpe rather than only at equal drawdown.
+
+## paper-ensemble-declaration
+
+The strategy in `config/paper_ensemble.yaml` is the first candidate in this repo whose parameters were fixed by someone else before anyone here saw the data.
+
+Zarattini, Pagani and Barbon (SSRN 5209907, April 2025) specify an ensemble of nine Donchian channels at lookbacks of 5, 10, 20, 30, 60, 90, 150, 250 and 360 days, each exiting on a stop that ratchets to the channel midpoint, aggregated equal-weight, sized to a 25% annualised volatility target from a 90-day realised estimate with leverage capped at 1.0, on a monthly snapshot of the top 20 most liquid coins.
+Every one of those numbers is external.
+That is the entire reason this family is worth running after 131 trials had already exhausted the statistical budget: a parameter set nobody here searched for carries a trial count of one, which is the same argument already recorded at `DECISIONS.md#btc-benchmark-trial-count`.
+
+The paper itself is paywalled and the parameter values come from a public reconstruction rather than from the paper's own text.
+An independent replication's preview names the ladder as beginning "5, 10, 2..." which is consistent, and the count of nine matches the paper's abstract, but the ladder, the midpoint stop rule and the volatility lookback are third-party attributions and are labelled as such in the declaration.
+If the real paper differs, this family's trial-count-of-one claim survives but its replication claim does not.
+
+## leverage-cap-semantics
+
+The paper's "leverage capped at 1.0" was first implemented as a cap on the volatility scalar and that was wrong.
+
+With the scalar capped, a book whose unlevered gross exposure was 21% of NAV could never scale up, because the scalar sat pinned at its ceiling whenever realised volatility ran below the 25% target, which was most of the time.
+Mean gross exposure came out at 18.5% and the strategy was measuring an 81%-cash portfolio.
+Leverage is gross exposure divided by NAV, not the scalar that produces it, so the cap belongs on the resulting exposure.
+
+Corrected, the scalar is uncapped and gross exposure is capped at 1.0, which lifts mean exposure to 31% on the top-20 book and 38% on BTC.
+The correction is a bug fix rather than a parameter change, and it is recorded because the defective version looked plausible: its performance numbers were unremarkable rather than absurd, so nothing about the output announced that the book was barely invested.
+
+## donchian-pulse-defect
+
+The `donchian_breakout` entry in `signals/families.py`, on which the family comparison at `DECISIONS.md#family-comparison-outcome` reported, is not a Donchian trend system and its conclusions about that family do not stand.
+
+The implementation marks a position only on bars where the close sits outside the channel, so the position vanishes the moment price stops making new extremes.
+Measured on the point-in-time top-20 universe, it carried a mean gross exposure of 8.8% at eight-hour bars and 9.3% at daily, held 1.4 names at a time, and had a holding period of 1.3 bars.
+A Donchian channel rule holds until the opposite channel is breached; this one held for one bar.
+
+Two reported findings were therefore artifacts.
+The family's "best drawdown control of any family" at 18.6% to 20.4% was the drawdown of a portfolio that was more than 90% in cash, and its low Screen 2 qualification rate of 4.3% to 8.4% was the direct arithmetic consequence of never taking meaningful exposure rather than evidence about range expansion as a mechanism.
+The stateful implementation in `signals/ensemble_trend.py` is the corrected form, and the prior row is left in place rather than deleted so that the correction is auditable.
+
+## paper-ensemble-outcome
+
+The declared ensemble is the first constructed strategy in this repo to beat BTC buy-and-hold on the Screen 3 composite, and it does so in the two windows that matter most.
+
+Applied to BTC alone with portfolio-level volatility targeting, out of sample from 2023-01-01 it returned 34.3% a year at a Sharpe of 1.25, a Sortino of 2.10, a Calmar of 1.39 and a maximum drawdown of 24.7%, for a Screen 3 score of 1.632 against BTC buy-and-hold at 1.364.
+In the post-publication window from 2025-04-01, the only stretch of data that postdates the paper's own parameter choices, it scored 0.667 against buy-and-hold at 0.150 and returned 11.4% a year while holding BTC lost 1.3%.
+Five prior stages in this repo produced nothing that beat the benchmark on any of these measures.
+
+The replication is directional rather than exact.
+On BTC the full record gives a Sharpe of 1.14 and a Sortino of 1.86 against the paper's 1.58 and 2.03, and the gap is consistent with history: this panel starts 2017-08-17 because Binance did not exist earlier, while the paper starts January 2015 and therefore includes the 2015-2017 bull run, which is the single most favourable stretch for a long-only crypto trend system.
+The top-20 book reproduced the paper's drawdown almost exactly, 10.6% against 11%, but only a third of its return, 6.2% against 18%, which says the paper deploys roughly three times the notional at the same risk and that the sizing reading here is more conservative than theirs.
+
+The observed return distribution is positively skewed at 1.35 with a kurtosis of 12.57.
+That is the payoff shape the asymmetry thesis wanted and failed to obtain with ATR stops at `DECISIONS.md#asymmetry-outcome`, and it arrives here from an exit rule that ratchets to the channel midpoint rather than to a volatility multiple, which lags far enough behind price to survive the drawdowns a trend needs to hold through.
+
+## paper-ensemble-trial-count
+
+Gate 4 passes for this candidate at an honest trial count of one or two and fails at any larger count, and which of those applies is a question about discipline rather than about the data.
+
+With the trial-Sharpe variance of 0.00088663 already estimated in `results/g4_deflated_sharpe.json`, the Deflated Sharpe Ratio of the BTC ensemble's out-of-sample record is 0.9938 at one trial and 0.9719 at two, against the 0.95 threshold, and 0.5741 at 27, 0.3116 at 131 and 0.2865 at 167.
+BTC buy-and-hold scores 0.9874 and 0.9519 at one and two.
+Nothing in this repo had previously cleared the gate at any count.
+
+The claim to a trial count of one rests on the parameters being external, and it is weaker than it looks.
+The lookback ladder, the volatility target, the volatility lookback and the leverage cap were all published before this data was touched, so those contribute nothing to a search.
+But three readings of the sizing rule were evaluated here before the best one was identified, across two execution styles and two no-trade-band settings, and the configuration now reported is the one that scored highest.
+That is a search of 36, and the DSR at 27 trials already fails.
+
+The defensible position is therefore narrow.
+`btc_voltgt_port` is the literal reading of "25% target annualised volatility, leverage capped at 1.0" once the cap is applied to exposure rather than to the scalar, so it is the reading that should have been committed to first on a stated principle, and it is a coincidence which cannot be demonstrated that the principled reading is also the best-performing one.
+Deploying it honestly requires declaring it prospectively as a single configuration and accepting the verdict of the window that follows, not reporting the 0.9719 obtained after looking.
+
+## screen3-is-a-sign-indicator
+
+Over a 14-day window the Screen 3 composite does not measure strategy quality, it measures whether the fortnight was up, and the bootstrap makes this unambiguous.
+
+Across 4000 contiguous out-of-sample 14-day windows, every configuration with a negative median 14-day return scored a median composite between -2.70 and -3.89, while BTC buy-and-hold, whose median 14-day return is +0.86%, scored +3.72.
+The mechanism is the Calmar term: annualising a small negative 14-day return produces a large negative CAGR, dividing it by a small drawdown produces a large negative ratio, and the 5.0 cap then pins the term at its floor.
+Sortino behaves the same way through its own sign.
+The composite spans roughly -3.9 to +3.7 with almost nothing in between, so it is a coin-flip readout on the sign of the window rather than a ranking of skill.
+
+This sharpens the caveat already recorded at `DECISIONS.md#screen-tension-quantified` from "discrimination may be dominated by path noise" to a specific claim: the single quantity that predicts a team's Screen 3 rank is the probability that its fortnight finishes positive.
+On that measure the ranking inverts everything the full-sample composite says.
+BTC buy-and-hold finishes positive in 55.5% of windows and clears the 5% return proxy in 29.8%, against 45.2% and 16.8% for the best-scoring ensemble configuration.
+The strategy with the best Sharpe, Sortino and Calmar over nine years is the one less likely to be scored at all, and optimising the composite harder makes that worse rather than better.

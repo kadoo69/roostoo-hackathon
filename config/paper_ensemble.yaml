@@ -1,0 +1,60 @@
+meta:
+  declared_utc: '2026-09-19'
+  kind: external_parameter_set
+  parameters_fitted_on_this_data: false
+  justification_ref: DECISIONS.md#paper-ensemble-declaration
+source:
+  authors: Zarattini, Pagani, Barbon
+  title: 'Catching Crypto Trends: A Tactical Approach for Bitcoin and Altcoins'
+  venue: SSRN 5209907
+  published: '2025-04'
+  reported:
+    btc_cagr: 0.30
+    btc_sharpe: 1.58
+    btc_sortino: 2.03
+    btc_max_drawdown: 0.19
+    top20_cagr: 0.18
+    top20_max_drawdown: 0.11
+    top20_alpha_vs_btc: 0.108
+  parameter_provenance: third_party_reconstruction
+  provenance_note: Paper is paywalled. Lookback ladder, stop rule and sizing taken
+    from a public reconstruction; the truncated preview of an independent replication
+    corroborates the first two ladder values.
+signal:
+  family: donchian_ensemble
+  mechanism: Range expansion across nine horizons simultaneously; a coin's weight is
+    the fraction of horizons currently in an open breakout, so exposure scales with
+    agreement across timescales rather than switching on one threshold.
+  failure_mode: A choppy market breaks the shortest channels repeatedly without
+    following through, so conviction oscillates near a third and pays the round trip
+    each time. Nine horizons also cannot all be in a trade unless the move is large,
+    so a genuine but shallow trend is under-weighted.
+  lookbacks_days: [5, 10, 20, 30, 60, 90, 150, 250, 360]
+  entry: close above the maximum close over the lookback, evaluated on lagged windows
+  exit: close below a ratcheting stop set to max(prior stop, channel midpoint)
+  aggregation: equal weight across the nine sub-models
+  direction: long_only
+  bar_interval: 1d
+sizing:
+  vol_target_annual: 0.25
+  vol_lookback_days: 90
+  max_gross_exposure: 1.0
+  leverage_cap_applies_to: gross_exposure
+  cap_semantics_ref: DECISIONS.md#leverage-cap-semantics
+universe:
+  definition: pit_top_n_by_dollar_volume
+  top_n: 20
+  snapshot: monthly
+  variants: [top20, btc_only]
+evaluation:
+  is_end: '2023-01-01'
+  published: '2025-04-01'
+  clean_oos_window: post_publication
+  benchmark: btc_buy_and_hold
+  bootstrap_window_days: 14
+  screen2_return_threshold: 0.05
+  trial_count_claim:
+    parameter_set: 1
+    sizing_readings_evaluated: 36
+    honest_total_for_this_repo: 167
+    ref: DECISIONS.md#paper-ensemble-trial-count
