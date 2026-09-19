@@ -25,8 +25,8 @@ There is no short leg and no leverage.
 | Long | close **below** the exit floor | Exit to cash on the next bar |
 | Either | neither condition met | Do nothing |
 
-There is no separate stop-loss.
-The exit floor is the stop, and because it is a trailing 10-bar low it rises automatically as price rises, so gains are protected without a second rule.
+There is no separate price stop-loss.
+The exit floor is a rolling 10-bar low, which can move down as well as up; it is not a ratcheting stop and cannot guarantee protection against gaps.
 
 ### Worked example
 
@@ -49,8 +49,9 @@ The edge comes from the asymmetry between the two windows.
 Entry requires clearing a 20-bar high, exit only requires losing a 10-bar low, so the bot gives back less on the way out than it waited for on the way in.
 This produces many small losses and occasional large gains, which shows up as a return skew of **+1.73** against roughly zero for holding the same coins.
 
-That skew is the point.
-The competition scores Sortino at the heaviest weight, and Sortino penalises only downside deviation while leaving upside unpenalised, so a payoff shaped like this scores well by construction rather than by luck.
+Positive skew motivates this design but does not establish a scoring advantage.
+The later fortnight analysis in `DECISIONS.md#beta-is-the-only-screen3-lever` rejects the claim that payoff asymmetry improves both qualification and the survivor score together.
+The registered statistical validation remains failed.
 
 ---
 

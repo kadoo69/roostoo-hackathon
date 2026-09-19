@@ -1,0 +1,23 @@
+meta:
+  name: paper_lab_v1
+  frozen: true
+  declared_utc: '2026-09-19'
+  evidence_ref: DECISIONS.md#prospective-paper-lab
+  mode: public_data_paper_only
+  mechanism: Compare trend horizons; buyer-led volume may reject weak breakout entries without continuously turning the book over.
+  failure_mode: Confirmation can arrive late, exclude profitable breakouts, or merely reduce beta; slower horizons can miss the competition window.
+base_config: config/bot_a_4h.yaml
+initial_nav: 100000.0
+poll_seconds: 60
+warmup_bars: 240
+fee_bps: 10.0
+fill_model: later_observed_quote_cross_at_limit
+min_comparison_days: 28
+selection: descriptive_only_no_automatic_promotion
+candidates:
+  - {name: channel_1h, interval: 1h, family: channel}
+  - {name: channel_4h, interval: 4h, family: channel}
+  - {name: channel_8h, interval: 8h, family: channel}
+  - {name: channel_1d, interval: 1d, family: channel}
+  - {name: flow_4h, interval: 4h, family: flow_entry}
+  - {name: btc_hold, interval: 4h, family: benchmark}

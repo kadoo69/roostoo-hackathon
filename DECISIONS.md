@@ -1229,3 +1229,61 @@ This is the mechanism behind the drawdown control and behind the bear-regime res
 
 The live reading on 2026-09-19 of ten names and 0.50 gross is therefore unusual rather than typical, and follows from the same broad breakout that has 64 of 66 Roostoo names long.
 Anyone reading the dashboard today should not treat 50% gross as the strategy's normal state.
+
+## prospective-paper-lab
+
+The operator requested a logic review, stronger signals if an edge exists, and simultaneous live-market horizon tests.
+The review found that immediate dry fills, incomplete universe ranking and silent market-data loss make the existing shadow results unsuitable for this selection.
+The evidence and remaining gaps are recorded in `results/logic_review_2026_09_19.md`.
+An isolated public-data-only experiment is declared in `config/paper_lab.yaml` before its first forward cycle.
+Four channel horizons, one 4h flow-confirmed entry candidate, and an executed BTC benchmark add six configurations to the append-only ledger.
+The baseline competition configuration and preregistered thresholds are not changed.
+No additional edge has been established.
+The paper lab requires later observed quote crosses for fills, reserves cash including fees, atomically persists orders and wallets, and rejects incomplete data rather than converting it into a trading decision.
+Forward reports suppress annualised metrics until 28 complete sampled days and never automatically promote a winner.
+Simulated fills cannot satisfy the real-fill portion of Gate 10.
+The 28-day reporting floor is a separate experiment rule, not a replacement for any registered gate or a claim of statistical sufficiency.
+
+## concentration-outcome
+
+Concentrating into the best few names rather than holding everything that signals was tested across four point-in-time ranking rules and five position counts, and it produced the first configuration in this repo to improve both screens at once.
+
+Ranking by trailing 20-bar return and holding the top three gives a holdout Screen 3 of 3.098 against the incumbent's 2.623, and a probability of clearing the 5% fortnightly proxy of 40.4% against 21.0%.
+Holding the top five gives 2.957 and 36.3%.
+Both beat the incumbent on Screen 3 and roughly double its qualification probability.
+
+The mechanism is exposure rather than selection skill.
+The incumbent holds 3.7 names at 0.18 gross and is therefore 82% cash, which is recorded at `DECISIONS.md#book-is-mostly-cash`.
+Concentrating into three names at equal weight lifts mean gross to 0.56, so capital that was sitting idle is deployed.
+More beta raises the right tail that Screen 2 needs, and the momentum ranking apparently picks well enough that Screen 3 does not deteriorate to pay for it.
+This is the first measured exception to `DECISIONS.md#beta-is-the-only-screen3-lever`, and it is an exception because the constraint being relaxed is idle cash rather than risk appetite.
+
+The ranking rule matters more than the count, and that is the part of this result with real support.
+Momentum beats breakout, liquidity and low-volatility at every one of the five position counts tested, at holdout Screen 3 of 3.098, 2.957, 2.455, 2.278 and 2.706 for N of 3, 5, 8, 10 and 20.
+Liquidity and low-volatility ranking collapse at small N, to 0.463 and 0.424 at three names, because neither has any relationship to which breakout is working.
+A consistent ordering across five independent counts is mechanism, not a fitted point.
+
+Three cautions apply and none of them is minor.
+
+The fit window would not have found this.
+Its argmax is breakout at ten names, which scores 2.394 on the holdout, while the holdout's best is momentum at three.
+The fit-versus-holdout Spearman is 0.68, better than the 0.50 of the sizing sweep but still a weak predictor, so selecting momentum-3 because it won the holdout is holdout-fitting and must be labelled as such.
+
+Drawdown roughly doubles.
+Momentum at three names draws down 42.4% against the incumbent's 17.4%, and at five names 33.0%.
+The full-history figure would be worse again, since `DECISIONS.md#gate8-regime-outcome` showed the 2023-onward window understates drawdown by about half.
+
+Three names is not three names.
+Mean holdings at N=3 is 1.7, because the channel rule is often long fewer than three of the pool at once.
+A book that averages 1.7 positions is a concentrated directional bet whose fortnightly outcome is dominated by idiosyncratic moves in one or two coins, which is precisely the variance profile that makes a 14-day Sharpe meaningless.
+
+## dashboard-breadth-is-not-the-book
+
+The dashboard reporting 64 of 66 coins long while the bot holds ten positions is not an inconsistency, and the panel now needs to say so.
+
+Market breadth scans the entire venue to give regime context; it is not the bot's book.
+The bot trades a 22-name pool and only acts when a bar closes.
+Bot A had recorded one new-bar cycle in its entire run at the time of the screenshot, because a 4h bar closes six times a day and the bot had been running about three hours, so its book is the decision taken at the 08:00 bar and nothing since.
+Bot B, on 1h bars, had four new-bar cycles and moved its target from seven names to eight across them.
+
+The lag is correct behaviour rather than a defect. Acting only on closed bars is what makes the live signal reproduce the backtest exactly, which is the property verified at `DECISIONS.md#bot-signal-parity`.

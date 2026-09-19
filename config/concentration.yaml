@@ -1,0 +1,35 @@
+meta:
+  declared_utc: '2026-09-19'
+  declared_before_any_backtest: true
+  requested_by: operator
+  purpose: test concentrating into the best N names instead of holding everything
+    that signals
+  justification_ref: DECISIONS.md#concentration-declaration
+cost_of_this_sweep:
+  ledger_before: 413
+  configs_added: 20
+premise:
+  operator_statement: bet on the best 5, not all the coins
+  constraint: ranking must be computable point-in-time. Ranking by historical
+    performance is excluded outright, because DECISIONS.md#roostoo-coin-selection-does-not-persist
+    measured Spearman -0.018 (p=0.91) between periods and found the ten best names
+    of one period returned a WORSE mean Sharpe in the next than the ten worst.
+grid:
+  signal: donchian_4h_entry20_exit10
+  pool: 30
+  n_positions: [3, 5, 8, 10, 20]
+  ranking_rules:
+    liquidity: highest trailing 30d median dollar volume
+    breakout: largest close over upper-channel excess at entry
+    momentum: highest trailing 20-bar return
+    lowvol: lowest trailing 20-bar realised volatility
+  sizing: equal weight 1/N of equity across selected names, gross capped at 1.0
+  configs: 20
+  all_counted_as_trials: true
+method:
+  fit_window: ['2023-01-01', '2025-01-01']
+  holdout_window: ['2025-01-01', '2026-09-19']
+  reported: [sharpe, sortino, calmar, screen3, max_drawdown, p_return_positive,
+             p_clears_screen2]
+  selection_rule: none. Both windows are reported. If the fit argmax does not
+    survive the holdout, the conclusion is that concentration cannot be fitted.
