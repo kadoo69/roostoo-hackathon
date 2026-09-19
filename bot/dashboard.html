@@ -134,7 +134,7 @@ function botPanel(b){
  const perf=p?[['sharpe',N(p.sharpe)],['sortino',N(p.sortino)],['calmar',N(p.calmar)],['screen 3',N(p.screen3)]]
    :[['sharpe','—'],['sortino','—'],['calmar','—'],['screen 3','—']];
  return `<div class="panel">
-  <div class="ph"><div><div class="pt">${esc(b.bot)}</div><div class="psub">${esc(m.interval||'')} · ch ${m.entry}/${m.exit} · 1/${m.divisor} · ${esc(m.venue||'')}</div></div><div class="tags">${tags}</div></div>
+  <div class="ph"><div><div class="pt">${esc(b.bot)}</div><div class="psub">${esc(m.interval||'')} · ch ${m.entry}/${m.exit} · 1/${m.divisor}${m.rule?' · '+esc(m.rule)+' top '+m.n_positions:''} · ${esc(m.venue||'')}</div></div><div class="tags">${tags}</div></div>
   ${eqChart(b.equity_series)}
   <div class="mg">
    <div class="m"><div class="k">equity</div><div class="v">${N(b.equity,0)}</div></div>

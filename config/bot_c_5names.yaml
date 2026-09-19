@@ -4,8 +4,13 @@ meta:
   declared_utc: '2026-09-19'
   description: Donchian channel breakout on 4h bars, long only, momentum-ranked top 5 of the top-30 liquidity pool
   evidence_ref: DECISIONS.md#concentration-outcome
-  caution: selection of momentum ranking at N=5 is HOLDOUT-INFORMED. The fit window
-    would have chosen breakout at N=10. Run alongside bot_a_4h rather than replacing it.
+  caution: N=5 and the momentum rule are HOLDOUT-INFORMED; the fit window would
+    have chosen breakout at N=10. Run alongside bot_a_4h rather than replacing it.
+  momentum_bars_basis: 40 bars (6.7 days) is supported by BOTH windows. Across 15
+    timeframe/lookback configurations the fit-vs-holdout Spearman is 0.95 and the
+    fit argmax IS the holdout argmax, which is the first time in this repo that
+    selecting on the fit window would have chosen the holdout's best.
+    Ref DECISIONS.md#concentration-timeframe-outcome.
   gate4_ref: DECISIONS.md#gate4-rerun-outcome
   gate4_verdict: FAIL at N=351, DSR 0.8687 against 0.95 threshold
 strategy:
@@ -15,7 +20,7 @@ strategy:
   top_n_pool: 30
   ranking_rule: momentum
   n_positions: 5
-  momentum_bars: 20
+  momentum_bars: 40
   weight_divisor: 20
   max_gross: 1.0
   quote: USDT

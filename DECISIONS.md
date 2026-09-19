@@ -1327,3 +1327,37 @@ The channel rule is frequently long fewer than five of the pool at once, and the
 
 First live cycle ranked ten signalling names, kept ENA, AVAX, SUI, TAO and LINK, and placed five orders of which four filled.
 ENA did not fill because the pre-registered spread filter rejected it at 5.01 bps against the 5.0 limit, which is the same control firing correctly that was recorded at `DECISIONS.md#live-monitoring-first-session`.
+
+## concentration-timeframe-outcome
+
+The momentum-ranked top-five logic was run across five bar intervals and three ranking lookbacks, and it produced the first selection in this repository that the fit window would have got right.
+
+The fit-versus-holdout Spearman across the 15 configurations is **0.95**, and the fit argmax is the holdout argmax: 4h bars with a 40-bar ranking lookback, scoring 4.443 on the fit window and 3.409 on the holdout.
+Every previous sweep in this repo had a fit window that either could not discriminate or actively pointed the wrong way, at 0.50 for sizing and 0.68 for the concentration rule.
+A rank correlation of 0.95 across fifteen independent points, with the two argmaxes agreeing, is a different quality of evidence, and it is the reason this particular parameter is changed while the others were not.
+
+Four-hour bars dominate at every ranking lookback tested, on both windows.
+Holdout Screen 3 at the best lookback runs 3.409 at 4h, 2.380 at 8h, 1.845 at 1h, 1.833 at 12h and 0.624 at 1d.
+The ordering is identical on the fit window.
+This is consistent with `DECISIONS.md#donchian-lowtf-outcome` and `DECISIONS.md#fast-horizon-outcome`, which found 4h optimal for the channel rule itself, and it now holds for the ranking layer on top of it.
+
+Daily bars are the clear failure case, at a holdout Calmar of -0.02 to 0.30 and a maximum drawdown near 57%.
+A 20 or 40-day ranking lookback on daily bars is measuring a different regime from the one the 20-bar channel is trading, so the ranking actively fights the signal.
+
+`bot_c_5names` is updated from a 20-bar to a 40-bar ranking lookback.
+The 20-bar value was the worst of the three tested at 4h, at a holdout 2.957 against 3.199 at 10 bars and 3.409 at 40, and it was chosen before this sweep existed.
+The change is journalled as `config_changed_mid_run` with both SHAs, which is the event a Screen 1 auditor should see, and it is being made now precisely because the prep window is when configuration changes are legitimate.
+
+The distinction from `DECISIONS.md#bot-c-declaration` must not be blurred.
+The choice of momentum ranking and of five positions remains holdout-informed and is still labelled as such.
+Only the ranking lookback has support from both windows.
+
+## no-additional-timeframe-bots
+
+Bots at 8h, 12h and 1d are not being run, and the reason is that the evidence is not close.
+
+The operator asked for the logic to be tested on other timeframes, and it was, across fifteen configurations.
+Running live bots at intervals the backtest ranks well below 4h would spend supervision and attention on configurations already known to be inferior on both windows, and would add restart counters and journals that a reader must then discount.
+
+One-hour operation is already observable through `bot_b_1h`, which runs the unranked channel at 1h, so the two intervals worth watching live are both covered.
+If the 4h configuration degrades in forward testing, the ranked variants at 8h are the next candidates and their parameters are already measured.

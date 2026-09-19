@@ -40,8 +40,10 @@ def bot_state(name: str, cfg: str) -> dict:
     try:
         s = load(cfg)
         meta = {"interval": s.interval, "entry": s.entry_bars, "exit": s.exit_bars,
-                "divisor": s.weight_divisor, "max_gross": s.max_gross,
-                "venue": s.venue, "dry_run": s.dry_run, "sha": s.config_sha256}
+                "divisor": s.n_positions or s.weight_divisor,
+                "max_gross": s.max_gross, "rule": s.ranking_rule,
+                "n_positions": s.n_positions, "venue": s.venue,
+                "dry_run": s.dry_run, "sha": s.config_sha256}
     except Exception:
         meta = {}
     bl = build_blotter(name)

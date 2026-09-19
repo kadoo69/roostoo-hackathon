@@ -1,0 +1,27 @@
+meta:
+  declared_utc: '2026-09-19'
+  declared_before_any_backtest: true
+  requested_by: operator
+  purpose: test the momentum-ranked top-5 logic across timeframes, not only 4h
+  justification_ref: DECISIONS.md#concentration-timeframe-declaration
+cost_of_this_sweep:
+  ledger_before: 439
+  configs_added: 15
+grid:
+  signal: donchian_entry20_exit10
+  pool: 30
+  n_positions: 5
+  ranking_rule: momentum
+  intervals: [1h, 4h, 8h, 12h, 1d]
+  momentum_bars: [10, 20, 40]
+  momentum_bars_note: the ranking lookback is in BARS, so it spans a different
+    calendar horizon at each interval. This is deliberate - it tests whether the
+    ranking works on a bar count or on a calendar horizon.
+  configs: 15
+  all_counted_as_trials: true
+method:
+  fit_window: ['2023-01-01', '2025-01-01']
+  holdout_window: ['2025-01-01', '2026-09-19']
+  baseline: momentum top-5 at 4h with 20-bar lookback, holdout Screen 3 2.957
+  selection_rule: none. Both windows reported. A conclusion is only drawn if the
+    ordering across intervals is consistent between them.
