@@ -1,84 +1,373 @@
 {
   "gate": "g4_deflated_sharpe",
   "passed": false,
-  "written_utc": "2026-09-19T06:39:12.483338+00:00",
-  "git_rev": "41c2be4a050aae5320d9facc38fc39f2aedf0169",
+  "written_utc": "2026-09-19T12:46:43.319269+00:00",
+  "git_rev": "1bee4b1ff9bee1e0e5c0ac1a77cca83af16bb2a2",
   "prereg_sha256_16": "1ecb91fdc34d2038",
   "thresholds": {
     "applicable": true,
     "min_dsr_probability": 0.95
   },
-  "trials_to_date": 131,
+  "trials_to_date": 351,
   "python": "3.12.2",
   "result": {
-    "n_trials": 131,
-    "trial_sharpes_sampled": 42,
-    "trial_sharpe_variance_per_obs": 0.00088663,
-    "expected_max_sharpe_under_null_per_obs": 0.078139,
-    "expected_max_sharpe_under_null_annual_365": 1.4928,
+    "n_trials": 351,
     "threshold_min_dsr": 0.95,
-    "candidates": {
-      "volume_trend_1d": {
-        "sharpe_per_obs": 0.04956883650507797,
-        "skew": 0.246,
-        "kurtosis": 13.1044,
-        "observations": 1357,
-        "z": -1.0546,
-        "dsr": 0.145812,
-        "sharpe_annual": 0.947,
-        "passes": false,
-        "min_track_record_obs": Infinity,
-        "min_track_record_years": null
+    "variance_note": "homogeneous_42 is the estimator established at N=131; wide_sample adds the low-timeframe channel trials",
+    "report": {
+      "homogeneous_42": {
+        "trial_sharpe_variance_per_obs": 0.00088663,
+        "counts": {
+          "n_1": {
+            "expected_max_sharpe_null_annual": 0.0,
+            "volume_trend_1d": {
+              "sharpe_annual": 0.9361,
+              "skew": 0.2774,
+              "kurtosis": 12.6963,
+              "observations": 1357,
+              "dsr": 0.964864,
+              "passes": true,
+              "min_track_record_obs": 1120.7
+            },
+            "xsec_momentum_8h": {
+              "sharpe_annual": 0.5941,
+              "skew": 1.4668,
+              "kurtosis": 28.3643,
+              "observations": 4071,
+              "dsr": 0.876849,
+              "passes": false,
+              "min_track_record_obs": 8193.2
+            },
+            "sma_trend_1d": {
+              "sharpe_annual": 0.3602,
+              "skew": 0.1722,
+              "kurtosis": 5.9837,
+              "observations": 1357,
+              "dsr": 0.756521,
+              "passes": false,
+              "min_track_record_obs": 7592.9
+            },
+            "donchian_breakout_1d": {
+              "sharpe_annual": 0.2645,
+              "skew": 0.0479,
+              "kurtosis": 38.3889,
+              "observations": 1357,
+              "dsr": 0.694811,
+              "passes": false,
+              "min_track_record_obs": 14131.8
+            },
+            "btc_hold_1d": {
+              "sharpe_annual": 1.147,
+              "skew": 0.4269,
+              "kurtosis": 6.4061,
+              "observations": 1357,
+              "dsr": 0.987264,
+              "passes": true,
+              "min_track_record_obs": 736.0
+            },
+            "donchian_4h_roostoo_top30": {
+              "sharpe_annual": 2.2061,
+              "skew": 1.7347,
+              "kurtosis": 11.7701,
+              "observations": 1358,
+              "dsr": 0.999998,
+              "passes": true,
+              "min_track_record_obs": 170.5
+            }
+          },
+          "n_21": {
+            "expected_max_sharpe_null_annual": 1.0934,
+            "volume_trend_1d": {
+              "sharpe_annual": 0.9361,
+              "skew": 0.2774,
+              "kurtosis": 12.6963,
+              "observations": 1357,
+              "dsr": 0.380427,
+              "passes": false,
+              "min_track_record_obs": null
+            },
+            "xsec_momentum_8h": {
+              "sharpe_annual": 0.5941,
+              "skew": 1.4668,
+              "kurtosis": 28.3643,
+              "observations": 4071,
+              "dsr": 0.005594,
+              "passes": false,
+              "min_track_record_obs": null
+            },
+            "sma_trend_1d": {
+              "sharpe_annual": 0.3602,
+              "skew": 0.1722,
+              "kurtosis": 5.9837,
+              "observations": 1357,
+              "dsr": 0.078482,
+              "passes": false,
+              "min_track_record_obs": null
+            },
+            "donchian_breakout_1d": {
+              "sharpe_annual": 0.2645,
+              "skew": 0.0479,
+              "kurtosis": 38.3889,
+              "observations": 1357,
+              "dsr": 0.055152,
+              "passes": false,
+              "min_track_record_obs": null
+            },
+            "btc_hold_1d": {
+              "sharpe_annual": 1.147,
+              "skew": 0.4269,
+              "kurtosis": 6.4061,
+              "observations": 1357,
+              "dsr": 0.541573,
+              "passes": false,
+              "min_track_record_obs": 336623.2
+            },
+            "donchian_4h_roostoo_top30": {
+              "sharpe_annual": 2.2061,
+              "skew": 1.7347,
+              "kurtosis": 11.7701,
+              "observations": 1358,
+              "dsr": 0.990538,
+              "passes": true,
+              "min_track_record_obs": 667.5
+            }
+          },
+          "n_351": {
+            "expected_max_sharpe_null_annual": 1.6751,
+            "volume_trend_1d": {
+              "sharpe_annual": 0.9361,
+              "skew": 0.2774,
+              "kurtosis": 12.6963,
+              "observations": 1357,
+              "dsr": 0.076485,
+              "passes": false,
+              "min_track_record_obs": null
+            },
+            "xsec_momentum_8h": {
+              "sharpe_annual": 0.5941,
+              "skew": 1.4668,
+              "kurtosis": 28.3643,
+              "observations": 4071,
+              "dsr": 3e-06,
+              "passes": false,
+              "min_track_record_obs": null
+            },
+            "sma_trend_1d": {
+              "sharpe_annual": 0.3602,
+              "skew": 0.1722,
+              "kurtosis": 5.9837,
+              "observations": 1357,
+              "dsr": 0.005575,
+              "passes": false,
+              "min_track_record_obs": null
+            },
+            "donchian_breakout_1d": {
+              "sharpe_annual": 0.2645,
+              "skew": 0.0479,
+              "kurtosis": 38.3889,
+              "observations": 1357,
+              "dsr": 0.003291,
+              "passes": false,
+              "min_track_record_obs": null
+            },
+            "btc_hold_1d": {
+              "sharpe_annual": 1.147,
+              "skew": 0.4269,
+              "kurtosis": 6.4061,
+              "observations": 1357,
+              "dsr": 0.151861,
+              "passes": false,
+              "min_track_record_obs": null
+            },
+            "donchian_4h_roostoo_top30": {
+              "sharpe_annual": 2.2061,
+              "skew": 1.7347,
+              "kurtosis": 11.7701,
+              "observations": 1358,
+              "dsr": 0.868675,
+              "passes": false,
+              "min_track_record_obs": 2927.1
+            }
+          }
+        }
       },
-      "xsec_momentum_8h": {
-        "sharpe_per_obs": 0.02537899875831974,
-        "skew": 1.2692,
-        "kurtosis": 21.2903,
-        "observations": 4071,
-        "z": -3.4157,
-        "dsr": 0.000318,
-        "sharpe_annual": 0.8398,
-        "passes": false,
-        "min_track_record_obs": Infinity,
-        "min_track_record_years": null
-      },
-      "sma_trend_1d": {
-        "sharpe_per_obs": 0.019108606314780452,
-        "skew": 0.1358,
-        "kurtosis": 5.9796,
-        "observations": 1357,
-        "z": -2.1761,
-        "dsr": 0.014776,
-        "sharpe_annual": 0.3651,
-        "passes": false,
-        "min_track_record_obs": Infinity,
-        "min_track_record_years": null
-      },
-      "donchian_breakout_1d": {
-        "sharpe_per_obs": 0.016704190062174037,
-        "skew": 0.2763,
-        "kurtosis": 37.1874,
-        "observations": 1357,
-        "z": -2.2646,
-        "dsr": 0.011768,
-        "sharpe_annual": 0.3191,
-        "passes": false,
-        "min_track_record_obs": Infinity,
-        "min_track_record_years": null
-      },
-      "btc_hold_1d": {
-        "sharpe_per_obs": 0.06003870853450408,
-        "skew": 0.4269,
-        "kurtosis": 6.4061,
-        "observations": 1357,
-        "z": -0.6735,
-        "dsr": 0.250302,
-        "sharpe_annual": 1.147,
-        "passes": false,
-        "min_track_record_obs": Infinity,
-        "min_track_record_years": null
+      "wide_sample": {
+        "trial_sharpe_variance_per_obs": 0.00154489,
+        "counts": {
+          "n_1": {
+            "expected_max_sharpe_null_annual": 0.0,
+            "volume_trend_1d": {
+              "sharpe_annual": 0.9361,
+              "skew": 0.2774,
+              "kurtosis": 12.6963,
+              "observations": 1357,
+              "dsr": 0.964864,
+              "passes": true,
+              "min_track_record_obs": 1120.7
+            },
+            "xsec_momentum_8h": {
+              "sharpe_annual": 0.5941,
+              "skew": 1.4668,
+              "kurtosis": 28.3643,
+              "observations": 4071,
+              "dsr": 0.876849,
+              "passes": false,
+              "min_track_record_obs": 8193.2
+            },
+            "sma_trend_1d": {
+              "sharpe_annual": 0.3602,
+              "skew": 0.1722,
+              "kurtosis": 5.9837,
+              "observations": 1357,
+              "dsr": 0.756521,
+              "passes": false,
+              "min_track_record_obs": 7592.9
+            },
+            "donchian_breakout_1d": {
+              "sharpe_annual": 0.2645,
+              "skew": 0.0479,
+              "kurtosis": 38.3889,
+              "observations": 1357,
+              "dsr": 0.694811,
+              "passes": false,
+              "min_track_record_obs": 14131.8
+            },
+            "btc_hold_1d": {
+              "sharpe_annual": 1.147,
+              "skew": 0.4269,
+              "kurtosis": 6.4061,
+              "observations": 1357,
+              "dsr": 0.987264,
+              "passes": true,
+              "min_track_record_obs": 736.0
+            },
+            "donchian_4h_roostoo_top30": {
+              "sharpe_annual": 2.2061,
+              "skew": 1.7347,
+              "kurtosis": 11.7701,
+              "observations": 1358,
+              "dsr": 0.999998,
+              "passes": true,
+              "min_track_record_obs": 170.5
+            }
+          },
+          "n_21": {
+            "expected_max_sharpe_null_annual": 1.4434,
+            "volume_trend_1d": {
+              "sharpe_annual": 0.9361,
+              "skew": 0.2774,
+              "kurtosis": 12.6963,
+              "observations": 1357,
+              "dsr": 0.163289,
+              "passes": false,
+              "min_track_record_obs": null
+            },
+            "xsec_momentum_8h": {
+              "sharpe_annual": 0.5941,
+              "skew": 1.4668,
+              "kurtosis": 28.3643,
+              "observations": 4071,
+              "dsr": 0.0001,
+              "passes": false,
+              "min_track_record_obs": null
+            },
+            "sma_trend_1d": {
+              "sharpe_annual": 0.3602,
+              "skew": 0.1722,
+              "kurtosis": 5.9837,
+              "observations": 1357,
+              "dsr": 0.018275,
+              "passes": false,
+              "min_track_record_obs": null
+            },
+            "donchian_breakout_1d": {
+              "sharpe_annual": 0.2645,
+              "skew": 0.0479,
+              "kurtosis": 38.3889,
+              "observations": 1357,
+              "dsr": 0.011577,
+              "passes": false,
+              "min_track_record_obs": null
+            },
+            "btc_hold_1d": {
+              "sharpe_annual": 1.147,
+              "skew": 0.4269,
+              "kurtosis": 6.4061,
+              "observations": 1357,
+              "dsr": 0.281916,
+              "passes": false,
+              "min_track_record_obs": null
+            },
+            "donchian_4h_roostoo_top30": {
+              "sharpe_annual": 2.2061,
+              "skew": 1.7347,
+              "kurtosis": 11.7701,
+              "observations": 1358,
+              "dsr": 0.946182,
+              "passes": false,
+              "min_track_record_obs": 1419.3
+            }
+          },
+          "n_351": {
+            "expected_max_sharpe_null_annual": 2.2111,
+            "volume_trend_1d": {
+              "sharpe_annual": 0.9361,
+              "skew": 0.2774,
+              "kurtosis": 12.6963,
+              "observations": 1357,
+              "dsr": 0.006837,
+              "passes": false,
+              "min_track_record_obs": null
+            },
+            "xsec_momentum_8h": {
+              "sharpe_annual": 0.5941,
+              "skew": 1.4668,
+              "kurtosis": 28.3643,
+              "observations": 4071,
+              "dsr": 0.0,
+              "passes": false,
+              "min_track_record_obs": null
+            },
+            "sma_trend_1d": {
+              "sharpe_annual": 0.3602,
+              "skew": 0.1722,
+              "kurtosis": 5.9837,
+              "observations": 1357,
+              "dsr": 0.000177,
+              "passes": false,
+              "min_track_record_obs": null
+            },
+            "donchian_breakout_1d": {
+              "sharpe_annual": 0.2645,
+              "skew": 0.0479,
+              "kurtosis": 38.3889,
+              "observations": 1357,
+              "dsr": 8.8e-05,
+              "passes": false,
+              "min_track_record_obs": null
+            },
+            "btc_hold_1d": {
+              "sharpe_annual": 1.147,
+              "skew": 0.4269,
+              "kurtosis": 6.4061,
+              "observations": 1357,
+              "dsr": 0.019106,
+              "passes": false,
+              "min_track_record_obs": null
+            },
+            "donchian_4h_roostoo_top30": {
+              "sharpe_annual": 2.2061,
+              "skew": 1.7347,
+              "kurtosis": 11.7701,
+              "observations": 1358,
+              "dsr": 0.495791,
+              "passes": false,
+              "min_track_record_obs": null
+            }
+          }
+        }
       }
     },
-    "surviving": []
+    "surviving_at_full_count": []
   }
 }

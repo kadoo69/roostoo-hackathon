@@ -57,6 +57,31 @@ def min_track_record_length(returns: pd.Series, sr_benchmark: float,
     return 1.0 + denom * (z / (sr - sr_benchmark)) ** 2
 
 
+def selected_donchian() -> pd.Series:
+    from data import flow, universe
+    from signals import donchian
+
+    costs = CostModel.from_prereg()
+    p4 = flow.panel("4h")
+    close = p4["close"]
+    spreads = daily.half_spread_bps(close, floor=daily.venue_tick_floor())
+    pdl = daily.build()
+    base = universe.membership(universe.load_panel("1h")).reindex(
+        pdl["close"].index).fillna(False)
+    trad = sorted(set(universe.tradable_symbols()) & set(close.columns)
+                  - universe.STABLES)
+    rmask = pd.DataFrame(False, index=close.index, columns=close.columns)
+    rmask[trad] = True
+    sel = universe.pit_top_n(pdl, base, top_n=30).reindex(
+        close.index, method="ffill").fillna(False) & rmask
+    w = donchian.position(close, 20, "lowchannel", 10).where(sel, 0.0) / 20.0
+    g = w.abs().sum(axis=1)
+    w = w.div(np.maximum(1.0, g), axis=0)
+    net, _, _ = run(w.loc[SPLIT:], close.loc[SPLIT:], spreads.loc[SPLIT:],
+                    costs, "LIMIT", PERIODS_PER_YEAR["4h"])
+    return ((1.0 + net.fillna(0.0)).resample("1D").prod() - 1.0).dropna()
+
+
 def candidate_returns() -> dict[str, tuple[pd.Series, int]]:
     from core.config import prereg
 
@@ -80,6 +105,7 @@ def candidate_returns() -> dict[str, tuple[pd.Series, int]]:
     btc.loc[c1["BTCUSDT"].dropna().index, "BTCUSDT"] = 1.0
     net, _, _ = run(btc.loc[SPLIT:], c1.loc[SPLIT:], sp1.loc[SPLIT:], costs, "LIMIT", 365)
     out["btc_hold_1d"] = (net.dropna(), 365)
+    out["donchian_4h_roostoo_top30"] = (selected_donchian(), 365)
     return out
 
 
@@ -99,34 +125,68 @@ def trial_sharpe_sample() -> np.ndarray:
     return pd.concat(frames).to_numpy() if frames else np.array([])
 
 
+HOMOGENEOUS_VARIANCE = 0.00088663
+
+
+def wide_trial_sample() -> np.ndarray:
+    frames = [pd.Series(trial_sharpe_sample())]
+    try:
+        f = pd.read_json("results/donchian_lowtf.json")
+        rows = pd.DataFrame(list(f["results"]))
+        rows = rows[rows["mode"] != "benchmark"]
+        frames.append((rows["daily_sharpe"] / np.sqrt(365)).dropna())
+    except (ValueError, KeyError):
+        pass
+    return pd.concat(frames).to_numpy()
+
+
 def main() -> int:
     cfg = gate_config(GATE)
     artifacts.require_passed("g1_data_integrity")
 
-    sample = trial_sharpe_sample()
     n = trial_count()
-    sr0 = expected_max_sharpe(sample, n)
+    candidates = candidate_returns()
 
-    results = {}
-    for name, (net, ppy) in candidate_returns().items():
-        d = deflated_sharpe(net, sr0)
-        d["sharpe_annual"] = round(d["sharpe_per_obs"] * np.sqrt(ppy), 4)
-        d["passes"] = bool(d["dsr"] >= cfg["min_dsr_probability"])
-        d["min_track_record_obs"] = round(min_track_record_length(net, sr0), 1)
-        d["min_track_record_years"] = (round(d["min_track_record_obs"] / ppy, 2)
-                                       if np.isfinite(d["min_track_record_obs"]) else None)
-        results[name] = d
+    variants = {
+        "homogeneous_42": HOMOGENEOUS_VARIANCE,
+        "wide_sample": float(np.var(wide_trial_sample(), ddof=1)),
+    }
 
-    passed = any(v["passes"] for k, v in results.items() if k != "btc_hold_1d")
+    report = {}
+    for vname, var in variants.items():
+        block = {"trial_sharpe_variance_per_obs": round(var, 8), "counts": {}}
+        for n_trials in (1, 21, n):
+            a = stats.norm.ppf(1.0 - 1.0 / n_trials) if n_trials >= 2 else 0.0
+            b = stats.norm.ppf(1.0 - 1.0 / (n_trials * np.e)) if n_trials >= 2 else 0.0
+            sr0 = (np.sqrt(var) * ((1.0 - EULER) * a + EULER * b)
+                   if n_trials >= 2 else 0.0)
+            row = {"expected_max_sharpe_null_annual": round(sr0 * np.sqrt(365), 4)}
+            for name, (net, ppy) in candidates.items():
+                d = deflated_sharpe(net, sr0)
+                mt = min_track_record_length(net, sr0)
+                row[name] = {
+                    "sharpe_annual": round(d["sharpe_per_obs"] * np.sqrt(ppy), 4),
+                    "skew": d.get("skew"), "kurtosis": d.get("kurtosis"),
+                    "observations": d["observations"], "dsr": d["dsr"],
+                    "passes": bool(d["dsr"] >= cfg["min_dsr_probability"]),
+                    "min_track_record_obs": (None if not np.isfinite(mt)
+                                             else round(mt, 1)),
+                }
+            block["counts"][f"n_{n_trials}"] = row
+        report[vname] = block
+
+    headline = report["homogeneous_42"]["counts"][f"n_{n}"]
+    passed = any(v["passes"] for k, v in headline.items()
+                 if isinstance(v, dict) and k != "btc_hold_1d")
     artifacts.write(GATE, passed, {
         "n_trials": n,
-        "trial_sharpes_sampled": int(sample.size),
-        "trial_sharpe_variance_per_obs": round(float(np.var(sample, ddof=1)), 8),
-        "expected_max_sharpe_under_null_per_obs": round(sr0, 6),
-        "expected_max_sharpe_under_null_annual_365": round(sr0 * np.sqrt(365), 4),
         "threshold_min_dsr": cfg["min_dsr_probability"],
-        "candidates": results,
-        "surviving": [k for k, v in results.items() if v["passes"] and k != "btc_hold_1d"],
+        "variance_note": "homogeneous_42 is the estimator established at N=131; "
+                         "wide_sample adds the low-timeframe channel trials",
+        "report": report,
+        "surviving_at_full_count": [
+            k for k, v in headline.items()
+            if isinstance(v, dict) and v["passes"] and k != "btc_hold_1d"],
     })
     return 0 if passed else 1
 

@@ -841,3 +841,47 @@ Fit period 2023-01-01 to 2025-01-01 gave 105.7% a year at a Sharpe of 2.94 and a
 
 This is the first configuration in the repo that beats the benchmark on the composite in both halves of the out-of-sample record.
 Deflation against the trial ledger has not been rerun and the count has risen materially, so the Gate 4 verdict at `DECISIONS.md#paper-ensemble-trial-count` should be recomputed before this is treated as established.
+
+## gate4-rerun-outcome
+
+Gate 4 was rerun on 2026-09-19 with the selected 4h channel included, and it fails at the honest trial count of 351 while failing differently from everything before it.
+
+The candidate's out-of-sample record from 2023-01-01 is 1358 daily observations at an annualised Sharpe of 2.206, a skew of +1.73 and a kurtosis of 11.77.
+Against the trial-Sharpe variance of 0.00088663 established at N=131, the expected maximum Sharpe obtainable by chance across 351 trials is 1.675 annualised.
+The Deflated Sharpe Ratio is 0.8687 against the pre-registered threshold of 0.95.
+
+Three things separate this from the previous verdict at `DECISIONS.md#gate4-outcome`.
+
+The observed Sharpe exceeds the null's expected maximum for the first time.
+Every prior candidate sat below it, which is why each one's minimum track record length was infinite: no quantity of additional data can establish a Sharpe that is beneath what the search alone would produce.
+This candidate sits 0.53 above the null, so its minimum track record length is finite at 2927 observations, or 8.0 years of daily returns against the 3.7 years it currently has.
+The claim is not refuted by the data, it is unproven by it.
+
+It also passes at the trial count of its own selection.
+Twenty-one universe constructions were evaluated to arrive at this configuration, and at N=21 the Deflated Sharpe Ratio is 0.9905.
+That is not the number the gate uses and it is not being promoted to one. The repo's policy at `DECISIONS.md#trial-counting` counts every configuration ever evaluated because each consumed the family-wise budget, and by that policy the answer is 351 and the verdict is failure.
+
+The honest-count-of-one argument that rescued the paper ensemble at `DECISIONS.md#paper-ensemble-trial-count` does not apply here and is not being attempted.
+That strategy's parameters were published by someone else before this data was touched.
+This one's interval, lookback, exit rule and universe pool were all chosen here, by looking at results. It is a search product and must be counted as one.
+
+## gate4-variance-estimator
+
+Two estimators of the trial-Sharpe variance are reported because the volume family's fastest configurations are not draws from the null the gate assumes.
+
+The Deflated Sharpe Ratio models trial Sharpes as draws from a common distribution centred near zero.
+The 1h volume configurations have annualised Sharpes near -21, which is not a draw from any such distribution: it is the arithmetic of paying 660% of NAV a year in fees. Including them would inflate the variance and therefore the hurdle, making the gate harder for reasons that have nothing to do with how much searching was done.
+
+The headline uses the homogeneous estimator of 0.00088663 established at N=131, which keeps the gate comparable to its previous run.
+A wider estimator including the low-timeframe channel trials gives 0.00154489, raising the expected maximum under the null from 1.675 to 2.211 and the candidate's Deflated Sharpe Ratio falls from 0.8687 to 0.4958.
+Both fail. Reporting only the one that fails less would be the error this entry exists to prevent.
+
+## gate4-standing-verdict
+
+No strategy in this repo has passed Gate 4 at its honest trial count, and the pre-registered threshold is not being moved to change that.
+
+The selected 4h channel is the strongest candidate produced across 351 trials, on every measure the repo tracks: the highest out-of-sample Sharpe at 2.206, the highest skew at +1.73, the only finite minimum track record length, the only configuration to beat the benchmark on the Screen 3 composite in both halves of the out-of-sample record, and the highest joint probability of clearing the Screen 2 return cut while outscoring buy-and-hold on the composite.
+It is also unvalidated by the standard this repo set for itself before any of it was run.
+
+Those two statements are both true and neither cancels the other.
+The competition entry is a decision under a deadline rather than a deployment decision, and the gate's purpose is to keep the distinction visible: what follows is a bet on the best candidate available, not a strategy demonstrated to have edge.
