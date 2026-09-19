@@ -675,3 +675,11 @@ trials:
   config: top20_unsized_scalar_capped_MARKET_exploratory
   status: exploratory_discarded
   screen3_oos: null
+- gate: competition_window
+  config: btc_core50_conv
+  mechanism: permanent BTC core plus conviction-scaled sleeve
+  floor_source: roostoo_plan.md section 2.3 cash buffer
+- gate: competition_window
+  config: btc_core70_conv
+  mechanism: permanent BTC core plus conviction-scaled sleeve
+  floor_source: roostoo_plan.md section 2.3 cash buffer

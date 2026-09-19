@@ -601,3 +601,53 @@ This sharpens the caveat already recorded at `DECISIONS.md#screen-tension-quanti
 On that measure the ranking inverts everything the full-sample composite says.
 BTC buy-and-hold finishes positive in 55.5% of windows and clears the 5% return proxy in 29.8%, against 45.2% and 16.8% for the best-scoring ensemble configuration.
 The strategy with the best Sharpe, Sortino and Calmar over nine years is the one less likely to be scored at all, and optimising the composite harder makes that worse rather than better.
+
+## competition-window-outcome
+
+Tested on the actual shape of the competition rather than on a nine-year record, the ensemble fails, and the paired comparison is what settles it.
+
+Every contiguous 14-day window in the out-of-sample period was scored exactly as the two screens would score it: raw return for Screen 2, and the 0.4/0.3/0.3 weighted composite computed from the fourteen daily returns for Screen 3.
+Each window was then compared against BTC buy-and-hold *over the same fourteen days*, which is the only comparison the competition actually makes.
+
+Across 1345 out-of-sample windows, the best candidate beat buy-and-hold on raw return in 34.3% of them and on the Screen 3 composite in 10.3%.
+The joint event that decides the competition, clearing the Screen 2 return cut and outscoring passive BTC on the composite, occurred in 0.2% of windows.
+No configuration tested reached 5.2% on that joint measure, including the top-20 book and both core-plus-sleeve blends.
+
+The full-period Screen 3 advantage recorded at `DECISIONS.md#paper-ensemble-outcome` is therefore real and irrelevant.
+A Screen 3 of 1.632 against 1.364 is a statement about nine years of compounding, in which avoided drawdowns accumulate into a better ratio.
+At 14-day resolution the same strategy scores a median composite of -2.67 against buy-and-hold's +3.73, because the composite over fourteen observations is governed by the sign of the window and the ensemble's median 14-day return is -0.17% against buy-and-hold's +0.86%.
+The mechanism that wins over years is invisible over a fortnight.
+
+## beta-is-the-only-screen3-lever
+
+The two screens are not merely in tension, they are collinear over a 14-day window, which closes off the design the plan proposed.
+
+Within a fortnight the composite is a function of the sign of the return, the sign of the return is a function of exposure to BTC, and so any reduction in beta reduces P(positive), P(clearing the return cut) and the composite together rather than trading one against another.
+The core-plus-sleeve blends make this explicit by construction: at a 70% permanent core the full-period composite is 1.385 and P(return above 5%) is 26.0%, at a 50% core they are 1.393 and 23.3%, and at pure conviction sizing they are 1.632 and 17.2%.
+The composite rises monotonically as qualification probability falls, across the whole range, with no interior point where both improve.
+
+This is the quantitative refutation of Section 1 of the plan, which claimed that an asymmetric payoff serves both screens simultaneously because Sortino leaves upside unpenalised.
+It is true that Sortino does not penalise upside. It is false that this creates a design in which shape can be improved without surrendering tail exposure, because over fourteen observations the downside deviation that Sortino measures and the right tail that Screen 2 requires are both produced by the same beta.
+
+## entry-state-conditioning-does-not-replicate
+
+Conditioning on the ensemble's conviction at the start of the window looked exploitable out of sample and reversed after publication, so it is not used.
+
+Out of sample from 2023 the relationship is monotonic: windows entered with seven or more of the nine channels open cleared the 5% return proxy 24.9% of the time at a median composite of +1.67, against 15.6% and -2.75 for windows entered with fewer than two open.
+That is an attractive result and it would be actionable, because conviction on the morning of 4 October is observable in advance rather than something to forecast.
+
+In the post-publication window it inverts.
+The highest conviction bucket produced a median return of -1.77%, cleared the proxy 8.0% of the time, and scored a median composite of -4.26, the worst of the four buckets.
+The bucket holds 25 windows, which is too few to establish the reversal as a fact, but it is also far too few to defend the original relationship as anything other than the in-sample pattern it was found in.
+Recorded here so that a future cycle does not rediscover the 2023-2025 monotonicity and treat it as a filter.
+
+## competition-live-state
+
+As of 2026-09-19, five of the nine Donchian channels on BTC are open, conviction stands at 0.556, and the volatility-targeted book would hold 95.1% gross exposure. Nineteen of the twenty top-20 names carry a signal.
+
+This matters more than any backtest statistic for the fortnight in question.
+At 95% gross exposure the ensemble is not a meaningfully different position from holding BTC; it is holding BTC with a stop attached.
+If the competition began today the two entries would track each other closely, and would diverge only if BTC broke down during the window.
+
+Stated as the actual decision rather than as a ranking: the cost of attaching the stop is 13 percentage points of qualification probability, 17.2% against 30.3% at the 5% proxy, and the benefit is a median 14-day drawdown of 2.9% against 5.5% and a worst observed 14-day outcome of -10.1% against -29.8%.
+That is a real trade and the right side of it depends on where the regional top-20 cut lands, which is unknowable in advance. It is not a trade that the Screen 3 composite rewards.
