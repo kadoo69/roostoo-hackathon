@@ -1119,3 +1119,21 @@ The rule reproduces on all three counts.
 One column in the first version of the scan was mislabelled.
 `roostoo_vs_binance_bps` compared a live Roostoo ticker against a bar close up to four hours stale, so its 300 to 400 bps readings measured price drift since that bar, not mirror error.
 It is renamed `drift_since_bar_close_bps`. The bot's own mirror check uses fresh one-minute klines and has stayed below 6 bps throughout.
+
+## trade-blotter
+
+Order records alone do not show what the strategy earned, so `bot/blotter.py` reconstructs round-trip trades from them by FIFO lot matching.
+
+The journal records intent and acknowledgement per order, which is what Screen 1 audits, but it cannot answer whether a position made money.
+The blotter pairs each sell against the oldest open buy lot for that symbol, apportions both legs' fees to the matched quantity, and emits realised gross and net profit, return percentage, holding period and the role each leg filled as.
+Lots still open are reported separately rather than marked to market, so realised and unrealised are never mixed in one figure.
+
+Fees come from the venue's reported `CommissionPercent` where a real fill supplied one, and fall back to the configured schedule only for dry-run fills.
+This matters because `DECISIONS.md#costs` records that the README and the organizer disagree about commission by a factor of eight, and the blotter is where the answer becomes visible once real fills exist.
+
+Two accounting identities are checked and must hold: quantity bought equals quantity closed plus quantity still open, and quantity sold equals quantity closed.
+Both held exactly on first evaluation, against 10 fills for bot A and 19 for bot B.
+A breach means the blotter and the venue have diverged, which is a reconciliation failure rather than a reporting one.
+
+First realised trades, both from bot B at 1h bars, were AVAX at +0.793% net over 1.06 hours and WLD at +0.319% net over 0.67 hours.
+Fees consumed 12.4% of gross profit on those two, which is the cost drag of the fast configuration showing up in realised terms exactly as the backtest predicted and is the reason bot A was selected.

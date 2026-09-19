@@ -52,5 +52,6 @@ case "${1:-start}" in
     echo "  worker processes: $(pgrep -f 'bot.run config' | wc -l | tr -d ' ')"
     ;;
   report) shift; exec "$PY" -m bot.status "$@" ;;
-  *) echo "usage: $0 {start|stop|restart|status|report}"; exit 2 ;;
+  trades) shift; exec "$PY" -m bot.blotter --csv "$@" ;;
+  *) echo "usage: $0 {start|stop|restart|status|report|trades}"; exit 2 ;;
 esac

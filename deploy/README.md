@@ -44,6 +44,23 @@ This evaluates the pre-registered shadow conditions: three distinct days of
 operation, live-versus-backtest signal agreement at or above 0.95, median fill
 deviation within 5 bps, no unexplained halts and no errors.
 
+## Trade tracking
+
+    ./run_bots.sh trades
+
+Reconstructs round-trip trades from the order journal by FIFO lot matching and
+reports realised P&L, fees, win rate, payoff ratio, profit factor, expectancy
+and holding period, alongside the lots still open.
+`--csv` also writes `live/<bot>/trades_closed.csv` and `trades_open.csv`, which
+are the structured trade logs Section 7 requires as the Screen 1 audit trail.
+
+Two accounting identities are checkable at any time and should always hold:
+quantity bought equals quantity closed plus quantity still open, and quantity
+sold equals quantity closed. A breach means the blotter and the venue disagree.
+
+Fees are taken from the venue's reported `CommissionPercent` where a real fill
+supplied one, and fall back to the configured schedule only for dry-run fills.
+
 ## State and restart safety
 
 Position state, cash, universe and last processed bar persist to
