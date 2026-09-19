@@ -481,3 +481,42 @@ Selecting on Screen 3 alone systematically selects against Screen 2, and the exp
 One caveat limits how far this can be pushed.
 Conditional on a window clearing the return threshold, the median Screen 3 score ran between 37 and 143 across families, because annualising Sortino and Calmar over fourteen observations produces very large numbers whenever the path is smooth.
 Discrimination between qualifying teams on Screen 3 may therefore be dominated by path noise rather than by strategy quality, which argues for prioritising qualification over ratio optimisation.
+
+## gate4-outcome
+
+Gate 4 failed for every candidate on 2026-09-19, and the single number that decides it is the expected maximum Sharpe under the null.
+
+Across 131 trials, with a per-observation trial-Sharpe variance of 0.00088663 estimated from 42 homogeneous out-of-sample runs, the expected maximum Sharpe obtainable by chance alone is 0.07814 per observation, or 1.493 annualised.
+No candidate reached it.
+Volume-gated trend at daily bars, the strongest constructed strategy in the repo, has an annualised Sharpe of 0.947 and a Deflated Sharpe Ratio of 0.146 against a 0.95 threshold.
+
+The required Sharpe to clear the gate at this trial count is 2.353 for that strategy, a gap of 1.406, and the minimum track record length is infinite because its observed Sharpe sits below the null's expected maximum.
+No quantity of additional data fixes that; only a smaller search would.
+
+The sensitivity to trial count is the instructive part.
+The same strategy and the same return series would have produced a Deflated Sharpe Ratio of 0.966 and passed if it had been the first and only configuration tested, 0.896 at two trials, 0.698 at five, and 0.398 at twenty.
+The edge did not disappear between those points, the evidence for it did.
+A search of 131 configurations cannot distinguish this result from the best of 131 coin flips.
+
+## btc-benchmark-trial-count
+
+Applying the 131-trial deflation to BTC buy-and-hold is incorrect and the correct treatment changes its verdict.
+
+BTC buy-and-hold was not selected from a search.
+It was fixed in advance as the benchmark, its honest trial count is one, and at one trial its Deflated Sharpe Ratio is 0.9873, which passes.
+Under the 131-trial deflation it scores 0.2503 and fails alongside everything else.
+
+This is not a technicality, it is the whole finding stated precisely.
+The one strategy in this repo with defensible statistical support is the one nobody searched for, and it beat every constructed alternative on out-of-sample Screen 3, on probability of clearing the Screen 2 return cut, and on expected value.
+
+The asymmetry is the cost of searching.
+Every configuration tested raised the bar for all the others, and a hundred and thirty-one attempts to beat a passive benchmark produced nothing that survives being counted honestly.
+
+## kurtosis-penalty
+
+Fat tails made the gate materially harder and are worth noting for any future cycle.
+
+Observed kurtosis ran 5.98 for plain trend, 13.10 for volume-gated trend, 21.29 for cross-sectional momentum at eight-hour bars, and 37.19 for breakout.
+The Deflated Sharpe Ratio penalises kurtosis through its denominator, so cross-sectional momentum needed an annualised Sharpe of 3.405 to pass against 2.353 for volume-gated trend, despite a similar observed Sharpe.
+
+A strategy whose returns arrive in rare large moves requires substantially more evidence to establish the same claim, which is an argument for preferring smoother return streams at equal Sharpe rather than only at equal drawdown.

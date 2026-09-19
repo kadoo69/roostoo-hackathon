@@ -1,0 +1,84 @@
+{
+  "gate": "g4_deflated_sharpe",
+  "passed": false,
+  "written_utc": "2026-09-19T06:39:12.483338+00:00",
+  "git_rev": "41c2be4a050aae5320d9facc38fc39f2aedf0169",
+  "prereg_sha256_16": "1ecb91fdc34d2038",
+  "thresholds": {
+    "applicable": true,
+    "min_dsr_probability": 0.95
+  },
+  "trials_to_date": 131,
+  "python": "3.12.2",
+  "result": {
+    "n_trials": 131,
+    "trial_sharpes_sampled": 42,
+    "trial_sharpe_variance_per_obs": 0.00088663,
+    "expected_max_sharpe_under_null_per_obs": 0.078139,
+    "expected_max_sharpe_under_null_annual_365": 1.4928,
+    "threshold_min_dsr": 0.95,
+    "candidates": {
+      "volume_trend_1d": {
+        "sharpe_per_obs": 0.04956883650507797,
+        "skew": 0.246,
+        "kurtosis": 13.1044,
+        "observations": 1357,
+        "z": -1.0546,
+        "dsr": 0.145812,
+        "sharpe_annual": 0.947,
+        "passes": false,
+        "min_track_record_obs": Infinity,
+        "min_track_record_years": null
+      },
+      "xsec_momentum_8h": {
+        "sharpe_per_obs": 0.02537899875831974,
+        "skew": 1.2692,
+        "kurtosis": 21.2903,
+        "observations": 4071,
+        "z": -3.4157,
+        "dsr": 0.000318,
+        "sharpe_annual": 0.8398,
+        "passes": false,
+        "min_track_record_obs": Infinity,
+        "min_track_record_years": null
+      },
+      "sma_trend_1d": {
+        "sharpe_per_obs": 0.019108606314780452,
+        "skew": 0.1358,
+        "kurtosis": 5.9796,
+        "observations": 1357,
+        "z": -2.1761,
+        "dsr": 0.014776,
+        "sharpe_annual": 0.3651,
+        "passes": false,
+        "min_track_record_obs": Infinity,
+        "min_track_record_years": null
+      },
+      "donchian_breakout_1d": {
+        "sharpe_per_obs": 0.016704190062174037,
+        "skew": 0.2763,
+        "kurtosis": 37.1874,
+        "observations": 1357,
+        "z": -2.2646,
+        "dsr": 0.011768,
+        "sharpe_annual": 0.3191,
+        "passes": false,
+        "min_track_record_obs": Infinity,
+        "min_track_record_years": null
+      },
+      "btc_hold_1d": {
+        "sharpe_per_obs": 0.06003870853450408,
+        "skew": 0.4269,
+        "kurtosis": 6.4061,
+        "observations": 1357,
+        "z": -0.6735,
+        "dsr": 0.250302,
+        "sharpe_annual": 1.147,
+        "passes": false,
+        "min_track_record_obs": Infinity,
+        "min_track_record_years": null
+      }
+    },
+    "surviving": []
+  }
+}
