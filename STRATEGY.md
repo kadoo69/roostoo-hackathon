@@ -122,14 +122,30 @@ The first live reading on 2026-09-19 was **0.9 bps** of deviation, and the bot h
 
 All figures are net of a 5 bps maker fee, computed from daily-compounded returns.
 
-| | Out-of-sample 2023+ | Recent 2025+ | BTC buy-and-hold 2023+ |
-|---|---|---|---|
-| CAGR | **80.8%** | 55.5% | 53.1% |
-| Sharpe | **2.21** | 1.54 | 1.15 |
-| Sortino | **4.28** | 2.94 | 1.79 |
-| Calmar | **4.58** | 3.14 | 1.00 |
-| Max drawdown | **-17.7%** | -17.7% | -53.0% |
-| Screen 3 composite | **3.745** | 2.582 | 1.361 |
+| | Full history 2017-08+ | Out-of-sample 2023+ | Recent 2025+ | BTC hold 2023+ |
+|---|---|---|---|---|
+| CAGR | **88.7%** | 80.8% | 55.5% | 53.1% |
+| Sharpe | **1.84** | 2.21 | 1.54 | 1.15 |
+| Sortino | **3.26** | 4.28 | 2.94 | 1.79 |
+| Max drawdown | **-38.1%** | -17.7% | -17.7% | -53.0% |
+| Screen 3 composite | - | 3.745 | 2.582 | 1.361 |
+
+**Quote the full-history drawdown, not the 2023+ one.**
+The 2023-onward window contains no crypto winter, so its -17.7% understates the risk by roughly half.
+Over the full record including 2018 and 2022 the maximum drawdown is **-38.1%**, and every Calmar computed on the shorter window is correspondingly optimistic.
+
+### Behaviour by market regime
+
+Partitioning the full history by BTC against its 200-day average and its trailing 90-day return:
+
+| Regime | Share of days | Strategy CAGR | Sharpe | BTC hold CAGR | BTC hold Sharpe |
+|---|---|---|---|---|---|
+| Bull | 36.7% | +307.2% | 3.26 | +367.2% | 2.85 |
+| **Bear** | 32.5% | **+20.4%** | **0.71** | **-69.1%** | **-1.32** |
+| Range | 24.8% | +23.7% | 0.78 | +12.6% | 0.49 |
+
+The bear column is the strongest evidence in this project that the mechanism is real rather than a bull-market artifact.
+A long-only system stays positive through a crypto winter by being in cash, which is exactly what the exit rule and the fractional sizing exist to produce.
 
 Behaviour over 1,345 rolling 14-day windows, which is the shape the competition actually scores:
 
@@ -166,9 +182,32 @@ This is the reason a 1h intraday variant was built and rejected: it scores compa
 **Look-ahead control.** Inserting extra bars of delay between signal and execution degrades performance smoothly rather than collapsing it, at Sharpe 2.00, 1.95 and 1.91 for zero, one and two bars of added lag.
 A look-ahead artifact dies at the first bar of delay; a real effect decays in proportion to the edge surrendered.
 
+**Parameter sensitivity.** Across a 5x5 grid of entry windows from 12 to 28 bars and exit windows from 6 to 14, all 25 configurations produced a positive net Sharpe between 1.48 and 2.02.
+The surface is a plateau, not a spike.
+The selected 20/10 is deliberately **not** the peak, which sits at 28/14 with a Sharpe of 2.02 against 20/10's 1.84; 20/10 was chosen for the 14-day window before the grid was computed, so the selection did not follow the surface.
+
+**Walk-forward.** Seven anchored folds from 2019 to 2025, with no refitting at any point, were profitable out of sample in all seven years, at a median out-of-sample to in-sample Sharpe ratio of 1.164.
+
 **Live implementation parity.** The live signal is an incremental state machine and the backtest is a vectorised array operation, written separately.
 Replayed bar by bar over 199 bars and 22 symbols, they agree on all **3,938 cells with zero mismatches**.
 Without this check no backtest number would transfer to the live bot.
+
+---
+
+## 7b. Validation gate scorecard
+
+| Gate | Status | Note |
+|---|---|---|
+| G1 data integrity | **PASS** | survivorship-free panel, repairs registered |
+| G2 parameter sensitivity | **PASS** | plateau, all 25 grid points positive |
+| G3 combinatorial purged CV | not run | |
+| G4 deflated Sharpe | **FAIL** | 0.8687 vs 0.95 at 351 trials |
+| G5 probability of overfitting | not run | |
+| G6 walk-forward | **PASS** | 7/7 folds positive, ratio 1.164 |
+| G7 cost-adjusted | partial | fee sensitivity done, gate not formalised |
+| G8 regime | **FAIL** | positive in 3/3 regimes; worst DD 38.97% vs 25% limit |
+| G9 capacity | N/A | no orderbook depth on venue |
+| G10 shadow | **running** | needs 3 live days; parity 1.0, fills untested |
 
 ---
 
