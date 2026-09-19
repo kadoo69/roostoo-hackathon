@@ -72,6 +72,7 @@ class RoostooClient:
         self.max_retries = max_retries
         self.session = requests.Session()
         self.time_offset_ms = 0
+        self.last_ticker_server_time_ms: int | None = None
 
     def _sign(self, params: dict[str, Any]) -> str:
         if not self.secret:
@@ -129,7 +130,9 @@ class RoostooClient:
         params: dict[str, Any] = {"timestamp": self._timestamp()}
         if pair:
             params["pair"] = pair
-        return self._request("GET", "/v3/ticker", params)["Data"]
+        payload = self._request("GET", "/v3/ticker", params)
+        self.last_ticker_server_time_ms = int(payload["ServerTime"])
+        return payload["Data"]
 
     def balance(self) -> dict:
         return self._request("GET", "/v3/balance", signed=True)["Wallet"]

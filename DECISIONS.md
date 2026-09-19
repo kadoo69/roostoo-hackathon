@@ -947,3 +947,72 @@ The consequence was not confined to Sortino: the Screen 3 composite caps each te
 
 The fix restores the annualisation used in `portfolio/backtest.py`, and the benchmark now reproduces its established values exactly.
 The lesson recorded is procedural: every new metric implementation is checked against a series whose answer is already known before any of its output is read.
+
+## gate8-regime-outcome
+
+Gate 8 fails on drawdown and passes on every other criterion, and the failure corrects a number that the 2023-onward window had understated by half.
+
+Partitioning the full history from 2017-08-17 by BTC's position against its 200-day average and its trailing 90-day return, the strategy is profitable in all three regimes: 307.2% a year in bull, 20.4% in bear and 23.7% in range, against a pre-registered requirement of positive in two.
+The bear-regime result is the substantive finding.
+Over the 32.5% of days classified bear, the strategy returned +20.4% at a Sharpe of 0.71 while BTC buy-and-hold returned -69.1% at a Sharpe of -1.32.
+A long-only system achieves that by being in cash, which is what the exit rule and the fractional sizing exist to produce, and it is the strongest evidence in this repo that the mechanism is real rather than a bull-market artifact.
+
+The gate fails because the worst regime drawdown is 38.97% against a pre-registered limit of 25%.
+The threshold is not being moved.
+
+The more important consequence is that the headline drawdown figure changes.
+Measured from 2023 the maximum drawdown is 17.7%; measured over the full history including the 2018 crypto winter and the 2022 bear it is 38.1%.
+Every Calmar figure computed on the 2023-onward window is therefore optimistic, and `STRATEGY.md` has been corrected to carry both.
+The competition runs for fourteen days and a 38% drawdown is not a fortnight event, but the number a submission quotes should be the one measured over the longest available record.
+
+## gate2-donchian-outcome
+
+Gate 2 passes, and the shape of the parameter surface is the useful part rather than the verdict.
+
+Across a five by five grid of entry windows from 12 to 28 bars and exit windows from 6 to 14, every one of the 25 configurations produced a positive net Sharpe, ranging from 1.48 to 2.02.
+The minimum neighbour of the selected point is 75.2% of the peak against a required 50%, and the peak isolation score is 0.103 against a permitted 0.35.
+This is a plateau, not a spike, which is the opposite of the signature recorded for `sma_crossover` at `DECISIONS.md#trend-family-outcome`.
+
+The selected configuration is not the peak, and that fact does more for the overfitting argument than the gate result does.
+20/10 scores 1.84 while the grid maximum of 2.02 sits at 28/14, and the surface improves monotonically toward slower parameters on full-sample Sharpe.
+20/10 was chosen for the fourteen-day window, because a 3.3-day channel completes several cycles inside a fortnight where a 20-day channel completes one, and that reasoning was fixed before this grid was computed.
+Selection therefore demonstrably did not follow the surface, and the 25 grid points are recorded as sensitivity rather than as candidate search.
+
+## gate6-walk-forward-outcome
+
+Gate 6 passes with no refitting anywhere in the procedure, which makes it a weaker test than its name suggests and a cleaner one than most.
+
+Seven anchored folds from 2019 to 2025 each expand the in-sample window and evaluate the following calendar year out of sample, holding 20/10 fixed throughout.
+Every one of the seven years was profitable out of sample, at annual returns between 17.3% and 472.3%, and the median out-of-sample to in-sample Sharpe ratio is 1.164 against a required 0.6.
+
+Because nothing is refit, this measures stability of the fixed rule across time rather than the decay of a fitted parameter.
+That is the correct test for a rule whose parameters were taken from convention, and it would be the wrong test for a rule that was optimised.
+The two weakest years are 2022 at a ratio of 0.276 and 2025 at 0.353, both of which are bear or range regimes, and both remained positive.
+
+## bot-state-persistence-defect
+
+The bot held all position state in memory and would have lost every open position on restart, which over a fourteen-day unattended run is a fatal defect rather than an inconvenience.
+
+Nothing in the backtest or the first live cycles could have revealed it, because both start from flat and neither restarts.
+A process killed by an out-of-memory event, a deploy, or a machine reboot would have resumed believing it held nothing, and the next cycle would have re-bought positions it already owned until either cash or the gross cap stopped it.
+
+`bot/state.py` now writes position state, cash, universe, equity curve and last processed bar atomically through a temporary file, and `bot/run.py` restores it at startup and persists after every cycle.
+A corrupt state file is moved aside rather than crashing the process.
+The stored config SHA is compared against the running one and a mismatch is journalled as `config_changed_mid_run`, which is the event a Screen 1 auditor would want flagged.
+
+Local state is not treated as authoritative once live.
+On startup and after every cycle outside dry run, the bot reads the venue wallet, reconciles it against local state, journals any mismatch, and adopts the venue's view.
+The venue knows what was filled and the bot only knows what it intended, and where they disagree the venue is right.
+
+Verified by running a cycle, killing the process, and running again: ten positions restored, cash unchanged, no duplicate orders.
+
+## gate10-shadow-design
+
+Gate 10 is the only gate that cannot be run faster than real time, and it is now instrumented and accumulating.
+
+`gates/gate10_shadow.py` evaluates five pre-registered conditions from the live journals: at least three distinct days of operation, live-versus-backtest signal agreement at or above 0.95, median fill deviation within 5 bps, no unexplained halts, and no logged errors.
+At first evaluation on 2026-09-19 it fails only on elapsed days, at one of three, while signal parity reads 1.0, halts and errors are zero, and the Binance-Roostoo mirror has a median absolute deviation of 0.47 bps and a maximum of 0.90.
+
+Fill deviation cannot be measured in dry run and is reported as unmeasured rather than as passing.
+It requires API credentials and live orders, and until those exist the gate's most operationally important check is untested.
+This is the largest remaining unknown before the window opens and is listed as such rather than left implicit.

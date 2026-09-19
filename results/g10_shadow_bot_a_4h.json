@@ -1,0 +1,65 @@
+{
+  "bot": "bot_a_4h",
+  "uptime": {
+    "cycles": 2,
+    "first": "2026-09-19 13:16:05.117538+00:00",
+    "last": "2026-09-19 13:16:15.803755+00:00",
+    "days": 0.0,
+    "distinct_utc_days": 1,
+    "median_gap_s": 10.0,
+    "max_gap_s": 10.0
+  },
+  "mirror": {
+    "samples": 2,
+    "median_bps": 0.467,
+    "p95_bps": 0.853,
+    "max_bps": 0.896
+  },
+  "fills": {
+    "fills": 0
+  },
+  "signal_parity": {
+    "checked": 3938,
+    "mismatches": 0,
+    "match_rate": 1.0
+  },
+  "journalled_agreement": {
+    "bars": 1,
+    "cells": 22,
+    "agreement": 0.454545
+  },
+  "order_events": {
+    "dry_run": 10
+  },
+  "halts": 0,
+  "errors": [],
+  "checks": {
+    "shadow_days": {
+      "value": 1,
+      "threshold": 3,
+      "ok": false
+    },
+    "signal_parity": {
+      "value": 1.0,
+      "threshold": 0.95,
+      "ok": true
+    },
+    "fill_deviation_bps": {
+      "value": null,
+      "threshold": 5.0,
+      "ok": true
+    },
+    "no_unexplained_halt": {
+      "value": 0,
+      "threshold": 0,
+      "ok": true
+    },
+    "no_errors": {
+      "value": 0,
+      "threshold": 0,
+      "ok": true
+    }
+  },
+  "dry_run_note": "fill metrics require live orders; dry-run reports zero fills",
+  "evaluated_utc": "2026-09-19T13:18:42.857866+00:00"
+}

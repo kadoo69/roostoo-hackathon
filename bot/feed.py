@@ -57,18 +57,24 @@ def roostoo_quotes(client: RoostooClient) -> dict[str, dict]:
     return client.ticker()
 
 
+def binance_prices(symbols: list[str]) -> dict[str, float]:
+    r = SESSION.get(f"{REST}/ticker/price", timeout=20)
+    r.raise_for_status()
+    wanted = set(symbols)
+    return {row["symbol"]: float(row["price"]) for row in r.json()
+            if row["symbol"] in wanted}
+
+
 def mirror_check(quotes: dict[str, dict], specs: dict[str, PairSpec],
                  symbols: list[str]) -> list[dict]:
+    prices = binance_prices(symbols)
     rows = []
     for sym in symbols:
         pair = next((p for p, s in specs.items() if s.binance_symbol == sym), None)
-        if pair is None or pair not in quotes:
+        if pair is None or pair not in quotes or sym not in prices:
             continue
         rst = float(quotes[pair]["LastPrice"])
-        try:
-            bn = float(klines(sym, "1m", 1)["close"].iloc[-1])
-        except Exception:
-            continue
+        bn = prices[sym]
         if rst <= 0 or bn <= 0:
             continue
         rows.append({"symbol": sym, "pair": pair, "roostoo": rst, "binance": bn,

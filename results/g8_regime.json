@@ -1,0 +1,119 @@
+{
+  "gate": "g8_regime",
+  "passed": false,
+  "written_utc": "2026-09-19T13:12:58.557587+00:00",
+  "git_rev": "03ed49608c4a3fda2a0b675c5fb8146e30a82b72",
+  "prereg_sha256_16": "1ecb91fdc34d2038",
+  "thresholds": {
+    "applicable": true,
+    "regimes": [
+      "bull",
+      "bear",
+      "range"
+    ],
+    "max_regime_drawdown": 0.25,
+    "require_positive_in_n_regimes": 2
+  },
+  "trials_to_date": 353,
+  "python": "3.12.2",
+  "result": {
+    "regime_rule": "bull: BTC>200dma and 90d return>+10%; bear: BTC<200dma and 90d return<-10%; else range",
+    "universe": "pit_top30_survivorship_free_no_venue_filter",
+    "full_sample": {
+      "days": 3321,
+      "total_return": 321.69859,
+      "cagr": 0.88683,
+      "sharpe": 1.8408,
+      "sortino": 3.2603,
+      "max_drawdown": -0.38119,
+      "p_positive_day": 0.4267
+    },
+    "btc_hold_full": {
+      "days": 3320,
+      "total_return": 17.88927,
+      "cagr": 0.38136,
+      "sharpe": 0.8214,
+      "sortino": 1.2041,
+      "max_drawdown": -0.83187,
+      "p_positive_day": 0.5117
+    },
+    "regimes": {
+      "bull": {
+        "strategy": {
+          "days": 1220,
+          "total_return": 108.19732,
+          "cagr": 3.07186,
+          "sharpe": 3.2626,
+          "sortino": 6.0379,
+          "max_drawdown": -0.25004,
+          "p_positive_day": 0.5082
+        },
+        "btc_hold": {
+          "days": 1220,
+          "total_return": 171.85609,
+          "cagr": 3.67166,
+          "sharpe": 2.8452,
+          "sortino": 4.8195,
+          "max_drawdown": -0.29492,
+          "p_positive_day": 0.5475
+        },
+        "share_of_days": 0.3674
+      },
+      "bear": {
+        "strategy": {
+          "days": 1078,
+          "total_return": 0.72916,
+          "cagr": 0.20373,
+          "sharpe": 0.714,
+          "sortino": 1.2673,
+          "max_drawdown": -0.37488,
+          "p_positive_day": 0.3748
+        },
+        "btc_hold": {
+          "days": 1078,
+          "total_return": -0.96878,
+          "cagr": -0.69081,
+          "sharpe": -1.3228,
+          "sortino": -1.7209,
+          "max_drawdown": -0.97368,
+          "p_positive_day": 0.462
+        },
+        "share_of_days": 0.3246
+      },
+      "range": {
+        "strategy": {
+          "days": 824,
+          "total_return": 0.61495,
+          "cagr": 0.23653,
+          "sharpe": 0.7761,
+          "sortino": 1.2303,
+          "max_drawdown": -0.38972,
+          "p_positive_day": 0.4248
+        },
+        "btc_hold": {
+          "days": 824,
+          "total_return": 0.30838,
+          "cagr": 0.12644,
+          "sharpe": 0.4893,
+          "sortino": 0.71,
+          "max_drawdown": -0.6764,
+          "p_positive_day": 0.5121
+        },
+        "share_of_days": 0.2481
+      }
+    },
+    "regimes_tested": [
+      "bear",
+      "bull",
+      "range"
+    ],
+    "regimes_positive": [
+      "bear",
+      "bull",
+      "range"
+    ],
+    "worst_regime_drawdown": -0.38972,
+    "threshold_max_regime_drawdown": 0.25,
+    "threshold_require_positive_in": 2
+  }
+}

@@ -12,6 +12,7 @@ from bot.execution import Executor
 from bot.journal import Journal
 from bot.report import from_equity
 from bot.settings import Settings, credentials, load
+from bot.state import Store, wallet_positions
 from bot.strategy import evaluate_book
 from venue.roostoo import RoostooClient
 
@@ -21,19 +22,66 @@ INITIAL_NAV = 100_000.0
 class Bot:
     def __init__(self, settings: Settings):
         self.s = settings
+        if not settings.dry_run:
+            raise RuntimeError("live_orders_blocked_until_restart_reconciliation_is_implemented")
         self.journal = Journal(settings.name)
         key, secret = credentials()
         self.client = RoostooClient(key, secret)
         self.client.sync_time()
         self.specs = self.client.exchange_info()
         self.executor = Executor(self.client, self.specs, settings, self.journal)
-        self.state: dict[str, bool] = {}
-        self.holdings: dict[str, float] = {}
-        self.cash = INITIAL_NAV
-        self.universe: list[str] = []
-        self.universe_at: dt.datetime | None = None
-        self.equity_curve: list[float] = []
-        self.last_bar: pd.Timestamp | None = None
+        self.store = Store(settings.name)
+        saved = self.store.load()
+        if saved.get("config_sha") not in (None, settings.config_sha256):
+            self.journal.write("errors", {
+                "event": "config_changed_mid_run",
+                "saved_sha": saved.get("config_sha"),
+                "current_sha": settings.config_sha256})
+        self.state = {k: bool(v) for k, v in saved.get("state", {}).items()}
+        self.holdings = {k: float(v) for k, v in saved.get("holdings", {}).items()}
+        self.cash = float(saved.get("cash", INITIAL_NAV))
+        self.universe = list(saved.get("universe", []))
+        self.universe_at = (dt.datetime.fromisoformat(saved["universe_at"])
+                            if saved.get("universe_at") else None)
+        self.equity_curve = [float(x) for x in saved.get("equity_curve", [])]
+        self.last_bar = (pd.Timestamp(saved["last_bar"])
+                         if saved.get("last_bar") else None)
+        self.journal.write("lifecycle", {
+            "event": "resumed" if saved else "cold_start",
+            "config_sha": settings.config_sha256,
+            "restored_positions": len(self.holdings),
+            "restored_cash": round(self.cash, 2),
+            "last_bar": str(self.last_bar) if self.last_bar is not None else None,
+            "dry_run": settings.dry_run})
+        if not settings.dry_run:
+            self.adopt_wallet()
+
+    def adopt_wallet(self) -> None:
+        from bot.verify import reconcile
+        try:
+            wallet = self.client.balance()
+        except Exception as exc:
+            self.journal.write("errors", {"event": "wallet_read_failed",
+                                          "error": repr(exc)})
+            return
+        live, cash = wallet_positions(wallet)
+        check = reconcile(self.holdings, live, tolerance=1e-6)
+        self.journal.write("reconcile", {"event": "startup", **check,
+                                         "cash_local": round(self.cash, 2),
+                                         "cash_venue": round(cash, 2)})
+        self.holdings = live
+        self.cash = cash
+        self.state = {s: True for s in live}
+
+    def persist(self) -> None:
+        self.store.save({
+            "config_sha": self.s.config_sha256,
+            "state": self.state, "holdings": self.holdings, "cash": self.cash,
+            "universe": self.universe,
+            "universe_at": (self.universe_at.isoformat()
+                            if self.universe_at else None),
+            "equity_curve": self.equity_curve[-5000:],
+            "last_bar": str(self.last_bar) if self.last_bar is not None else None})
 
     def refresh_universe(self, now: dt.datetime) -> None:
         stale = (self.universe_at is None or
@@ -96,12 +144,16 @@ class Bot:
         frames = feed.bar_frame(self.universe, self.s.interval, need + 20)
         matrix = feed.close_matrix(frames)
         quotes = feed.roostoo_quotes(self.client)
+        ticker_time = self.client.last_ticker_server_time_ms
+        ticker_age_s = (float("inf") if ticker_time is None else
+                        max(0.0, (self.client._timestamp() - ticker_time) / 1000.0))
         equity, prices = self.mark(quotes)
         self.equity_curve.append(equity)
 
-        mirror = feed.mirror_check(quotes, self.specs, self.universe[:3])
-        worst = max((abs(m["deviation_bps"]) for m in mirror), default=None)
-        guard = risk.gate(self.equity_curve, self.executor.error_rate(), 0.0,
+        mirror = feed.mirror_check(quotes, self.specs, self.universe)
+        worst = (max((abs(m["deviation_bps"]) for m in mirror), default=None)
+                 if len(mirror) == len(self.universe) else float("inf"))
+        guard = risk.gate(self.equity_curve, self.executor.error_rate(), ticker_age_s,
                           worst, self.s)
         derisk = risk.derisk_multiplier(now, self.s)
 
@@ -134,8 +186,13 @@ class Bot:
             "n_universe": len(self.universe), "n_long": len(target),
             "derisk": derisk, "halt": guard["halt"], "breaches": guard["breaches"],
             "drawdown": guard["drawdown"], "orders": len(placed),
-            "mirror_worst_bps": worst, "config_sha": self.s.config_sha256,
+            "mirror_worst_bps": worst, "mirror_checked": len(mirror),
+            "ticker_age_s": round(ticker_age_s, 3),
+            "config_sha": self.s.config_sha256,
         }
+        if not self.s.dry_run:
+            self.adopt_wallet()
+        self.persist()
         self.journal.write("cycles", snapshot)
         if fresh:
             self.journal.write("signals", {

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 import time
 
 from bot.journal import Journal
@@ -24,15 +25,26 @@ class Executor:
     def limit_price(self, spec: PairSpec, side: str, quote: dict) -> float:
         bid, ask = float(quote["MaxBid"]), float(quote["MinAsk"])
         off = self.settings.limit_offset_bps / 1e4
-        px = bid * (1.0 + off) if side == "BUY" else ask * (1.0 - off)
         step = spec.tick
-        return round(round(px / step) * step, spec.price_precision)
+        if side == "BUY":
+            raw = min(bid * (1.0 + off), ask - step)
+            px = math.floor((raw + step * 1e-9) / step) * step
+        else:
+            raw = max(ask * (1.0 - off), bid + step)
+            px = math.ceil((raw - step * 1e-9) / step) * step
+        return round(px, spec.price_precision)
 
     def prepare(self, order: dict, quotes: dict) -> dict | None:
         spec = self.spec(order["symbol"])
         if spec is None or spec.pair not in quotes:
             return None
         q = quotes[spec.pair]
+        bid, ask = float(q["MaxBid"]), float(q["MinAsk"])
+        spread_bps = (ask / bid - 1.0) * 1e4
+        if spread_bps > self.settings.max_spread_bps:
+            return {"skipped": "spread_exceeds_limit", "symbol": order["symbol"],
+                    "pair": spec.pair, "spread_bps": round(spread_bps, 4),
+                    "max_spread_bps": self.settings.max_spread_bps}
         qty = spec.round_qty(order["quantity"])
         if qty <= 0:
             return None
