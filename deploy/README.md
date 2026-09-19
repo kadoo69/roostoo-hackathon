@@ -118,3 +118,29 @@ open `live/<bot>.out`.
 
 Binding to `0.0.0.0` exposes the dashboard to the network. On EC2 keep it on
 `127.0.0.1` and reach it through an SSH tunnel rather than opening a port.
+
+## Dashboard insights
+
+The dashboard derives interpretation rather than only displaying numbers.
+Each insight card states a value, the reference it is being judged against, and
+a tone, so a reading is actionable without recalling the backtest.
+
+- **Exposure vs norm** compares live gross exposure against the 18% historical
+  mean on 3.7 names. A reading of 50% is 2.8 times normal and means the market
+  is in a broad breakout, not that the strategy has changed.
+- **Realised fee drag** annualises fees actually paid and compares them to the
+  5.1% a year the backtest expects for bot A and 19.3% for bot B. A sustained
+  reading above expectation means fills are worse than modelled.
+- **Drawdown headroom** and **mirror headroom** show distance to the two kill
+  switches rather than the raw level, because distance is what decides whether
+  to act.
+- **Shadow gate** counts distinct live days against the three Gate 10 requires.
+- **Process integrity** surfaces supervisor restarts, which is the number that
+  says whether an unattended run was genuinely continuous.
+- **Trade sample** states plainly that win rate and payoff mean nothing below
+  roughly 30 closed trades, so an early 100% win rate is not read as skill.
+
+Market breadth scans all 66 venue names every four minutes on a background
+thread, so page loads never block on it. It reports how many coins are long,
+how many sit within 2% of an entry or a stop, the median cushion above the stop
+for held names, and names within 3% of being stopped out.

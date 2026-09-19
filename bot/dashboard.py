@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import threading
+import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 
@@ -10,9 +12,22 @@ import pandas as pd
 from bot.blotter import build as build_blotter
 from bot.journal import Journal
 from bot.report import from_equity
+from bot.insights import breadth, derive
 from bot.settings import ROOT, load
 
 BOTS = {"bot_a_4h": "config/bot_a_4h.yaml", "bot_b_1h": "config/bot_b_1h.yaml"}
+EXPECTED_DRAG = {"bot_a_4h": 0.051, "bot_b_1h": 0.193}
+_BREADTH = {"data": None, "updated": None}
+
+
+def _breadth_loop():
+    while True:
+        try:
+            _BREADTH["data"] = breadth(load("config/bot_a_4h.yaml"))
+            _BREADTH["updated"] = pd.Timestamp.now(tz="UTC").isoformat()
+        except Exception as exc:
+            _BREADTH["data"] = {"error": str(exc)[:160]}
+        time.sleep(240)
 
 
 def bot_state(name: str, cfg: str) -> dict:
@@ -76,8 +91,14 @@ def bot_state(name: str, cfg: str) -> dict:
 
 
 def snapshot() -> dict:
+    bots = []
+    for n, c in BOTS.items():
+        st = bot_state(n, c)
+        st["insights"] = derive(st, EXPECTED_DRAG.get(n, 0.05))
+        bots.append(st)
     return {"generated": pd.Timestamp.now(tz="UTC").isoformat(),
-            "bots": [bot_state(n, c) for n, c in BOTS.items()]}
+            "breadth": _BREADTH["data"], "breadth_updated": _BREADTH["updated"],
+            "bots": bots}
 
 
 HTML = (Path(__file__).parent / "dashboard.html")
@@ -110,6 +131,7 @@ def main() -> int:
     ap.add_argument("--port", type=int, default=8787)
     ap.add_argument("--host", default="127.0.0.1")
     a = ap.parse_args()
+    threading.Thread(target=_breadth_loop, daemon=True).start()
     srv = HTTPServer((a.host, a.port), Handler)
     print(f"dashboard: http://{a.host}:{a.port}")
     srv.serve_forever()
