@@ -346,3 +346,84 @@ The strategy's tighter distribution is what lifts Sortino and Calmar for Screen 
 Screen 2 is a rank cut that advances the top 20 of a region on raw return, and a rank cut is won from the right tail rather than the median.
 Compressing the distribution improves the scored composite while reducing the probability of reaching a tail outcome large enough to survive the cut that precedes it.
 A configuration optimised purely for Screen 3 is therefore selecting against its own chance of being scored at all.
+
+## screen3-caps
+
+Sortino, Sharpe, and Calmar are each capped at 5.0 before the weighted sum.
+
+Over a 14-day window a near-zero drawdown or a run without a single down day sends Calmar or Sortino toward infinity, and an uncapped average would let one quiet fortnight dominate a statistic meant to summarise three properties.
+The caps sit far above any sustained value and are not tuned.
+
+The weighting is 0.4 Sortino, 0.3 Sharpe, 0.3 Calmar, taken from the competition plan rather than assumed.
+This replaces the equal-weighted mean used earlier in this repo, and the change matters: Sortino carries the largest single weight, so upside volatility is free and only downside deviation is penalised.
+
+## asymmetry-thesis
+
+The plan's central claim is that cutting losers hard while letting winners run serves both screens at once, and it is treated as a hypothesis to be tested rather than a design to be implemented.
+
+The reasoning is that Screen 2 rewards magnitude while Screen 3 rewards shape, and an asymmetric payoff raises raw return through uncapped upside while improving Sortino and Calmar through bounded downside.
+It is plausible and it is also exactly the kind of claim that survives in a backtest because stops are path-dependent and easy to fit.
+
+Testing it requires a path-dependent simulator rather than the weight-vector backtest used so far.
+A stop that triggers intrabar cannot be represented by a vector of target weights applied at bar close, so the engine now tracks each position, its stop level, and its trailing high, and exits at the stop price when the bar's low or high breaches it.
+
+The stop and trailing multiples are declared as a small grid and the daily loss breaker is fixed at 3% and not swept, for the reason recorded at `DECISIONS.md#overlay-grid`.
+
+## plan-correction-shorting
+
+The plan marks the short-selling mechanic UNCONFIRMED and states the API exposes only BUY and SELL with no short flag.
+This is incorrect and the correction is material to the design.
+
+`POST /v6/short_open`, `POST /v6/short_close`, and `GET /v6/short_positions` are documented and live, verified against the running API on 2026-09-18.
+A short is sized by committed collateral rather than by quantity, with quantity derived as `collateral / EntryPrice` rounded down to the pair's `AmountPrecision`.
+
+The cost asymmetry between the legs is the part that changes strategy design.
+Spot orders pay 0.10% taker and 0.05% maker, so limit execution halves the fee, but shorts pay 0.10% on both open and close with no maker discount, stated directly in the README as "the same for market and limit orders".
+A short round trip therefore costs 20 bps regardless of execution style, against 10 bps for a spot round trip worked with limits, which makes the short leg twice as expensive and argues for using it as a hedge rather than as a symmetric alpha source.
+
+One further trap: the short open fee is charged when the request is accepted, including for a LIMIT order that has not yet filled, and is released only on cancel.
+
+## asymmetry-engine-defects
+
+Testing the asymmetry thesis required a path-dependent simulator, and the first version of it produced fabricated results through three separate defects.
+They are recorded because each one is the kind that survives casual inspection by making performance better rather than worse.
+
+The first run reported a Sharpe of 6.59, an annual return of 428.7%, and a maximum drawdown of 7.8%, with 93.8% of 14-day windows positive.
+None of that was real.
+
+The first defect was a stale stop on a direction flip.
+A position moving from long to short without passing through zero kept its old stop, and a long's stop sits below the market while a short's triggers when price rises to meet it, so the inherited level fired immediately at an absurd price.
+
+The second was a trailing stop permitted to ratchet above the current price.
+Measured across the panel, the trailing level sat above the current close on 37.8% of cells, by a median of 548 bps.
+A long stop-loss that fills 5.5% above the market is not a stop, it is a guaranteed profitable exit, and it was the largest contributor to the fabricated return.
+
+The third was that stopped positions were zeroed before the bar's profit and loss was computed, so the stop-out loss was never booked at all.
+Stops were free escapes from losing positions.
+
+The engine now clamps a long's stop at or below the current close and a short's at or above it, fills at the bar open when a gap carries price through the stop level, and books the realised loss before flattening.
+Validation is a control run with stops disabled, which reproduces the weight-vector backtest at a correlation of 0.9999981, plus a monotonicity check confirming that tighter stops reduce cumulative return rather than raising it.
+
+## asymmetry-outcome
+
+The asymmetry thesis failed on this data and the failure is mechanically explicable.
+
+All eight declared configurations lost money out of sample, returning between -2.4% and -9.9% a year at Screen 3 scores between -1.51 and +0.03, against BTC buy-and-hold at 1.36.
+On the 14-day bootstrap every configuration had a negative median Screen 3 score and a negative median return.
+
+Stops and trend following are working against each other here.
+A trend signal earns its return by holding a position through drawdowns that later recover, and an ATR stop is an exit rule that fires precisely during those drawdowns.
+The signal already exits on the moving-average cross, so the stop is a second and strictly worse exit that triggers first, and tightening it monotonically reduced cumulative return in the sanity check.
+
+The plan's reasoning that asymmetry serves both screens is sound in the abstract and does not hold for this signal family.
+It would need a signal whose losses are genuinely terminal rather than temporary, which cross-sectional trend is not.
+
+## screen2-tail-evidence
+
+The bootstrap quantifies why a low-volatility design is the wrong answer to a rank cut.
+
+Screen 2 advances the top 20 of a region on raw return, which is won from the right tail.
+Across 14-day windows BTC buy-and-hold exceeded a 5% return 29.6% of the time, against 11.1% to 16.8% for the eight asymmetry configurations, whose 95th percentile outcomes ran 8.7% to 10.7% against BTC's 21.8%.
+
+Volatility targeting and stops both compress the distribution, and compressing the distribution is what removes the tail outcome the first screen requires.
+A design that improves Screen 3 by suppressing variance is reducing its own probability of ever reaching Screen 3.

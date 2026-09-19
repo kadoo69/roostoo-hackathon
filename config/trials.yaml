@@ -411,3 +411,35 @@ trials:
   config: 1d_20/50
   oos_sharpe: 0.9588
   median_composite_14d: 0.9126
+- gate: asymmetry
+  config: 4h_s1.5_v0.015
+  screen3: 0.028
+  median_screen3_14d: -0.8854
+- gate: asymmetry
+  config: 4h_s1.5_v0.025
+  screen3: -0.0475
+  median_screen3_14d: -0.9526
+- gate: asymmetry
+  config: 4h_s2.5_v0.015
+  screen3: 0.0053
+  median_screen3_14d: -0.7731
+- gate: asymmetry
+  config: 4h_s2.5_v0.025
+  screen3: -0.1148
+  median_screen3_14d: -0.7753
+- gate: asymmetry
+  config: 8h_s1.5_v0.015
+  screen3: -0.2872
+  median_screen3_14d: -1.5065
+- gate: asymmetry
+  config: 8h_s1.5_v0.025
+  screen3: -0.2255
+  median_screen3_14d: -1.4835
+- gate: asymmetry
+  config: 8h_s2.5_v0.015
+  screen3: -0.2321
+  median_screen3_14d: -1.2137
+- gate: asymmetry
+  config: 8h_s2.5_v0.025
+  screen3: -0.1903
+  median_screen3_14d: -1.3973

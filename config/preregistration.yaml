@@ -11,6 +11,11 @@ venue:
   perpetuals: false
   funding_rate: false
   orderbook_depth_available: false
+  shorting_endpoints:
+  - /v6/short_open
+  - /v6/short_close
+  - /v6/short_positions
+  short_fee_has_maker_discount: false
 costs:
   source: organizer_verbal_2026_09_18
   spot_market_fee: 0.001
@@ -131,17 +136,21 @@ portfolio:
   justification_ref: DECISIONS.md#no-trade-band
   max_net_exposure: 0.8
 objective:
-  name: competition_composite
-  definition: mean(sharpe, sortino, calmar)
-  components:
-  - sharpe
-  - sortino
-  - calmar
+  name: screen3_weighted
+  definition: 0.4*sortino + 0.3*sharpe + 0.3*calmar
+  weights:
+    sortino: 0.4
+    sharpe: 0.3
+    calmar: 0.3
+  source: roostoo_plan.md section 0
   calmar_cap: 5.0
-  calmar_cap_reason_ref: DECISIONS.md#composite-objective
+  sortino_cap: 5.0
+  sharpe_cap: 5.0
+  cap_reason_ref: DECISIONS.md#screen3-caps
+  screen2_gate: raw_return_rank_top20_per_region
   fitted_on: in_sample_only
   in_sample_end: '2023-01-01'
-  judged_on: out_of_sample_and_14d_bootstrap
+  judged_on: out_of_sample_14d_bootstrap
   benchmark: btc_buy_and_hold
 overlay:
   vol_target_annual_grid:
@@ -185,3 +194,24 @@ horizon_search:
   judged_on: out_of_sample_14d_bootstrap
   min_flips_per_14d: 2
   justification_ref: DECISIONS.md#horizon-search
+asymmetry:
+  declared_utc: '2026-09-19'
+  thesis_ref: DECISIONS.md#asymmetry-thesis
+  atr_lookback_bars: 14
+  stop_atr_multiple_grid:
+  - 1.5
+  - 2.5
+  trailing_atr_multiple_grid:
+  - 3.0
+  daily_loss_breaker_grid:
+  - 0.03
+  daily_loss_breaker_swept: false
+  vol_target_daily_grid:
+  - 0.015
+  - 0.025
+  decision_bars_grid:
+  - 4h
+  - 8h
+  cash_buffer: 0.25
+  max_gross_exposure: 1.0
+  configs: 8
