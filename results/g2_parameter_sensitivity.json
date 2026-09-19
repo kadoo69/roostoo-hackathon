@@ -1,9 +1,9 @@
 {
   "gate": "g2_parameter_sensitivity",
   "passed": false,
-  "written_utc": "2026-09-19T05:56:16.316362+00:00",
-  "git_rev": "5e7062bcbb7f1d4af3a47943ea516e7219ce9101",
-  "prereg_sha256_16": "824b6394c01776b2",
+  "written_utc": "2026-09-19T06:35:51.932447+00:00",
+  "git_rev": "81921ddb1bf0aa6b4ab9ee38f5f082e13dae0443",
+  "prereg_sha256_16": "1ecb91fdc34d2038",
   "thresholds": {
     "applicable": true,
     "perturbation_steps": [
@@ -15,43 +15,53 @@
     "min_neighbour_sharpe_ratio_to_peak": 0.5,
     "max_peak_isolation_score": 0.35
   },
-  "trials_to_date": 109,
+  "trials_to_date": 131,
   "python": "3.12.2",
   "result": {
-    "stage": "asymmetry_thesis",
-    "objective": "0.4*sortino+0.3*sharpe+0.3*calmar",
-    "engine_defects_found_and_fixed": [
-      "stale stop retained across long/short direction flip",
-      "trailing stop permitted above current price (37.8% of cells, median 548bps)",
-      "stopped positions zeroed before booking the loss"
-    ],
-    "pre_fix_fabricated_result": {
-      "sharpe": 6.59,
-      "annual_return": 4.287,
-      "max_drawdown": -0.078,
-      "p_return_positive_14d": 0.938
+    "stage": "family_comparison",
+    "families": 5,
+    "bar_intervals": 4,
+    "configs": 20,
+    "parameters_tuned": false,
+    "best_oos_screen3": {
+      "BTC hold_1d": 1.361,
+      "volume_trend_1d": 1.112,
+      "xsec_momentum_8h": 0.974,
+      "xsec_momentum_12h": 0.842,
+      "volume_trend_12h": 0.549
     },
-    "engine_validation": {
-      "control_corr_vs_weight_engine": 0.9999981,
-      "tighter_stops_reduce_return": true
+    "best_competition_ev": {
+      "BTC hold_1d": 41.3,
+      "EW top20 hold_1d": 38.7,
+      "sma_trend_1d": 27.2,
+      "xsec_momentum_4h": 22.4,
+      "volume_trend_12h": 22.0
     },
-    "configs_tested": 8,
-    "configs_profitable": 0,
-    "best_screen3": 0.028,
-    "benchmark_btc_screen3": 1.36,
-    "beats_benchmark": false,
-    "bootstrap_p_return_above_5pct": {
-      "btc": 0.296,
-      "strategy_range": [
-        0.1105,
-        0.1675
-      ]
+    "benchmark_btc_beats_all": true,
+    "family_optimal_timeframe": {
+      "sma_trend": "1d",
+      "volume_trend": "1d",
+      "xsec_momentum": "8h-12h",
+      "donchian_breakout": "1d",
+      "short_reversal": "none"
     },
-    "trials_cumulative": 109,
+    "short_reversal_cost_casualty": {
+      "hourly_accuracy": 0.521,
+      "annual_return_1d": -0.403,
+      "cost_drag_1d": 0.276,
+      "cost_drag_4h": 1.645
+    },
+    "screen_tension": {
+      "best_screen3_strategy": "volume_trend_1d",
+      "its_p_qual": 0.295,
+      "best_p_qual_strategy": "btc_hold"
+    },
+    "trials_cumulative": 131,
     "blocking_findings": [
-      "all 8 configurations lose money out of sample",
-      "stops cut trend positions during recoverable drawdowns, the source of the edge",
-      "variance compression reduces P(return>5%) from 29.6% to 11-17%, hurting the Screen 2 rank cut"
+      "BTC buy-and-hold leads on OOS Screen 3, P(qualify) and expected value",
+      "strategies ranking best on Screen 3 qualify least often for Screen 2",
+      "short_reversal beats coinflip on accuracy and loses 40-85%/yr to costs",
+      "conditional Screen 3 among qualifying windows is 37-143, likely path noise"
     ]
   }
 }

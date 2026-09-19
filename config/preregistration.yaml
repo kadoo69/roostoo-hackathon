@@ -215,3 +215,51 @@ asymmetry:
   cash_buffer: 0.25
   max_gross_exposure: 1.0
   configs: 8
+family_comparison:
+  declared_utc: '2026-09-19'
+  purpose: compare mechanisms, not parameters; one fixed untuned setting per family
+  families:
+    sma_trend:
+      mechanism: time-series trend continuation
+      params:
+        fast: 20
+        slow: 50
+    xsec_momentum:
+      mechanism: cross-sectional relative strength
+      params:
+        lookback: 20
+        quantile: 0.2
+    donchian_breakout:
+      mechanism: range expansion / new extreme
+      params:
+        lookback: 20
+    short_reversal:
+      mechanism: short-horizon overreaction correction
+      params:
+        lookback: 1
+        quantile: 0.2
+    volume_trend:
+      mechanism: trend gated by volume expansion
+      params:
+        fast: 20
+        slow: 50
+        vol: 10
+  bar_intervals:
+  - 4h
+  - 8h
+  - 12h
+  - 1d
+  configs: 20
+  parameters_tuned: false
+  execution: LIMIT
+  stops: false
+  stops_reason_ref: DECISIONS.md#asymmetry-outcome
+  judged_on:
+  - screen3_oos
+  - bootstrap_14d_screen2_tail
+  - conditional_screen3_given_screen2
+  screen2_return_threshold: 0.05
+  threshold_reason_ref: DECISIONS.md#screen2-threshold
+  benchmarks:
+  - btc_hold
+  - ew_top20_hold

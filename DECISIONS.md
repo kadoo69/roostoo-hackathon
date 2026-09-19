@@ -427,3 +427,57 @@ Across 14-day windows BTC buy-and-hold exceeded a 5% return 29.6% of the time, a
 
 Volatility targeting and stops both compress the distribution, and compressing the distribution is what removes the tail outcome the first screen requires.
 A design that improves Screen 3 by suppressing variance is reducing its own probability of ever reaching Screen 3.
+
+## screen2-threshold
+
+A 5% 14-day return is used as the proxy for clearing the Screen 2 rank cut, and it is an assumption rather than a known quantity.
+
+The organisers advance the top 20 per region on raw return without publishing an absolute bar, so the real threshold depends on what other teams achieve and cannot be known in advance.
+5% over 14 days is roughly 150% annualised, which is the order of magnitude a competitive entry in a crypto trading contest would need, and it is held fixed across every family so that comparisons between them are unaffected by the choice.
+
+The quantity that matters is therefore relative: which family most often reaches a tail outcome large enough to qualify, not whether 5% is exactly right.
+
+## family-comparison-design
+
+Families are compared at one fixed parameter setting each, chosen from convention rather than fitted, because the question is which mechanism suits the competition rather than which parameter suits the history.
+
+The trial ledger stood at 109 before this stage.
+Every additional configuration raises the hurdle that any survivor must clear at Gate 4, so a full parameter sweep across five families would cost more statistical power than the answer is worth.
+Tuning each family to its own best setting would also bias the comparison toward whichever family has the most parameters to tune.
+
+Stops are disabled for every family, following the result at `DECISIONS.md#asymmetry-outcome` that they cut trend positions during recoverable drawdowns.
+Two mechanisms not previously tested are included: range breakout, and short-horizon reversal, the latter because it was the only signal to exceed 50% directional accuracy in the hourly check recorded at `DECISIONS.md#horizon-search-outcome`.
+
+## family-comparison-outcome
+
+Five mechanisms were compared at fixed untuned settings across four bar intervals on 2026-09-19, and the ranking depends entirely on which screen is being optimised.
+
+BTC buy-and-hold led on every measure: out-of-sample Screen 3 of 1.36, the highest probability of clearing the Screen 2 proxy at 29.5%, and the highest expected value at 41.3.
+This is the fifth consecutive stage in which it has beaten every constructed strategy.
+
+The best timeframe is family-dependent rather than universal, which is the main reason the comparison was worth running.
+Trend and volume-gated trend improve monotonically as they slow down, peaking at daily bars.
+Cross-sectional momentum peaks in the middle at eight to twelve hours, scoring 0.97 and 0.84 against 0.51 at four hours and 0.20 at daily, so it is the one family with a genuine interior optimum rather than a preference for the slowest setting available.
+
+Short-horizon reversal is the clearest cost casualty in the repo.
+It was the only signal to exceed 50% directional accuracy in the earlier hourly check, at 52.1%, and it lost money at every timeframe tested, returning -40.3% a year at daily bars and -85.4% at four hours against cost drag of 27.6% and 164.5% respectively.
+Directional accuracy above a coin flip is worth nothing when the trade frequency required to harvest it costs more than the edge.
+
+Range breakout produced the best downside control of any family, drawing down 18.6% at eight hours and 20.4% at daily against 33% to 66% elsewhere, and the highest lower-quartile Screen 3 among qualifying windows at 72.6.
+It also qualified least often, reaching the return threshold in 4.3% to 8.4% of windows, so its risk control comes from rarely taking meaningful exposure.
+
+## screen-tension-quantified
+
+The comparison measures the conflict between the two screens directly, and it is consistent across families rather than particular to one design.
+
+The strategies with the strongest full-sample Screen 3 scores have the weakest chance of ever being scored.
+Volume-gated trend at daily bars ranks second on out-of-sample Screen 3 at 1.11 and reaches the return threshold in only 14.0% of windows.
+Breakout at daily bars has the highest lower-quartile conditional Screen 3 at 72.6 and qualifies in 4.9%.
+Plain trend at daily bars scores 0.36 and qualifies in 22.4%.
+
+The mechanism is the same in each case: everything that improves a risk-adjusted ratio does so by suppressing variance, and the first screen is a rank cut decided in the right tail.
+Selecting on Screen 3 alone systematically selects against Screen 2, and the expected-value ordering is therefore closer to the qualification probability ordering than to the Screen 3 ordering.
+
+One caveat limits how far this can be pushed.
+Conditional on a window clearing the return threshold, the median Screen 3 score ran between 37 and 143 across families, because annualising Sortino and Calmar over fourteen observations produces very large numbers whenever the path is smooth.
+Discrimination between qualifying teams on Screen 3 may therefore be dominated by path noise rather than by strategy quality, which argues for prioritising qualification over ratio optimisation.
