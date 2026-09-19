@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import argparse
 import json
 import warnings
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -64,9 +66,9 @@ def windows(dr: pd.Series, hold: pd.Series) -> dict:
         m = np.stack([a[i:i + WINDOW] for i in range(n)])
         eq = np.cumprod(1.0 + m, axis=1)
         r = eq[:, -1] - 1.0
-        dd = (eq / np.maximum.accumulate(eq, axis=1) - 1.0).min(axis=1)
-        mu, sd = m.mean(axis=1), m.std(axis=1)
-        dn = np.sqrt((np.clip(m, None, 0.0) ** 2).mean(axis=1))
+        dd = (eq / np.maximum(1.0, np.maximum.accumulate(eq, axis=1)) - 1.0).min(axis=1)
+        mu, sd = m.mean(axis=1), m.std(axis=1, ddof=1)
+        dn = np.sqrt((np.clip(m, None, 0.0) ** 2).mean(axis=1)) * np.sqrt(365.0)
         sh = np.where(sd > 0, mu / np.where(sd > 0, sd, 1.0) * np.sqrt(365.0), 0.0)
         so = np.where(dn > 0, mu * 365.0 / np.where(dn > 0, dn, 1.0), 0.0)
         cg = np.where(r > -1.0, (1.0 + r) ** (365.0 / WINDOW) - 1.0, -1.0)
@@ -110,6 +112,9 @@ def activity(settings, close, members) -> dict:
 
 
 def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--output", type=Path, default=RESULTS / "bot_comparison.json")
+    args = parser.parse_args()
     hold = daily.build()["close"]["BTCUSDT"].pct_change()
     out = {"oos_start": OOS, "period_b": SPLIT_B, "bots": {}}
     for cfg in ("config/bot_a_4h.yaml", "config/bot_b_1h.yaml"):
@@ -138,7 +143,8 @@ def main() -> int:
     out["btc_hold_period_b"]["window_14d"] = windows(hb, hb)
 
     RESULTS.mkdir(parents=True, exist_ok=True)
-    (RESULTS / "bot_comparison.json").write_text(json.dumps(out, indent=2))
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    args.output.write_text(json.dumps(out, indent=2))
     return 0
 
 

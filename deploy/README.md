@@ -144,3 +144,17 @@ Market breadth scans all 66 venue names every four minutes on a background
 thread, so page loads never block on it. It reports how many coins are long,
 how many sit within 2% of an entry or a stop, the median cushion above the stop
 for held names, and names within 3% of being stopped out.
+# Prospective paper lab
+
+The independent six-portfolio experiment runs with `/opt/anaconda3/bin/python3 -m bot.paper_lab` from the repository root.
+It uses public data only and never submits exchange orders.
+On this Mac its service definition is `deploy/com.roostoo.paper-lab.plist`, loaded as `gui/501/com.roostoo.paper-lab`.
+Inspect it with `launchctl print gui/501/com.roostoo.paper-lab`.
+Stop it with `launchctl bootout gui/501/com.roostoo.paper-lab`.
+Load it with `launchctl bootstrap gui/501 /Users/aaravmahajan/roostoo-hackathon/deploy/com.roostoo.paper-lab.plist`.
+The service persists after the agent session, restarts after process failure, and inhibits idle sleep while running; it does not survive logout or reboot without being loaded again.
+Read current results with `/opt/anaconda3/bin/python3 -m bot.paper_lab --report`.
+State and accounting events are in `live/paper_lab_v1/state.json`; the latest comparison is `live/paper_lab_v1/comparison.json`.
+Diagnostics are in `live/paper-lab.out`, `live/paper-lab.err`, and dated error streams under `live/paper_lab_v1/`.
+Code or configuration changes invalidate the experiment fingerprint; use a new declared experiment root rather than overwriting the old state.
+The paper lab uses later observed quote crosses and cannot verify real venue queue position or fill capacity.

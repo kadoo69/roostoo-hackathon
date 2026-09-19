@@ -51,9 +51,9 @@ def _window_arrays(a: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     m = np.stack([a[i:i + WINDOW] for i in range(n)])
     eq = np.cumprod(1.0 + m, axis=1)
     ret = eq[:, -1] - 1.0
-    dd = (eq / np.maximum.accumulate(eq, axis=1) - 1.0).min(axis=1)
-    mu, sd = m.mean(axis=1), m.std(axis=1)
-    dn = np.sqrt((np.clip(m, None, 0.0) ** 2).mean(axis=1))
+    dd = (eq / np.maximum(1.0, np.maximum.accumulate(eq, axis=1)) - 1.0).min(axis=1)
+    mu, sd = m.mean(axis=1), m.std(axis=1, ddof=1)
+    dn = np.sqrt((np.clip(m, None, 0.0) ** 2).mean(axis=1)) * np.sqrt(365.0)
     sh = np.where(sd > 0, mu / np.where(sd > 0, sd, 1.0) * np.sqrt(365.0), 0.0)
     so = np.where(dn > 0, mu * 365.0 / np.where(dn > 0, dn, 1.0), 0.0)
     cg = np.where(ret > -1.0, (1.0 + ret) ** (365.0 / WINDOW) - 1.0, -1.0)

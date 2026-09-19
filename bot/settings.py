@@ -41,6 +41,9 @@ class Settings:
     config_sha256: str
     dry_run: bool
     venue: str
+    ranking_rule: str | None
+    n_positions: int | None
+    momentum_bars: int
 
     @property
     def bars_per_day(self) -> int:
@@ -82,6 +85,9 @@ def load(path: str | Path) -> Settings:
         config_sha256=hashlib.sha256(raw).hexdigest()[:16],
         dry_run=os.environ.get("ROOSTOO_DRY_RUN", "1") != "0",
         venue=os.environ.get("BOT_VENUE", cfg["meta"].get("venue", "roostoo")),
+        ranking_rule=s.get("ranking_rule"),
+        n_positions=(int(s["n_positions"]) if s.get("n_positions") else None),
+        momentum_bars=int(s.get("momentum_bars", 20)),
     )
 
 

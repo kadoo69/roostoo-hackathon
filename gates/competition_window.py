@@ -31,9 +31,9 @@ def windows(net: pd.Series) -> pd.DataFrame:
     mat = np.stack([vals[i:i + WINDOW] for i in range(n)])
     eq = np.cumprod(1.0 + mat, axis=1)
     ret = eq[:, -1] - 1.0
-    dd = (eq / np.maximum.accumulate(eq, axis=1) - 1.0).min(axis=1)
-    mu, sd = mat.mean(axis=1), mat.std(axis=1)
-    down = np.sqrt((np.clip(mat, None, 0.0) ** 2).mean(axis=1))
+    dd = (eq / np.maximum(1.0, np.maximum.accumulate(eq, axis=1)) - 1.0).min(axis=1)
+    mu, sd = mat.mean(axis=1), mat.std(axis=1, ddof=1)
+    down = np.sqrt((np.clip(mat, None, 0.0) ** 2).mean(axis=1)) * np.sqrt(365.0)
     sharpe = np.where(sd > 0, mu / np.where(sd > 0, sd, 1.0) * np.sqrt(ANN), 0.0)
     sortino = np.where(down > 0, mu * ANN / np.where(down > 0, down, 1.0), 0.0)
     cagr = np.where(ret > -1.0, (1.0 + ret) ** (ANN / WINDOW) - 1.0, -1.0)

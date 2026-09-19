@@ -54,9 +54,10 @@ def summarise(name: str) -> dict:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("bots", nargs="*", default=["bot_a_4h", "bot_b_1h"])
+    ap.add_argument("bots", nargs="*",
+                    default=["bot_a_4h", "bot_b_1h", "bot_c_5names"])
     a = ap.parse_args()
-    print(json.dumps([summarise(b) for b in (a.bots or ["bot_a_4h", "bot_b_1h"])],
+    print(json.dumps([summarise(b) for b in (a.bots or ["bot_a_4h", "bot_b_1h", "bot_c_5names"])],
                      indent=2, default=str))
     return 0
 

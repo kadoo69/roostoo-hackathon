@@ -1244,6 +1244,16 @@ Forward reports suppress annualised metrics until 28 complete sampled days and n
 Simulated fills cannot satisfy the real-fill portion of Gate 10.
 The 28-day reporting floor is a separate experiment rule, not a replacement for any registered gate or a claim of statistical sufficiency.
 
+## fortnight-scoring-review-correction
+
+The logic review found the missing Sortino annualisation still present in five independent fortnight scorers: bot_comparison, competition_window, donchian_lowtf, paper_ensemble and volume_sweep.
+The fix to bot/report did not propagate to those copies.
+They divided annualised mean return by daily downside deviation, inflating Sortino by sqrt(365) before clipping and artificially encouraging the apparent sign-indicator behavior.
+All five now annualise downside deviation, include starting capital in the drawdown peak, and use sample standard deviation consistently with bot/report.
+Regression tests call every implementation, compare with daily NAV accounting, and verify the closed-form Sortino of an alternating -1%, +2% return sequence.
+Prior fortnight Screen 3 rankings and the collinearity claims that depend on them must be re-evaluated; raw-return qualification frequencies are unaffected by this scoring correction.
+Corrected A/B results are written separately to results/bot_comparison_corrected.json so the old artifacts remain an audit trail.
+
 ## concentration-outcome
 
 Concentrating into the best few names rather than holding everything that signals was tested across four point-in-time ranking rules and five position counts, and it produced the first configuration in this repo to improve both screens at once.
@@ -1287,3 +1297,33 @@ Bot A had recorded one new-bar cycle in its entire run at the time of the screen
 Bot B, on 1h bars, had four new-bar cycles and moved its target from seven names to eight across them.
 
 The lag is correct behaviour rather than a defect. Acting only on closed bars is what makes the live signal reproduce the backtest exactly, which is the property verified at `DECISIONS.md#bot-signal-parity`.
+
+## bot-c-declaration
+
+`bot_c_5names` runs the momentum-ranked top five alongside bots A and B rather than replacing A, and the reason for running rather than switching is stated in the config itself.
+
+The configuration is holdout-informed.
+`DECISIONS.md#concentration-outcome` records that the fit window's argmax was breakout at ten names, which scores 2.394 on the holdout, while the holdout's own best was momentum at three.
+Choosing momentum at five is therefore a choice made after seeing the window used to judge it, and the only honest way to adopt it is to let it accumulate its own forward record next to the incumbent rather than assert it is better.
+`meta.caution` in `config/bot_c_5names.yaml` carries that statement so it cannot be read without it.
+
+Five names rather than three is deliberate and is not the holdout optimum.
+Three scores 3.098 against five at 2.957, but three draws down 42.4% against 33.0% and averages 1.7 actual holdings against 2.3.
+A book that averages under two positions is a single-name directional bet, and its fortnightly outcome is idiosyncratic in a way no risk-adjusted statistic over fourteen observations can express.
+Giving up 0.14 of composite to halve the single-name concentration is a risk decision rather than a performance one.
+
+Ranking is computed from the same bar matrix the signal uses, over the declared 20-bar lookback, and applies only to names already long.
+It never introduces a position the channel rule did not select, so it can only subtract from the incumbent's book, never add to it.
+
+## bot-c-ranked-parity
+
+The ranked book was verified against its backtest before being allowed to trade, on the same standard applied to the plain channel at `DECISIONS.md#bot-signal-parity`.
+
+The live path evaluates the channel state machine bar by bar and then calls `portfolio.rank_and_select`; the reference path computes the vectorised Donchian position and takes the top five by momentum with pandas.
+Across 179 bars and 22 symbols, the two agree on all 3938 cells with zero mismatches, and both select a mean of 4.02 names.
+
+Mean selection below five is expected rather than a defect.
+The channel rule is frequently long fewer than five of the pool at once, and the ranking cannot manufacture a position the signal has not produced.
+
+First live cycle ranked ten signalling names, kept ENA, AVAX, SUI, TAO and LINK, and placed five orders of which four filled.
+ENA did not fill because the pre-registered spread filter rejected it at 5.01 bps against the 5.0 limit, which is the same control firing correctly that was recorded at `DECISIONS.md#live-monitoring-first-session`.

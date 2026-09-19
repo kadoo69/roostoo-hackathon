@@ -3,6 +3,11 @@
 This is the strategy the competition bot runs.
 It is `bot_a_4h`, defined by the frozen config at `config/bot_a_4h.yaml` and implemented in `bot/`.
 
+Review notice, 2026-09-19: historical fortnight Screen 3 numbers below require the scoring correction in `DECISIONS.md#fortnight-scoring-review-correction`.
+Five window scorers retained a missing Sortino annualisation and omitted initial capital from drawdown.
+This affects claims about the two screens and paired composite rankings; it does not itself change raw strategy returns.
+The separate live-market paper lab and unresolved implementation gaps are documented in `results/logic_review_2026_09_19.md`.
+
 The whole system is two comparisons per coin per four hours.
 Everything else in this document is universe selection, position sizing, risk limits, and the evidence for why those two comparisons are the ones being made.
 

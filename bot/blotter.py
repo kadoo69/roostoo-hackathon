@@ -112,11 +112,12 @@ def build(bot: str) -> dict:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("bots", nargs="*", default=["bot_a_4h", "bot_b_1h"])
+    ap.add_argument("bots", nargs="*",
+                    default=["bot_a_4h", "bot_b_1h", "bot_c_5names"])
     ap.add_argument("--csv", action="store_true")
     a = ap.parse_args()
     out = []
-    for b in (a.bots or ["bot_a_4h", "bot_b_1h"]):
+    for b in (a.bots or ["bot_a_4h", "bot_b_1h", "bot_c_5names"]):
         r = build(b)
         out.append(r)
         if a.csv:

@@ -168,8 +168,11 @@ class Bot:
 
         fresh = self.bar_close_due(matrix)
         channels = evaluate_book(matrix, self.state, self.s) if fresh else {}
+        ranking = {}
         if fresh:
             self.state = {s: c.held for s, c in channels.items()}
+            selected, ranking = portfolio.rank_and_select(channels, matrix, self.s)
+            channels = selected
 
         target = ({} if guard["halt"]
                   else portfolio.target_weights(channels, self.s, derisk))
@@ -197,6 +200,7 @@ class Bot:
             "target_gross": round(sum(target.values()), 4) if fresh else None,
             "n_target": len(target) if fresh else None,
             "positions": {k: round(v, 5) for k, v in sorted(held_weights.items())},
+            "ranking": ranking or None,
             "n_universe": len(self.universe),
             "derisk": derisk, "halt": guard["halt"], "breaches": guard["breaches"],
             "drawdown": guard["drawdown"], "orders": len(placed),

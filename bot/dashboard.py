@@ -15,8 +15,10 @@ from bot.report import from_equity
 from bot.insights import breadth, derive
 from bot.settings import ROOT, load
 
-BOTS = {"bot_a_4h": "config/bot_a_4h.yaml", "bot_b_1h": "config/bot_b_1h.yaml"}
-EXPECTED_DRAG = {"bot_a_4h": 0.051, "bot_b_1h": 0.193}
+BOTS = {"bot_a_4h": "config/bot_a_4h.yaml",
+        "bot_b_1h": "config/bot_b_1h.yaml",
+        "bot_c_5names": "config/bot_c_5names.yaml"}
+EXPECTED_DRAG = {"bot_a_4h": 0.051, "bot_b_1h": 0.193, "bot_c_5names": 0.075}
 _BREADTH = {"data": None, "updated": None}
 
 

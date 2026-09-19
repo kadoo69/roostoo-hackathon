@@ -155,6 +155,11 @@ Agent-spawned background processes do not survive between tool calls, so a shado
 
 ## Open items
 
+- **2026-09-19 review update:** `results/logic_review_2026_09_19.md` records execution, universe and data-integrity gaps, and a surviving Sortino annualisation defect in five fortnight scorers.
+  Their historical Screen 3 artifacts and the sign-indicator thesis need re-evaluation with corrected scoring.
+- **Prospective paper lab:** `config/paper_lab.yaml` declares 1h, 4h, 8h and daily channels, a flow-confirmed 4h candidate and BTC control.
+  `python3 -m bot.paper_lab --report` shows the isolated live-market paper comparison; simulated fills do not establish real fill quality or edge.
+
 - **Roostoo credentials are not issued.** Every signed endpoint, the real `CommissionPercent`, fill quality, partial fills and rejections are untested on the competition venue. The README and the organizer disagree about commission by a factor of eight and only a live fill settles it.
 - **Gate 10 needs three distinct days** of live operation and must run from a real terminal or EC2.
 - **Gates 3, 5 and 7** have never been run. Gate 8 fails on drawdown, Gate 4 fails on trial count.

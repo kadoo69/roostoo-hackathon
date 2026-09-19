@@ -42,9 +42,9 @@ def window_stats(net: pd.Series, window: int = 14, draws: int = 4000,
     mat = np.stack([r[s:s + window] for s in starts])
     eq = np.cumprod(1.0 + mat, axis=1)
     ret = eq[:, -1] - 1.0
-    dd = (eq / np.maximum.accumulate(eq, axis=1) - 1.0).min(axis=1)
-    mu, sd = mat.mean(axis=1), mat.std(axis=1)
-    down = np.sqrt((np.clip(mat, None, 0.0) ** 2).mean(axis=1))
+    dd = (eq / np.maximum(1.0, np.maximum.accumulate(eq, axis=1)) - 1.0).min(axis=1)
+    mu, sd = mat.mean(axis=1), mat.std(axis=1, ddof=1)
+    down = np.sqrt((np.clip(mat, None, 0.0) ** 2).mean(axis=1)) * np.sqrt(365.0)
     ann = np.sqrt(365.0)
     sharpe = np.where(sd > 0, mu / np.where(sd > 0, sd, 1) * ann, 0.0)
     sortino = np.where(down > 0, mu * 365.0 / np.where(down > 0, down, 1), 0.0)

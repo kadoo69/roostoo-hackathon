@@ -2,7 +2,7 @@
 set -uo pipefail
 cd "$(dirname "$0")"
 PY=${PY:-python3}
-CONFIGS=${CONFIGS:-"config/bot_a_4h.yaml config/bot_b_1h.yaml"}
+CONFIGS=${CONFIGS:-"config/bot_a_4h.yaml config/bot_b_1h.yaml config/bot_c_5names.yaml"}
 mkdir -p live run
 
 pidfile() { echo "run/$1.pid"; }

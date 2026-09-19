@@ -32,7 +32,7 @@ main{max-width:1560px;margin:0 auto;padding:20px 22px 60px;display:flex;flex-dir
 .icard .v{font-size:19px;margin:4px 0 5px;font-family:var(--mono)}
 .icard.good .v{color:var(--up)} .icard.warn .v{color:var(--warn)} .icard.bad .v{color:var(--dn)}
 .icard .d{font-size:11.5px;color:var(--faint);line-height:1.45}
-.bots{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.bots{display:grid;grid-template-columns:repeat(auto-fit,minmax(430px,1fr));gap:20px}
 @media(max-width:1180px){.bots{grid-template-columns:1fr}}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;overflow:hidden}
 .ph{padding:13px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}

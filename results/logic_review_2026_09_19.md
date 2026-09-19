@@ -8,6 +8,9 @@ The new experiment does not select a replacement on the data used to invent it.
 
 | Priority | Finding | Consequence | Disposition |
 |---|---|---|---|
+| High | Five fortnight-scoring functions still omit annualisation of downside deviation even though `bot/report.py` was fixed. | Sortino is inflated by sqrt(365), often clipped to its cap, distorting the reported Screen 3 comparisons and the claimed sign-indicator behavior. | Corrected all five; regression against an analytic alternating-return example and the daily accounting scorer. Prior fortnight composite artifacts require regeneration. |
+| High | The same functions omit initial capital from the drawdown peak and use population rather than sample standard deviation. | First-day losses are omitted from drawdown; Sharpe differs from the reporting implementation. | Initial NAV included in the peak and sample standard deviation used consistently in all five functions. |
+| High | Weight-vector backtests price exposure each bar but charge turnover only for target-weight changes. | Constant target weights implicitly rebalance without paying for drift trades; maker fills are assumed and the live lifecycle differs. | Historical P&L is approximate; the paper lab accounts for actual simulated quantities and observed fills. Historical simulator reconciliation remains open. |
 | High | `Bot.apply_dry_fill` immediately fills every proposed limit; `Executor.send` journals before cash/inventory acceptance. | Unobserved fills and rejected wallet changes can appear as trades; old paper P&L is unsuitable for comparing execution-sensitive horizons. | Isolated lab requires a later quote to cross the resting limit; fills, fees, inventory and events commit in one state snapshot. |
 | High | `universe.select` takes today's top 180 by 24h volume before ranking 30-day medians and accepts 15 daily observations. | The actual selection differs from the stated full-market 30-day rule, precisely where historical performance was most sensitive. | Lab ranks all active spot USDT symbols surviving the existing exclusions, requires 30 contiguous completed daily bars, and aborts on failed requests. |
 | High | `feed.bar_frame` silently discards request failures; `evaluate` drops missing closes; `Bot.cycle` builds a target from surviving columns. | A feed fault can compress time, suppress a signal, and liquidate an otherwise valid holding. | Lab requires complete contiguous, current closed bars and valid quotes for all required symbols before committing a cycle. |
@@ -66,3 +69,16 @@ Official Binance field definitions for completed candle times and taker-buy quot
 Regression tests exercise the actual signal, execution price planner and paper ledger code.
 Cases include no same-observation fill, cash reservations, duplicate orders, expiration after downtime, stale and missing bars, missing marks, missed intermediate exits, entry filtering and short-sample reporting.
 Public-data validation and process status are recorded separately from statistical evidence.
+The first two public-data cycles ranked 470 sufficiently seasoned active spot markets and selected 24 venue-listed names.
+The first cycle generated pending limits and zero fills; the second restored state and recorded only later-observation crosses.
+All 23 regression tests passed after the scorer corrections.
+The `com.roostoo.paper-lab` service was verified running and producing further observations after the two manual cycles.
+
+## Corrected historical A/B comparison
+
+`results/bot_comparison_corrected.json` reruns the existing configurations with corrected fortnight scoring; no new strategy parameter was selected.
+For 2023 onward, median fortnight Screen 3 falls from 3.8280 to 2.5124 for 4h and from 3.6612 to 2.1893 for 1h.
+For 2025 onward, it falls from 2.8101 to 1.0958 for 4h and from 3.1321 to 1.5918 for 1h.
+The correction preserves the longer-sample 4h advantage and the recent-sample 1h advantage on this particular measure.
+It does not establish an overall winner or remove the 1h fee sensitivity.
+The original Screen 3 figures in other historical artifacts remain superseded pending their own reruns.
