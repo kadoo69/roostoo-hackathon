@@ -142,7 +142,7 @@ class Bot:
         frames = feed.bar_frame(self.universe, self.s.interval, need + 20)
         matrix = feed.close_matrix(frames)
         quotes = feed.roostoo_quotes(self.client)
-        ticker_time = self.client.last_ticker_server_time_ms
+        ticker_time = getattr(self.client, "last_ticker_server_time_ms", None)
         ticker_age_s = (float("inf") if ticker_time is None else
                         max(0.0, (self.client._timestamp() - ticker_time) / 1000.0))
         equity, prices = self.mark(quotes)

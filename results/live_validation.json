@@ -1,0 +1,150 @@
+{
+  "written_utc": "2026-09-19T13:33:39.851837+00:00",
+  "status": "DRY_RUN_PASS_LIVE_DEPLOYMENT_BLOCKED",
+  "orders_submitted": 0,
+  "config_sha": "11acf1bd9cb46271",
+  "server_offset_ms": 232,
+  "bar": "2026-09-19T08:00:00+00:00",
+  "venue_pairs": 88,
+  "selected_symbols": 22,
+  "long_signals": 10,
+  "target_gross": 0.5,
+  "ticker_age_s": 0.163,
+  "mirror_checked": 22,
+  "mirror_abs_median_bps": 0.0,
+  "mirror_abs_max_bps": 5.582,
+  "signal_parity": {
+    "checked": 528,
+    "mismatches": 0,
+    "match_rate": 1.0
+  },
+  "proposed_orders": [
+    {
+      "symbol": "AVAXUSDT",
+      "pair": "AVAX/USD",
+      "side": "BUY",
+      "quantity": 536.59,
+      "price": 9.317,
+      "type": "LIMIT",
+      "notional": 4999.409,
+      "marketable": false,
+      "spread_bps": 1.0733
+    },
+    {
+      "symbol": "BNBUSDT",
+      "pair": "BNB/USD",
+      "side": "BUY",
+      "quantity": 6.496,
+      "price": 769.68,
+      "type": "LIMIT",
+      "notional": 4999.8413,
+      "marketable": false,
+      "spread_bps": 0.1299
+    },
+    {
+      "symbol": "BTCUSDT",
+      "pair": "BTC/USD",
+      "side": "BUY",
+      "quantity": 0.061520000000000005,
+      "price": 81266.0,
+      "type": "LIMIT",
+      "notional": 4999.4843,
+      "marketable": false,
+      "spread_bps": 0.0012
+    },
+    {
+      "symbol": "DOGEUSDT",
+      "pair": "DOGE/USD",
+      "side": "BUY",
+      "quantity": 56217.0,
+      "price": 0.08894,
+      "type": "LIMIT",
+      "notional": 4999.94,
+      "marketable": false,
+      "spread_bps": 1.1244
+    },
+    {
+      "skipped": "spread_exceeds_limit",
+      "symbol": "ENAUSDT",
+      "pair": "ENA/USD",
+      "spread_bps": 5.0403,
+      "max_spread_bps": 5.0
+    },
+    {
+      "symbol": "ETHUSDT",
+      "pair": "ETH/USD",
+      "side": "BUY",
+      "quantity": 1.8964,
+      "price": 2636.44,
+      "type": "LIMIT",
+      "notional": 4999.7448,
+      "marketable": false,
+      "spread_bps": 0.0379
+    },
+    {
+      "symbol": "LINKUSDT",
+      "pair": "LINK/USD",
+      "side": "BUY",
+      "quantity": 400.73,
+      "price": 12.476,
+      "type": "LIMIT",
+      "notional": 4999.5075,
+      "marketable": false,
+      "spread_bps": 0.8015
+    },
+    {
+      "symbol": "SUIUSDT",
+      "pair": "SUI/USD",
+      "side": "BUY",
+      "quantity": 5889.900000000001,
+      "price": 0.8488,
+      "type": "LIMIT",
+      "notional": 4999.3471,
+      "marketable": false,
+      "spread_bps": 1.1781
+    },
+    {
+      "symbol": "TAOUSDT",
+      "pair": "TAO/USD",
+      "side": "BUY",
+      "quantity": 18.7758,
+      "price": 266.3,
+      "type": "LIMIT",
+      "notional": 4999.9955,
+      "marketable": false,
+      "spread_bps": 3.7552
+    },
+    {
+      "symbol": "XRPUSDT",
+      "pair": "XRP/USD",
+      "side": "BUY",
+      "quantity": 3479.9,
+      "price": 1.4368,
+      "type": "LIMIT",
+      "notional": 4999.9203,
+      "marketable": false,
+      "spread_bps": 0.696
+    }
+  ],
+  "checks": {
+    "all_selected_symbols_have_bars": true,
+    "signal_parity_exact": true,
+    "gross_exposure_within_one": true,
+    "full_mirror_coverage": true,
+    "mirror_within_50bps": true,
+    "ticker_fresh": true,
+    "risk_gate_clear": true,
+    "spread_limit_enforced": true,
+    "all_limit_orders_passive": true,
+    "gross_order_notional_within_cash": true,
+    "authenticated_orders_safety_block_active": true
+  },
+  "deployment_blocks": {
+    "restart_safe_local_portfolio_state": true,
+    "restart_safe_pending_order_intent_reconciliation": false,
+    "authenticated_fill_role_and_commission_observed": false,
+    "deflated_sharpe_gate_0_95": false
+  },
+  "deflated_sharpe_trial_count": 386,
+  "deflated_sharpe_probability": 0.861026
+}

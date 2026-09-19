@@ -24,6 +24,7 @@ class BinanceTestnetClient:
         self.session = requests.Session()
         self.session.headers.update({"User-Agent": "roostoo-hackathon-bot"})
         self.time_offset_ms = 0
+        self.last_ticker_server_time_ms: int | None = None
         self._specs: dict[str, PairSpec] = {}
 
     def _signed_params(self, params: dict[str, Any]) -> dict[str, Any]:
@@ -83,8 +84,12 @@ class BinanceTestnetClient:
         self._specs = out
         return out
 
+    def _timestamp(self) -> int:
+        return int(time.time() * 1000) + self.time_offset_ms
+
     def ticker(self, pair: str | None = None) -> dict:
         rows = self._request("GET", "/api/v3/ticker/bookTicker")
+        self.last_ticker_server_time_ms = self._timestamp()
         specs = self._specs or self.exchange_info()
         by_symbol = {p.replace("/", ""): p for p in specs}
         out = {}

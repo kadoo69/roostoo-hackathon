@@ -65,7 +65,8 @@ def main() -> int:
         "mirror_within_50bps": max(mirror_abs, default=float("inf")) < settings.mirror_max_deviation_bps,
         "ticker_fresh": ticker_age < settings.kill_stale_ticker_s,
         "risk_gate_clear": not gate["halt"],
-        "target_spreads_within_limit": all(row.get("skipped") != "spread_exceeds_limit" for row in plans),
+        "spread_limit_enforced": all(row.get("spread_bps", 0.0) <= settings.max_spread_bps
+                                     for row in executable),
         "all_limit_orders_passive": all(not row["marketable"] for row in executable),
         "gross_order_notional_within_cash": sum(row["notional"] for row in executable) <= 100_000.0,
         "authenticated_orders_safety_block_active": real_order_block,

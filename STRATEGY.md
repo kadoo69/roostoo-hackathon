@@ -192,6 +192,8 @@ The selected 20/10 is deliberately **not** the peak, which sits at 28/14 with a 
 Replayed bar by bar over 199 bars and 22 symbols, they agree on all **3,938 cells with zero mismatches**.
 Without this check no backtest number would transfer to the live bot.
 
+**Live public-data validation.** On the completed 2026-09-19 08:00 UTC bar, the current Roostoo–Binance intersection contained 22 names and produced 10 long signals at 50% gross exposure. A fresh replay matched all 528 checked signal cells, the Roostoo ticker was 0.163 seconds old, and absolute Binance–Roostoo price deviation was 0.000 bps at the median and 5.582 bps at the maximum. Nine proposed limits were passive; ENA was correctly rejected because its 5.040 bps spread exceeded the 5 bps ceiling. No order was submitted. The public-data and order-planning path passed, while authenticated deployment remains blocked by the pending-order reconciliation and statistical gates described below.
+
 ---
 
 ## 7b. Validation gate scorecard
@@ -248,6 +250,7 @@ It is not a strategy demonstrated to have edge, and the two statements are both 
 | `bot/run.py` | The cycle loop |
 | `DECISIONS.md` | Every non-obvious choice, with its reasoning and its evidence |
 | `results/` | Gate artifacts and backtest outputs |
+| `results/live_validation.md` | Latest read-only Binance and Roostoo public-data validation |
 
 Run the public-data shadow with `python3 -m bot.run config/bot_a_4h.yaml`.
 It is dry-run by default. Authenticated order submission is blocked until restart-safe pending-order intent reconciliation and observed fill-role validation are complete.
