@@ -2,6 +2,146 @@ policy:
   append_only: true
   counts_nulls: true
   counts_abandoned_searches: true
-  rationale_ref: "DECISIONS.md#trial-counting"
-
-trials: []
+  rationale_ref: DECISIONS.md#trial-counting
+trials:
+- signal: xsec_momentum
+  lookback: 10
+  gate: g2_parameter_sensitivity
+  net_sharpe: -1.577324
+  gross_sharpe: -0.645615
+- signal: xsec_momentum
+  lookback: 20
+  gate: g2_parameter_sensitivity
+  net_sharpe: -1.08155
+  gross_sharpe: -0.396792
+- signal: xsec_momentum
+  lookback: 30
+  gate: g2_parameter_sensitivity
+  net_sharpe: -0.785538
+  gross_sharpe: -0.193294
+- signal: xsec_momentum
+  lookback: 45
+  gate: g2_parameter_sensitivity
+  net_sharpe: -0.64597
+  gross_sharpe: -0.147423
+- signal: xsec_momentum
+  lookback: 60
+  gate: g2_parameter_sensitivity
+  net_sharpe: -0.624649
+  gross_sharpe: -0.198199
+- signal: xsec_volume
+  lookback: 3
+  gate: g2_parameter_sensitivity
+  net_sharpe: -2.389325
+  gross_sharpe: -1.392017
+- signal: xsec_volume
+  lookback: 5
+  gate: g2_parameter_sensitivity
+  net_sharpe: -1.907129
+  gross_sharpe: -1.168018
+- signal: xsec_volume
+  lookback: 10
+  gate: g2_parameter_sensitivity
+  net_sharpe: -1.670097
+  gross_sharpe: -1.121622
+- signal: xsec_volume
+  lookback: 20
+  gate: g2_parameter_sensitivity
+  net_sharpe: -1.382475
+  gross_sharpe: -0.833319
+- signal: xsec_volume
+  lookback: 30
+  gate: g2_parameter_sensitivity
+  net_sharpe: 0.0
+  gross_sharpe: 0.0
+- signal: size_conditioned_momentum
+  lookback: 10
+  gate: g2_parameter_sensitivity
+  net_sharpe: -0.520146
+  gross_sharpe: 0.180125
+- signal: size_conditioned_momentum
+  lookback: 20
+  gate: g2_parameter_sensitivity
+  net_sharpe: -0.288731
+  gross_sharpe: 0.370762
+- signal: size_conditioned_momentum
+  lookback: 30
+  gate: g2_parameter_sensitivity
+  net_sharpe: -0.30446
+  gross_sharpe: 0.273269
+- signal: size_conditioned_momentum
+  lookback: 45
+  gate: g2_parameter_sensitivity
+  net_sharpe: -0.38319
+  gross_sharpe: 0.121312
+- signal: size_conditioned_momentum
+  lookback: 60
+  gate: g2_parameter_sensitivity
+  net_sharpe: -0.527003
+  gross_sharpe: -0.062832
+- signal: xsec_momentum
+  gate: exploratory
+  variant: roostoo_tradable_subset
+  note: survivor-conditioned universe, not deployable
+- signal: xsec_momentum
+  gate: exploratory
+  variant: pit_liquidity_top40
+  note: undeclared universe parameter
+- signal: xsec_momentum
+  gate: exploratory
+  variant: pit_liquidity_top60
+  note: undeclared universe parameter
+- signal: xsec_momentum
+  gate: exploratory
+  variant: pit_liquidity_top90
+  note: undeclared universe parameter
+- signal: xsec_momentum
+  gate: exploratory
+  variant: execution_LIMIT
+- signal: xsec_momentum
+  gate: exploratory
+  variant: execution_zero_cost
+- signal: xsec_volume
+  gate: exploratory
+  variant: roostoo_tradable_subset
+  note: survivor-conditioned universe, not deployable
+- signal: xsec_volume
+  gate: exploratory
+  variant: pit_liquidity_top40
+  note: undeclared universe parameter
+- signal: xsec_volume
+  gate: exploratory
+  variant: pit_liquidity_top60
+  note: undeclared universe parameter
+- signal: xsec_volume
+  gate: exploratory
+  variant: pit_liquidity_top90
+  note: undeclared universe parameter
+- signal: xsec_volume
+  gate: exploratory
+  variant: execution_LIMIT
+- signal: xsec_volume
+  gate: exploratory
+  variant: execution_zero_cost
+- signal: size_conditioned_momentum
+  gate: exploratory
+  variant: roostoo_tradable_subset
+  note: survivor-conditioned universe, not deployable
+- signal: size_conditioned_momentum
+  gate: exploratory
+  variant: pit_liquidity_top40
+  note: undeclared universe parameter
+- signal: size_conditioned_momentum
+  gate: exploratory
+  variant: pit_liquidity_top60
+  note: undeclared universe parameter
+- signal: size_conditioned_momentum
+  gate: exploratory
+  variant: pit_liquidity_top90
+  note: undeclared universe parameter
+- signal: size_conditioned_momentum
+  gate: exploratory
+  variant: execution_LIMIT
+- signal: size_conditioned_momentum
+  gate: exploratory
+  variant: execution_zero_cost

@@ -111,3 +111,50 @@ Prices and volumes are untouched, and the bar is not dropped, because dropping i
 
 Every repair is registered in `data/repairs.py` with an identifier and an action, applied at panel build, and reported in the Gate 1 artifact under `repairs_applied`.
 A repair that is not in that registry does not happen.
+
+## signal-declarations
+
+Section 2 requires universe, lookback, rebalance frequency, and long/short construction to be fixed before any backtest is run, so they live in `config/signals.yaml` and are committed before the first return is computed.
+
+Each declaration also carries a mechanism and a failure mode, which Section 1 requires and Section 8.5 requires before code is written.
+A signal without a written failure mode is not accepted regardless of its backtest.
+
+The `lookback_grid` is the full set of parameter values that will ever be evaluated for that signal.
+It is declared up front because every value in it counts as a trial against the multiple-testing budget in Gates 4 and 7, whether or not its result is reported.
+
+## size-proxy
+
+Market capitalisation is not available point-in-time for delisted symbols, so trailing median quote volume is used as the size proxy.
+
+Dollar volume is the standard liquidity proxy, is available in the kline archive for every symbol including delisted ones, and is computable strictly from past data.
+Circulating-supply based market cap would require a vendor snapshot that does not exist for the 199 delisted names and would reintroduce the survivorship problem Gate 1 exists to prevent.
+
+## tick-size
+
+Spread is derived from the minimum positive price increment observed in each symbol's own close series rather than from a venue table.
+
+Roostoo's `PricePrecision` was compared against the implied tick from Binance closes across all 65 overlapping symbols on 2026-09-19 and matched exactly on every one.
+This makes the estimator usable for the 199 delisted symbols that Roostoo does not list and for which no venue table exists.
+
+The estimate is computed from the trailing window only, never from the full sample, so it carries no look-ahead.
+
+## undeclared-universe-sweep
+
+A universe size parameter was swept during exploration without being pre-registered, and the trials are recorded rather than discarded.
+
+After Gate 2 failed on the declared universe, a liquidity-ranked point-in-time universe was tested at three sizes to check whether the failure was a universe-construction artifact rather than an absence of edge.
+`topN` is not in `config/preregistration.yaml`, so those runs are exploratory and none of their numbers may be reported as a gate result.
+
+The sweep produced a peak at `topN=60` and a collapse to negative at `topN=90`, which is the peak-isolation failure Gate 2 is built to detect, applied to a parameter Gate 2 was not watching.
+That is the reason the result is not promoted: a maximum selected from an undeclared sweep, with its immediate neighbour negative, is a search artifact.
+
+Using a liquidity-ranked universe in future requires adding it to the pre-registration with an explicit grid before any further evaluation, and every value in that grid counts against the trial budget.
+
+## gate2-outcome
+
+Gate 2 failed on 2026-09-19 and the pipeline stops there.
+No signal produced a positive net Sharpe at any declared grid point, and the best gross Sharpe across all three signals sat 1.01 standard deviations above a random-score null, against a Harvey-Liu-Zhu hurdle near 3.0.
+
+The declared mechanism for `xsec_volume` is inverted on this universe: rising relative volume predicted underperformance, at a gross Sharpe of -1.17.
+The sign is not flipped, because a sign chosen after seeing the result is a new hypothesis and requires its own stated mechanism, its own declaration, and its own trial count.
+The declared failure mode for that signal already anticipated it, since volume spikes on delisting announcements dominate a universe that is three quarters delisted names.

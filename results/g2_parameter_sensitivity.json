@@ -1,0 +1,238 @@
+{
+  "gate": "g2_parameter_sensitivity",
+  "passed": false,
+  "written_utc": "2026-09-19T05:10:32.028398+00:00",
+  "git_rev": "1ec4b0e85803f2bf50be3f1de7db4f84fd2c186b",
+  "prereg_sha256_16": "b56f6329440b1901",
+  "thresholds": {
+    "applicable": true,
+    "perturbation_steps": [
+      -2,
+      -1,
+      1,
+      2
+    ],
+    "min_neighbour_sharpe_ratio_to_peak": 0.5,
+    "max_peak_isolation_score": 0.35
+  },
+  "trials_to_date": 15,
+  "python": "3.12.2",
+  "result": {
+    "null_distribution": {
+      "draws": 200,
+      "mean": 0.021,
+      "std": 0.3474,
+      "p95": 0.5558,
+      "p99": 0.9071
+    },
+    "signals": {
+      "xsec_momentum": {
+        "declaration": {
+          "family": "risk_premium",
+          "mechanism": "Cross-sectional trend persistence. Sticky and siloed capital inside crypto produces reflexive continuation once a sub-ecosystem receives a windfall.",
+          "failure_mode": "Sharp mean-reverting deleveraging cascades; crowding once the trade is widely held."
+        },
+        "grid": [
+          {
+            "signal": "xsec_momentum",
+            "lookback": 10,
+            "gross_sharpe": -0.645615,
+            "net_sharpe": -1.577324,
+            "net_annual_return": -0.364979,
+            "max_drawdown": -0.988573,
+            "annual_turnover": 154.961254,
+            "annual_cost_drag": 0.247275
+          },
+          {
+            "signal": "xsec_momentum",
+            "lookback": 20,
+            "gross_sharpe": -0.396792,
+            "net_sharpe": -1.08155,
+            "net_annual_return": -0.274303,
+            "max_drawdown": -0.972034,
+            "annual_turnover": 112.665831,
+            "annual_cost_drag": 0.180716
+          },
+          {
+            "signal": "xsec_momentum",
+            "lookback": 30,
+            "gross_sharpe": -0.193294,
+            "net_sharpe": -0.785538,
+            "net_annual_return": -0.209443,
+            "max_drawdown": -0.945695,
+            "annual_turnover": 94.734535,
+            "annual_cost_drag": 0.152024
+          },
+          {
+            "signal": "xsec_momentum",
+            "lookback": 45,
+            "gross_sharpe": -0.147423,
+            "net_sharpe": -0.64597,
+            "net_annual_return": -0.176314,
+            "max_drawdown": -0.926401,
+            "annual_turnover": 77.762259,
+            "annual_cost_drag": 0.12511
+          },
+          {
+            "signal": "xsec_momentum",
+            "lookback": 60,
+            "gross_sharpe": -0.198199,
+            "net_sharpe": -0.624649,
+            "net_annual_return": -0.172966,
+            "max_drawdown": -0.928099,
+            "annual_turnover": 67.160361,
+            "annual_cost_drag": 0.107609
+          }
+        ],
+        "stability": {
+          "peak_net_sharpe": -0.624649,
+          "peak_lookback": 60,
+          "neighbour_ratio": null,
+          "peak_isolation": null,
+          "passed": false,
+          "reason": "no_positive_configuration"
+        },
+        "best_gross_sharpe_z_vs_null": -0.485
+      },
+      "xsec_volume": {
+        "declaration": {
+          "family": "market_inefficiency",
+          "mechanism": "Rising adjusted volume is mildly predictive of future direction, falling volume of the reverse. Volume carries order-flow information ahead of price.",
+          "failure_mode": "Volume spikes on delisting announcements and exchange incidents invert the sign."
+        },
+        "grid": [
+          {
+            "signal": "xsec_volume",
+            "lookback": 3,
+            "gross_sharpe": -1.392017,
+            "net_sharpe": -2.389325,
+            "net_annual_return": -0.431234,
+            "max_drawdown": -0.99526,
+            "annual_turnover": 139.042311,
+            "annual_cost_drag": 0.225441
+          },
+          {
+            "signal": "xsec_volume",
+            "lookback": 5,
+            "gross_sharpe": -1.168018,
+            "net_sharpe": -1.907129,
+            "net_annual_return": -0.369098,
+            "max_drawdown": -0.989383,
+            "annual_turnover": 104.757643,
+            "annual_cost_drag": 0.168679
+          },
+          {
+            "signal": "xsec_volume",
+            "lookback": 10,
+            "gross_sharpe": -1.121622,
+            "net_sharpe": -1.670097,
+            "net_annual_return": -0.32911,
+            "max_drawdown": -0.976645,
+            "annual_turnover": 76.088308,
+            "annual_cost_drag": 0.123145
+          },
+          {
+            "signal": "xsec_volume",
+            "lookback": 20,
+            "gross_sharpe": -0.833319,
+            "net_sharpe": -1.382475,
+            "net_annual_return": -0.274884,
+            "max_drawdown": -0.953997,
+            "annual_turnover": 73.200791,
+            "annual_cost_drag": 0.118637
+          },
+          {
+            "signal": "xsec_volume",
+            "lookback": 30,
+            "gross_sharpe": 0.0,
+            "net_sharpe": 0.0,
+            "net_annual_return": 0.0,
+            "max_drawdown": 0.0,
+            "annual_turnover": 0.0,
+            "annual_cost_drag": 0.0
+          }
+        ],
+        "stability": {
+          "peak_net_sharpe": 0.0,
+          "peak_lookback": 30,
+          "neighbour_ratio": null,
+          "peak_isolation": null,
+          "passed": false,
+          "reason": "no_positive_configuration"
+        },
+        "best_gross_sharpe_z_vs_null": -0.06
+      },
+      "size_conditioned_momentum": {
+        "declaration": {
+          "family": "market_inefficiency",
+          "mechanism": "Momentum works on large-cap crypto and reverses in small caps, so new highs are bought in the large decile and sold in the small decile.",
+          "failure_mode": "Small-cap shorts are the least liquid leg and the most exposed to a squeeze."
+        },
+        "grid": [
+          {
+            "signal": "size_conditioned_momentum",
+            "lookback": 10,
+            "gross_sharpe": 0.180125,
+            "net_sharpe": -0.520146,
+            "net_annual_return": -0.305872,
+            "max_drawdown": -0.991429,
+            "annual_turnover": 208.885172,
+            "annual_cost_drag": 0.335101
+          },
+          {
+            "signal": "size_conditioned_momentum",
+            "lookback": 20,
+            "gross_sharpe": 0.370762,
+            "net_sharpe": -0.288731,
+            "net_annual_return": -0.170049,
+            "max_drawdown": -0.975588,
+            "annual_turnover": 155.552689,
+            "annual_cost_drag": 0.253185
+          },
+          {
+            "signal": "size_conditioned_momentum",
+            "lookback": 30,
+            "gross_sharpe": 0.273269,
+            "net_sharpe": -0.30446,
+            "net_annual_return": -0.17251,
+            "max_drawdown": -0.972981,
+            "annual_turnover": 133.32886,
+            "annual_cost_drag": 0.219157
+          },
+          {
+            "signal": "size_conditioned_momentum",
+            "lookback": 45,
+            "gross_sharpe": 0.121312,
+            "net_sharpe": -0.38319,
+            "net_annual_return": -0.191164,
+            "max_drawdown": -0.976743,
+            "annual_turnover": 112.068168,
+            "annual_cost_drag": 0.187042
+          },
+          {
+            "signal": "size_conditioned_momentum",
+            "lookback": 60,
+            "gross_sharpe": -0.062832,
+            "net_sharpe": -0.527003,
+            "net_annual_return": -0.230771,
+            "max_drawdown": -0.978977,
+            "annual_turnover": 101.428396,
+            "annual_cost_drag": 0.17027
+          }
+        ],
+        "stability": {
+          "peak_net_sharpe": -0.288731,
+          "peak_lookback": 20,
+          "neighbour_ratio": null,
+          "peak_isolation": null,
+          "passed": false,
+          "reason": "no_positive_configuration"
+        },
+        "best_gross_sharpe_z_vs_null": 1.007
+      }
+    },
+    "trials_recorded_this_gate": 15,
+    "trials_cumulative": 15,
+    "surviving_signals": []
+  }
+}
