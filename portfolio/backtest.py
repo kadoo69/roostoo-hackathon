@@ -8,6 +8,7 @@ import pandas as pd
 from costs.model import CostModel
 
 DAYS_PER_YEAR = 365
+PERIODS_PER_YEAR = {'4h':2190,'8h':1095,'12h':730,'1d':365,'2d':182,'3d':121}
 
 
 @dataclass(frozen=True)
@@ -35,35 +36,38 @@ def _drawdown(equity: pd.Series) -> float:
 
 
 def evaluate(net: pd.Series, gross: pd.Series, turnover: pd.Series,
-             cost: pd.Series, exposure: pd.Series) -> Performance:
+             cost: pd.Series, exposure: pd.Series,
+             periods_per_year: int = DAYS_PER_YEAR) -> Performance:
+    global DAYS_PER_YEAR_ACTIVE
+    DAYS_PER_YEAR_ACTIVE = periods_per_year
     net = net.dropna()
     if net.empty or net.std() == 0:
         return Performance(0, 0, 0, 0, 0, 0, 0, 0, 0, len(net), 0)
 
     equity = (1.0 + net).cumprod()
-    years = len(net) / DAYS_PER_YEAR
+    years = len(net) / periods_per_year
     annual_return = equity.iloc[-1] ** (1 / years) - 1.0 if years > 0 else 0.0
-    annual_vol = net.std() * np.sqrt(DAYS_PER_YEAR)
-    downside = np.sqrt((net.clip(upper=0.0) ** 2).mean()) * np.sqrt(DAYS_PER_YEAR)
+    annual_vol = net.std() * np.sqrt(periods_per_year)
+    downside = np.sqrt((net.clip(upper=0.0) ** 2).mean()) * np.sqrt(periods_per_year)
     max_dd = _drawdown(equity)
 
     return Performance(
         total_return=equity.iloc[-1] - 1.0,
         annual_return=annual_return,
         annual_volatility=annual_vol,
-        sharpe=net.mean() / net.std() * np.sqrt(DAYS_PER_YEAR) if net.std() else 0.0,
-        sortino=net.mean() * DAYS_PER_YEAR / downside if downside else 0.0,
+        sharpe=net.mean() / net.std() * np.sqrt(periods_per_year) if net.std() else 0.0,
+        sortino=net.mean() * periods_per_year / downside if downside else 0.0,
         calmar=annual_return / abs(max_dd) if max_dd else 0.0,
         max_drawdown=max_dd,
-        annual_turnover=turnover.mean() * DAYS_PER_YEAR,
-        annual_cost_drag=cost.mean() * DAYS_PER_YEAR,
+        annual_turnover=turnover.mean() * periods_per_year,
+        annual_cost_drag=cost.mean() * periods_per_year,
         days=len(net),
         mean_gross_exposure=exposure.mean(),
     )
 
 
 def run(weights: pd.DataFrame, close: pd.DataFrame, half_spread_bps: pd.DataFrame,
-        costs: CostModel, execution: str = "MARKET"
+        costs: CostModel, execution: str = "MARKET", periods_per_year: int = DAYS_PER_YEAR
         ) -> tuple[pd.Series, Performance, Performance]:
     returns = close.pct_change(fill_method=None)
     aligned = weights.reindex_like(returns).fillna(0.0)
@@ -80,5 +84,5 @@ def run(weights: pd.DataFrame, close: pd.DataFrame, half_spread_bps: pd.DataFram
     exposure = aligned.abs().sum(axis=1)
     zero = pd.Series(0.0, index=cost.index)
     return (net,
-            evaluate(net, gross, turn, cost, exposure),
-            evaluate(gross, gross, turn, zero, exposure))
+            evaluate(net, gross, turn, cost, exposure, periods_per_year),
+            evaluate(gross, gross, turn, zero, exposure, periods_per_year))

@@ -1,9 +1,9 @@
 {
   "gate": "g2_parameter_sensitivity",
   "passed": false,
-  "written_utc": "2026-09-19T05:31:07.147806+00:00",
-  "git_rev": "b290902d845cfa4b7de4f80611b0b512239633c0",
-  "prereg_sha256_16": "b448f451cde797ce",
+  "written_utc": "2026-09-19T05:38:32.963704+00:00",
+  "git_rev": "8bc194b451c72c28a97089f2747fdcd093f5c933",
+  "prereg_sha256_16": "cb65ec302d178685",
   "thresholds": {
     "applicable": true,
     "perturbation_steps": [
@@ -15,37 +15,55 @@
     "min_neighbour_sharpe_ratio_to_peak": 0.5,
     "max_peak_isolation_score": 0.35
   },
-  "trials_to_date": 89,
+  "trials_to_date": 101,
   "python": "3.12.2",
   "result": {
-    "stage": "composite_objective_optimisation",
-    "selected_on_in_sample": "volume_confirmed_trend vol5 / vol_target 0.50 / symmetric",
-    "in_sample_composite": 1.3,
-    "in_sample_benchmark_btc": 0.7,
-    "oos_composite": 1.18,
-    "oos_benchmark_btc": 1.31,
-    "beats_benchmark_oos": false,
-    "attribution_oos_composite": {
-      "raw_signal": 0.99,
-      "plus_vol_target": 1.01,
-      "plus_circuit_breaker": 1.17,
-      "plus_both": 1.18
+    "stage": "horizon_search",
+    "configs_tested": 12,
+    "directional_accuracy": {
+      "mean": 0.488,
+      "min": 0.4819,
+      "max": 0.4943,
+      "any_above_coinflip": false
     },
-    "circuit_breaker_cash_fraction_oos": 0.848,
-    "bootstrap_14d": {
-      "draws": 4000,
-      "strategy_flat_fraction": 0.842,
-      "strategy_p_return_positive": 0.093,
-      "btc_p_return_positive": 0.556,
-      "p_strategy_composite_beats_btc": 0.455,
-      "p_strategy_return_beats_btc": 0.468
+    "monotonic_speed_penalty": {
+      "4h_sharpe_range": [
+        0.003,
+        0.317
+      ],
+      "1d_sharpe_range": [
+        0.389,
+        0.965
+      ],
+      "4h_cost_drag_range": [
+        0.095,
+        0.144
+      ],
+      "1d_cost_drag_range": [
+        0.0182,
+        0.026
+      ]
     },
-    "trials_cumulative": 89,
+    "selected_under_preregistered_constraints": "8h_20/50",
+    "selected_median_composite_14d": 0.53,
+    "selected_p_return_positive": 0.51,
+    "excluded_by_flips_constraint": {
+      "config": "1d_12/48",
+      "median_composite_14d": 1.55,
+      "p_return_positive": 0.535
+    },
+    "benchmark_btc_hold": {
+      "median_composite_14d": 2.25,
+      "p_return_positive": 0.56,
+      "median_return": 0.0082
+    },
+    "beats_benchmark": false,
+    "trials_cumulative": 101,
     "blocking_findings": [
-      "optimised configuration loses to BTC buy-and-hold on the optimised objective",
-      "entire composite gain attributable to holding cash 84.8% of days",
-      "flat in 84.2% of 14-day windows, which fails the Screen 2 return gate",
-      "12% circuit breaker mis-specified against 30% natural drawdown"
+      "directional accuracy below 50% at every timeframe tested",
+      "faster horizons monotonically worse; cost drag 9.5-14.4%/yr at 4h",
+      "BTC buy-and-hold beats all 12 configurations on the 14-day composite",
+      "Screen 2 rank cut rewards right-tail variance that Screen 3 optimisation removes"
     ]
   }
 }

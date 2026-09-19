@@ -162,3 +162,26 @@ bootstrap:
   seed: 20260919
   block: contiguous
   reason_ref: DECISIONS.md#competition-bootstrap
+horizon_search:
+  declared_utc: '2026-09-19'
+  bar_intervals:
+  - 4h
+  - 8h
+  - 12h
+  - 1d
+  sma_pairs_in_bars:
+  - - 6
+    - 24
+  - - 12
+    - 48
+  - - 20
+    - 50
+  signal: volume_confirmed_trend
+  volume_lookback_bars: 10
+  configs: 12
+  selection_metric: bootstrap_14d_median_composite
+  selection_constraint: 'must clear Screen 2 return gate: P(return>0) >= 0.50'
+  fitted_on: in_sample_only
+  judged_on: out_of_sample_14d_bootstrap
+  min_flips_per_14d: 2
+  justification_ref: DECISIONS.md#horizon-search

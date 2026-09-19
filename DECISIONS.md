@@ -291,3 +291,58 @@ Screen 2 ranks on raw portfolio return and advances only the top 20 per region, 
 
 The correct objective is the composite conditional on clearing the return cut, not the composite alone.
 A configuration that maximises Screen 3 while failing Screen 2 scores nothing, and the two-stage structure means the gates cannot be optimised independently.
+
+## horizon-search
+
+The existing signals hold for 7 to 22 days, which is incoherent with a 14-day competition, and the horizon is therefore searched explicitly.
+
+A 21-day holding period inside a 14-day window produces at most one signal change, so the outcome is a single directional bet rather than a repeated process.
+None of the three scored metrics is meaningful on one flip: Sharpe and Sortino need a return series, and Calmar needs a drawdown path.
+The horizon must be short enough that the strategy completes several independent cycles inside the window, which is why `min_flips_per_14d` is set at 2.
+
+The search is bounded below by the cost arithmetic measured on 2026-09-19.
+Break-even directional accuracy is 61.7% at a 1-hour horizon and 55.8% at 4 hours, against realised accuracy of 47.9% to 52.1% for simple signals on hourly BTC over a year.
+Nothing faster than 4 hours is tested, because below that the average move is smaller than the round trip cost and no accuracy makes it profitable.
+
+Selection is on the median composite across 14-day windows, not on full-sample statistics, and is subject to a hard constraint that the configuration must be positive in at least half of those windows.
+That constraint encodes the Screen 2 return gate, which the previous optimisation stage failed by producing a configuration that was flat in 84% of fortnights.
+
+## horizon-search-outcome
+
+Twelve configurations across four bar intervals were tested out of sample on 2026-09-19, and the result reverses the premise that motivated the search.
+
+Directional accuracy was 48.8% on average with a range of 48.2% to 49.4%.
+Not one configuration at any timeframe exceeded a coin flip, yet several were clearly profitable, the best returning 28.9% a year at a Sharpe of 0.97.
+This is the ordinary signature of trend following: it is right slightly less than half the time and wins more when right than it loses when wrong.
+
+Directional accuracy is therefore the wrong optimisation target for this strategy family.
+It cannot be raised materially and does not need to be, and a search that maximised it would select against the asymmetry that produces the returns.
+
+Speed made performance monotonically worse.
+Out-of-sample Sharpe ran 0.00 to 0.32 at four-hour bars against 0.39 to 0.97 at daily bars, while cost drag ran 9.5% to 14.4% of NAV a year at four hours against 1.8% to 2.6% at daily.
+Cost scales inversely with horizon and consumes the entire gross edge at the fast end, which is the same arithmetic recorded at `DECISIONS.md#mid-frequency` arriving from the opposite direction.
+
+One configuration passed both pre-registered constraints, eight-hour bars with a 20/50 crossover, at a median 14-day composite of 0.53 and a positive return in 51.0% of windows.
+BTC buy-and-hold scored 2.25 and 56.0% on the same basis and beat it, as it has beaten every configuration tested in this repo.
+
+## flips-constraint-misspecified
+
+The `min_flips_per_14d` constraint excluded the strongest configuration, and its stated rationale was partly wrong.
+
+The constraint was declared on the reasoning that Sharpe, Sortino, and Calmar are not meaningful across one signal change.
+That reasoning is incorrect: all three are computed from the return series, not from the trade sequence, and fourteen daily returns support them regardless of how many times the position flipped.
+
+The variance argument survives, since a fortnight containing 1.6 position changes is closer to a single directional bet than to a repeated process, and its outcome is correspondingly more idiosyncratic.
+The constraint stands as declared for this cycle, because relaxing it after seeing that it excluded the best result is precisely the post-hoc adjustment the pre-registration exists to prevent.
+The configuration it excluded, daily bars at 12/48 with a median 14-day composite of 1.55, is recorded here so a future cycle can test it under a constraint declared in advance.
+
+## screen2-needs-variance
+
+The two screens want opposite distributional shapes, and the horizon search made the conflict measurable.
+
+Across 14-day windows the selected configuration spans a 5th percentile of -8.3% and a 95th of 13.6%, against BTC buy-and-hold at -11.3% and 21.0%.
+The strategy's tighter distribution is what lifts Sortino and Calmar for Screen 3.
+
+Screen 2 is a rank cut that advances the top 20 of a region on raw return, and a rank cut is won from the right tail rather than the median.
+Compressing the distribution improves the scored composite while reducing the probability of reaching a tail outcome large enough to survive the cut that precedes it.
+A configuration optimised purely for Screen 3 is therefore selecting against its own chance of being scored at all.
