@@ -714,3 +714,63 @@ This is the policy at `DECISIONS.md#trial-counting` applied to a request rather 
 
 The result is still worth having.
 A family with a gross Sharpe of 1.8 that dies entirely on turnover is a different finding from a family with no edge, and it says where a tradeable version would have to come from: the same signal harvested at a fraction of the turnover, not a better volume feature.
+
+## donchian-lowtf-declaration
+
+The operator asked for the single-channel Donchian taken to lower timeframes for the competition, without adding rules, and the grid was declared at `config/donchian_lowtf.yaml` before any of it was run.
+
+The declaration separates two readings of "lookback" that are different signals rather than different settings.
+In `bars` mode the entry window is a fixed twenty bars, so the signal itself speeds up as the interval shortens and a 4h channel spans 3.3 days rather than 20.
+In `calendar` mode the window is twenty days expressed in bars, so the signal is nominally unchanged and only the execution grid gets finer.
+Running one without the other would have confounded "trade faster" with "execute more precisely", which are the two distinct things a lower timeframe can buy.
+
+Exit is either the ratcheting midpoint already used by the ensemble or the opposite channel at half the entry lookback, the latter being the canonical Turtle construction. Twenty and its half are conventional values, not fitted.
+
+## annualisation-across-intervals
+
+Full-sample Sharpe, Sortino and Calmar must be computed from a single daily return series, never from each configuration's native bar, and the first version of this comparison got it wrong.
+
+Annualising a per-bar Sharpe by the square root of bars per year assumes serial independence.
+Crypto returns are not independent at intraday frequencies, so the factor is wrong by a different amount at every interval and the resulting table compares configurations on inconsistent scales.
+Every metric reported for this family is therefore computed after compounding each strategy's returns to daily.
+
+The measured distortion runs the opposite way to the expectation that prompted the check.
+Native-bar annualisation understated the calendar-mode Sharpe, by 7.5% at 1h and 5.2% at 4h, and was within 1% for every bars-mode and daily configuration.
+The correction strengthened the low-timeframe result rather than removing it, but the discipline stands regardless of which way it cut: the comparison is only meaningful on a common sampling frequency.
+
+## donchian-lowtf-outcome
+
+Lowering the timeframe improves the same channel rule substantially, and the reason splits into two separable effects that the declared grid was built to distinguish.
+
+Out of sample from 2023, on daily-compounded returns, the twenty-day channel executed on 1h bars returned 68.9% a year at a Sharpe of 1.99, a Sortino of 3.23 and a Calmar of 3.33, against the identical twenty-day channel on daily bars at 24.2%, 0.86, 1.29 and 0.69.
+Annual turnover is 25 times NAV in both cases and cost drag is 1.3% in both.
+The same trade sequence executed on a finer grid more than doubled the Sharpe at no additional cost.
+
+Part of that is exit granularity: a stop checked twenty-four times a day releases a losing position hours rather than up to a day after the level breaks, and crypto drawdowns are fast.
+Part of it is that the channel is not actually the same. A maximum taken over 480 hourly closes exceeds the maximum over 20 daily closes on 100% of days, by a median of 103 bps, so the hourly-defined channel is a strictly more selective entry. Both effects are legitimate and neither is look-ahead.
+
+For the competition specifically the ranking differs from the full-sample ranking, and the competition ranking is the one that governs.
+Measured over 14-day windows, `bars` mode beats `calendar` mode because a 3.3-day channel completes several independent cycles inside a fortnight while a twenty-day channel completes roughly one.
+The selected configuration, 4h bars with a 20-bar entry and a 10-bar low exit, is positive in 57.0% of 14-day windows against buy-and-hold's 55.7%, carries a median 14-day Screen 3 of +3.84 against +3.73, and reaches the joint event of clearing the Screen 2 proxy while outscoring buy-and-hold on the composite in 9.5% of windows.
+That last figure was 0.2% for the paper ensemble and 4.7% for the daily single channel, so it is the first configuration in this repo to make that joint event other than negligible.
+
+The worst 14-day outcome is -11.1% against buy-and-hold's -29.8%, and the position turns over on 13.1 of every 14 days, which satisfies the Screen 1 activity requirement without any rule added for that purpose.
+
+## lowtf-lookahead-control
+
+The low-timeframe result was checked for look-ahead by inserting extra bars of delay between signal and execution, and it degrades smoothly rather than collapsing.
+
+At 1h calendar the Sharpe ran 2.00, 1.95 and 1.91 at zero, one and two bars of additional lag. At 4h bars with the low-channel exit it ran 1.71, 1.35 and 1.08.
+A look-ahead artifact dies at the first bar of delay because the information it depends on is no longer available; a real effect decays in proportion to the edge given away, which is what both series show.
+The faster configuration decays faster, as it should, since one 4h bar of delay surrenders four hours of a 3.3-day signal.
+
+## stablecoin-universe-leak
+
+`PAXGUSDT` was selected into the top-20 book on 651 days despite appearing in this repo's own `STABLES` exclusion set, and the filter has been moved to where the book is actually chosen.
+
+The exclusion list was applied in `research_symbols`, which governs which symbols get downloaded, but `pit_top_n` ranked on dollar volume without consulting it, so anything already in the panel could be selected.
+Tokenized gold is not a cryptocurrency trend candidate and its presence contradicted the declared universe.
+
+The fix filters `STABLES` and leveraged tokens inside `pit_top_n`, and no leveraged token was present in the panel to begin with.
+The impact is immaterial and is recorded as such rather than left implied: on the selected configuration the Sharpe moved from 1.71 to 1.70 and the Screen 3 score from 2.625 to 2.611.
+A correctness defect that changes nothing is still a correctness defect, and the reason for recording the size of it is that the next such leak may not be immaterial.

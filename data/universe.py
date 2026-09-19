@@ -136,7 +136,9 @@ def pit_top_n(panel_daily: dict, base_members: pd.DataFrame,
     adv = panel_daily["quote_volume"].rolling(size_lookback).median().shift(1)
     spread = daily.half_spread_bps(close, floor=daily.venue_tick_floor()) * 2.0
 
+    excluded = [c for c in close.columns if c in STABLES or LEVERAGED.search(c)]
     eligible = base_members.reindex_like(close).fillna(False) & (spread <= max_spread_bps)
+    eligible[excluded] = False
     ranked = adv.where(eligible).rank(axis=1, ascending=False)
     return (ranked <= top_n) & eligible
 
