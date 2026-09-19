@@ -1,0 +1,12 @@
+{
+  "interval": "1h",
+  "requested": 265,
+  "downloaded": 264,
+  "missing": [
+    "USDSOLDUSDT"
+  ],
+  "rows": 8068963,
+  "first_bar": "2017-08-17 04:00:00+00:00",
+  "last_bar": "2026-09-19 04:00:00+00:00",
+  "elapsed_s": 123.9
+}

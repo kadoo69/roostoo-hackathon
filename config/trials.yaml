@@ -1,0 +1,7 @@
+policy:
+  append_only: true
+  counts_nulls: true
+  counts_abandoned_searches: true
+  rationale_ref: "DECISIONS.md#trial-counting"
+
+trials: []

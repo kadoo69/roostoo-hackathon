@@ -1,0 +1,123 @@
+{
+  "gate": "g1_data_integrity",
+  "passed": true,
+  "written_utc": "2026-09-19T04:54:12.006160+00:00",
+  "git_rev": "uncommitted",
+  "prereg_sha256_16": "b56f6329440b1901",
+  "thresholds": {
+    "applicable": true,
+    "max_lookahead_violations": 0,
+    "max_survivorship_violations": 0,
+    "require_monotonic_timestamps": true
+  },
+  "trials_to_date": 0,
+  "python": "3.12.2",
+  "result": {
+    "panel_rows": 8068963,
+    "panel_span": [
+      "2017-08-17 04:00:00+00:00",
+      "2026-09-19 04:00:00+00:00"
+    ],
+    "timestamps": {
+      "duplicated_rows": 0,
+      "non_monotonic_symbols": 0,
+      "timezone_naive": 0,
+      "symbols_with_gaps": 204,
+      "total_missing_bars": 8257,
+      "worst_gaps": [
+        {
+          "symbol": "VENUSDT",
+          "missing_bars": 2135
+        },
+        {
+          "symbol": "KEYUSDT",
+          "missing_bars": 712
+        },
+        {
+          "symbol": "NBTUSDT",
+          "missing_bars": 445
+        },
+        {
+          "symbol": "VIDTUSDT",
+          "missing_bars": 224
+        },
+        {
+          "symbol": "BCCUSDT",
+          "missing_bars": 166
+        },
+        {
+          "symbol": "BNXUSDT",
+          "missing_bars": 150
+        },
+        {
+          "symbol": "COCOSUSDT",
+          "missing_bars": 131
+        },
+        {
+          "symbol": "BTCUSDT",
+          "missing_bars": 127
+        },
+        {
+          "symbol": "DREPUSDT",
+          "missing_bars": 127
+        },
+        {
+          "symbol": "ETHUSDT",
+          "missing_bars": 127
+        }
+      ]
+    },
+    "survivorship": {
+      "symbols_in_panel": 264,
+      "currently_trading": 65,
+      "delisted_retained": 199,
+      "delisted_fraction": 0.7538,
+      "naive_universe_would_drop": 199,
+      "sample_delisted": [
+        "A2ZUSDT",
+        "ACAUSDT",
+        "ACXUSDT",
+        "AERGOUSDT",
+        "AGIXUSDT",
+        "AIONUSDT",
+        "AKROUSDT",
+        "ALCXUSDT",
+        "ALPACAUSDT",
+        "ALPHAUSDT"
+      ]
+    },
+    "lookahead": {
+      "membership_before_first_bar": 0,
+      "violations": [],
+      "close_time_after_open_time_always": true,
+      "label_horizon_bars": 24,
+      "embargo_bars": 24,
+      "embargo_at_least_label_horizon": true,
+      "membership_matrix_shape": [
+        3321,
+        264
+      ],
+      "mean_daily_members": 94.19
+    },
+    "price_source": {
+      "pairs_compared": 86,
+      "pairs_unmatched": 2,
+      "median_deviation_bps": 0.0,
+      "p95_deviation_bps": 1.7657,
+      "max_deviation_bps": 8.5379
+    },
+    "repairs_applied": [
+      {
+        "id": "close_time_before_open_time",
+        "reference": "DECISIONS.md#upstream-defects",
+        "action": "rewrite_close_time_to_bar_end",
+        "rows": 100,
+        "symbols": 100,
+        "bars": [
+          "2020-12-21 14:00:00+00:00"
+        ]
+      }
+    ],
+    "costs_confirmed": false
+  }
+}
