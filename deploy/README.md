@@ -92,3 +92,29 @@ Unload with `launchctl unload -w ~/Library/LaunchAgents/com.roostoo.bot.plist`.
 None of this is needed for the competition itself, where the bot runs on the
 EC2 instance under systemd. It matters only for accumulating the Gate 10
 shadow days beforehand.
+
+## Dashboard
+
+    ./run_bots.sh dashboard          # http://127.0.0.1:8787
+    ./run_bots.sh dashboard --port 9000 --host 0.0.0.0
+
+Reads the journals directly, so it reflects whatever the bots have actually
+written rather than a separate copy of the state.
+It serves one page and one `/api/state` endpoint, refreshes every five seconds,
+and uses only the standard library so it runs on the EC2 instance with no extra
+dependencies.
+
+It shows, per bot: equity and an equity sparkline, P&L and return, drawdown from
+peak, gross exposure, open positions with weights, closed trades with realised
+return and holding period, realised net P&L, fees, win rate and profit factor,
+plus Sharpe, Sortino, Calmar and the Screen 3 composite once three daily marks
+exist.
+
+Read the badges first.
+`live` means a cycle landed within five minutes, `stale` means the bot stopped.
+`paper` means dry run; it reads `LIVE ORDERS` when `ROOSTOO_DRY_RUN=0`.
+`restarts` and `halts` appear only when non-zero, and either one is a reason to
+open `live/<bot>.out`.
+
+Binding to `0.0.0.0` exposes the dashboard to the network. On EC2 keep it on
+`127.0.0.1` and reach it through an SSH tunnel rather than opening a port.

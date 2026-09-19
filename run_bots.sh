@@ -53,5 +53,6 @@ case "${1:-start}" in
     ;;
   report) shift; exec "$PY" -m bot.status "$@" ;;
   trades) shift; exec "$PY" -m bot.blotter --csv "$@" ;;
-  *) echo "usage: $0 {start|stop|restart|status|report|trades}"; exit 2 ;;
+  dashboard) shift; exec "$PY" -m bot.dashboard "$@" ;;
+  *) echo "usage: $0 {start|stop|restart|status|report|trades|dashboard}"; exit 2 ;;
 esac
