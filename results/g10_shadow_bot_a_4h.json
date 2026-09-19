@@ -1,19 +1,19 @@
 {
   "bot": "bot_a_4h",
   "uptime": {
-    "cycles": 2,
+    "cycles": 40,
     "first": "2026-09-19 13:16:05.117538+00:00",
-    "last": "2026-09-19 13:16:15.803755+00:00",
-    "days": 0.0,
+    "last": "2026-09-19 14:02:41.228553+00:00",
+    "days": 0.032,
     "distinct_utc_days": 1,
-    "median_gap_s": 10.0,
-    "max_gap_s": 10.0
+    "median_gap_s": 66.0,
+    "max_gap_s": 202.0
   },
   "mirror": {
-    "samples": 2,
-    "median_bps": 0.467,
-    "p95_bps": 0.853,
-    "max_bps": 0.896
+    "samples": 40,
+    "median_bps": 4.446,
+    "p95_bps": 10.729,
+    "max_bps": 26.316
   },
   "fills": {
     "fills": 0
@@ -61,5 +61,5 @@
     }
   },
   "dry_run_note": "fill metrics require live orders; dry-run reports zero fills",
-  "evaluated_utc": "2026-09-19T13:18:42.857866+00:00"
+  "evaluated_utc": "2026-09-19T14:05:40.810930+00:00"
 }
