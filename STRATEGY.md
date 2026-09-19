@@ -106,7 +106,7 @@ It is coded into the frozen config rather than applied by hand, because the repo
 
 ## 5. Execution
 
-Orders are **LIMIT** by default, placed 1 bp inside the touch, to earn the 5 bps maker fee instead of the 10 bps taker fee.
+Orders are **LIMIT** by default, placed up to 1 bp inside the touch and clamped at least one tick short of the opposing quote, to avoid crossing and paying the taker fee.
 An order unfilled after 15 minutes is cancelled and re-evaluated on the next cycle rather than chased.
 
 Each pair's `PricePrecision`, `AmountPrecision` and `MiniOrder` are read from `exchangeInfo` at startup and respected on every order, and an order below the venue minimum is logged as skipped rather than sent malformed.
@@ -201,7 +201,7 @@ Without this check no backtest number would transfer to the live bot.
 | G1 data integrity | **PASS** | survivorship-free panel, repairs registered |
 | G2 parameter sensitivity | **PASS** | plateau, all 25 grid points positive |
 | G3 combinatorial purged CV | not run | |
-| G4 deflated Sharpe | **FAIL** | 0.8687 vs 0.95 at 351 trials |
+| G4 deflated Sharpe | **FAIL** | 0.8610 vs 0.95 at 386 trials |
 | G5 probability of overfitting | not run | |
 | G6 walk-forward | **PASS** | 7/7 folds positive, ratio 1.164 |
 | G7 cost-adjusted | partial | fee sensitivity done, gate not formalised |
@@ -216,19 +216,19 @@ Without this check no backtest number would transfer to the live bot.
 The strategy **fails the repository's own pre-registered validation gate**, and the submission should say so rather than imply otherwise.
 
 The Deflated Sharpe Ratio corrects an observed Sharpe for the number of configurations searched before finding it.
-Across the 351 trials logged in `config/trials.yaml`, the expected maximum Sharpe obtainable by chance alone is 1.675 annualised.
-This strategy's 2.206 exceeds that, but its Deflated Sharpe Ratio is **0.8687 against a pre-registered threshold of 0.95**, so it does not clear the bar.
+Across the 386 trials currently logged in `config/trials.yaml`, the expected maximum Sharpe obtainable by chance alone is 1.692 annualised.
+This strategy's 2.206 exceeds that, but its Deflated Sharpe Ratio is **0.8610 against a pre-registered threshold of 0.95**, so it does not clear the bar.
 
 The failure differs in kind from every earlier candidate in this repository.
 All previous strategies sat *below* the null's expected maximum, giving them an infinite minimum track record length, meaning no quantity of additional data could ever establish them.
-This one sits above it, so its minimum track record length is finite at **2,927 daily observations, about 8.0 years**, against the 3.7 years it currently has.
+This one sits above it, so its minimum track record length is finite at **3,120 daily observations, about 8.5 years**, against the 3.7 years it currently has.
 
 The claim is unproven, not refuted.
 
 It passes at a trial count of 21, which is the number of universe constructions evaluated to reach it, but repository policy counts every configuration ever run because each one consumed the same error budget.
-That policy gives 351 and the honest verdict is failure.
+That policy currently gives 386 and the honest verdict is failure.
 
-Entering the competition with this strategy is a considered bet on the best candidate produced across 351 trials.
+Entering the competition with this strategy is a considered bet on the best candidate produced across 386 trials.
 It is not a strategy demonstrated to have edge, and the two statements are both true.
 
 ---
@@ -249,5 +249,5 @@ It is not a strategy demonstrated to have edge, and the two statements are both 
 | `DECISIONS.md` | Every non-obvious choice, with its reasoning and its evidence |
 | `results/` | Gate artifacts and backtest outputs |
 
-Run it with `python3 -m bot.run config/bot_a_4h.yaml`.
-It is dry-run by default; set `ROOSTOO_DRY_RUN=0` with credentials in `.env` to place real orders.
+Run the public-data shadow with `python3 -m bot.run config/bot_a_4h.yaml`.
+It is dry-run by default. Authenticated order submission is blocked until restart-safe pending-order intent reconciliation and observed fill-role validation are complete.

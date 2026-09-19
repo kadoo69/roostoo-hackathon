@@ -1,17 +1,17 @@
 {
   "gate": "g4_deflated_sharpe",
   "passed": false,
-  "written_utc": "2026-09-19T12:46:43.319269+00:00",
-  "git_rev": "1bee4b1ff9bee1e0e5c0ac1a77cca83af16bb2a2",
+  "written_utc": "2026-09-19T13:28:31.702944+00:00",
+  "git_rev": "7aa777dbe54c00f39dc407c823fb297a3aa2048a",
   "prereg_sha256_16": "1ecb91fdc34d2038",
   "thresholds": {
     "applicable": true,
     "min_dsr_probability": 0.95
   },
-  "trials_to_date": 351,
+  "trials_to_date": 386,
   "python": "3.12.2",
   "result": {
-    "n_trials": 351,
+    "n_trials": 386,
     "threshold_min_dsr": 0.95,
     "variance_note": "homogeneous_42 is the estimator established at N=131; wide_sample adds the low-timeframe channel trials",
     "report": {
@@ -132,14 +132,14 @@
               "min_track_record_obs": 667.5
             }
           },
-          "n_351": {
-            "expected_max_sharpe_null_annual": 1.6751,
+          "n_386": {
+            "expected_max_sharpe_null_annual": 1.6918,
             "volume_trend_1d": {
               "sharpe_annual": 0.9361,
               "skew": 0.2774,
               "kurtosis": 12.6963,
               "observations": 1357,
-              "dsr": 0.076485,
+              "dsr": 0.071952,
               "passes": false,
               "min_track_record_obs": null
             },
@@ -157,7 +157,7 @@
               "skew": 0.1722,
               "kurtosis": 5.9837,
               "observations": 1357,
-              "dsr": 0.005575,
+              "dsr": 0.005082,
               "passes": false,
               "min_track_record_obs": null
             },
@@ -166,7 +166,7 @@
               "skew": 0.0479,
               "kurtosis": 38.3889,
               "observations": 1357,
-              "dsr": 0.003291,
+              "dsr": 0.002985,
               "passes": false,
               "min_track_record_obs": null
             },
@@ -175,7 +175,7 @@
               "skew": 0.4269,
               "kurtosis": 6.4061,
               "observations": 1357,
-              "dsr": 0.151861,
+              "dsr": 0.144346,
               "passes": false,
               "min_track_record_obs": null
             },
@@ -184,9 +184,9 @@
               "skew": 1.7347,
               "kurtosis": 11.7701,
               "observations": 1358,
-              "dsr": 0.868675,
+              "dsr": 0.861026,
               "passes": false,
-              "min_track_record_obs": 2927.1
+              "min_track_record_obs": 3120.1
             }
           }
         }
@@ -308,14 +308,14 @@
               "min_track_record_obs": 1419.3
             }
           },
-          "n_351": {
-            "expected_max_sharpe_null_annual": 2.2111,
+          "n_386": {
+            "expected_max_sharpe_null_annual": 2.2331,
             "volume_trend_1d": {
               "sharpe_annual": 0.9361,
               "skew": 0.2774,
               "kurtosis": 12.6963,
               "observations": 1357,
-              "dsr": 0.006837,
+              "dsr": 0.006065,
               "passes": false,
               "min_track_record_obs": null
             },
@@ -333,7 +333,7 @@
               "skew": 0.1722,
               "kurtosis": 5.9837,
               "observations": 1357,
-              "dsr": 0.000177,
+              "dsr": 0.00015,
               "passes": false,
               "min_track_record_obs": null
             },
@@ -342,7 +342,7 @@
               "skew": 0.0479,
               "kurtosis": 38.3889,
               "observations": 1357,
-              "dsr": 8.8e-05,
+              "dsr": 7.5e-05,
               "passes": false,
               "min_track_record_obs": null
             },
@@ -351,7 +351,7 @@
               "skew": 0.4269,
               "kurtosis": 6.4061,
               "observations": 1357,
-              "dsr": 0.019106,
+              "dsr": 0.017194,
               "passes": false,
               "min_track_record_obs": null
             },
@@ -360,7 +360,7 @@
               "skew": 1.7347,
               "kurtosis": 11.7701,
               "observations": 1358,
-              "dsr": 0.495791,
+              "dsr": 0.477261,
               "passes": false,
               "min_track_record_obs": null
             }

@@ -1016,3 +1016,39 @@ At first evaluation on 2026-09-19 it fails only on elapsed days, at one of three
 Fill deviation cannot be measured in dry run and is reported as unmeasured rather than as passing.
 It requires API credentials and live orders, and until those exist the gate's most operationally important check is untested.
 This is the largest remaining unknown before the window opens and is listed as such rather than left implicit.
+
+## maker-fill-assumption-measured
+
+The entire fee argument for this strategy rests on limit orders filling as maker, and that assumption was measured rather than assumed, without needing any venue credentials.
+
+The bot posts a limit 1 bp inside the touch and cancels after 15 minutes.
+Across the 22 selected symbols and 1000 minutes of 1-minute Binance data, a limit posted at that offset is reached within 15 minutes on 93.8% of occasions at the median symbol, 88.0% at the tenth percentile and 70.9% at the worst symbol.
+Buy and sell sides are symmetric at 93.6% and 94.1%.
+
+Blending 5 bps on the filled fraction and 10 bps on the remainder gives an effective 5.31 bps per side, or 10.62 bps round trip.
+That sits inside the range already tested at `DECISIONS.md#bot-selection`, where bot A scored 3.393 at a 10 bps round trip against 3.745 at 5 bps, so the fee assumption is confirmed rather than merely survivable.
+
+Fill rate rises with the timeout, reaching 95.3% at 30 minutes and 96.9% at an hour.
+The 15-minute timeout is kept because a stale limit order is an unhedged directional exposure that the signal no longer endorses, and the marginal 1.5 percentage points of fill rate is not worth holding one.
+
+This is an upper bound on a real venue rather than a measurement of one.
+It assumes an order resting at a price is filled when the market trades through it, which ignores queue position, and Roostoo's matching behaviour is not observable without credentials.
+The direction of the error is known: real fill rates will be at or below these, so the effective fee will be at or above 5.31 bps per side.
+
+## interim-test-venue
+
+Binance Spot Testnet is the interim venue for exercising the order lifecycle before Roostoo credentials exist.
+
+Four candidate venues were probed on 2026-09-19. Binance Spot Testnet, Bybit testnet and Kraken public all responded; OKX timed out from this environment and Alpaca requires credentials to return anything.
+
+Binance Spot Testnet is chosen for a reason specific to this project rather than on general merit.
+`DECISIONS.md#price-source` established that Roostoo does not approximate Binance, it mirrors it, at a median deviation of 0.00 bps across the venue universe and 0.47 bps measured live by the bot.
+Testing fills against Binance's own matching engine is therefore the closest obtainable proxy for how orders will behave on Roostoo, which no other venue offers.
+
+`venue/binance_testnet.py` presents the same interface as `venue/roostoo.py`, so `bot/execution.py` and `bot/run.py` are unchanged and the venue is selected by a config key or the `BOT_VENUE` environment variable.
+Instrument specifications are translated from Binance's `PRICE_FILTER`, `LOT_SIZE` and `NOTIONAL` filters into the same `PairSpec` the Roostoo client emits, so precision and minimum-order handling is exercised on real venue rules rather than on Roostoo's alone.
+Public verification on 2026-09-19 returned 487 tradable USDT pairs with correct tick and step parsing.
+
+What this does and does not test should not be blurred.
+It tests the order lifecycle: signed request construction, partial fills, rejections, precision and minimum-notional handling, cancel-and-replace, and the maker versus taker attribution that the fee argument depends on.
+It does not test Roostoo's own API, whose signing scheme, error envelope and short-selling endpoints differ, and those remain unexercised until credentials arrive.

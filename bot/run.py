@@ -11,10 +11,9 @@ from bot import feed, portfolio, risk, universe, verify
 from bot.execution import Executor
 from bot.journal import Journal
 from bot.report import from_equity
-from bot.settings import Settings, credentials, load
+from bot.settings import Settings, load, make_client
 from bot.state import Store, wallet_positions
 from bot.strategy import evaluate_book
-from venue.roostoo import RoostooClient
 
 INITIAL_NAV = 100_000.0
 
@@ -25,8 +24,7 @@ class Bot:
         if not settings.dry_run:
             raise RuntimeError("live_orders_blocked_until_restart_reconciliation_is_implemented")
         self.journal = Journal(settings.name)
-        key, secret = credentials()
-        self.client = RoostooClient(key, secret)
+        self.client = make_client(settings)
         self.client.sync_time()
         self.specs = self.client.exchange_info()
         self.executor = Executor(self.client, self.specs, settings, self.journal)

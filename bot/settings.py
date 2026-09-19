@@ -39,6 +39,7 @@ class Settings:
     mirror_max_deviation_bps: float
     config_sha256: str
     dry_run: bool
+    venue: str
 
     @property
     def bars_per_day(self) -> int:
@@ -78,6 +79,7 @@ def load(path: str | Path) -> Settings:
         mirror_max_deviation_bps=float(r["mirror_max_deviation_bps"]),
         config_sha256=hashlib.sha256(raw).hexdigest()[:16],
         dry_run=os.environ.get("ROOSTOO_DRY_RUN", "1") != "0",
+        venue=os.environ.get("BOT_VENUE", cfg["meta"].get("venue", "roostoo")),
     )
 
 
@@ -89,3 +91,13 @@ def credentials() -> tuple[str | None, str | None]:
                 k, v = line.split("=", 1)
                 os.environ.setdefault(k.strip(), v.strip())
     return os.environ.get("ROOSTOO_API_KEY"), os.environ.get("ROOSTOO_SECRET_KEY")
+
+
+def make_client(settings: "Settings"):
+    key, secret = credentials()
+    if settings.venue == "binance_testnet":
+        from venue.binance_testnet import BinanceTestnetClient
+        return BinanceTestnetClient(os.environ.get("BINANCE_TESTNET_KEY"),
+                                    os.environ.get("BINANCE_TESTNET_SECRET"))
+    from venue.roostoo import RoostooClient
+    return RoostooClient(key, secret)
