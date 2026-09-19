@@ -1193,3 +1193,39 @@ What the numbers do not support: anything at all.
 Two trades is not a sample, a win rate of 1.0 is noise, and bot A has recorded one new-bar cycle in its entire run because a 4h bar closes six times a day.
 The standing result across 351 trials is that short-sample optimisation reverses, and two trades is shorter than any sample that produced that finding.
 The only figure worth carrying forward is that fees consumed 12.4% of gross profit on bot B's two trades, which is the fast configuration's cost drag appearing in realised terms exactly as the backtest predicted, and is confirmation of the existing selection rather than a reason to revisit it.
+
+## sizing-sweep-outcome
+
+Number of holdings and position size were swept across 17 declared configurations, and the result is that neither can be fitted from this data.
+
+The fit window cannot discriminate.
+Across every pool of 30 or 40 and every divisor from 10 to 30, the fit-window Screen 3 spans 4.370 to 4.395, a range of 0.025 on a statistic near 4.4.
+That is noise, and any argmax taken from it is arbitrary.
+
+Worse, the fit argmax is the holdout's worst.
+Selecting on the fit window chooses a divisor of 10, the most concentrated setting, at a fit Screen 3 of 4.395 and a holdout Screen 3 of 2.169.
+The holdout's best is a divisor of 25 at 2.810.
+The Spearman rank correlation of Screen 3 between the two windows is 0.50, so the fit window is close to uninformative about which setting will work next.
+
+The holdout does show a clean monotonic pattern, and it runs in opposite directions for the two screens.
+Screen 3 rises as positions shrink, from 2.169 at a divisor of 10 through 2.623 at 20 to 2.808 at 25.
+Probability of clearing the Screen 2 return proxy falls across exactly the same range, from 26.4% at 10 through 21.0% at 20 to 17.3% at 25.
+This is the collinearity already recorded at `DECISIONS.md#beta-is-the-only-screen3-lever`, now measured on the sizing parameter rather than on a core-versus-sleeve blend.
+
+Two findings are unambiguous and are adopted.
+A pool of 20 is worse than 30 or 40 on every measure in both windows, so the pool stays at 30; 40 is indistinguishable from it and adds nothing.
+Capping gross below 1.0 hurts, at holdout Screen 3 of 2.101 at a cap of 0.6 and 2.087 at 0.8 against 2.169 uncapped, so the cap stays at 1.0 where the no-leverage rule puts it anyway.
+
+The divisor is not changed.
+Moving to 25 would improve the holdout Screen 3 by 0.19 and cost 3.7 percentage points of qualification probability, and the only evidence for it comes from the window being used to judge it.
+The pre-registered 1/20 sits mid-range on the holdout and is the single value in the grid that was not chosen by looking at either window, which is the only property that makes it defensible.
+
+## book-is-mostly-cash
+
+The sweep surfaced a property of the strategy that had not been stated plainly: it is usually not invested.
+
+Mean gross exposure is 0.18 and the mean number of names held is 3.7 out of a pool of 30, so the book sits roughly 82% in cash across the out-of-sample record.
+This is the mechanism behind the drawdown control and behind the bear-regime result at `DECISIONS.md#gate8-regime-outcome`, and it is also the reason probability of clearing a 5% fortnightly return is only 21%.
+
+The live reading on 2026-09-19 of ten names and 0.50 gross is therefore unusual rather than typical, and follows from the same broad breakout that has 64 of 66 Roostoo names long.
+Anyone reading the dashboard today should not treat 50% gross as the strategy's normal state.

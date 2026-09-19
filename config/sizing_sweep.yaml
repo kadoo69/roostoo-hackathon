@@ -1,0 +1,29 @@
+meta:
+  declared_utc: '2026-09-19'
+  declared_before_any_backtest: true
+  requested_by: operator
+  purpose: sweep number of holdings and position size for maximum Sharpe/Sortino/Calmar
+  justification_ref: DECISIONS.md#sizing-sweep-declaration
+cost_of_this_sweep:
+  ledger_before: 396
+  configs_added: 17
+  note: every configuration raises the Deflated Sharpe hurdle for every candidate in
+    the repo, including the one already selected. Gate 4 stood at DSR 0.8687 against
+    a 0.95 threshold at 351 trials, so this sweep makes an already-failing gate harder.
+grid:
+  signal: donchian_4h_entry20_exit10
+  top_n_pool: [20, 30, 40]
+  weight_divisor: [10, 15, 20, 25, 30]
+  max_gross_primary: 1.0
+  max_gross_secondary: [0.6, 0.8]
+  secondary_applies_to: best pool/divisor pair only
+  configs: 17
+  all_counted_as_trials: true
+method:
+  fit_window: ['2023-01-01', '2025-01-01']
+  holdout_window: ['2025-01-01', '2026-09-19']
+  selection_rule: none. The sweep reports both windows and checks whether the fit
+    optimum survives in the holdout. If the argmax moves, the conclusion is that
+    sizing should not be fitted, and the pre-registered 1/20 stands.
+  metrics: [sharpe, sortino, calmar, screen3, max_drawdown]
+  competition_metrics: [p_return_positive, p_clears_screen2, median_screen3_14d]
