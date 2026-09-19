@@ -8,7 +8,7 @@ import pandas as pd
 from costs.model import CostModel
 
 DAYS_PER_YEAR = 365
-PERIODS_PER_YEAR = {'4h':2190,'8h':1095,'12h':730,'1d':365,'2d':182,'3d':121}
+PERIODS_PER_YEAR = {'1h':8760,'4h':2190,'8h':1095,'12h':730,'1d':365,'2d':182,'3d':121}
 
 
 @dataclass(frozen=True)

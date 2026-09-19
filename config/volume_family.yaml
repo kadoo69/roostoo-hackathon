@@ -1,0 +1,91 @@
+meta:
+  declared_utc: '2026-09-19'
+  declared_before_any_backtest: true
+  requested_by: operator
+  justification_ref: DECISIONS.md#volume-family-declaration
+premise:
+  operator_statement: volume increasing go long, volume decreasing go short, ride the volume
+  known_defect: Raw volume is unsigned. It rises on capitulation selling as readily
+    as on accumulation, so a rule keyed to volume direction alone has no view on price
+    direction. This repo already measured the effect inverted once, at
+    DECISIONS.md#gate2-outcome, where rising relative volume predicted underperformance
+    at a gross Sharpe of -1.17.
+  resolution: The literal rule is tested as declared, alongside signed variants that
+    give volume a direction. If the literal rule fails and a signed one works, the
+    conclusion is about signing, not about volume.
+data:
+  source: data.binance.vision spot klines, already cached locally
+  new_fields: [taker_buy_base, taker_buy_quote]
+  field_note: Binance klines carry taker buy volume per bar, so aggressor-side
+    imbalance is available from OHLCV alone without touching aggTrades or depth.
+  intervals: [1h, 4h, 8h, 12h, 1d]
+features:
+  vol_trend:
+    definition: sign(volume MA fast - volume MA slow)
+    direction: long when rising
+    mechanism: The literal operator rule. Participation expands as a move gathers
+      conviction, so rising volume marks the live trend and falling volume marks its
+      exhaustion.
+    failure_mode: Unsigned. Goes long into a high-volume crash.
+  vol_z:
+    definition: z-score of volume against its own trailing window
+    direction: long when high
+    mechanism: Same as vol_trend but scale-free across coins, so it is comparable
+      cross-sectionally rather than dominated by the largest names.
+    failure_mode: Unsigned, plus a spike on a delisting or listing announcement is
+      indistinguishable from a spike on genuine demand.
+  taker_imbalance:
+    definition: 2 * taker_buy_base / volume - 1
+    direction: long when positive
+    mechanism: Signed order flow. Market buys lifting the offer push price up; this
+      measures the fraction of the bar's volume that was aggressive buying, which is
+      the closest thing to order flow obtainable from a kline.
+    failure_mode: Aggressor side is not information, it is impatience. In a falling
+      market aggressive buying can simply be forced covering, which does not persist.
+  taker_imbalance_z:
+    definition: z-score of taker_imbalance against its own trailing window
+    direction: long when positive
+    mechanism: Removes each coin's structural resting bias so the signal reads change
+      in aggression rather than its level.
+    failure_mode: Same as taker_imbalance, plus noise amplification in thin names.
+  signed_volume:
+    definition: volume change fraction * sign(bar return)
+    direction: long when positive
+    mechanism: Gives the operator's rule a direction. Volume expanding on an up bar
+      is accumulation, expanding on a down bar is distribution.
+    failure_mode: Collapses toward plain momentum when volume changes little, so it
+      may add nothing over the return sign alone.
+  avg_trade_size:
+    definition: quote_volume / trades, as a ratio to its trailing median
+    direction: long when rising
+    mechanism: Rising average ticket size at constant volume implies larger
+      participants, whose flow is more persistent than retail.
+    failure_mode: Exchange microstructure changes and order-splitting behaviour move
+      this without any change in who is trading.
+  vol_confirmed_mom:
+    definition: sign(trailing return) gated to zero unless volume is above its
+      trailing median
+    direction: long when positive
+    mechanism: Momentum, but only where participation confirms it. Filters the
+      low-volume drift that reverses.
+    failure_mode: The gate removes trades without improving the ones it keeps, which
+      is the repo's prior finding for this family.
+construction:
+  book: cross_sectional_long_short
+  quantile: 0.2
+  universe: pit_top_20_by_dollar_volume
+  fast_bars: 5
+  slow_bars: 20
+  z_lookback_bars: 60
+  execution: LIMIT
+  stops: false
+grid:
+  features: 7
+  intervals: 5
+  configs: 35
+  all_counted_as_trials: true
+evaluation:
+  is_end: '2023-01-01'
+  metrics: [sharpe, sortino, calmar, max_drawdown]
+  competition: 14d_window_paired_vs_btc_hold
+  benchmark: btc_buy_and_hold

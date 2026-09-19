@@ -651,3 +651,66 @@ If the competition began today the two entries would track each other closely, a
 
 Stated as the actual decision rather than as a ranking: the cost of attaching the stop is 13 percentage points of qualification probability, 17.2% against 30.3% at the 5% proxy, and the benefit is a median 14-day drawdown of 2.9% against 5.5% and a worst observed 14-day outcome of -10.1% against -29.8%.
 That is a real trade and the right side of it depends on where the regional top-20 cut lands, which is unknowable in advance. It is not a trade that the Screen 3 composite rewards.
+
+## volume-family-declaration
+
+The operator asked for a rule that goes long when volume rises and short when it falls, across several horizons, and it was declared at `config/volume_family.yaml` before any of it was run.
+
+The declaration records the defect in the literal rule rather than quietly fixing it.
+Volume is unsigned: it rises on capitulation selling as readily as on accumulation, so a rule keyed to volume direction alone holds no view on price direction.
+This repo had already measured that once, at `DECISIONS.md#gate2-outcome`, where rising relative volume predicted underperformance at a gross Sharpe of -1.17.
+The literal rule was therefore tested exactly as asked, alongside six signed or normalised variants, so that a failure of the literal rule could be attributed to signing rather than to volume.
+
+Binance klines carry `taker_buy_base` and `taker_buy_quote`, which the repo's loader already parsed and cached but the panel builder discarded.
+Aggressor-side imbalance is therefore available from OHLCV alone for all 264 symbols with no nulls across the full history, and `data/flow.py` rebuilds the panel with those fields.
+No call to `aggTrades` or `depth` was needed, and no new download was required.
+
+## volume-family-outcome
+
+There is a real gross volume edge, it is larger than the benchmark's, and trading costs remove all of it.
+
+Across 35 declared configurations out of sample from 2023, the best gross Sharpes were 1.81 for `signed_volume` at four-hour bars, 1.60 for `vol_confirmed_mom` at four hours, and 1.48 for `vol_z` at eight hours, against BTC buy-and-hold's net Sharpe of 1.15.
+Net of a 5 bps maker fee per side, the same configurations returned -2.27, 0.02 and 0.07.
+Not one of the 35 beat the benchmark net, and only three had a positive net Sharpe at all.
+
+The arithmetic is the entire result.
+`vol_z` at eight hours turns over 1077 times NAV a year and pays 53.9% of NAV in fees; at four hours `vol_confirmed_mom` turns over 2023 times and pays 101.2%.
+Section 2.5 of the plan budgeted roughly ten full-notional round trips against a 1% fee allowance.
+This family requires between 700 and 3300, which is not a tuning problem but a two-order-of-magnitude mismatch between the decay rate of the signal and the cost of acting on it.
+
+The edge is also real enough to be worth stating precisely, because it is the only mechanism tested in this repo whose gross Sharpe exceeds the benchmark.
+It peaks at four to twelve hours and collapses at daily bars, where the best gross Sharpe across all seven features is 0.35.
+That interior optimum is the signature of a genuine short-horizon effect rather than a fitted one, and it matches the interior optimum found for cross-sectional momentum at `DECISIONS.md#family-comparison-outcome`.
+
+## volume-literal-rule-is-a-coinflip
+
+The operator's rule as literally stated carries no directional information on BTC.
+
+Tested as a time-series signal, long when the five-bar volume average exceeds the twenty-bar average and short otherwise, directional accuracy ran 49.3% to 50.9% across 1h, 4h, 8h, 12h and 1d bars.
+Gross Sharpe reached 0.88 at hourly bars and was 0.50, 0.00, 0.50 and 0.06 at the slower ones, and net Sharpe was negative at every interval except twelve hours at 0.24.
+
+Cross-sectionally the same feature was the weakest of the seven tested, at a gross Sharpe of 0.73 at best and negative at eight hours and slower.
+The features that did carry gross edge were the ones that gave volume a direction, either by ranking its magnitude cross-sectionally (`vol_z`) or by multiplying it against the sign of the bar's return (`signed_volume`).
+The declared failure mode was therefore the correct diagnosis: volume is a measure of participation, not of direction, and it becomes tradeable only once something else supplies the sign.
+
+## no-trade-band-cannot-fix-a-quantile-book
+
+The pre-registered no-trade band was applied to the best gross configurations and reduced turnover by less than a tenth of one percent, which is a structural fact rather than a poor choice of threshold.
+
+At an 8h `vol_z` book, annual turnover was 1077 with no band, 1076 at a band of 0.25, and 1075 at 0.60.
+A quantile book assigns a name either its share of the long or short sleeve or nothing at all, so a position entering or leaving the top quintile moves between zero and full weight.
+Every such move is a 100% change in that name's weight and clears any band below 1.0 by construction.
+
+Bands damp drift in a continuously weighted book; they do nothing to a discrete one.
+Reducing turnover in this family would require changing the construction, by holding names for a minimum number of bars or by weighting continuously on the score, and neither is declared.
+Recorded so that the band is not reached for again as a cost remedy in a ranked book.
+
+## volume-family-cost-to-the-ledger
+
+Running this family moved the trial ledger from 169 to 236 and returned a null, and that cost is borne by every other candidate in the repo.
+
+The Deflated Sharpe hurdle is a function of the total number of configurations evaluated, so 67 further trials raise the bar that the single-channel Donchian and BTC buy-and-hold must clear, without any of them having changed.
+This is the policy at `DECISIONS.md#trial-counting` applied to a request rather than to a search, and the entry exists so the cost is visible rather than absorbed silently.
+
+The result is still worth having.
+A family with a gross Sharpe of 1.8 that dies entirely on turnover is a different finding from a family with no edge, and it says where a tradeable version would have to come from: the same signal harvested at a fraction of the turnover, not a better volume feature.
