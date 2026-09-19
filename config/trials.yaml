@@ -145,3 +145,113 @@ trials:
 - signal: size_conditioned_momentum
   gate: exploratory
   variant: execution_zero_cost
+- signal: sma_crossover
+  config: 10/50
+  gate: g2_parameter_sensitivity
+  universe: pit_top20
+  net_sharpe: 0.9449
+  oos_sharpe: 0.410589
+- signal: sma_crossover
+  config: 10/50
+  gate: diagnostic
+  universe: live_top20_survivor
+  note: not deployable
+- signal: sma_crossover
+  config: 20/50
+  gate: g2_parameter_sensitivity
+  universe: pit_top20
+  net_sharpe: 0.742185
+  oos_sharpe: 0.301742
+- signal: sma_crossover
+  config: 20/50
+  gate: diagnostic
+  universe: live_top20_survivor
+  note: not deployable
+- signal: sma_crossover
+  config: 20/100
+  gate: g2_parameter_sensitivity
+  universe: pit_top20
+  net_sharpe: 0.546899
+  oos_sharpe: 0.550619
+- signal: sma_crossover
+  config: 20/100
+  gate: diagnostic
+  universe: live_top20_survivor
+  note: not deployable
+- signal: sma_crossover
+  config: 50/200
+  gate: g2_parameter_sensitivity
+  universe: pit_top20
+  net_sharpe: 0.218652
+  oos_sharpe: 0.099347
+- signal: sma_crossover
+  config: 50/200
+  gate: diagnostic
+  universe: live_top20_survivor
+  note: not deployable
+- signal: sma_distance
+  config: 20d
+  gate: g2_parameter_sensitivity
+  universe: pit_top20
+  net_sharpe: 0.091292
+  oos_sharpe: 0.39809
+- signal: sma_distance
+  config: 20d
+  gate: diagnostic
+  universe: live_top20_survivor
+  note: not deployable
+- signal: sma_distance
+  config: 50d
+  gate: g2_parameter_sensitivity
+  universe: pit_top20
+  net_sharpe: 0.115388
+  oos_sharpe: 0.027077
+- signal: sma_distance
+  config: 50d
+  gate: diagnostic
+  universe: live_top20_survivor
+  note: not deployable
+- signal: sma_distance
+  config: 100d
+  gate: g2_parameter_sensitivity
+  universe: pit_top20
+  net_sharpe: -0.265383
+  oos_sharpe: -0.105481
+- signal: sma_distance
+  config: 100d
+  gate: diagnostic
+  universe: live_top20_survivor
+  note: not deployable
+- signal: volume_confirmed_trend
+  config: vol5
+  gate: g2_parameter_sensitivity
+  universe: pit_top20
+  net_sharpe: 0.998962
+  oos_sharpe: 0.866757
+- signal: volume_confirmed_trend
+  config: vol5
+  gate: diagnostic
+  universe: live_top20_survivor
+  note: not deployable
+- signal: volume_confirmed_trend
+  config: vol10
+  gate: g2_parameter_sensitivity
+  universe: pit_top20
+  net_sharpe: 0.857083
+  oos_sharpe: 0.880386
+- signal: volume_confirmed_trend
+  config: vol10
+  gate: diagnostic
+  universe: live_top20_survivor
+  note: not deployable
+- signal: volume_confirmed_trend
+  config: vol20
+  gate: g2_parameter_sensitivity
+  universe: pit_top20
+  net_sharpe: 0.77389
+  oos_sharpe: 0.801687
+- signal: volume_confirmed_trend
+  config: vol20
+  gate: diagnostic
+  universe: live_top20_survivor
+  note: not deployable

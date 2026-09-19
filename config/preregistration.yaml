@@ -1,54 +1,56 @@
 meta:
-  registered_utc: "2026-09-19"
+  registered_utc: '2026-09-19'
   registered_before_any_gate_run: true
-  amendment_policy: "Thresholds are frozen. An amendment requires a new file with a new registered_utc and invalidates every prior gate artifact."
-
+  amendment_policy: Thresholds are frozen. An amendment requires a new file with a new registered_utc and invalidates every prior gate artifact.
 venue:
   name: roostoo_mock
-  base_url: "https://mock-api.roostoo.com"
+  base_url: https://mock-api.roostoo.com
   initial_nav_usd: 100000
   max_leverage: 1.0
   shorting: true
   perpetuals: false
   funding_rate: false
   orderbook_depth_available: false
-
 costs:
-  source: "organizer_verbal_2026_09_18"
-  spot_market_fee: 0.0010
+  source: organizer_verbal_2026_09_18
+  spot_market_fee: 0.001
   spot_limit_fee: 0.0005
-  short_fee_open: 0.0010
-  short_fee_close: 0.0010
+  short_fee_open: 0.001
+  short_fee_close: 0.001
   short_fee_limit_discount: false
-  spread_model: "one_tick_from_price_precision"
-  impact_model: "none"
-  impact_justification_ref: "DECISIONS.md#impact"
-  requires_empirical_confirmation_by: "2026-10-01"
+  spread_model: one_tick_from_price_precision
+  impact_model: none
+  impact_justification_ref: DECISIONS.md#impact
+  requires_empirical_confirmation_by: '2026-10-01'
   confirmed: false
-
 data:
   price_source: binance_spot
-  price_source_justification_ref: "DECISIONS.md#price-source"
+  price_source_justification_ref: DECISIONS.md#price-source
   quote_asset: USDT
   survivorship_free: true
-  symbol_history_source: "s3://data.binance.vision"
+  symbol_history_source: s3://data.binance.vision
   bar_interval: 1h
   label_horizon_bars: 24
   embargo_bars: 24
-
 universe:
-  definition: "roostoo_tradable_intersect_binance_pit"
+  definition: pit_top_n_by_dollar_volume
   max_spread_bps: 5.0
   min_history_bars: 2160
-  exclude_asset_types: [stock]
-  exclude_justification_ref: "DECISIONS.md#tokenized-stocks"
+  exclude_asset_types:
+  - stock
+  exclude_justification_ref: DECISIONS.md#tokenized-stocks
   rebalance: daily
-
+  top_n: 20
+  top_n_grid:
+  - 20
+  size_lookback_days: 30
+  diagnostic_variants:
+  - live_top20_survivor_conditioned
+  justification_ref: DECISIONS.md#top20-universe
 trials:
-  ledger: "config/trials.yaml"
+  ledger: config/trials.yaml
   counts_nulls: true
   counts_abandoned_searches: true
-
 gates:
   g1_data_integrity:
     applicable: true
@@ -57,7 +59,11 @@ gates:
     require_monotonic_timestamps: true
   g2_parameter_sensitivity:
     applicable: true
-    perturbation_steps: [-2, -1, 1, 2]
+    perturbation_steps:
+    - -2
+    - -1
+    - 1
+    - 2
     min_neighbour_sharpe_ratio_to_peak: 0.5
     max_peak_isolation_score: 0.35
   g3_cpcv:
@@ -71,10 +77,12 @@ gates:
     min_dsr_probability: 0.95
   g5_pbo:
     applicable: true
-    max_pbo: 0.50
+    max_pbo: 0.5
   g6_walk_forward:
     applicable: true
-    modes: [anchored, rolling]
+    modes:
+    - anchored
+    - rolling
     min_oos_to_is_sharpe_ratio: 0.6
   g7_cost_adjusted:
     applicable: true
@@ -83,34 +91,42 @@ gates:
     max_annual_fee_spend_fraction_of_nav: 0.26
   g8_regime:
     applicable: true
-    regimes: [bull, bear, range]
+    regimes:
+    - bull
+    - bear
+    - range
     max_regime_drawdown: 0.25
     require_positive_in_n_regimes: 2
   g9_capacity:
     applicable: false
-    not_applicable_reason_ref: "DECISIONS.md#impact"
+    not_applicable_reason_ref: DECISIONS.md#impact
   g10_shadow:
     applicable: true
     min_signal_correlation_live_vs_backtest: 0.95
     max_fill_price_deviation_bps: 5.0
     min_shadow_days: 3
-
 competition:
-  live_window_start: "2026-10-04"
-  live_window_end: "2026-10-17"
+  live_window_start: '2026-10-04'
+  live_window_end: '2026-10-17'
   live_trading_days: 14
   min_active_days_required: 10
   live_result_is_evidence: false
-  live_result_justification_ref: "DECISIONS.md#sample-size"
-
+  live_result_justification_ref: DECISIONS.md#sample-size
 risk:
   max_gross_exposure: 1.0
   max_net_exposure: 0.8
-  max_single_name_weight: 0.20
+  max_single_name_weight: 0.2
   drawdown_circuit_breaker: 0.12
   circuit_breaker_is_fitted: false
   kill_switch_conditions:
-    - "nav_drawdown_from_peak_exceeds_circuit_breaker"
-    - "venue_error_rate_above_0.25_over_20_requests"
-    - "position_reconciliation_mismatch"
-    - "stale_ticker_older_than_120s"
+  - nav_drawdown_from_peak_exceeds_circuit_breaker
+  - venue_error_rate_above_0.25_over_20_requests
+  - position_reconciliation_mismatch
+  - stale_ticker_older_than_120s
+portfolio:
+  no_trade_band: 0.25
+  no_trade_band_is_fitted: false
+  no_trade_band_grid:
+  - 0.25
+  justification_ref: DECISIONS.md#no-trade-band
+  max_net_exposure: 0.8

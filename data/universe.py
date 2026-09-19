@@ -120,3 +120,39 @@ def spread_filter(specs: dict[str, PairSpec], prices: dict[str, float],
         sym for sym, spec in specs.items()
         if spec.pair in prices and spec.spread_bps(prices[spec.pair]) <= max_spread_bps
     )
+
+
+def pit_top_n(panel_daily: dict, base_members: pd.DataFrame,
+              top_n: int | None = None, size_lookback: int | None = None,
+              max_spread_bps: float | None = None) -> pd.DataFrame:
+    cfg = prereg()["universe"]
+    top_n = top_n or cfg["top_n"]
+    size_lookback = size_lookback or cfg["size_lookback_days"]
+    max_spread_bps = max_spread_bps or cfg["max_spread_bps"]
+
+    from data import daily
+
+    close = panel_daily["close"]
+    adv = panel_daily["quote_volume"].rolling(size_lookback).median().shift(1)
+    spread = daily.half_spread_bps(close, floor=daily.venue_tick_floor()) * 2.0
+
+    eligible = base_members.reindex_like(close).fillna(False) & (spread <= max_spread_bps)
+    ranked = adv.where(eligible).rank(axis=1, ascending=False)
+    return (ranked <= top_n) & eligible
+
+
+def live_top_n(panel_daily: dict, base_members: pd.DataFrame,
+               top_n: int | None = None) -> pd.DataFrame:
+    import json
+
+    from core.config import CACHE
+
+    top_n = top_n or prereg()["universe"]["top_n"]
+    live = json.loads((CACHE / "top20_live.json").read_text())
+    chosen = [r["symbol"] for r in live[:top_n]]
+    close = panel_daily["close"]
+    mask = pd.DataFrame(False, index=close.index, columns=close.columns)
+    for sym in chosen:
+        if sym in mask.columns:
+            mask[sym] = True
+    return mask & base_members.reindex_like(close).fillna(False)

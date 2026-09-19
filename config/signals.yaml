@@ -1,43 +1,103 @@
 meta:
-  declared_utc: "2026-09-19"
+  declared_utc: '2026-09-19'
   declared_before_any_backtest: true
-  rationale_ref: "DECISIONS.md#signal-declarations"
-
+  rationale_ref: DECISIONS.md#signal-declarations
+  amended_utc: '2026-09-19'
+  amendment_note: Added SMA and volume trend family for the top-20 venue universe. Prior signals remain as recorded failures.
 defaults:
-  universe: "pit_survivorship_free"
+  universe: pit_survivorship_free
   rebalance: daily
   construction: long_short_market_neutral
   quantile: 0.2
   weighting: equal
   execution_assumption: MARKET
-
 signals:
   xsec_momentum:
     family: risk_premium
-    mechanism: "Cross-sectional trend persistence. Sticky and siloed capital inside crypto produces reflexive continuation once a sub-ecosystem receives a windfall."
-    failure_mode: "Sharp mean-reverting deleveraging cascades; crowding once the trade is widely held."
+    mechanism: Cross-sectional trend persistence. Sticky and siloed capital inside crypto produces reflexive continuation once a sub-ecosystem receives a windfall.
+    failure_mode: Sharp mean-reverting deleveraging cascades; crowding once the trade is widely held.
     lookback_days: 30
-    lookback_grid: [10, 20, 30, 45, 60]
+    lookback_grid:
+    - 10
+    - 20
+    - 30
+    - 45
+    - 60
     long: top_quantile
     short: bottom_quantile
-
   xsec_volume:
     family: market_inefficiency
-    mechanism: "Rising adjusted volume is mildly predictive of future direction, falling volume of the reverse. Volume carries order-flow information ahead of price."
-    failure_mode: "Volume spikes on delisting announcements and exchange incidents invert the sign."
+    mechanism: Rising adjusted volume is mildly predictive of future direction, falling volume of the reverse. Volume carries order-flow information ahead of price.
+    failure_mode: Volume spikes on delisting announcements and exchange incidents invert the sign.
     lookback_days: 5
-    lookback_grid: [3, 5, 10, 20, 30]
+    lookback_grid:
+    - 3
+    - 5
+    - 10
+    - 20
+    - 30
     reference_days: 30
     long: top_quantile
     short: bottom_quantile
-
   size_conditioned_momentum:
     family: market_inefficiency
-    mechanism: "Momentum works on large-cap crypto and reverses in small caps, so new highs are bought in the large decile and sold in the small decile."
-    failure_mode: "Small-cap shorts are the least liquid leg and the most exposed to a squeeze."
+    mechanism: Momentum works on large-cap crypto and reverses in small caps, so new highs are bought in the large decile and sold in the small decile.
+    failure_mode: Small-cap shorts are the least liquid leg and the most exposed to a squeeze.
     lookback_days: 20
-    lookback_grid: [10, 20, 30, 45, 60]
+    lookback_grid:
+    - 10
+    - 20
+    - 30
+    - 45
+    - 60
     size_lookback_days: 30
     size_proxy: trailing_median_quote_volume
     long: large_cap_winners
     short: small_cap_winners
+  sma_crossover:
+    family: risk_premium
+    mechanism: Time-series trend. Sticky and siloed capital inside crypto plus price-insensitive long-term holders make large-cap moves persist over multi-week horizons rather than mean-revert.
+    failure_mode: Whipsaw in range-bound regimes; crossover signals invert repeatedly and pay the cost each time. Fails hardest exactly when realised volatility is low.
+    construction: time_series_directional
+    lookback_days: 50
+    lookback_grid:
+    - 50
+    pair_grid:
+    - - 10
+      - 50
+    - - 20
+      - 50
+    - - 20
+      - 100
+    - - 50
+      - 200
+    long: fast_above_slow
+    short: fast_below_slow
+  sma_distance:
+    family: risk_premium
+    mechanism: Cross-sectional extension above a moving average ranks relative trend strength without the discrete flip of a crossover, so it trades less and holds longer.
+    failure_mode: Buys the most extended names into a deleveraging cascade; the top of the ranking is where forced selling lands first.
+    lookback_days: 50
+    lookback_grid:
+    - 20
+    - 50
+    - 100
+    long: top_quantile
+    short: bottom_quantile
+  volume_confirmed_trend:
+    family: market_inefficiency
+    mechanism: Rising volume is mildly predictive of continuation, so a trend signal is taken only when volume is expanding against its own trailing base, suppressing low-conviction whipsaw.
+    failure_mode: Volume expansion also accompanies delisting news and exchange incidents, where it marks reversal rather than continuation.
+    construction: time_series_directional
+    lookback_days: 50
+    lookback_grid:
+    - 50
+    pair_grid:
+    - - 20
+      - 50
+    volume_lookback_grid:
+    - 5
+    - 10
+    - 20
+    long: fast_above_slow_and_volume_expanding
+    short: fast_below_slow_and_volume_expanding

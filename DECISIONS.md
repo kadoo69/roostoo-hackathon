@@ -158,3 +158,64 @@ No signal produced a positive net Sharpe at any declared grid point, and the bes
 The declared mechanism for `xsec_volume` is inverted on this universe: rising relative volume predicted underperformance, at a gross Sharpe of -1.17.
 The sign is not flipped, because a sign chosen after seeing the result is a new hypothesis and requires its own stated mechanism, its own declaration, and its own trial count.
 The declared failure mode for that signal already anticipated it, since volume spikes on delisting announcements dominate a universe that is three quarters delisted names.
+
+## top20-universe
+
+The research universe is the top 20 names by trailing 30-day median dollar volume, selected point-in-time at each rebalance.
+
+The operator asked for "top 20 crypto on Roostoo", and taken literally that means the 20 names that rank highest on the venue today, which is survivor-conditioned in exactly the way Gate 1 exists to prevent.
+The point-in-time construction selects by a rule that was computable at each historical date and does not know which names survived.
+Both are computed and reported together, because the size of the gap between them is itself the evidence for which one to trust.
+
+The concentration justifies the cut: the top 20 carry 92.8% of venue crypto dollar volume and a median quoted spread of 1.21 bps, against 4.37 bps for the crypto universe as a whole.
+Two members breach the pre-registered 5 bps spread cap, PEPE at 26.32 and APT at 12.85, and are removed by the existing filter rather than by a new exception.
+
+## no-trade-band
+
+A no-trade band of 0.25 of target weight is applied and is not fitted.
+
+Gate 2 failed with annual turnover between 93 and 157 times and cost drag between 15% and 25% of NAV, which would destroy a real edge if one existed.
+The band is set by reasoning rather than by sweeping it against performance: trade only when a position has drifted by more than a quarter of its target, which is the point where the correction is large enough to be worth two crossings of a roughly 20 bps round trip.
+
+`no_trade_band_grid` contains a single value deliberately.
+Sweeping the band against realised Sharpe would convert a cost control into a fitted parameter, which is the same error recorded at `DECISIONS.md#undeclared-universe-sweep`.
+
+## mid-frequency
+
+Holding period is targeted in days to weeks, not minutes, and this is a constraint rather than a preference.
+
+The competition rules prohibit high-frequency trading, market making, and arbitrage, and require medium-frequency directional strategies.
+Independently, the fee structure forces the same answer: at 10 bps per side a 1% total fee budget buys about ten full-notional round trips, so a 14-day window supports roughly one per day at most.
+Daily-bar SMA signals with a no-trade band produce multi-week holds naturally, and realised holding period is reported rather than assumed.
+
+## trend-family-outcome
+
+The SMA and volume family was tested on the point-in-time top-20 venue universe on 2026-09-19 and Gate 2 failed, on the benchmark criterion rather than on stability.
+
+Out of sample from 2023-01-01, no configuration of any of the three signals beat BTC buy-and-hold, which returned 53.1% a year at a Sharpe of 1.15 over the same window.
+The best configuration, `volume_confirmed_trend` at a 5-day volume lookback, returned 23.7% at a Sharpe of 0.87.
+A strategy that loses to the single asset it is built on does not advance, whatever its in-sample record.
+
+Two findings are worth keeping despite the failure.
+
+`sma_crossover` at 10/50 is a clean overfitting signature: it was the strongest configuration in sample at 1.23 and among the weakest out of sample at 0.41, an OOS-to-IS ratio of 0.31.
+Selecting on the full-sample number would have chosen precisely the worst-decaying member of the family.
+
+`volume_confirmed_trend` is parameter-stable in a way the other two families are not.
+Its out-of-sample Sharpe spans 0.80 to 0.88 across all three declared volume lookbacks, a spread of 0.08, against 0.45 for `sma_crossover` and 0.50 for `sma_distance`, and its worst OOS-to-IS ratio is 0.80.
+That flatness is the signature of a weak real effect rather than a fitted one, and it is the only member of the family that would survive Gate 6.
+
+Its value is in drawdown rather than return.
+Out of sample it drew down 30.6% against BTC's 53.0% while capturing under half the return, which is a shape result, not an edge.
+The same pattern has now appeared in this operator's trend work repeatedly, and it is recorded here so the next cycle does not rediscover it.
+
+## competition-vs-deployment
+
+The trend family scores better against the competition's rubric than against a deployment standard, and the distinction must not be blurred.
+
+Screen 2 ranks on raw return over 14 days, where BTC buy-and-hold would likely beat `volume_confirmed_trend`, since the strategy captured under half of BTC's out-of-sample return.
+Screen 3 ranks survivors on a composite of Sharpe, Sortino, and Calmar, where the strategy's halved drawdown feeds directly into Calmar.
+
+This does not make it deployable.
+It makes it a candidate whose only demonstrated advantage happens to be the thing the scoring rubric rewards, which is a reason for care rather than confidence.
+Nothing here has passed Gates 3 through 9, the deflated Sharpe against 53 trials has not been computed, and the out-of-sample drawdown of 30.6% breaches the pre-registered Gate 8 limit of 25%.
