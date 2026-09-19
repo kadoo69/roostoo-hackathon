@@ -1284,3 +1284,9 @@ trials:
 - gate: roostoo_coins
   config: percoin_ZENUSDT
   status: per_asset_attribution_not_a_candidate
+- gate: bot_comparison
+  config: bot_a_4h
+  status: deployment_candidate
+- gate: bot_comparison
+  config: bot_b_1h
+  status: deployment_candidate

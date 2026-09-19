@@ -885,3 +885,65 @@ It is also unvalidated by the standard this repo set for itself before any of it
 
 Those two statements are both true and neither cancels the other.
 The competition entry is a decision under a deadline rather than a deployment decision, and the gate's purpose is to keep the distinction visible: what follows is a bet on the best candidate available, not a strategy demonstrated to have edge.
+
+## bot-architecture
+
+Two bots share one codebase and differ only by a frozen config file, which is what makes the comparison between them a comparison of timeframe rather than of implementation.
+
+`bot/` separates market data, universe selection, signal, portfolio, execution, risk and journalling into modules with explicit interfaces, as Section 8 of the plan requires.
+`bot/settings.py` refuses to load a config whose `meta.frozen` is not true and stamps the SHA-256 of the file bytes into every journal record, so a parameter change is visible in the audit trail rather than inferred from commit history.
+Bot A is `config/bot_a_4h.yaml` at 4h bars; bot B is `config/bot_b_1h.yaml` at 1h. Entry of 20 bars, exit of 10 bars, a top-30 liquidity pool, a twentieth of equity per name and a gross cap of 1.0 are identical between them.
+
+Market data comes from Binance rather than Roostoo, and this is a deliberate consequence of the finding at `DECISIONS.md#price-source`.
+Roostoo publishes no historical endpoint, so a bot sourcing its own bars would need 20 bars of warm-up before it could trade at all, which is a meaningful fraction of a fourteen-day window.
+Roostoo mirrors Binance exactly, so the signal is computed from Binance klines, which are available keyless and complete from bar one, while Roostoo's ticker supplies execution prices.
+The mirror is not assumed. Every cycle measures the deviation between the two and halts the bot if it exceeds 50 bps, and the first live measurement on 2026-09-19 was 0.9 bps.
+
+## bot-signal-parity
+
+The live signal is an incremental state machine and the backtest is a vectorised array operation, and they were verified to produce identical positions rather than assumed to.
+
+`bot/verify.py` replays the live `evaluate_book` bar by bar over a window of real market data and compares its output cell by cell against `signals/donchian.position`.
+On 199 bars across 22 symbols, both bots matched on all 3938 cells with zero mismatches.
+
+This is the check that makes every backtest number in this repo meaningful for the live bot.
+A strategy whose live implementation differs from its simulation has no validated performance whatever its backtest says, and the two were written independently enough that agreement is evidence rather than tautology.
+
+## bot-selection
+
+Bot A at 4h bars is selected over bot B at 1h, and the deciding argument is fee robustness rather than backtested performance.
+
+Over the full out-of-sample record bot A dominates: 80.8% a year at a Sharpe of 2.21, a Sortino of 4.28 and a Calmar of 4.58 for a Screen 3 of 3.745, against bot B at 51.4%, 1.58, 3.26, 2.37 and 2.486.
+In the recent period from 2025 they are level, bot B marginally ahead on the composite at 2.603 against 2.582 and on the joint competition measure at 9.93% against 8.79%.
+On that evidence alone the choice would be close.
+
+The fee assumption breaks the tie, and `costs.confirmed` is still false in the pre-registration.
+Bot B pays 15.9% of NAV a year at the assumed 5 bps maker fee and 31.8% at 10 bps, which is the taker rate any unfilled limit order falls back to.
+Its Screen 3 falls from 2.486 to 1.473 at 10 bps and to -0.111 at 20 bps.
+Bot A pays 4.1% and 8.2% at the same two rates and still scores 2.756 at 20 bps.
+
+Selecting bot B would stake the competition on an unverified fee schedule, where being wrong by one tier removes 40% of the composite and being wrong by two tiers makes it unprofitable.
+Bot A survives every fee in the tested range. That asymmetry decides it, and it is the same reasoning recorded at `DECISIONS.md#costs` for preferring the organizer's figures over the README's.
+
+Bot B is kept rather than deleted. It is the comparison that establishes bot A's margin, and if the prep window confirms a fee at or below 5 bps with reliable maker fills, the recent-period evidence for it is real enough to revisit under a declared decision rule rather than a live judgement call.
+
+## bot-self-improvement-scope
+
+The operator asked for a bot that improves itself, and what is built verifies itself instead. The distinction is deliberate.
+
+Refitting parameters on live data during the competition would fit fourteen observations, and the standing result across 351 trials in this repo is that short-sample optimisation reverses out of sample.
+It would also change the declared strategy mid-window, which Section 7 of the plan identifies as a Screen 1 failure, and it would make the commit history inconsistent with the behaviour being audited.
+
+What the bot does continuously is measure whether its own assumptions still hold: signal parity against the reference implementation, position reconciliation against the venue wallet, realised fill price against intended price, realised commission against the assumed schedule, and the Binance-Roostoo mirror.
+Adaptation is limited to behaviour declared in the frozen config before the window opens, namely the time-based de-risking ramp and the kill switches.
+Every one of those checks writes to the journal whether it passes or fails, so a divergence is a logged fact rather than a silent degradation.
+
+## bot-report-annualisation-defect
+
+`bot/report.py` computed Sortino without annualising the downside deviation, inflating it by the square root of 365, and the error was caught by a benchmark sanity check rather than by inspection.
+
+Reported Sortinos of 81.71 and 62.20 were implausible on their face, and BTC buy-and-hold on the same code path returned 34.22 where its known value is 1.7913, a ratio of 19.1 which is exactly the missing factor.
+The consequence was not confined to Sortino: the Screen 3 composite caps each term at 5.0, so an inflated Sortino pinned its term at the cap for every configuration and compressed the differences the comparison existed to measure.
+
+The fix restores the annualisation used in `portfolio/backtest.py`, and the benchmark now reproduces its established values exactly.
+The lesson recorded is procedural: every new metric implementation is checked against a series whose answer is already known before any of its output is read.
