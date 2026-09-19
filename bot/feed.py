@@ -77,6 +77,12 @@ def mirror_check(quotes: dict[str, dict], specs: dict[str, PairSpec],
         bn = prices[sym]
         if rst <= 0 or bn <= 0:
             continue
+        spec = specs[pair]
+        dev = (rst / bn - 1.0) * 1e4
+        tick_bps = spec.tick / rst * 1e4
         rows.append({"symbol": sym, "pair": pair, "roostoo": rst, "binance": bn,
-                     "deviation_bps": round((rst / bn - 1.0) * 1e4, 3)})
+                     "deviation_bps": round(dev, 3),
+                     "tick_bps": round(tick_bps, 3),
+                     "ticks": round(abs(dev) / tick_bps, 2) if tick_bps > 0 else None,
+                     "material": bool(abs(dev) > 2.0 * tick_bps)})
     return rows

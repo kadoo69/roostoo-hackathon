@@ -1414,3 +1414,33 @@ trials:
 - gate: g8_regime
   config: donchian_4h_20_10_full_history
   status: regime_partition
+- gate: fast_horizon
+  config: donchian_5m_20_10_fee5
+  status: declared_grid
+- gate: fast_horizon
+  config: donchian_5m_20_10_fee10
+  status: declared_grid
+- gate: fast_horizon
+  config: donchian_15m_20_10_fee5
+  status: declared_grid
+- gate: fast_horizon
+  config: donchian_15m_20_10_fee10
+  status: declared_grid
+- gate: fast_horizon
+  config: donchian_30m_20_10_fee5
+  status: declared_grid
+- gate: fast_horizon
+  config: donchian_30m_20_10_fee10
+  status: declared_grid
+- gate: fast_horizon
+  config: donchian_1h_20_10_fee5
+  status: declared_grid
+- gate: fast_horizon
+  config: donchian_1h_20_10_fee10
+  status: declared_grid
+- gate: fast_horizon
+  config: donchian_4h_20_10_fee5
+  status: declared_grid
+- gate: fast_horizon
+  config: donchian_4h_20_10_fee10
+  status: declared_grid

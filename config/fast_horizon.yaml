@@ -1,0 +1,33 @@
+meta:
+  declared_utc: '2026-09-19'
+  declared_before_any_backtest: true
+  requested_by: operator
+  purpose: test whether the channel rule survives below 1h, where prior work says
+    cost exceeds the average move
+  justification_ref: DECISIONS.md#fast-horizon-declaration
+premise:
+  operator_statement: shorter horizon bots that flip and close faster and scrape profits
+  prior_evidence_against:
+    - DECISIONS.md#horizon-search says break-even directional accuracy is 61.7% at a
+      1-hour horizon against realised accuracy of 47.9 to 52.1 percent
+    - DECISIONS.md#volume-family-outcome measured 660 percent of NAV per year in fees
+      at 1h on a ranked book
+    - donchian_lowtf measured 19.3 percent annual cost drag at 1h bars against 5.1 at 4h
+  decisive_quantity: mean absolute bar return versus round-trip cost. If the average
+    move is smaller than the cost of capturing it, no directional accuracy rescues it.
+grid:
+  intervals: [5m, 15m, 30m, 1h, 4h]
+  entry_bars: 20
+  exit_bars: 10
+  universe: [BTCUSDT, ETHUSDT, SOLUSDT, XRPUSDT, DOGEUSDT]
+  universe_note: the five most liquid names with 5m history, which is the best case
+    for fast trading; failure here generalises, success here would not
+  weight_divisor: 5
+  max_gross: 1.0
+  fee_bps_per_side_grid: [5, 10]
+  configs: 20
+  all_counted_as_trials: true
+evaluation:
+  is_end: '2023-01-01'
+  metrics: [sharpe, sortino, calmar, max_drawdown, annual_cost_drag, trades_per_day]
+  benchmark: same universe equal-weight buy and hold

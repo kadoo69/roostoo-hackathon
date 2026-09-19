@@ -28,6 +28,7 @@ class Bot:
         self.client.sync_time()
         self.specs = self.client.exchange_info()
         self.executor = Executor(self.client, self.specs, settings, self.journal)
+        self.mirror_breaches = 0
         self.store = Store(settings.name)
         saved = self.store.load()
         if saved.get("config_sha") not in (None, settings.config_sha256):
@@ -152,8 +153,15 @@ class Bot:
             mirror, worst = [], None
         else:
             mirror = feed.mirror_check(quotes, self.specs, self.universe)
-            worst = (max((abs(m["deviation_bps"]) for m in mirror), default=None)
-                     if len(mirror) == len(self.universe) else float("inf"))
+            material = [m for m in mirror if m.get("material")]
+            raw_worst = (max((abs(m["deviation_bps"]) for m in material), default=0.0)
+                         if len(mirror) == len(self.universe) else float("inf"))
+            if raw_worst >= self.s.mirror_max_deviation_bps:
+                self.mirror_breaches += 1
+            else:
+                self.mirror_breaches = 0
+            worst = (raw_worst if self.mirror_breaches >= 2 else
+                     min(raw_worst, self.s.mirror_max_deviation_bps - 1e-9))
         guard = risk.gate(self.equity_curve, self.executor.error_rate(), ticker_age_s,
                           worst, self.s)
         derisk = risk.derisk_multiplier(now, self.s)

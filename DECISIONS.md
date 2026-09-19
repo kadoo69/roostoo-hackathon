@@ -1137,3 +1137,59 @@ A breach means the blotter and the venue have diverged, which is a reconciliatio
 
 First realised trades, both from bot B at 1h bars, were AVAX at +0.793% net over 1.06 hours and WLD at +0.319% net over 0.67 hours.
 Fees consumed 12.4% of gross profit on those two, which is the cost drag of the fast configuration showing up in realised terms exactly as the backtest predicted and is the reason bot A was selected.
+
+## fast-horizon-outcome
+
+The operator asked for shorter-horizon bots that flip faster and scrape profits. Twenty configurations were declared at `config/fast_horizon.yaml` and tested, and the answer is that the channel rule dies below one hour for two independent reasons rather than one.
+
+The first is the arithmetic the declaration named in advance.
+Mean absolute bar return against a 10 bps round trip runs 1.41 times at 5m, 2.46 at 15m, 3.46 at 30m, 4.87 at 1h and 9.81 at 4h.
+At five minutes the average move is barely larger than the cost of capturing it, so the strategy needs to be right about direction nearly every time simply to break even.
+
+The second was not anticipated and matters more.
+Gross Sharpe, measured before any cost at all, falls monotonically as the bar shortens: 1.38 at 4h, 1.26 at 1h, 1.15 at 30m, 0.45 at 15m and **negative 0.22 at 5m**.
+The signal itself inverts. A five-minute breakout is not a weak edge being eaten by fees, it is noise that mean-reverts, and no fee schedule rescues a negative gross edge.
+
+Net results at the 5 bps maker fee, on the five most liquid names from 2023, are 4h at a Sharpe of 1.24 and 45.0% a year, 1h at 0.68 and 19.5%, 30m at -0.01, 15m at -1.92 and -50.1%, and 5m at **-7.15 and -91.8%**, with a maximum drawdown of -100%.
+At the 10 bps taker fee 5m returns -99.2% a year at a Sharpe of -14.01.
+Trade frequency runs 32.5 a day at 5m against 0.64 at 4h, and annual cost drag 238% of NAV against 5%.
+
+The universe chosen was the five most liquid names with 5m history, which is the most favourable case available for fast trading.
+Failure there generalises; success there would not have.
+Four-hour bars are the optimum of the tested range on every metric, and the ordering is monotonic, so there is no faster configuration worth building.
+
+## mirror-materiality
+
+The mirror kill switch counted single-tick rounding as price divergence, which on cheap coins is large enough to approach a halt on its own.
+
+PEPE trades near 3.8e-06 with a tick of 1e-08, so one tick is 26.2 bps.
+An observed deviation of 26.178 bps was exactly one tick, which is the smallest representable difference between the two feeds and carries no information.
+`mirror_check` now reports `tick_bps`, the deviation expressed in ticks, and a `material` flag requiring the deviation to exceed two ticks, and the halt considers only material rows.
+
+A second hypothesis was tested and rejected.
+The spikes were initially attributed to comparing a live Roostoo tick against a one-minute Binance bar close up to sixty seconds stale, but `mirror_check` was already using the live price endpoint, so staleness is not the cause.
+The 20 to 35 bps excursions are genuine transient divergence between the two feeds during fast moves, and AVAX at 21 ticks of deviation is real rather than an artifact.
+
+## mirror-halt-hysteresis
+
+A single-cycle mirror excursion would have liquidated the entire book, and the observed excursions come close enough to the threshold that this was a live risk rather than a theoretical one.
+
+On a halt the target weight set is empty and orders are computed, so the bot flattens to cash.
+That is correct behaviour for a genuine feed failure and catastrophic for a transient one, because it realises losses and surrenders every position the signal still endorses.
+Measured material deviation has a median near 5 bps but reached 34.69 bps against a 50 bps threshold, which is 69% of the way to an unrecoverable action on a feed that returns to zero deviation seconds later.
+
+The halt now requires the breach on two consecutive cycles.
+The threshold itself is pre-registered and is not moved, which matters because raising it would weaken the control, whereas requiring persistence removes only the transient case the control was never meant to catch.
+A genuine feed failure persists across cycles and still halts within one poll interval.
+
+## live-monitoring-first-session
+
+First live observations, all from roughly two hours of paper trading, and none of them a basis for changing the strategy.
+
+What is working: zero errors and zero halts across 88 and 152 cycles, the blotter's accounting identities holding exactly, and the pre-registered spread filter firing correctly on a real case, skipping ENA at 5.01 bps against the declared 5.0 limit.
+Two closed trades, AVAX at +0.793% net over 1.06 hours and WLD at +0.319% over 0.67 hours, both from bot B.
+
+What the numbers do not support: anything at all.
+Two trades is not a sample, a win rate of 1.0 is noise, and bot A has recorded one new-bar cycle in its entire run because a 4h bar closes six times a day.
+The standing result across 351 trials is that short-sample optimisation reverses, and two trades is shorter than any sample that produced that finding.
+The only figure worth carrying forward is that fees consumed 12.4% of gross profit on bot B's two trades, which is the fast configuration's cost drag appearing in realised terms exactly as the backtest predicted, and is confirmation of the existing selection rather than a reason to revisit it.

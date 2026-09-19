@@ -1,0 +1,212 @@
+{
+  "declaration": "config/fast_horizon.yaml",
+  "universe": [
+    "BTCUSDT",
+    "ETHUSDT",
+    "SOLUSDT",
+    "XRPUSDT",
+    "DOGEUSDT"
+  ],
+  "bar_edge_vs_cost": [
+    {
+      "interval": "5m",
+      "mean_abs_bar_return_bps": 14.132,
+      "median_abs_bar_return_bps": 8.823,
+      "bars": 390867
+    },
+    {
+      "interval": "15m",
+      "mean_abs_bar_return_bps": 24.642,
+      "median_abs_bar_return_bps": 15.537,
+      "bars": 130290
+    },
+    {
+      "interval": "30m",
+      "mean_abs_bar_return_bps": 34.554,
+      "median_abs_bar_return_bps": 21.447,
+      "bars": 65146
+    },
+    {
+      "interval": "1h",
+      "mean_abs_bar_return_bps": 48.7,
+      "median_abs_bar_return_bps": 30.043,
+      "bars": 32573
+    },
+    {
+      "interval": "4h",
+      "mean_abs_bar_return_bps": 98.111,
+      "median_abs_bar_return_bps": 61.158,
+      "bars": 8144
+    }
+  ],
+  "results": [
+    {
+      "interval": "5m",
+      "fee_bps": 5,
+      "net_sharpe": -7.1541,
+      "gross_sharpe": -0.2159,
+      "net_cagr": -0.91832,
+      "gross_cagr": -0.12232,
+      "net_sortino": -8.6609,
+      "net_calmar": -0.9184,
+      "max_drawdown": -0.99992,
+      "screen3": -3.7755,
+      "annual_turnover": 4751.3,
+      "annual_cost_drag": 2.3757,
+      "trades_per_day": 32.54,
+      "mean_gross_exposure": 0.3601
+    },
+    {
+      "interval": "5m",
+      "fee_bps": 10,
+      "net_sharpe": -14.0106,
+      "gross_sharpe": -0.2159,
+      "net_cagr": -0.9924,
+      "gross_cagr": -0.12232,
+      "net_sortino": -12.7333,
+      "net_calmar": -0.9924,
+      "max_drawdown": -1.0,
+      "screen3": -3.7977,
+      "annual_turnover": 4751.3,
+      "annual_cost_drag": 4.7513,
+      "trades_per_day": 32.54,
+      "mean_gross_exposure": 0.3601
+    },
+    {
+      "interval": "15m",
+      "fee_bps": 5,
+      "net_sharpe": -1.9189,
+      "gross_sharpe": 0.4517,
+      "net_cagr": -0.5012,
+      "gross_cagr": 0.10118,
+      "net_sortino": -3.0856,
+      "net_calmar": -0.5366,
+      "max_drawdown": -0.93401,
+      "screen3": -1.9709,
+      "annual_turnover": 1584.7,
+      "annual_cost_drag": 0.7923,
+      "trades_per_day": 10.85,
+      "mean_gross_exposure": 0.3606
+    },
+    {
+      "interval": "15m",
+      "fee_bps": 10,
+      "net_sharpe": -4.2745,
+      "gross_sharpe": 0.4517,
+      "net_cagr": -0.77409,
+      "gross_cagr": 0.10118,
+      "net_sortino": -6.0512,
+      "net_calmar": -0.7769,
+      "max_drawdown": -0.99636,
+      "screen3": -3.5154,
+      "annual_turnover": 1584.7,
+      "annual_cost_drag": 1.5847,
+      "trades_per_day": 10.85,
+      "mean_gross_exposure": 0.3606
+    },
+    {
+      "interval": "30m",
+      "fee_bps": 5,
+      "net_sharpe": -0.0077,
+      "gross_sharpe": 1.1473,
+      "net_cagr": -0.05695,
+      "gross_cagr": 0.39553,
+      "net_sortino": -0.0145,
+      "net_calmar": -0.1222,
+      "max_drawdown": -0.466,
+      "screen3": -0.0448,
+      "annual_turnover": 784.2,
+      "annual_cost_drag": 0.3921,
+      "trades_per_day": 5.37,
+      "mean_gross_exposure": 0.3604
+    },
+    {
+      "interval": "30m",
+      "fee_bps": 10,
+      "net_sharpe": -1.1564,
+      "gross_sharpe": 1.1473,
+      "net_cagr": -0.36277,
+      "gross_cagr": 0.39553,
+      "net_sortino": -2.0165,
+      "net_calmar": -0.4263,
+      "max_drawdown": -0.85102,
+      "screen3": -1.2814,
+      "annual_turnover": 784.2,
+      "annual_cost_drag": 0.7842,
+      "trades_per_day": 5.37,
+      "mean_gross_exposure": 0.3604
+    },
+    {
+      "interval": "1h",
+      "fee_bps": 5,
+      "net_sharpe": 0.6813,
+      "gross_sharpe": 1.2555,
+      "net_cagr": 0.19459,
+      "gross_cagr": 0.45703,
+      "net_sortino": 1.3013,
+      "net_calmar": 0.4505,
+      "max_drawdown": -0.43192,
+      "screen3": 0.8601,
+      "annual_turnover": 397.4,
+      "annual_cost_drag": 0.1987,
+      "trades_per_day": 2.72,
+      "mean_gross_exposure": 0.3649
+    },
+    {
+      "interval": "1h",
+      "fee_bps": 10,
+      "net_sharpe": 0.1101,
+      "gross_sharpe": 1.2555,
+      "net_cagr": -0.02061,
+      "gross_cagr": 0.45703,
+      "net_sortino": 0.2025,
+      "net_calmar": -0.0403,
+      "max_drawdown": -0.51109,
+      "screen3": 0.1019,
+      "annual_turnover": 397.4,
+      "annual_cost_drag": 0.3974,
+      "trades_per_day": 2.72,
+      "mean_gross_exposure": 0.3649
+    },
+    {
+      "interval": "4h",
+      "fee_bps": 5,
+      "net_sharpe": 1.2446,
+      "gross_sharpe": 1.3809,
+      "net_cagr": 0.45045,
+      "gross_cagr": 0.51978,
+      "net_sortino": 2.1374,
+      "net_calmar": 1.5584,
+      "max_drawdown": -0.28905,
+      "screen3": 1.6959,
+      "annual_turnover": 93.5,
+      "annual_cost_drag": 0.0468,
+      "trades_per_day": 0.64,
+      "mean_gross_exposure": 0.3624
+    },
+    {
+      "interval": "4h",
+      "fee_bps": 10,
+      "net_sharpe": 1.1087,
+      "gross_sharpe": 1.3809,
+      "net_cagr": 0.38427,
+      "gross_cagr": 0.51978,
+      "net_sortino": 1.8874,
+      "net_calmar": 1.2262,
+      "max_drawdown": -0.31338,
+      "screen3": 1.4554,
+      "annual_turnover": 93.5,
+      "annual_cost_drag": 0.0935,
+      "trades_per_day": 0.64,
+      "mean_gross_exposure": 0.3624
+    }
+  ],
+  "benchmark_equal_weight_hold": {
+    "cagr": 0.53367,
+    "sharpe": 1.0025,
+    "sortino": 1.5148,
+    "calmar": 0.8131,
+    "max_drawdown": -0.65635,
+    "screen3": 1.1506
+  }
+}
