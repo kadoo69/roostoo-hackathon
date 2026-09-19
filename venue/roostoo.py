@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import time
+from decimal import ROUND_DOWN, Decimal
 from dataclasses import dataclass
 from typing import Any
 from urllib.parse import urlencode
@@ -43,8 +44,17 @@ class PairSpec:
         return self.tick / price * 1e4
 
     def round_qty(self, qty: float) -> float:
-        step = 10.0**-self.amount_precision
-        return (qty // step) * step
+        step = Decimal(1).scaleb(-self.amount_precision)
+        floored = (Decimal(repr(qty)) / step).to_integral_value(ROUND_DOWN) * step
+        return float(floored.quantize(step))
+
+    def format_qty(self, qty: float) -> str:
+        step = Decimal(1).scaleb(-self.amount_precision)
+        return str(Decimal(repr(qty)).quantize(step, rounding=ROUND_DOWN))
+
+    def format_price(self, price: float) -> str:
+        step = Decimal(1).scaleb(-self.price_precision)
+        return str(Decimal(repr(price)).quantize(step))
 
 
 def parse_exchange_info(payload: dict) -> dict[str, PairSpec]:
@@ -124,7 +134,9 @@ class RoostooClient:
         return self.time_offset_ms
 
     def exchange_info(self) -> dict[str, PairSpec]:
-        return parse_exchange_info(self._request("GET", "/v3/exchangeInfo"))
+        specs = parse_exchange_info(self._request("GET", "/v3/exchangeInfo"))
+        self._spec_cache = specs
+        return specs
 
     def ticker(self, pair: str | None = None) -> dict:
         params: dict[str, Any] = {"timestamp": self._timestamp()}
@@ -139,12 +151,14 @@ class RoostooClient:
 
     def place_order(self, pair: str, side: str, quantity: float,
                     price: float | None = None) -> dict:
+        spec = self._spec_cache.get(pair) if hasattr(self, "_spec_cache") else None
         params: dict[str, Any] = {
-            "pair": pair, "side": side.upper(), "quantity": quantity,
+            "pair": pair, "side": side.upper(),
+            "quantity": spec.format_qty(quantity) if spec else quantity,
             "type": "MARKET" if price is None else "LIMIT",
         }
         if price is not None:
-            params["price"] = price
+            params["price"] = spec.format_price(price) if spec else price
         return self._request("POST", "/v3/place_order", params, signed=True)
 
     def query_order(self, order_id: int | None = None, pair: str | None = None,

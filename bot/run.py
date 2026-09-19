@@ -148,9 +148,12 @@ class Bot:
         equity, prices = self.mark(quotes)
         self.equity_curve.append(equity)
 
-        mirror = feed.mirror_check(quotes, self.specs, self.universe)
-        worst = (max((abs(m["deviation_bps"]) for m in mirror), default=None)
-                 if len(mirror) == len(self.universe) else float("inf"))
+        if self.s.mirror_reference == "none":
+            mirror, worst = [], None
+        else:
+            mirror = feed.mirror_check(quotes, self.specs, self.universe)
+            worst = (max((abs(m["deviation_bps"]) for m in mirror), default=None)
+                     if len(mirror) == len(self.universe) else float("inf"))
         guard = risk.gate(self.equity_curve, self.executor.error_rate(), ticker_age_s,
                           worst, self.s)
         derisk = risk.derisk_multiplier(now, self.s)
@@ -176,12 +179,17 @@ class Bot:
             placed.append(rec)
         self.executor.sweep_unfilled()
 
+        held_weights = portfolio.current_weights(self.holdings, prices, equity)
         snapshot = {
             "event": "cycle", "bar": str(matrix.index[-1]) if len(matrix) else None,
             "new_bar": fresh, "equity": round(equity, 2),
             "cash": round(self.cash, 2),
-            "gross_exposure": round(sum(target.values()), 4),
-            "n_universe": len(self.universe), "n_long": len(target),
+            "gross_exposure": round(sum(abs(w) for w in held_weights.values()), 4),
+            "n_long": len(held_weights),
+            "target_gross": round(sum(target.values()), 4) if fresh else None,
+            "n_target": len(target) if fresh else None,
+            "positions": {k: round(v, 5) for k, v in sorted(held_weights.items())},
+            "n_universe": len(self.universe),
             "derisk": derisk, "halt": guard["halt"], "breaches": guard["breaches"],
             "drawdown": guard["drawdown"], "orders": len(placed),
             "mirror_worst_bps": worst, "mirror_checked": len(mirror),

@@ -112,12 +112,14 @@ class BinanceTestnetClient:
     def place_order(self, pair: str, side: str, quantity: float,
                     price: float | None = None) -> dict:
         symbol = pair.replace("/", "")
+        spec = (self._specs or self.exchange_info())[pair]
         params: dict[str, Any] = {"symbol": symbol, "side": side.upper(),
-                                  "quantity": quantity}
+                                  "quantity": spec.format_qty(quantity)}
         if price is None:
             params["type"] = "MARKET"
         else:
-            params.update({"type": "LIMIT", "timeInForce": "GTC", "price": price})
+            params.update({"type": "LIMIT", "timeInForce": "GTC",
+                           "price": spec.format_price(price)})
         r = self._request("POST", "/api/v3/order", params, signed=True)
         filled = float(r.get("executedQty", 0) or 0)
         cummulative = float(r.get("cummulativeQuoteQty", 0) or 0)

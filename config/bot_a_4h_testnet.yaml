@@ -4,6 +4,10 @@ meta:
   venue: binance_testnet
   declared_utc: '2026-09-19'
   description: Donchian channel breakout on 4h bars, long only, top-30 liquidity pool
+  scope: ORDER LIFECYCLE ONLY. Binance testnet runs a synthetic book whose prices
+    diverge from production by ~26pct, while signal bars come from production.
+    P&L and equity on this config are meaningless; only order mechanics are valid.
+  mirror_disabled_reason: DECISIONS.md#testnet-mirror-scope
   evidence_ref: DECISIONS.md#donchian-lowtf-outcome
   gate4_ref: DECISIONS.md#gate4-rerun-outcome
   gate4_verdict: FAIL at N=351, DSR 0.8687 against 0.95 threshold
@@ -28,5 +32,6 @@ risk:
   max_error_rate: 0.25
   max_ticker_age_s: 120
   mirror_max_deviation_bps: 50.0
+  mirror_reference: none
   derisk_start_utc: '2026-10-15T00:00:00+00:00'
   derisk_end_utc: '2026-10-17T20:00:00+00:00'

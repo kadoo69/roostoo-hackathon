@@ -1,0 +1,60 @@
+{
+  "symbol": "BTC/USDT",
+  "steps": [
+    {
+      "step": "spec",
+      "price_precision": 2,
+      "amount_precision": 5,
+      "min_order": 5.0,
+      "bid": 81260.47,
+      "ask": 81260.48,
+      "spread_bps": 0.001
+    },
+    {
+      "step": "place_resting_limit",
+      "ok": true,
+      "order_id": 3970452,
+      "status": "NEW",
+      "price": 73134.42,
+      "qty": 0.00273,
+      "notional": 199.66,
+      "filled": 0.0
+    },
+    {
+      "step": "query_pending",
+      "ok": true,
+      "count": 1,
+      "contains_ours": true
+    },
+    {
+      "step": "cancel",
+      "ok": true,
+      "gone": true
+    },
+    {
+      "step": "min_notional_rejected",
+      "ok": true,
+      "error": "/api/v3/order:400:{\"code\":-1013,\"msg\":\"Filter failure: NOTIONAL\"}"
+    },
+    {
+      "step": "marketable_limit_buy",
+      "ok": true,
+      "status": "FILLED",
+      "role": "TAKER",
+      "commission_percent": 0.001,
+      "filled": 0.00245,
+      "avg_price": 81260.48000000001,
+      "quoted_ask": 81260.48,
+      "slippage_vs_ask_bps": 0.0
+    },
+    {
+      "step": "bot_style_limit_at_touch",
+      "ok": true,
+      "order_id": 3970456,
+      "price": 81268.6,
+      "status_after_20s": "FILLED",
+      "filled_qty": 0.00246,
+      "fill_fraction": 1.0
+    }
+  ]
+}

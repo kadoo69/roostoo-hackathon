@@ -1052,3 +1052,70 @@ Public verification on 2026-09-19 returned 487 tradable USDT pairs with correct 
 What this does and does not test should not be blurred.
 It tests the order lifecycle: signed request construction, partial fills, rejections, precision and minimum-notional handling, cancel-and-replace, and the maker versus taker attribution that the fee argument depends on.
 It does not test Roostoo's own API, whose signing scheme, error envelope and short-selling endpoints differ, and those remain unexercised until credentials arrive.
+
+## qty-precision-defect
+
+`PairSpec.round_qty` produced quantities that a real venue rejects, and only a live order revealed it.
+
+The implementation was `(qty // step) * step` in binary floating point, which for a 200 USD order in BTC at five decimal places yields 0.0024600000000000004 rather than 0.00246.
+Binance rejected it with `-1111 Parameter 'quantity' has too much precision`.
+Roostoo declares `AmountPrecision` the same way and would reject the same value, so this was a live defect for the competition venue and not an artifact of the test harness.
+
+Nothing in the backtest could surface it.
+The backtest never formats an order, it multiplies weight vectors, so the entire research pipeline is blind to wire representation.
+This is the specific class of defect the interim venue at `DECISIONS.md#interim-test-venue` exists to catch, and it justifies that work on its own.
+
+The fix uses `Decimal` with explicit `ROUND_DOWN` quantisation, and adds `format_qty` and `format_price` so both venue clients send exact decimal strings rather than repr of a float.
+Rounding down rather than to nearest is deliberate: rounding up can exceed available balance or breach the gross cap by a tick.
+
+## limit-price-retraction
+
+A claim that the bot was crossing the spread and paying taker fees on every trade was made and is withdrawn.
+
+The observation behind it was real, that an order placed during the lifecycle test filled immediately as TAKER at 10 bps.
+The inference was wrong. That order's price came from a formula hand-written inside `gates/order_lifecycle.py`, not from `Executor.limit_price`, which already clamped a buy to `ask - tick` and a sell to `bid + tick`.
+The bot's pricing was correct before the test and is unchanged by it.
+
+Two lessons are recorded rather than the correction alone.
+A test harness that reimplements the logic it is testing does not test that logic, and the harness now calls `Executor.limit_price` directly.
+And the same turn produced a claim that `bot/run.py` and `venue/roostoo.py` contained edits from an unknown source; both were traced to commit `208077c`, which is this repo's own history, so that claim is withdrawn too.
+
+## exposure-telemetry-defect
+
+The journal reported zero gross exposure while the bot held half its equity in positions, which for a Screen 1 audit trail is a misrepresentation rather than a cosmetic bug.
+
+`cycle` recomputes channels only when a new bar closes and logged the resulting target weights.
+On every intermediate cycle that target was an empty dictionary, so the record showed `gross_exposure` of 0 and `n_long` of 0 while ten positions worth roughly 50% of equity were open.
+Trading was never affected, because orders are computed only on a fresh bar or a halt, but the audit trail said the book was flat when it was not.
+
+The record now carries actual held weights and an explicit `positions` map on every cycle, with the target reported separately and only when it was recomputed.
+Verified against a live cycle: `gross_exposure` 0.5002 across ten named positions.
+
+## process-supervision
+
+Several reports in this session stated that both bots were running continuously and accumulating shadow days. That was wrong and is corrected here.
+
+Background processes started from the agent's tool calls did not survive between calls, so each reported run was a short burst followed by silent death, visible afterwards as six `resumed` lifecycle events and cycle gaps far exceeding the configured poll interval.
+The supervisor script also used `setsid`, which does not exist on macOS, so it never detached anything.
+
+`run_bots.sh` now uses `nohup` with `disown` and a respawn loop, tracks supervisor PIDs under `run/`, and exposes `start`, `stop`, `restart`, `status` and `report`.
+Verified surviving across a tool-call boundary.
+
+The operational conclusion stands regardless of the fix.
+Gate 10 requires three distinct days of live operation, and that cannot be produced from an agent session.
+It has to run on the operator's machine or the competition EC2 instance, which is what Section 7 of the plan requires in any case, and `deploy/` now carries a systemd unit and instructions for exactly that.
+
+## live-scan-universe-confirmation
+
+The universe rule was confirmed on live data that postdates every backtest used to choose it.
+
+The channel logic was run against all 66 Roostoo-tradable cryptocurrencies on 700 freshly fetched 4h bars, roughly 117 days, net of the 5 bps maker fee.
+The 22 names in the selected top-30 liquidity pool had a median Sharpe of 1.28 and were positive in 95.5% of cases, against 0.56 and 63.6% for the 44 outside it, with median returns of 18.7% and 5.2%.
+A Mann-Whitney test of selected against the rest gives p=0.0021.
+
+This matters because the liquidity rule was chosen at `DECISIONS.md#roostoo-universe-pool-size` on the 2025 period, and this window is later data, a different measurement, and one coin at a time rather than as a portfolio.
+The rule reproduces on all three counts.
+
+One column in the first version of the scan was mislabelled.
+`roostoo_vs_binance_bps` compared a live Roostoo ticker against a bar close up to four hours stale, so its 300 to 400 bps readings measured price drift since that bar, not mirror error.
+It is renamed `drift_since_bar_close_bps`. The bot's own mirror check uses fresh one-minute klines and has stayed below 6 bps throughout.

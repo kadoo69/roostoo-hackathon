@@ -37,6 +37,7 @@ class Settings:
     kill_error_rate: float
     kill_stale_ticker_s: int
     mirror_max_deviation_bps: float
+    mirror_reference: str
     config_sha256: str
     dry_run: bool
     venue: str
@@ -77,6 +78,7 @@ def load(path: str | Path) -> Settings:
         kill_error_rate=float(r["max_error_rate"]),
         kill_stale_ticker_s=int(r["max_ticker_age_s"]),
         mirror_max_deviation_bps=float(r["mirror_max_deviation_bps"]),
+        mirror_reference=r.get("mirror_reference", "binance_spot"),
         config_sha256=hashlib.sha256(raw).hexdigest()[:16],
         dry_run=os.environ.get("ROOSTOO_DRY_RUN", "1") != "0",
         venue=os.environ.get("BOT_VENUE", cfg["meta"].get("venue", "roostoo")),
