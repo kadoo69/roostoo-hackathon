@@ -1,0 +1,18 @@
+meta:
+  declared_utc: '2026-09-19'
+  declared_before_test: true
+  mechanism: Balance concentration and idle cash while limiting correlated portfolio volatility.
+  failure_mode: Volatility forecasts lag shocks; caps leave cash idle; frequent ranking changes consume fees.
+signal: donchian_4h_20_10
+momentum_bars: 40
+risk_bars: 90
+position_counts: [5, 8, 12]
+sizing: [equal, inverse_vol]
+max_gross: 0.8
+max_single: 0.2
+min_weight: 0.02
+target_vol: 0.25
+cost_bps_per_side: [10, 20]
+controls: [channel_4h, ranked5_4h]
+selection: Maximise mean capped Sharpe/Sortino/Calmar on 2023-2024 at both costs, subject to drawdown <=25% and all ratios positive; do not use later window for selection.
+assessment: 2025 onward is reused historical assessment, not untouched holdout. Forward paper is required. No automatic promotion.

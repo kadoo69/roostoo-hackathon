@@ -1361,3 +1361,28 @@ Running live bots at intervals the backtest ranks well below 4h would spend supe
 
 One-hour operation is already observable through `bot_b_1h`, which runs the unranked channel at 1h, so the two intervals worth watching live are both covered.
 If the 4h configuration degrades in forward testing, the ranked variants at 8h are the next candidates and their parameters are already measured.
+
+## take-profit-outcome
+
+Take-profit exits were tested across twelve configurations on the 4h momentum-ranked top-five book, and they do not help.
+
+Not one of the six full-exit variants beat the no-take-profit baseline on the holdout.
+They scored 1.725 to 3.194 against the baseline's 3.409, and the damage is largest at the tightest targets: a 3% target costs 1.30 of Screen 3 and an 8% target costs 1.69.
+Five of the six half-exit variants also lost, and the single exception gained 0.142.
+
+The mechanism predicted in the declaration is exactly what the numbers show.
+Return skew falls from 2.38 at baseline to between 0.90 and 1.68 under every take-profit setting.
+Screen 3 weights Sortino at 0.4, Sortino penalises only downside deviation, and the strategy's edge is an uncapped right tail.
+Truncating that tail removes the thing the scoring function rewards, which is why tighter targets hurt monotonically more.
+
+The one configuration that beat baseline is not adopted, for two reasons.
+It is a 30% target taking half the position, which barely binds: mean holding period is 8.9 bars and annual turnover 224, both identical to baseline, so the rule is doing almost nothing and its +0.142 is noise around a book that hardly changed.
+And the fit-versus-holdout Spearman across the grid is 0.29, the weakest of any sweep in this repo, so the fit window cannot select here at all.
+Selecting on it would have chosen a 3% half-exit, which scores 2.473 on the holdout against the baseline's 3.409, destroying 0.94 of composite.
+
+This is the same result as `DECISIONS.md#asymmetry-outcome` arriving from the opposite direction.
+Stops failed because they cut positions during drawdowns a trend needs to hold through.
+Take-profits fail because they cut positions during the advances a trend exists to capture.
+The channel exit is already both the stop and the target, and adding either one on top of it makes the system worse.
+
+No change is made to any bot.

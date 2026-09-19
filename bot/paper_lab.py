@@ -18,6 +18,7 @@ import requests
 import yaml
 
 from bot import feed, portfolio, risk, universe
+from bot.allocation import targets as allocation_targets
 from bot.execution import Executor
 from bot.journal import Journal
 from bot.report import from_equity
@@ -93,7 +94,7 @@ def cancel(book: dict, now: float) -> None:
 
 
 def submit(book: dict, target: dict, prices: dict, quotes: dict,
-           executor: Executor, observed: float, fee: float) -> None:
+           executor: Executor, observed: float, fee: float, policy: dict | None = None) -> None:
     equity = nav(book, prices)
     current = portfolio.current_weights(book["holdings"], prices, equity)
     orders = portfolio.deltas(target, current, equity, prices)
@@ -101,6 +102,10 @@ def submit(book: dict, target: dict, prices: dict, quotes: dict,
                    for o in book["pending"] if o["side"] == "BUY")
     available = max(0.0, book["cash"] - reserved)
     pending_symbols = {o["symbol"] for o in book["pending"]}
+    occupied = set(book["holdings"]) | {o["symbol"] for o in book["pending"] if o["side"] == "BUY"}
+    capacity = max(0.0, (policy or {}).get("max_gross", 1.0) * equity
+                   - sum(book["holdings"][s] * prices[s] for s in book["holdings"])
+                   - reserved / (1 + fee))
     for order in sorted(orders, key=lambda o: (o["side"] == "BUY", o["symbol"])):
         if order["symbol"] in pending_symbols:
             continue
@@ -112,7 +117,12 @@ def submit(book: dict, target: dict, prices: dict, quotes: dict,
             continue
         spec = executor.spec(plan["symbol"])
         if plan["side"] == "BUY":
-            plan["quantity"] = spec.round_qty(min(plan["quantity"], available / (plan["price"] * (1 + fee))))
+            if policy and plan["symbol"] not in occupied and len(occupied) >= policy["n_positions"]:
+                continue
+            name_capacity = max(0.0, (policy or {}).get("max_single", 1.0) * equity
+                                - book["holdings"].get(plan["symbol"], 0) * prices[plan["symbol"]])
+            plan["quantity"] = spec.round_qty(min(plan["quantity"], available / (plan["price"] * (1 + fee)),
+                                                   capacity / plan["price"], name_capacity / plan["price"]))
         else:
             plan["quantity"] = spec.round_qty(min(plan["quantity"], book["holdings"].get(plan["symbol"], 0)))
         plan["notional"] = plan["quantity"] * plan["price"]
@@ -120,6 +130,8 @@ def submit(book: dict, target: dict, prices: dict, quotes: dict,
             continue
         if plan["side"] == "BUY":
             available -= plan["notional"] * (1 + fee)
+            capacity -= plan["notional"]
+            occupied.add(plan["symbol"])
         plan["submitted"] = observed
         book["pending"].append(plan)
         book["events"].append({**plan, "event": "submitted", "time": observed})
@@ -196,7 +208,8 @@ class Lab:
         self.settings = replace(load(ROOT / self.cfg["base_config"]), dry_run=True, execution="LIMIT")
         code_paths = [Path(__file__), ROOT / "bot/strategy.py", ROOT / "bot/execution.py",
                       ROOT / "bot/portfolio.py", ROOT / "bot/feed.py", ROOT / "bot/universe.py",
-                      ROOT / "bot/risk.py", ROOT / "bot/settings.py", ROOT / "venue/roostoo.py"]
+                      ROOT / "bot/risk.py", ROOT / "bot/settings.py", ROOT / "venue/roostoo.py",
+                      ROOT / "bot/allocation.py"]
         digest = hashlib.sha256(raw + (ROOT / self.cfg["base_config"]).read_bytes())
         for source in code_paths:
             digest.update(source.read_bytes())
@@ -216,12 +229,17 @@ class Lab:
         self.client = RoostooClient()
         self.client.sync_time()
         self.specs = self.client.exchange_info()
+        self.specs_at = time.time()
         self.executor = Executor(self.client, self.specs, self.settings, self.journal)
         self.frames = {}
 
     def cycle(self) -> dict:
         state = copy.deepcopy(self.state)
         now = pd.Timestamp.now(tz="UTC")
+        if time.time() - self.specs_at >= 300:
+            self.specs = self.client.exchange_info()
+            self.specs_at = time.time()
+            self.executor = Executor(self.client, self.specs, self.settings, self.journal)
         refreshed = now.timestamp() - state["universe_at"] >= 86400
         if refreshed:
             self.specs = self.client.exchange_info()
@@ -254,7 +272,7 @@ class Lab:
         prices = {}
         for symbol in symbols:
             spec = self.executor.spec(symbol)
-            if spec is None or not valid_quote(quotes.get(spec.pair, {})):
+            if spec is None or not spec.can_trade or spec.asset_type == "stock" or not valid_quote(quotes.get(spec.pair, {})):
                 raise ValueError(f"missing_or_invalid_quote:{symbol}")
             prices[symbol] = float(quotes[spec.pair]["LastPrice"])
         mirror = feed.mirror_check(quotes, self.specs, sorted(symbols))
@@ -268,7 +286,9 @@ class Lab:
         for candidate in self.cfg["candidates"]:
             book = state["books"][candidate["name"]]
             settings = replace(self.settings, interval=candidate["interval"])
+            pending_before = len(book["pending"])
             settle(book, quotes, observed, fee, settings.limit_timeout_s)
+            settled = len(book["pending"]) < pending_before
             equity = nav(book, prices)
             book["peak"] = max(book["peak"], equity)
             book["halted"] |= equity / book["peak"] - 1 <= -settings.kill_max_drawdown
@@ -293,16 +313,32 @@ class Lab:
                 changed |= book.get("derisk", 1.0) != derisk
                 book["derisk"] = derisk
                 target = portfolio.target_weights(channels, settings, derisk)
+                matrix = feed.close_matrix({s: self.frames[candidate["interval"], s] for s in selected})
+                if candidate.get("allocation"):
+                    target = {s: w * derisk for s, w in allocation_targets(
+                        matrix, book["signals"], candidate["allocation"], settings.bars_per_day * 365).items()}
+                elif candidate["family"] == "ranked":
+                    ranked_settings = replace(settings, ranking_rule="momentum", n_positions=5, momentum_bars=40)
+                    ranked, _ = portfolio.rank_and_select(channels, matrix, ranked_settings)
+                    target = portfolio.target_weights(ranked, ranked_settings, derisk)
             if book["halted"]:
                 target = {}
                 changed = True
             if changed:
                 cancel(book, observed)
-                submit(book, target, prices, quotes, self.executor, observed, fee)
+                book["target"] = target
+            if changed or (settled and candidate.get("allocation")):
+                submit(book, book.get("target", target), prices, quotes, self.executor, observed, fee, candidate.get("allocation"))
+            book["policy"] = candidate.get("allocation", {})
+            book["interval"] = candidate["interval"]
+            book["marks"] = {s: prices[s] for s in book["holdings"]}
             book["nav"].append({"time": now.isoformat(), "equity": nav(book, prices),
                                 "gross": sum(q * prices[s] for s, q in book["holdings"].items()) / equity})
         state["last_cycle"] = now.isoformat()
         state["mirror_worst_bps"] = worst
+        state["venue_pairs"] = {s: self.executor.spec(s).pair for s in symbols}
+        state["venue_verified_at"] = self.specs_at
+        state["venue"] = "Roostoo"
         self.store.save(state)
         self.state = state
         report = comparison(state, self.cfg)

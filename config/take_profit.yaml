@@ -1,0 +1,41 @@
+meta:
+  declared_utc: '2026-09-19'
+  declared_before_any_backtest: true
+  requested_by: operator
+  purpose: test take-profit exits on the momentum-ranked top-5 4h configuration
+  justification_ref: DECISIONS.md#take-profit-declaration
+cost_of_this_sweep:
+  ledger_before: 454
+  configs_added: 21
+premise:
+  operator_statement: close trades when they are in our favour if the criteria meet
+  prior_evidence: DECISIONS.md#asymmetry-outcome tested ATR stops on this signal
+    family. All eight configurations lost money because a stop fires during exactly
+    the drawdowns a trend needs to hold through. A take-profit is the mirror case
+    and the mechanism to watch is the opposite one.
+  mechanism_at_risk: the strategy's measured return skew is +1.73 and Screen 3
+    weights Sortino at 0.4, which penalises only downside deviation and leaves
+    upside free. Capping gains truncates the right tail that produces both the
+    return and the skew. If take-profit helps, it must be by reducing give-back on
+    positions that peak and revert, not by improving the average winner.
+  failure_mode: a fixed percentage target is not volatility-aware, so it binds
+    almost immediately on a high-volatility coin and never on a low-volatility one,
+    making the effective rule a disguised volatility filter rather than a profit rule.
+grid:
+  base: donchian_4h_entry20_exit10_momentum_top5_mom40
+  take_profit_pct: [null, 3, 5, 8, 12, 20, 30]
+  exit_mode:
+    full: close the entire position at the target
+    half: close half at the target and let the remainder run to the channel exit
+  trigger: bar close at or above entry price times (1 + target). Close-based only,
+    no intrabar fill, so no look-ahead.
+  configs: 21
+  all_counted_as_trials: true
+method:
+  fit_window: ['2023-01-01', '2025-01-01']
+  holdout_window: ['2025-01-01', '2026-09-19']
+  baseline: no take-profit, holdout Screen 3 3.409
+  reported: [sharpe, sortino, calmar, screen3, max_drawdown, skew,
+             p_return_positive, p_clears_screen2, mean_hold_bars]
+  selection_rule: none. A change is adopted only if both windows agree, matching
+    the standard set at DECISIONS.md#concentration-timeframe-outcome.
