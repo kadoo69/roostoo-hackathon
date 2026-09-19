@@ -219,3 +219,75 @@ Screen 3 ranks survivors on a composite of Sharpe, Sortino, and Calmar, where th
 This does not make it deployable.
 It makes it a candidate whose only demonstrated advantage happens to be the thing the scoring rubric rewards, which is a reason for care rather than confidence.
 Nothing here has passed Gates 3 through 9, the deflated Sharpe against 53 trials has not been computed, and the out-of-sample drawdown of 30.6% breaches the pre-registered Gate 8 limit of 25%.
+
+## composite-objective
+
+The objective is the mean of Sharpe, Sortino, and Calmar, matching the three metrics the organisers named for Screen 3.
+
+Calmar is capped at 5.0 before averaging.
+Over a short window a near-zero maximum drawdown sends Calmar toward infinity and would let a single quiet fortnight dominate an average that is supposed to summarise three things.
+The cap is set above any plausible sustained value and is not tuned.
+
+Weights across the three are equal because the organisers did not publish weights.
+Equal weighting is also the construction least sensitive to being wrong about their choice, since a strategy strong on all three ranks well under any positive weighting.
+
+## overlay-grid
+
+The overlay is fitted on data before 2023-01-01 only, and every number reported for it comes from the out-of-sample period or the bootstrap.
+
+The grid is deliberately small, three volatility targets by two de-risking modes, because the trial ledger already stood at 53 before this stage and each additional configuration raises the hurdle that the survivor must clear at Gate 4.
+
+The drawdown circuit breaker is held fixed at the pre-registered 12% and is not swept.
+Sweeping it against the scored objective would convert the one risk control declared as unfitted into the most heavily fitted parameter in the repo, and this operator's prior work has seen regime overlays of exactly that shape reverse out of sample repeatedly.
+
+Volatility targeting is expected to help, and that expectation is itself a caution.
+A prior replication in this operator's trend work found volatility scaling supplied roughly 0.33 of Sharpe while the underlying signal supplied close to nothing, so any improvement here must be attributed between the overlay and the signal rather than credited to the strategy as a whole.
+
+## competition-bootstrap
+
+Performance is reported over 4000 contiguous 14-day windows in addition to the full out-of-sample record.
+
+The competition is a single 14-day draw, and a nine-year Sharpe describes the distribution that draw comes from, not the draw.
+A strategy with a better long-run composite can easily lose a given fortnight, and the spread between those two facts is the quantity a team actually needs in order to decide anything.
+
+The bootstrap is contiguous rather than resampled within the window so that autocorrelation and drawdown structure survive, since Calmar is meaningless once the path is shuffled.
+
+## objective-optimisation-outcome
+
+Optimising the Sharpe/Sortino/Calmar composite succeeded in sample and failed out of sample, and the attribution matters more than the headline.
+
+Selection on pre-2023 data chose `volume_confirmed_trend` at a 5-day volume lookback with a 50% volatility target and symmetric de-risking, at an in-sample composite of 1.30 against BTC buy-and-hold at 0.70.
+Out of sample that configuration scored 1.18 against BTC at 1.31.
+The optimised strategy lost to holding BTC on the exact objective it was optimised for.
+
+Decomposing the out-of-sample composite isolates where the gain came from:
+
+    raw signal              0.99
+    + volatility target     1.01
+    + circuit breaker       1.17
+    + both                  1.18
+
+Volatility targeting contributed 0.02 and the circuit breaker contributed 0.18.
+This contradicts the prior expectation recorded at `DECISIONS.md#overlay-grid`, where volatility scaling had supplied most of the Sharpe in earlier trend work, and the difference is that the no-trade band had already removed most of the turnover-driven volatility this overlay would otherwise have damped.
+
+The circuit breaker's contribution is not an improvement in the strategy.
+It holds cash on 84.8% of out-of-sample days, which shrinks the drawdown denominator faster than it shrinks the return numerator and mechanically lifts Calmar.
+Diluting a position with cash raises a ratio without adding edge, and reporting that as optimisation would be a misattribution.
+
+## breaker-misspecification
+
+The 12% drawdown circuit breaker is mis-specified for a strategy whose natural drawdown is 30%, and it is not being retuned.
+
+A breaker set below a strategy's ordinary drawdown does not control risk, it exits the strategy permanently, which is what the 84.8% cash weighting shows.
+The threshold was pre-registered as unfitted and the correct response to discovering it is wrong is a new pre-registration with a stated derivation, not an adjustment made after seeing which value scores better.
+Tuning it now against the composite would make the single control declared as unfitted into the most heavily fitted parameter in the repo.
+
+## screen-ordering
+
+Optimising the Screen 3 composite in isolation is the wrong objective, because Screen 2 runs first and is a return gate.
+
+The composite-optimised configuration returns exactly zero in 84.2% of 14-day windows and is positive in 9.3%, against 55.6% for BTC buy-and-hold.
+Screen 2 ranks on raw portfolio return and advances only the top 20 per region, so a flat fortnight is elimination before the composite is ever computed.
+
+The correct objective is the composite conditional on clearing the return cut, not the composite alone.
+A configuration that maximises Screen 3 while failing Screen 2 scores nothing, and the two-stage structure means the gates cannot be optimised independently.

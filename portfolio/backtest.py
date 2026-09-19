@@ -44,7 +44,7 @@ def evaluate(net: pd.Series, gross: pd.Series, turnover: pd.Series,
     years = len(net) / DAYS_PER_YEAR
     annual_return = equity.iloc[-1] ** (1 / years) - 1.0 if years > 0 else 0.0
     annual_vol = net.std() * np.sqrt(DAYS_PER_YEAR)
-    downside = net[net < 0].std() * np.sqrt(DAYS_PER_YEAR)
+    downside = np.sqrt((net.clip(upper=0.0) ** 2).mean()) * np.sqrt(DAYS_PER_YEAR)
     max_dd = _drawdown(equity)
 
     return Performance(

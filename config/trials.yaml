@@ -255,3 +255,111 @@ trials:
   gate: diagnostic
   universe: live_top20_survivor
   note: not deployable
+- gate: objective_optimisation
+  config: vol5 t50 sym
+  is_composite: 1.4162
+- gate: objective_optimisation
+  config: vol5 t50 asym
+  is_composite: 1.3711
+- gate: objective_optimisation
+  config: vol5 t70 sym
+  is_composite: 1.3552
+- gate: objective_optimisation
+  config: vol5 t70 asym
+  is_composite: 1.3044
+- gate: objective_optimisation
+  config: vol5 t30 sym
+  is_composite: 1.2287
+- gate: objective_optimisation
+  config: vol5 t30 asym
+  is_composite: 1.1537
+- gate: objective_optimisation
+  config: vol20 t30 sym
+  is_composite: 1.0439
+- gate: objective_optimisation
+  config: vol20 t30 asym
+  is_composite: 0.962
+- gate: objective_optimisation
+  config: vol10 t70 sym
+  is_composite: 0.9216
+- gate: objective_optimisation
+  config: vol10 t50 sym
+  is_composite: 0.8974
+- gate: objective_optimisation
+  config: vol20 t50 sym
+  is_composite: 0.8911
+- gate: objective_optimisation
+  config: vol10 t70 asym
+  is_composite: 0.8791
+- gate: objective_optimisation
+  config: vol10 t50 asym
+  is_composite: 0.854
+- gate: objective_optimisation
+  config: vol20 t50 asym
+  is_composite: 0.8494
+- gate: objective_optimisation
+  config: vol20 t70 sym
+  is_composite: 0.795
+- gate: objective_optimisation
+  config: vol20 t70 asym
+  is_composite: 0.7618
+- gate: objective_optimisation
+  config: vol10 t30 sym
+  is_composite: 0.7538
+- gate: objective_optimisation
+  config: vol10 t30 asym
+  is_composite: 0.6779
+- gate: objective_optimisation_rerun
+  config: vol5 t50 sym
+  is_composite: 1.296
+- gate: objective_optimisation_rerun
+  config: vol5 t50 asym
+  is_composite: 1.2505
+- gate: objective_optimisation_rerun
+  config: vol5 t70 sym
+  is_composite: 1.2318
+- gate: objective_optimisation_rerun
+  config: vol5 t70 asym
+  is_composite: 1.1797
+- gate: objective_optimisation_rerun
+  config: vol5 t30 sym
+  is_composite: 1.1656
+- gate: objective_optimisation_rerun
+  config: vol5 t30 asym
+  is_composite: 1.0881
+- gate: objective_optimisation_rerun
+  config: vol20 t30 sym
+  is_composite: 1.0366
+- gate: objective_optimisation_rerun
+  config: vol20 t50 sym
+  is_composite: 0.9621
+- gate: objective_optimisation_rerun
+  config: vol20 t30 asym
+  is_composite: 0.9456
+- gate: objective_optimisation_rerun
+  config: vol10 t50 sym
+  is_composite: 0.9342
+- gate: objective_optimisation_rerun
+  config: vol10 t70 sym
+  is_composite: 0.9294
+- gate: objective_optimisation_rerun
+  config: vol20 t70 sym
+  is_composite: 0.9223
+- gate: objective_optimisation_rerun
+  config: vol20 t50 asym
+  is_composite: 0.9057
+- gate: objective_optimisation_rerun
+  config: vol10 t50 asym
+  is_composite: 0.8882
+- gate: objective_optimisation_rerun
+  config: vol10 t70 asym
+  is_composite: 0.8822
+- gate: objective_optimisation_rerun
+  config: vol20 t70 asym
+  is_composite: 0.8754
+- gate: objective_optimisation_rerun
+  config: vol10 t30 sym
+  is_composite: 0.862
+- gate: objective_optimisation_rerun
+  config: vol10 t30 asym
+  is_composite: 0.78

@@ -130,3 +130,35 @@ portfolio:
   - 0.25
   justification_ref: DECISIONS.md#no-trade-band
   max_net_exposure: 0.8
+objective:
+  name: competition_composite
+  definition: mean(sharpe, sortino, calmar)
+  components:
+  - sharpe
+  - sortino
+  - calmar
+  calmar_cap: 5.0
+  calmar_cap_reason_ref: DECISIONS.md#composite-objective
+  fitted_on: in_sample_only
+  in_sample_end: '2023-01-01'
+  judged_on: out_of_sample_and_14d_bootstrap
+  benchmark: btc_buy_and_hold
+overlay:
+  vol_target_annual_grid:
+  - 0.3
+  - 0.5
+  - 0.7
+  vol_lookback_days: 30
+  max_leverage_multiple: 1.0
+  asymmetric_derisk_grid:
+  - false
+  - true
+  drawdown_circuit_breaker: 0.12
+  circuit_breaker_swept: false
+  justification_ref: DECISIONS.md#overlay-grid
+bootstrap:
+  window_days: 14
+  draws: 4000
+  seed: 20260919
+  block: contiguous
+  reason_ref: DECISIONS.md#competition-bootstrap
