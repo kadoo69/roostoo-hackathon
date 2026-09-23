@@ -3266,3 +3266,13 @@ Minutes after the reset, `momentum_top3_15m` placed three buys of about 33,330 d
 **Open, live venues only:** on a real venue a sell is a resting limit order, so its cash arrives only when it fills. A rotation that sells A and buys B will buy less B than intended, and because a held name is never topped up while booking is on, B stays underweight until it exits. Dry run cannot show this; it needs Roostoo keys to measure.
 
 The fleet was reset a second time at the same moment, on this code, so every book's record starts clean. The first reset's state is archived beside the pre-reset state.
+
+## log-review-2026-09-23
+
+Operator: "analyze the logs till now, the profits, logic gaps, what is going right, what is going wrong." Full write-up at `results/log_review_2026-09-23.md`, produced by the new `gates/log_review.py`, which reuses `bot.blotter.build` for round trips and adds benchmarks over the same hours, exposure-matched equal-weight returns, uptime, missed bar closes, booking effect and per-coin attribution.
+
+The finding that outranks the rest: **the pre-reset books were offline 55% of their 60 hours** (33 to 34 hours of gaps, 8 or 9 of about 15 4h closes missed), because the Mac sleeps (`pmset` `sleep 1`, repeated sleep/wake through three nights). That is an operations problem, not a code one, and every missed close was also a trigger for the channel-state defect fixed at `#live-validation-2026-09-23`.
+
+Every book lagged an equal-weight basket scaled to its own gross: channel books by about 1pp, momentum books by 5 to 10pp, with the momentum losses concentrated in ARB and ENA while the rally was led by NEAR, TAO, SUI and PEPE, the last of which no book could buy. None of this is a performance result: 60 hours, one regime, four defects.
+
+Also fixed from the post-reset logs: RLUSD inside the testnet universe, because the stablecoin list existed twice and predated it. One list now, four stablecoins added, test `test_live_and_backtest_share_one_stablecoin_list_and_it_covers_rlusd`.

@@ -4,11 +4,11 @@ import pandas as pd
 
 from bot.feed import bar_frame
 from bot.settings import Settings
+from data.universe import STABLES as DATA_STABLES
 from venue.roostoo import PairSpec
 
 LEVERAGED = ("UPUSDT", "DOWNUSDT", "BULLUSDT", "BEARUSDT")
-STABLES = {"USDCUSDT", "FDUSDUSDT", "TUSDUSDT", "BUSDUSDT", "DAIUSDT", "USDPUSDT",
-           "EURUSDT", "AEURUSDT", "USD1USDT", "XUSDUSDT", "PAXGUSDT", "USDEUSDT"}
+STABLES = DATA_STABLES
 
 
 def venue_symbols(specs: dict[str, PairSpec], exclude_types=("stock",)) -> list[str]:

@@ -269,3 +269,10 @@ def test_a_refused_paper_fill_reports_false():
     assert b.apply_dry_fill({"symbol": "LTCUSDT", "side": "BUY", "quantity": 1.0, "price": 62.66,
                              "type": "LIMIT"}) is False
     assert b.holdings == {}
+
+
+def test_live_and_backtest_share_one_stablecoin_list_and_it_covers_rlusd():
+    from bot import universe as live
+    from data import universe as research
+    assert live.STABLES is research.STABLES
+    assert {"RLUSDUSDT", "USDSUSDT", "BFUSDUSDT", "EURIUSDT"} <= research.STABLES
