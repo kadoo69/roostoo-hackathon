@@ -1,6 +1,6 @@
 # The bot fleet
 
-Fifteen books. Fourteen are paper on Roostoo in dry run; one places real orders on Binance testnet.
+Sixteen books. Fifteen are paper on Roostoo in dry run; one places real orders on Binance testnet.
 
 **The whole fleet was reset to 100,000 and restarted together at 2026-09-22T20:48Z**, on the replayed channel state, the one-tick spread rule and cash-capped buys. Everything before that is archived under `live/_archive/`. No reading may span the reset.
 
@@ -27,8 +27,9 @@ Fifteen books. Fourteen are paper on Roostoo in dry run; one places real orders 
 | `momentum_top3_1h` | 1h | 20/10 | momentum 40 | top 3 | 30 | full | roostoo | ON |
 | `momentum_top3_30m` | 30m | 20/10 | momentum 40 | top 3 | 30 | full | roostoo | ON |
 | `momentum_top3_15m` | 15m | 20/10 | momentum 40 | top 3 | 30 | full | roostoo | ON |
+| `momentum_top3_lock` | 4h | 20/10 | momentum 40 | top 3 | 30 | full + **target lock** | roostoo | ON |
 
-All fourteen Roostoo books run in **dry run**. Only `testnet_live` places real orders.
+All fifteen Roostoo books run in **dry run**. `./run_bots.sh awake` keeps the Mac from sleeping while they run. Only `testnet_live` places real orders.
 
 ## What each one is for
 
@@ -40,6 +41,7 @@ All fourteen Roostoo books run in **dry run**. Only `testnet_live` places real o
 - **`alpha_flow`** was the booking arm; booking is now everywhere, so its remaining job is the **alternate-data collector**: dealer GEX, plus every positioning feature and market input in the exact definition `gates/positioning_edges.py` scored (OI change, funding, premium, top-trader vs retail, taker ratio, aggregate OI and funding, DVOL, Coinbase premium), every 15 minutes, for up to 12 held names. It never trades on them: all failed their test. `#alpha-flow-declaration`, `#positioning-edges-outcome`.
 - **`scalper_live`** runs on explicit operator instruction after failing its own backtest, paper only, to accumulate forward evidence. `#scalper-v1-outcome`.
 - **`donchian_30m`, `donchian_15m`, `momentum_top3_1h`, `momentum_top3_30m`, `momentum_top3_15m`** are the deployed rules on faster clocks, added on operator instruction as paper forward evidence. **All five fail their backtest**, the ranked ones by cost: `momentum_top3_15m` holdout median is -21.3% per fortnight at 384x turnover. Never candidates. `#lowtf-paper-bots`.
+- **`momentum_top3_lock`** is `momentum_top3_full` plus the target lock (once the 14-day window is up 5%, hold at most 0.3 gross), the only arm of `config/competition_wf.yaml` to pass on every period: P(fortnight > +2%) 0.53 -> 0.68 on 2025-26, but P(> +15%) 0.22 -> 0.06. It rehearses the mechanics on a window from 2026-09-23T08:00Z; compare it with `momentum_top3_full` from that moment. `#competition-wf-outcome`.
 - **`testnet_live`** exists to test what a backtest cannot: wire format, rounding, minimum notional, partial fills, cancel semantics, real fill rates. `#testnet-live`.
 
 ## Profit booking: the skim ladder

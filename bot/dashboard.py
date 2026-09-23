@@ -36,10 +36,12 @@ BOTS = {"donchian_4h": "config/donchian_4h.yaml",
         "donchian_15m": "config/donchian_15m.yaml",
         "momentum_top3_1h": "config/momentum_top3_1h.yaml",
         "momentum_top3_30m": "config/momentum_top3_30m.yaml",
-        "momentum_top3_15m": "config/momentum_top3_15m.yaml"}
+        "momentum_top3_15m": "config/momentum_top3_15m.yaml",
+        "momentum_top3_lock": "config/momentum_top3_lock.yaml"}
 CONTROL_OF = {"donchian_4h_cushion": "donchian_4h", "momentum_top5_cushion": "momentum_top5_4h",
               "momentum_top3_full": "momentum_top3_4h",
-              "alpha_flow": "momentum_top3_full"}
+              "alpha_flow": "momentum_top3_full",
+              "momentum_top3_lock": "momentum_top3_full"}
 SCANNER = ROOT / "live" / "scanner" / "state.json"
 EXPECTED_DRAG = {"donchian_4h": 0.051, "donchian_1h": 0.193, "momentum_top5_4h": 0.075,
                  "donchian_4h_cushion": 0.051, "momentum_top5_cushion": 0.075,
@@ -50,7 +52,8 @@ EXPECTED_DRAG = {"donchian_4h": 0.051, "donchian_1h": 0.193, "momentum_top5_4h":
                  "donchian_15m": 0.669,
                  "momentum_top3_1h": 1.219,
                  "momentum_top3_30m": 2.452,
-                 "momentum_top3_15m": 5.007}
+                 "momentum_top3_15m": 5.007,
+                 "momentum_top3_lock": 0.085}
 _BREADTH = {"data": None, "updated": None}
 
 # Product backlog and integration state are deliberately separate. A source can

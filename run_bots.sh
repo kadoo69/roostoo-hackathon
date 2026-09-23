@@ -4,7 +4,7 @@ ROOT="$(cd "$(dirname "$0")" && pwd)"
 cd "$ROOT"
 PY=${PY:-python3}
 # Gated arms are listed next to the control they must be read against.
-CONFIGS=${CONFIGS:-"config/donchian_4h.yaml config/donchian_4h_cushion.yaml config/donchian_1h.yaml config/momentum_top5_4h.yaml config/momentum_top5_cushion.yaml config/momentum_top3_4h.yaml config/momentum_top3_full.yaml config/donchian_30m.yaml config/donchian_15m.yaml config/momentum_top3_1h.yaml config/momentum_top3_30m.yaml config/momentum_top3_15m.yaml"}
+CONFIGS=${CONFIGS:-"config/donchian_4h.yaml config/donchian_4h_cushion.yaml config/donchian_1h.yaml config/momentum_top5_4h.yaml config/momentum_top5_cushion.yaml config/momentum_top3_4h.yaml config/momentum_top3_full.yaml config/donchian_30m.yaml config/donchian_15m.yaml config/momentum_top3_1h.yaml config/momentum_top3_30m.yaml config/momentum_top3_15m.yaml config/momentum_top3_lock.yaml"}
 # alpha_flow runs under bot.alpha_flow_run, not bot.run, so it is started separately.
 ALPHA_FLOW_CONFIG=${ALPHA_FLOW_CONFIG:-"config/alpha_flow.yaml"}
 mkdir -p live run
@@ -173,6 +173,19 @@ case "${1:-start}" in
     rm -f run/alpha_flow.pid
     sleep 0.3
     if [ -n "$(alpha_procs)" ]; then echo "  alpha_flow STILL RUNNING"; else echo "  alpha_flow stopped"; fi ;;
+  awake)
+    # 55% of the pre-reset forward test was lost to the Mac sleeping (pmset sleep 1);
+    # every sleep was also a missed bar close. -i blocks idle sleep, -s blocks system
+    # sleep on mains power. Closing the lid still sleeps a MacBook without an external
+    # display. DECISIONS.md#log-review-2026-09-23
+    if pgrep -f "awakeroot=$ROOT" >/dev/null; then echo "  keep-awake already running"; else
+      nohup bash -c 'awakeroot="$1"; while true; do caffeinate -is; sleep 5; done' "awakeroot=$ROOT" >> live/awake.out 2>&1 &
+      echo $! > run/awake.pid; disown 2>/dev/null || true; echo "  keep-awake started (pid $!)"
+    fi ;;
+  awakestop)
+    p=$(cat run/awake.pid 2>/dev/null) && { pkill -P "$p" 2>/dev/null; kill "$p" 2>/dev/null; }
+    sup=$(pgrep -f "awakeroot=$ROOT"); [ -n "$sup" ] && { for s in $sup; do pkill -P "$s"; done; kill $sup 2>/dev/null; }
+    rm -f run/awake.pid; echo "  keep-awake stopped" ;;
   compare) shift; exec "$PY" -m bot.compare "$@" ;;
   report) shift; exec "$PY" -m bot.status "$@" ;;
   trades) shift; exec "$PY" -m bot.blotter --csv "$@" ;;

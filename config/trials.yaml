@@ -5361,3 +5361,88 @@ trials:
   status: declared_before_test
   note: operator-requested paper bot, same rule in bars on a faster clock, fee+tick
     cost; gates/lowtf_paper_bots.py
+- signal: competition_wf
+  gate: competition_wf
+  config: S1_short_sleeve
+  status: declared_before_test
+  note: 14d windows, fee+tick, hourly live-cycle sim; config/competition_wf.yaml
+- signal: competition_wf
+  gate: competition_wf
+  config: S2_intrabar_entry
+  status: declared_before_test
+  note: 14d windows, fee+tick, hourly live-cycle sim; config/competition_wf.yaml
+- signal: competition_wf
+  gate: competition_wf
+  config: S3_channel_ensemble
+  status: declared_before_test
+  note: 14d windows, fee+tick, hourly live-cycle sim; config/competition_wf.yaml
+- signal: competition_wf
+  gate: competition_wf
+  config: S4_target_lock
+  status: declared_before_test
+  note: 14d windows, fee+tick, hourly live-cycle sim; config/competition_wf.yaml
+- signal: competition_wf
+  gate: competition_wf
+  config: S5_blend
+  status: declared_before_test
+  note: 14d windows, fee+tick, hourly live-cycle sim; config/competition_wf.yaml
+- signal: competition_wf
+  gate: competition_wf
+  config: WF_select
+  status: declared_before_test
+  note: 14d windows, fee+tick, hourly live-cycle sim; config/competition_wf.yaml
+- signal: competition_wf
+  gate: lock_robustness
+  config: lock3_keep0.0
+  status: sensitivity_grid_not_selection
+  note: neighbourhood of the declared 5%/0.3 lock; never a candidate
+- signal: competition_wf
+  gate: lock_robustness
+  config: lock3_keep0.3
+  status: sensitivity_grid_not_selection
+  note: neighbourhood of the declared 5%/0.3 lock; never a candidate
+- signal: competition_wf
+  gate: lock_robustness
+  config: lock3_keep0.5
+  status: sensitivity_grid_not_selection
+  note: neighbourhood of the declared 5%/0.3 lock; never a candidate
+- signal: competition_wf
+  gate: lock_robustness
+  config: lock5_keep0.0
+  status: sensitivity_grid_not_selection
+  note: neighbourhood of the declared 5%/0.3 lock; never a candidate
+- signal: competition_wf
+  gate: lock_robustness
+  config: lock5_keep0.5
+  status: sensitivity_grid_not_selection
+  note: neighbourhood of the declared 5%/0.3 lock; never a candidate
+- signal: competition_wf
+  gate: lock_robustness
+  config: lock7_keep0.0
+  status: sensitivity_grid_not_selection
+  note: neighbourhood of the declared 5%/0.3 lock; never a candidate
+- signal: competition_wf
+  gate: lock_robustness
+  config: lock7_keep0.3
+  status: sensitivity_grid_not_selection
+  note: neighbourhood of the declared 5%/0.3 lock; never a candidate
+- signal: competition_wf
+  gate: lock_robustness
+  config: lock7_keep0.5
+  status: sensitivity_grid_not_selection
+  note: neighbourhood of the declared 5%/0.3 lock; never a candidate
+- signal: competition_wf
+  gate: lock_robustness
+  config: lock10_keep0.0
+  status: sensitivity_grid_not_selection
+  note: neighbourhood of the declared 5%/0.3 lock; never a candidate
+- signal: competition_wf
+  gate: lock_robustness
+  config: lock10_keep0.3
+  status: sensitivity_grid_not_selection
+  note: neighbourhood of the declared 5%/0.3 lock; never a candidate
+- signal: competition_wf
+  gate: lock_robustness
+  config: lock10_keep0.5
+  status: sensitivity_grid_not_selection
+  note: neighbourhood of the declared 5%/0.3 lock; never a candidate

@@ -33,7 +33,7 @@ from venue.roostoo import RoostooClient
 
 BOOKS = ("donchian_4h", "donchian_4h_cushion", "donchian_1h", "momentum_top5_4h",
          "momentum_top5_cushion", "momentum_top3_4h", "momentum_top3_full", "alpha_flow",
-         "testnet_live", "donchian_30m", "donchian_15m", "momentum_top3_1h", "momentum_top3_30m", "momentum_top3_15m")
+         "testnet_live", "donchian_30m", "donchian_15m", "momentum_top3_1h", "momentum_top3_30m", "momentum_top3_15m", "momentum_top3_lock")
 EQUITY = 100_000.0
 
 

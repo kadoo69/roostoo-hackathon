@@ -7,7 +7,7 @@ import time
 
 import pandas as pd
 
-from bot import booking, feed, portfolio, regime, risk, universe
+from bot import booking, feed, lock, portfolio, regime, risk, universe
 from bot.execution import Executor
 from bot.intents import IntentLog
 from bot.intents import reconcile as reconcile_intents
@@ -75,6 +75,7 @@ class Bot:
         self.skim_refs = {k: float(v) for k, v in
                           (saved.get('skim_refs') or {}).items()}
         self.skims = int(saved.get('skims') or 0)
+        self.lock_state = dict(saved.get("lock_state") or {})
         self.journal.write("lifecycle", {
             "event": "resumed" if saved else "cold_start",
             # A one-shot diagnostic run resumes state exactly like a supervised
@@ -138,7 +139,8 @@ class Bot:
             "equity_curve": self.equity_curve[-5000:],
             "last_bar": str(self.last_bar) if self.last_bar is not None else None,
             "skim_refs": {k: round(v, 10) for k, v in self.skim_refs.items()},
-            "skims": self.skims})
+            "skims": self.skims,
+            "lock_state": self.lock_state})
 
     def refresh_universe(self, now: dt.datetime) -> None:
         stale = (self.universe_at is None or
@@ -323,6 +325,11 @@ class Bot:
                                            "step_pct": self.s.booking.get("step_pct"),
                                            "skim_fraction": self.s.booking.get("skim_fraction"),
                                            "skims": skims})
+        target, lock_event, lock_force = lock.apply(target, equity, self.lock_state,
+                                                    self.s.target_lock, now)
+        if lock_event:
+            self.journal.write("signals", {**lock_event, "equity": round(equity, 2),
+                                           "start_equity": self.lock_state.get("start_equity")})
         # The gate defaults to always_on, which returns `target` unmodified, so
         # a bot that does not declare regime_gate behaves exactly as before.
         target, gate = regime.apply(target, self.s.regime_gate,
@@ -330,7 +337,7 @@ class Bot:
                                     min_cushion_pct=self.s.min_cushion_pct)
         current = current_w
         orders = (portfolio.deltas(target, current, equity, prices,
-                                   force={e["symbol"] for e in skims})
+                                   force={e["symbol"] for e in skims} | lock_force)
                   if fresh or guard["halt"] or self.trades_every_cycle() else [])
 
         suppressed = []

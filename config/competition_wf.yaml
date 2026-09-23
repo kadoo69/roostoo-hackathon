@@ -1,0 +1,89 @@
+meta:
+  name: competition_wf
+  declared_before_any_backtest: true
+  declared_utc: '2026-09-23'
+  requested_by: operator
+  operator_request: 'Scale, robustness and profitability to beat a strong field. Test strategies
+    out of sample and walk forward only, and in live markets, because it must work on the live
+    feed.'
+  target_evidence: 'Past Roostoo competitions: IMC x Roostoo Labs top three finished +20.5%, +8.1%,
+    +5.7%; the SG vs HK round-one leader had +17%. Team numbers reached 126+. Third place at
+    +5.7% implies the 20th per region is near 0 to 3%, so QUALIFYING needs a positive fortnight
+    and WINNING needs about +17 to 20%. Thresholds below follow from that and were fixed before
+    any number was computed.'
+  thresholds: [0.0, 0.02, 0.05, 0.10, 0.15, 0.20]
+  objective: 'Primary: P(14-day return > 2%) - the likely qualification cut. Secondary: P(> 15%) - the
+    likely winning level. Median, worst window and median Screen 3 are reported for every arm.'
+  evaluation: 'Every 14-day window starting at 00:00 UTC on every day, scored on the hourly
+    live-cycle simulator (gates.positioning_edges.simulate semantics: 4h entries, ladder 3x15,
+    drift band, never top up a held name) with 5 bps fee plus each coin''s own tick per side, and
+    an entry cost at the window start. Reported separately for 2022, 2023-24 and 2025-26. No
+    parameter below is fitted; each arm is one declared rule. That makes every window out of sample
+    for the arm itself; the WALK-FORWARD arm tests whether choosing between arms on trailing data
+    works on the next month.'
+  decision_rule: 'An arm is a candidate for the live feed only if, against its control, it raises
+    P(>2%) AND median in all three periods, its worst window is no more than 5 points worse, and its
+    nonsense control does not reproduce more than half its gain. A candidate then paper-trades on the
+    live feed until 2026-10-03 beside its control; nothing is promoted on backtest alone.'
+controls:
+  C0: momentum_top3_full as deployed
+  C1: donchian_4h as deployed
+arms:
+  S1_short_sleeve:
+    rule: 'While BTC''s 4h close is below its 180-bar mean (30 days), the book may also SHORT: names
+      in the universe whose 4h close breaks below the prior 20-bar low, held until the close exceeds
+      the prior 10-bar high, top 3 by most negative 40-bar momentum, sharing the 1.0 gross cap with
+      the longs (longs first). Shorts pay 10 bps per side (Roostoo short fee, no maker discount)
+      plus the tick, and are not laddered.'
+    control: C0
+    mechanism: A long-only book can at best sit in cash through a falling fortnight, so it cannot
+      qualify when the cut is positive and the market is down. Breakdowns are the mirror of the
+      breakouts the long book already monetises.
+    failure_mode: Crypto drifts up; bear-market rallies are violent; 20 bps round trips on whipsaws
+      eat the sleeve, so it adds drawdown without adding positive fortnights.
+    nonsense_control: the same sleeve with the regime flag replaced by a block-shuffled copy of
+      itself (same share of time, random timing), 20 seeds.
+  S2_intrabar_entry:
+    rule: 'Channel levels from closed 4h bars as deployed, but an ENTRY may trigger on any 1h close
+      above the 4h upper level; the momentum rank is taken at that hour. Exits unchanged at 4h
+      closes.'
+    control: C0
+    mechanism: A breakout is a price event; waiting up to four hours for the bar close buys it later
+      and higher (the logged ENA entry paid +2.2% for waiting).
+    failure_mode: 1h closes above the level that fail by the 4h close are false breakouts the 4h rule
+      never takes; faster clocks have lost every time they were tried here.
+    leak_check: With triggers restricted to 1h bars that are also 4h closes, the arm must reproduce
+      C0 exactly; if not, the harness leaks and nothing may be read.
+  S3_channel_ensemble:
+    rule: A name is live when at least 3 of 4 channels are long (entry/exit 10/5, 20/10, 40/20,
+      80/40); momentum top 3, full deployment.
+    control: C0
+    mechanism: The only rule in this repo that survived honest deflation is an ensemble of
+      lookbacks; agreement across horizons filters one-horizon noise such as the ARB spike entry.
+    failure_mode: Requiring agreement delays entry and blunts the concentration that produces the
+      right tail.
+  S4_target_lock:
+    rule: Within a 14-day window, once the window's return reaches +5%, gross is cut to 0.3 for the
+      rest of the window, paying fee plus tick on the reduction.
+    control: C0
+    mechanism: Browne's deadline-optimal policy; +5% is fixed from the external evidence that it
+      was third place, not fitted. Locking a qualifying return also lowers the volatility that Screen
+      3 penalises.
+    failure_mode: The cut in our region is higher than +5%, or the lock gives up the right tail that
+      wins.
+  S5_blend:
+    rule: Half the account runs C0, half runs C1, in one book.
+    control: C0
+    mechanism: C1 is positive more often, C0 has the tail; the blend may raise P(>2%) at a small cost
+      in P(>15%).
+    failure_mode: The books are correlated and the blend is merely their average.
+walk_forward:
+  WF_select:
+    rule: At the first day of each month, compute P(14-day return > 2%) over the trailing 180 days
+      of windows that ENDED before that day, for C0, C1, S1, S2, S3, S4, S5; trade the best for the
+      month. Ties go to C0.
+    mechanism: If regimes persist for months, the arm that has been qualifying recently keeps
+      qualifying.
+    failure_mode: Arm rankings do not persist month to month, as coin rankings did not
+      (DECISIONS.md#coin-selection-does-not-persist), and selection chases the last regime.
+trials_added: 6

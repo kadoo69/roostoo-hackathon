@@ -3276,3 +3276,39 @@ The finding that outranks the rest: **the pre-reset books were offline 55% of th
 Every book lagged an equal-weight basket scaled to its own gross: channel books by about 1pp, momentum books by 5 to 10pp, with the momentum losses concentrated in ARB and ENA while the rally was led by NEAR, TAO, SUI and PEPE, the last of which no book could buy. None of this is a performance result: 60 hours, one regime, four defects.
 
 Also fixed from the post-reset logs: RLUSD inside the testnet universe, because the stablecoin list existed twice and predated it. One list now, four stablecoins added, test `test_live_and_backtest_share_one_stablecoin_list_and_it_covers_rlusd`.
+
+## competition-wf-outcome
+
+Declaration `config/competition_wf.yaml`, harness `gates/competition_wf.py`, robustness `gates/lock_robustness.py`, artifacts `results/competition_wf.json` and `results/lock_robustness.json`. Ledger 985 -> 991 declared, plus 11 sensitivity rows excluded from the Sharpe family.
+
+**The target was set from outside evidence before any number was computed.** Past Roostoo competitions: the IMC x Roostoo Labs top three finished +20.5%, +8.1% and +5.7%, and the SG vs HK round-one leader had +17%, with team numbers past 126. Third place at +5.7% puts the 20th per region near 0 to 3%. So qualifying needs a positive fortnight, and winning needs about +17 to 20%. The primary objective is P(14-day return > 2%); P(> 15%) is reported as the winning level.
+
+**Every window is out of sample for its arm.** Each arm is one declared rule with nothing fitted, scored on every 14-day window starting at 00:00 UTC, in 2022, 2023-24 and 2025-26 separately, on an hourly simulator that reproduces the live cycle (4h selection, ladder, drift band, no top-up) with the fee plus each coin's tick per side and 10 bps plus tick on shorts. The simulator reproduced `gates.positioning_edges.simulate` to **0.0pp**, and the intrabar arm collapsed to the control exactly when its hourly triggers were switched off (leak check **0.0**).
+
+| arm | P(>2%) 2022 / 23-24 / 25-26 | median | P(>15%) | worst | verdict |
+|---|---|---|---|---|---|
+| C0 momentum_top3_full | 0.36 / 0.57 / 0.53 | -0.73 / +4.43 / +2.91 | 0.08 / 0.27 / 0.22 | -31 / -28 / -29 | control |
+| C1 donchian_4h | 0.12 / 0.42 / 0.34 | -0.54 / +0.87 / +0.34 | 0.00 / 0.04 / 0.03 | -4 / -5 / -9 | control |
+| S1 short sleeve in bear regime | 0.37 / 0.53 / 0.47 | -2.39 / +3.36 / +1.06 | 0.10 / 0.23 / 0.19 | -27 / -31 / -35 | **fails** |
+| S2 intrabar entry | 0.37 / 0.55 / 0.51 | -0.59 / +3.99 / +2.36 | 0.10 / 0.29 / 0.23 | -28 / -27 / -29 | **fails** |
+| S3 channel ensemble | 0.33 / 0.57 / 0.48 | -0.63 / +4.87 / +1.14 | 0.10 / 0.28 / 0.22 | -21 / -21 / -37 | **fails** |
+| **S4 target lock +5%, keep 0.3** | **0.56 / 0.69 / 0.68** | **+3.17 / +5.13 / +5.01** | 0.00 / 0.09 / 0.06 | -31 / -28 / -29 | **passes** |
+| S5 half C0, half C1 | 0.30 / 0.53 / 0.49 | -0.49 / +2.76 / +1.84 | 0.01 / 0.15 / 0.12 | -18 / -17 / -18 | fails |
+| WF monthly selection | 0.56 / 0.68 / 0.68 | +3.17 / +5.10 / +5.01 | | | picked S4 in 56 of 60 months; not independent evidence |
+
+The short sleeve loses in every period, and its random-regime control does about as well as it does, so the regime flag carries nothing. The intrabar entry is not better in any period that matters. The ensemble cuts the worst window in 2022 and 2023-24 and then has the worst window of all in 2025-26.
+
+**The target lock is robust, and it is not alpha.** It is a barrier on the qualification objective: most fortnights touch +5% at some point even when they do not finish there, and locking converts touches into finishes. Robustness, none of it used to choose:
+- every lock level (3, 5, 7, 10%) and every retained exposure (0, 0.3, 0.5) raises P(>2%) in every period; the declared 5%/0.3 sits inside the plateau, not at its peak (3%/0.0 is higher, and was not chosen);
+- at doubled tick costs it holds (2025-26: 0.669 against the control's 0.514);
+- at six start hours the gain is the same to within 0.02;
+- Screen 3 among qualifying windows is unchanged (medians 4.8 to 5.0, the composite's cap binds either way), so it does not cost the finalist ranking;
+- the worst window is unchanged, because a window that never reaches +5% never locks.
+
+**The price is the winning tail**: P(>15%) falls from 0.08/0.27/0.22 to 0.00/0.09/0.06. The lock maximises the chance of qualifying and gives up most of the chance of a +17% to +20% fortnight. Which of those the competition rewards more is the operator's call, and it turns on the region's actual cut.
+
+### Forward test on the live feed
+
+`config/momentum_top3_lock.yaml`: `momentum_top3_full` plus the lock, with a rehearsal window 2026-09-23T08:00Z to 2026-10-07T08:00Z, compared against the running `momentum_top3_full` from the same moment. It tests the mechanics that no backtest can: the window anchoring its starting equity once, the lock firing on the live equity, the forced de-risk passing the drift band, later entries being capped, and a restart inside the window remembering all of it (`lock_state` in the state file). `bot/lock.py`, `tests/test_target_lock.py`.
+
+**Nothing is changed on the deployed books.** Whether the competition book runs the lock is a decision for the operator after the forward week.

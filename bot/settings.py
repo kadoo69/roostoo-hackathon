@@ -48,10 +48,11 @@ class Settings:
     min_cushion_pct: float
     full_deployment: bool = False
     booking: dict = field(default_factory=dict)
+    target_lock: dict = field(default_factory=dict)
 
     @property
     def bars_per_day(self) -> int:
-        return {"1h": 24, "4h": 6, "8h": 3, "12h": 2, "1d": 1}[self.interval]
+        return {"15m": 96, "30m": 48, "1h": 24, "4h": 6, "8h": 3, "12h": 2, "1d": 1}[self.interval]
 
 
 def load(path: str | Path) -> Settings:
@@ -95,6 +96,7 @@ def load(path: str | Path) -> Settings:
         min_cushion_pct=float(s.get("min_cushion_pct", 1.0)),
         full_deployment=bool(s.get("full_deployment", False)),
         booking=dict(cfg.get("booking") or {}),
+        target_lock=dict(cfg.get("target_lock") or {}),
         momentum_bars=int(s.get("momentum_bars", 20)),
     )
 
