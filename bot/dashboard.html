@@ -191,7 +191,8 @@ function botPanel(b){
   m.dry_run?'<span class="tag">paper</span>':'<span class="tag warn">live orders</span>',
   b.restarts>0?`<span class="tag warn">${b.restarts} restarts</span>`:'',
   b.halts>0?`<span class="tag off">${b.halts} halts</span>`:'',
-  b.errors>0?`<span class="tag off">${b.errors} err</span>`:''].join('');
+  b.errors>0?`<span class="tag off" title="non-network errors: check live/${b.bot}/errors-*.jsonl">${b.errors} err</span>`:'',
+  b.errors_network>0?`<span class="tag" title="dropped connections or timeouts, each retried on the next cycle">${b.errors_network} net</span>`:''].join('');
  const perf=p?[['sharpe',N(p.sharpe)],['sortino',N(p.sortino)],['calmar',N(p.calmar)],['screen 3',N(p.screen3)]]
    :[['sharpe','—'],['sortino','—'],['calmar','—'],['screen 3','—']];
  return `<div class="panel">

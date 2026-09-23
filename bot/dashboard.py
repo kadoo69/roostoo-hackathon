@@ -80,6 +80,19 @@ SOURCE_CATALOG = (
 )
 
 
+
+# A dropped connection or a timeout to Binance or Roostoo fails ONE cycle, which the
+# next cycle 30 to 60 seconds later retries; no signal, order or halt depends on it.
+# Counting those together with real faults put a red "err" tag on every bot for a
+# handful of recovered blips. DECISIONS.md#log-review-2026-09-23
+NETWORK_ERROR = ("ConnectionError", "ReadTimeout", "RemoteDisconnected", "HTTPSConnectionPool",
+                 "SSLError", "try again later", "Connection aborted", "ConnectTimeout")
+
+
+def transient(e: dict) -> bool:
+    return e.get("event") in ("cycle_error", "config_changed_mid_run") and (
+        e.get("event") == "config_changed_mid_run" or any(k in str(e.get("error", "")) for k in NETWORK_ERROR))
+
 def _breadth_loop():
     while True:
         try:
@@ -138,7 +151,10 @@ def bot_state(name: str, cfg: str) -> dict:
         "restarts": sum(1 for ev in life if ev.get("event") == "resumed"),
         "health": health_report(name),
         "halts": int(f.get("halt", pd.Series(dtype=bool)).fillna(False).sum()),
-        "errors": len(errors),
+        "errors": sum(1 for e in errors if not transient(e)),
+        "errors_network": sum(1 for e in errors if transient(e)),
+        "errors_last_hour": sum(1 for e in errors if e.get("ts_utc", "") >= (
+            pd.Timestamp.now(tz="UTC") - pd.Timedelta(hours=1)).isoformat()),
         "max_gap_s": round(float(gaps.max()), 1) if len(gaps) else None,
         "equity": round(cur, 2), "equity_start": round(start, 2),
         "pnl": round(cur - start, 2),

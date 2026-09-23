@@ -46,3 +46,12 @@ def test_scalper_logic_is_not_mislabeled_as_donchian():
     row = strategy_logic([{"bot": "scalper_live", "meta": {}}])[0]
     assert "divergence" in row["signal"]
     assert "Donchian" not in row["signal"]
+
+
+def test_network_blips_are_not_counted_as_errors():
+    from bot.dashboard import transient
+    assert transient({"event": "cycle_error", "error": "ConnectionError(ProtocolError('Connection aborted.'))"})
+    assert transient({"event": "cycle_error", "error": 'ReadTimeout(ReadTimeoutError("HTTPSConnectionPool(host=api.binance.com)"))'})
+    assert transient({"event": "cycle_error", "error": "RoostooError('/v3/ticker:try again later')"})
+    assert not transient({"event": "cycle_error", "error": "KeyError('equity')"})
+    assert not transient({"event": "wallet_read_failed", "error": "RoostooError('missing_api_key')"})
