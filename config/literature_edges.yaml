@@ -1,0 +1,81 @@
+meta:
+  name: literature_edges
+  declared_before_any_backtest: true
+  declared_utc: '2026-09-23'
+  requested_by: operator
+  operator_request: 'Find new sources of alpha from research papers, Substack posts and anywhere
+    else; test, validate, and only keep what makes consistent profit.'
+  screen: 'Kept only ideas with a stated mechanism, a horizon of hours or longer (sub-hourly families
+    are dead here and outside, RESEARCH_SHORT_HORIZON.md), data that can be tested point in time, and
+    no overlap with a family FINDINGS.md already records as dead.'
+  engine: gates.competition_wf - every 14-day window, hourly live-cycle simulator, 5 bps fee plus
+    each coin's tick per side; the three periods 2022, 2023-24, 2025-26.
+  overlay_construction: 'N1, N2, N3 and N5 trade ONLY the cash the deployed book leaves idle, so
+    they cannot change what the book holds. Each is simulated as its own unit-capital sleeve with its
+    own trading costs, and the combined hourly return is C0 plus C0''s idle fraction times the
+    sleeve''s return. That is exact for a sleeve that only ever uses idle cash, and the sleeve''s
+    toggle costs are charged in full.'
+  decision_rule: 'Same as config/competition_wf.yaml: raise P(14-day > 2%) AND the median against C0
+    in every period the data covers, worst window no more than 5 points worse, and the nonsense
+    control must not reproduce more than half the gain. Survivors paper-trade on the live feed; none
+    is promoted on backtest.'
+  control: C0 = momentum_top3_full as deployed.
+arms:
+  N1_btc_overnight:
+    source: 'Padysak and Vojtko, "Seasonality, Trend-following, and Mean reversion in Bitcoin", SSRN
+      4081000 (Quantpedia "Overnight Seasonality in Bitcoin"). Published on 2015-2021 data, so every
+      window here from 2022 is post-publication.'
+    rule: Idle cash holds BTC from 22:00 to 00:00 UTC every day (hour bars labelled 22 and 23).
+    mechanism: Asian-session open demand arriving into a thin book after US close.
+    failure_mode: Published anomaly decays after publication; 10 bps round trip a day exceeds a
+      two-hour drift of a few bps.
+    nonsense_control: The same two-hour hold at each of the other 23 start hours; N1 must beat most of
+      them post-publication.
+  N2_monday_asia_open:
+    source: Concretum Group, "Seasonality in Bitcoin Intraday Trend Trading" (2025), the "Monday
+      Asia Open Effect", strongest after mid-2020.
+    rule: Idle cash holds BTC from Sunday 23:00 UTC to Monday 23:00 UTC.
+    mechanism: Weekend information and flows are priced when Asian institutions open on Monday.
+    failure_mode: The effect was measured on a trend strategy's P&L, not on BTC drift, so the drift
+      itself may be absent.
+    nonsense_control: The same 24-hour hold starting at 23:00 UTC on each of the other six days.
+  N3_etf_flow_momentum:
+    source: 'Lim, "The Price Impact of Spot Bitcoin ETF Flows", SSRN 6592830: flows predict next-day
+      BTC returns with no reversal from 1 to 20 days, on January 2024 to April 2025.'
+    data: data.macro.etf_flows, TFTC dataset (CC BY 4.0), session d stamped usable at 14:00 UTC on d+1.
+    rule: Idle cash holds BTC for the 24 hours after a session's flow becomes known, when that
+      session's net flow is positive.
+    periods: 'Data starts 2024-01; the in-paper period (2024-01 to 2025-04) and the post-publication
+      period (2025-05 onward) are reported separately, and the arm must pass in BOTH.'
+    mechanism: Flow is persistent buying by a new, slow, price-insensitive investor class.
+    failure_mode: Flows follow returns (the paper finds feedback both ways) and add nothing once
+      they are known.
+    nonsense_control: The flow sign permuted across days, 20 seeds.
+  N4_trend_factor_rank:
+    source: 'Fieberg, Liedtke, Poddig, Walker and Zaremba, "A Trend Factor for the Cross Section of
+      Cryptocurrency Returns", JFQA: aggregating price trends across horizons predicts returns,
+      robustly, after costs, in liquid coins.'
+    rule: 'Inside the channel-fired set, rank by the equal-weight mean of (close / SMA_k - 1) for k in
+      3, 5, 10, 20, 50, 100 and 200 days (4h bars times 6), instead of 40-bar momentum. Top 3, full
+      deployment. The paper combines its signals by machine learning; this is a fixed, unfitted
+      equal-weight simplification and is labelled as such.'
+    mechanism: A single lookback is one noisy estimate of trend; averaging horizons ranks by the
+      persistence of a move rather than its latest burst, the failure behind the logged ARB entry.
+    failure_mode: Long horizons dominate the average and the rank drifts toward slow, low-momentum
+      names, losing the concentration that produces the tail.
+    nonsense_control: none - it is a ranker against a ranker; C0 is the comparison.
+  N5_liquidation_flush_reversal:
+    source: Industry descriptions of liquidation cascades (Amberdata, Coinchange) and the forced-selling
+      overshoot literature; no peer-reviewed crypto paper located, stated as such.
+    rule: At a 4h close, a universe name whose 24h open-interest change AND 24h return are BOTH in the
+      bottom decile of the universe that bar is bought with idle cash, up to 3 names equally, held 18
+      bars (3 days), then sold.
+    mechanism: Forced deleveraging sells regardless of value; once open interest has collapsed with
+      price, the marginal seller is gone and the overshoot mean-reverts.
+    failure_mode: Collapses are information (hacks, delistings, unlocks) and keep falling.
+    nonsense_control: Buys at random bars at the same trigger rate, 20 seeds.
+diagnostic:
+  N6_btc_alt_lead_lag: 'IC of BTC''s last-1h and last-4h return against each alt''s next-1h and 4h
+    return net of BTC beta, per period. Reported, never traded: the literature places the lag in
+    minutes for small caps and this universe is the 30 most liquid names.'
+trials_added: 5

@@ -3312,3 +3312,21 @@ The short sleeve loses in every period, and its random-regime control does about
 `config/momentum_top3_lock.yaml`: `momentum_top3_full` plus the lock, with a rehearsal window 2026-09-23T08:00Z to 2026-10-07T08:00Z, compared against the running `momentum_top3_full` from the same moment. It tests the mechanics that no backtest can: the window anchoring its starting equity once, the lock firing on the live equity, the forced de-risk passing the drift band, later entries being capped, and a restart inside the window remembering all of it (`lock_state` in the state file). `bot/lock.py`, `tests/test_target_lock.py`.
 
 **Nothing is changed on the deployed books.** Whether the competition book runs the lock is a decision for the operator after the forward week.
+
+## literature-edges-outcome
+
+Declaration `config/literature_edges.yaml`, harness `gates/literature_edges.py`, artifact `results/literature_edges.json`. Ledger 1002 -> 1007. Screened from papers and practitioner posts for a stated mechanism, an hourly-or-longer horizon, point-in-time data, and no overlap with a dead family. Scored on the competition engine (`#competition-wf-outcome`) against `momentum_top3_full`, whose idle cash averages 36.8% since 2022, which is what the four overlays trade.
+
+**All five fail. No new edge.**
+
+| arm | source | P(14d > 2%) vs C0, by period | standalone evidence | why it fails |
+|---|---|---|---|---|
+| N1 BTC 22:00-00:00 UTC | SSRN 4081000, 2015-21 sample | 0.366/0.561/0.515 vs 0.361/0.571/0.525 | net per night -6.0, +0.2, **-6.5 bps (t -2.74)** | the published anomaly is gone after publication; 22:00 ranks 12th, 3rd and 17th of 24 start hours |
+| N2 Monday Asia open | Concretum 2025 | 0.344/0.579/0.504 | -14, +15, **-37 bps** per Monday | Sunday-start ranks 2nd, 5th, 6th of 7 days; it was a property of a trend strategy's P&L, not of BTC drift |
+| N3 ETF-flow momentum | SSRN 6592830, 2024-01 to 2025-04 | in paper 0.520 vs 0.501, **post-publication 0.542 vs 0.560** | +88 bps (t 1.98) in the paper's own period, **+29 bps (t 0.73) after it** | reproduces the paper in-sample and decays out of it; a permuted flow sign does as well (0.513, 0.549), so the gain was exposure |
+| N4 trend-factor rank | Fieberg et al., JFQA | 0.264/0.501/0.489 | | the multi-horizon average ranks toward slow names and gives up the concentration that makes the tail, the declared failure mode |
+| N5 liquidation-flush reversal | industry, no peer-reviewed source | 0.361/0.564/0.517, worst -35.5 vs -28.5 | 23 episodes in five years | too rare to matter, deepens the worst window, random triggers do as well |
+
+**Diagnostic, BTC-to-alt lead-lag:** after a BTC move, alts underperform BTC slightly over the next 1 to 4 hours in 2022 and 2023-24 (corr -0.02 to -0.05, t about -2 to -2.7) and not at all in 2025-26 (t 0.2 to 0.3). No catch-up to trade, and what little there was has gone.
+
+The pattern across the five is the same one this repo keeps finding: effects that were real in their authors' samples either decay after publication (N1, N3) or were never a property of price at this universe's liquidity (N2, N6), and the ones that change what the book holds cost it the concentration that produces its right tail (N4). The target lock (`#competition-wf-outcome`) remains the only change of any kind to pass on every period, and it is a change to the objective's shape, not a new signal.

@@ -106,5 +106,22 @@ def coinbase_premium(binance_hourly_close: pd.Series) -> pd.Series:
     return s
 
 
+def etf_flows() -> pd.Series:
+    """Daily net flow across US spot Bitcoin ETFs, from TFTC's published dataset.
+
+    Stamped when it is KNOWN, not when it happened: issuers report a session's
+    creations after the US close and aggregators publish overnight, so session d is
+    stamped at 14:00 UTC on d+1, the next US pre-open. Weekends and holidays have
+    no session and no row.
+    """
+    d = _json("https://www.tftc.io/bitcoin-etf-flows/data.json")
+    rows = {pd.Timestamp(r["date"], tz="UTC") + pd.Timedelta(days=1, hours=14): float(r["netFlowUsd"])
+            for r in d["days"] if r.get("netFlowUsd") is not None}
+    s = pd.Series(rows).sort_index().rename("etf_net_flow_usd")
+    CACHE.mkdir(parents=True, exist_ok=True)
+    s.to_frame().to_parquet(CACHE / "etf_flows.parquet")
+    return s
+
+
 def load(name: str) -> pd.Series:
     return pd.read_parquet(CACHE / f"{name}.parquet").iloc[:, 0]

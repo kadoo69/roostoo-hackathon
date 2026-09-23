@@ -38,6 +38,8 @@ Concentration, the derisk ramp, the weight path, the deployment rule and the boo
 | positioning: OI, top-trader vs retail, funding veto and priority | 4 | null on 2022, fit and holdout. **Never veto negative-funding names**: removing them costs 1.5-3.7pp in every window | `#positioning-edges-outcome` |
 | market gates: crowding, implied vol, Coinbase premium, stablecoin supply, washout BTC sleeve | 5 | null; crowding gate is the nearest miss (better 2022 and holdout, worse fit) | `#positioning-edges-outcome` |
 | booking triggered by positioning | 2 | harmful (per-coin) or inert (market) | `#positioning-edges-outcome` |
+| literature: BTC overnight, Monday Asia open, ETF-flow momentum, multi-horizon trend rank, liquidation-flush reversal | 5 | all fail on the competition engine; the two published anomalies decayed after publication | `#literature-edges-outcome` |
+| short sleeve, intrabar entry, channel ensemble, half/half blend | 4 | fail; only the target lock passes | `#competition-wf-outcome` |
 | rotation hysteresis | - | null, effects below the noise threshold | `#rotation-hysteresis-outcome` |
 
 **Ledger stands at 980 rows** (679 in the Sharpe family before the positioning run). Every configuration counts, including nulls and abandoned searches.

@@ -52,7 +52,7 @@ def load():
 
 
 def book_hourly(close1, idx4, long4=None, short4=None, long1=None, trigger1=None, mom1=None,
-                n=3, divisor=None, ladder=True, band=BAND, tick=None):
+                n=3, divisor=None, ladder=True, band=BAND, tick=None, return_gross=False):
     """Hourly weight state. `long4`/`short4` are 4h boolean frames of SELECTED names (applied at 4h
     closes); `long1` (hourly live set) plus `trigger1` (hours allowed to add entries) and `mom1` (hourly
     rank score) switch on intrabar entries into free slots between 4h closes."""
@@ -69,6 +69,7 @@ def book_hourly(close1, idx4, long4=None, short4=None, long1=None, trigger1=None
     w = np.zeros(nn)
     ref = np.full(nn, np.nan)
     net = np.zeros(len(px))
+    gross_path = np.zeros(len(px))
     for t in range(1, len(px)):
         prev, cur = px[t - 1], px[t]
         ok = np.isfinite(prev) & np.isfinite(cur) & (prev > 0)
@@ -127,6 +128,9 @@ def book_hourly(close1, idx4, long4=None, short4=None, long1=None, trigger1=None
         cost = float((dw * (np.where(short_leg, SHORT_FEE, FEE) + tb)).sum())
         net[t] = (mult - 1.0) - cost
         w = tgt
+        gross_path[t] = float(np.abs(w).sum())
+    if return_gross:
+        return pd.Series(net, index=idx1), pd.Series(gross_path, index=idx1)
     return pd.Series(net, index=idx1)
 
 

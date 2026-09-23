@@ -5446,3 +5446,28 @@ trials:
   config: lock10_keep0.5
   status: sensitivity_grid_not_selection
   note: neighbourhood of the declared 5%/0.3 lock; never a candidate
+- signal: literature_edges
+  gate: literature_edges
+  config: N1_btc_overnight
+  status: declared_before_test
+  note: config/literature_edges.yaml; competition_wf engine
+- signal: literature_edges
+  gate: literature_edges
+  config: N2_monday_asia_open
+  status: declared_before_test
+  note: config/literature_edges.yaml; competition_wf engine
+- signal: literature_edges
+  gate: literature_edges
+  config: N3_etf_flow_momentum
+  status: declared_before_test
+  note: config/literature_edges.yaml; competition_wf engine
+- signal: literature_edges
+  gate: literature_edges
+  config: N4_trend_factor_rank
+  status: declared_before_test
+  note: config/literature_edges.yaml; competition_wf engine
+- signal: literature_edges
+  gate: literature_edges
+  config: N5_liquidation_flush_reversal
+  status: declared_before_test
+  note: config/literature_edges.yaml; competition_wf engine
