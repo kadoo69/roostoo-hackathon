@@ -1,0 +1,115 @@
+meta:
+  declared_utc: '2026-09-20'
+  declared_before_any_backtest: true
+  requested_by: operator
+  purpose: >-
+    test whether making the book aware of the correlation between its holdings
+    improves it, beyond the effect of simply holding less
+  justification_ref: DECISIONS.md#correlation-cap-declaration
+cost_of_this_sweep:
+  ledger_before: 548
+  configs_added: 24
+  all_counted_as_trials: true
+  controls_not_counted: >-
+    the beta-matched control arms are null benchmarks, not candidates. They
+    cannot be selected on, so they are not hypotheses and are not counted.
+
+premise:
+  observation: |
+    Measured live on 2026-09-20. bot_c_5names held 5 names at 99% gross and had
+    1.49 effective bets. bot_a_4h held 10 names at 50% gross and had 1.68.
+    Pairwise 1h return correlation across the held names was 0.551 over the
+    prior 200 hours and 0.833 through the 00:00-04:00 UTC drawdown. BTC fell
+    1.06% in that window while AVAX fell 6.90%, TAO 5.46% and ENA 4.85%.
+    The book is not ten positions, it is roughly one and a half positions
+    wearing ten tickers, and the position is long altcoin beta.
+
+  the_trap_this_experiment_is_built_to_avoid: |
+    DECISIONS.md#beta-is-the-only-screen3-lever established that within a
+    fortnight the composite and the qualification probability are collinear,
+    because both are produced by beta. DECISIONS.md#sizing-sweep-outcome then
+    measured that capping gross below 1.0 HURTS - holdout Screen 3 of 2.101 at
+    a cap of 0.6 and 2.087 at 0.8 against 2.169 uncapped.
+    Any correlation rule that reduces exposure will therefore move Screen 3 and
+    P(Screen 2) in opposite directions automatically, and a sweep that reports
+    only Screen 3 would "prove" the rule works when all it did was de-risk.
+    That is the specific error this design exists to prevent.
+
+  decisive_test: |
+    Every arm that changes mean gross exposure is paired with a BETA-MATCHED
+    CONTROL: the same baseline book scaled by a single constant chosen so its
+    mean gross exposure over the window equals that arm's. The correlation rule
+    is credited with nothing unless it beats its own matched control. Beating
+    the unscaled baseline is not evidence, because a constant haircut would do
+    that too.
+
+  mechanism_at_risk: |
+    In a long-only book of 5 to 10 crypto majors and large alts there may be no
+    correlation structure left to exploit. If every name loads on the same
+    factor, a reweighting cannot raise effective bets and only a haircut can
+    reduce risk, in which case the honest finding is that this book cannot be
+    diversified and the only lever is size.
+
+  null_hypothesis: |
+    No correlation-aware arm exceeds its beta-matched control on holdout
+    Screen 3 and holdout P(14d return > 0) simultaneously.
+
+books:
+  top5_momentum:
+    basis: the bot_c_5names live configuration, 4h, momentum-ranked top 5 of 30
+  all_signals_div20:
+    basis: the bot_a_4h live configuration, 4h, every signalling name at 1/20
+
+arms:
+  baseline: |
+    Weights as the live bots build them. No correlation input.
+
+  scale: |
+    eff = (sum w)^2 / (w' C w) on the trailing correlation matrix C of the held
+    names. All weights multiplied by min(1, (eff / n_held) ** exponent).
+    This REDUCES GROSS and is therefore confounded with beta. Matched control
+    required.
+
+  reweight: |
+    Weights set proportional to the inverse of each name's average correlation
+    to the rest of the book, then renormalised to the SAME gross as baseline.
+    Composition changes, exposure does not. Not confounded with beta, so no
+    matched control is needed and a positive result here would be the only
+    unambiguous one available.
+
+  cluster_cap: |
+    Single-linkage clusters at a correlation threshold, then at most
+    max_per_cluster names kept per cluster, highest-ranked first, each still at
+    the baseline per-name weight. Changes BOTH composition and gross. Matched
+    control required.
+
+grid:
+  corr_bars: [90, 180]
+  scale_exponent: [0.5, 1.0]
+  reweight_shrinkage: [0.0, 0.5]
+  cluster_threshold: [0.7, 0.8]
+  max_per_cluster: [1, 2]
+  configs_per_book: 12
+  books: 2
+  configs: 24
+
+method:
+  fit_window: ['2023-01-01', '2025-01-01']
+  holdout_window: ['2025-01-01', '2026-09-19']
+  fee_bps: 5
+  correlation_estimator: |
+    Pearson on 4h simple returns over corr_bars bars, computed on bars strictly
+    before the rebalance, recomputed at each rebalance. Names with insufficient
+    history are treated as uncorrelated with everything, which is the
+    conservative direction because it cannot manufacture a diversification
+    benefit that the data does not show.
+  reported: [screen3, sharpe, sortino, calmar, max_drawdown, skew,
+             p_return_positive, p_clears_screen2, mean_gross, mean_eff_bets,
+             mean_names, annual_turnover]
+  selection_rule: |
+    None. An arm is a candidate only if it beats its beta-matched control on
+    BOTH windows, on BOTH Screen 3 and P(14d > 0). Six families in this repo
+    have reversed out of sample after being selected on one window.
+  deployment_rule: |
+    A passing arm changes bot_c_5names and bot_a_4h only after the change is
+    stated here with its measured effect. A failing sweep changes nothing.

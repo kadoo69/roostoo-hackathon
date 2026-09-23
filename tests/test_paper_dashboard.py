@@ -3,7 +3,7 @@ import json
 
 import pytest
 
-from bot.paper_dashboard import accounting, snapshot
+from bot.paper_dashboard import accounting, bot_logs, snapshot, trace_records
 
 
 def book():
@@ -41,3 +41,23 @@ def test_snapshot_staleness_and_pnl_reconcile(tmp_path):
     assert b["initial"] == pytest.approx(1100)
     assert b["pnl"] == pytest.approx(b["realized"] + b["unrealized"])
     assert b["unrealized"] == pytest.approx(19.5)
+
+
+def test_bot_logs_are_separate_and_newest_first(tmp_path):
+    state = {"books": {"alpha": book()}, "last_cycle": "2026-09-19T10:00:00+00:00",
+             "started": 1, "sha": "test"}
+    (tmp_path / "state.json").write_text(json.dumps(state))
+    log_dir = tmp_path / "alpha"
+    log_dir.mkdir()
+    (log_dir / "decisions-2026-09-19.jsonl").write_text(
+        json.dumps({"ts_utc": "2026-09-19T10:00:00Z", "equity": 1000}) + "\n" +
+        "not json\n" +
+        json.dumps({"ts_utc": "2026-09-19T10:01:00Z", "equity": 1001}) + "\n")
+    (log_dir / "orders-2026-09-19.jsonl").write_text(
+        json.dumps({"ts_utc": "2026-09-19T10:01:00Z", "event": "submitted"}) + "\n")
+    logs = bot_logs(tmp_path, "alpha")
+    assert [row["equity"] for row in logs["decisions"]] == [1001, 1000]
+    assert logs["orders"][0]["event"] == "submitted"
+    assert trace_records(tmp_path, "alpha", "fills") == []
+    with pytest.raises(KeyError, match="unknown_bot"):
+        bot_logs(tmp_path, "missing")

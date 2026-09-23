@@ -1,0 +1,82 @@
+meta:
+  name: paper_lab_v3
+  frozen: true
+  declared_utc: '2026-09-20'
+  mode: public_data_paper_only
+  mechanism: Prospectively compare risk-controlled allocations against the unmodified
+    channel and concentration controls.
+  supersedes: paper_lab_v2
+  why_a_new_root: 'paper_lab.py raises experiment_code_or_config_changed_use_new_root
+    rather than resetting, so a root is sealed by any change to its config or to the
+    code its hash covers. v2 was sealed twice on 2026-09-20: bot/settings.py gained
+    the regime_gate fields, and base_config pointed at config/bot_a_4h.yaml which
+    was renamed to config/donchian_4h.yaml. Its 13.5h record is kept at live/paper_lab_v2
+    as an audit trail and is unreadable before min_comparison_days.'
+  evidence_ref: DECISIONS.md#paper-lab-v3-declaration
+base_config: config/donchian_4h.yaml
+initial_nav: 100000.0
+poll_seconds: 60
+warmup_bars: 240
+fee_bps: 10.0
+fill_model: later_observed_quote_cross_at_limit
+min_comparison_days: 28
+selection: descriptive_only_no_automatic_promotion
+candidates:
+- name: channel_1h
+  interval: 1h
+  family: channel
+- name: channel_4h
+  interval: 4h
+  family: channel
+- name: channel_8h
+  interval: 8h
+  family: channel
+- name: channel_1d
+  interval: 1d
+  family: channel
+- name: flow_4h
+  interval: 4h
+  family: flow_entry
+- name: btc_hold
+  interval: 4h
+  family: benchmark
+- name: ranked5_4h
+  interval: 4h
+  family: ranked
+- name: ranked5_hourlyexit
+  interval: 4h
+  family: ranked
+  exit_interval: 1h
+  selection_basis: 'Forward comparison only, no promotion. NOTE added 2026-09-20:
+    DECISIONS.md#exit-clock-outcome has since measured this idea in backtest - 0 of
+    12 arms improved both windows and holdout max drawdown got WORSE (-33.0% to -36.3%
+    on the ranked book). It is kept as a forward arm precisely because it now has
+    a prior that says it should fail, which makes it a real test rather than a hopeful
+    one.'
+- name: balanced_12_equal
+  interval: 4h
+  family: channel
+  selection_basis: Selected among balanced candidates on earlier fit window only;
+    not superior to incumbent on every criterion.
+  allocation:
+    n_positions: 12
+    sizing: equal
+    momentum_bars: 40
+    risk_bars: 90
+    max_gross: 0.8
+    max_single: 0.2
+    min_weight: 0.02
+    target_vol: 0.25
+- name: balanced_5_equal
+  interval: 4h
+  family: channel
+  selection_basis: Assessment-informed diagnostic; not a validated winner.
+  allocation:
+    n_positions: 5
+    sizing: equal
+    momentum_bars: 40
+    risk_bars: 90
+    max_gross: 0.8
+    max_single: 0.2
+    min_weight: 0.02
+    target_vol: 0.25

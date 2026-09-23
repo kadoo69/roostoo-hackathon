@@ -2,10 +2,8 @@ from __future__ import annotations
 
 import warnings
 
-import numpy as np
 import pandas as pd
 
-from core.config import prereg, record_trials
 from costs.model import CostModel
 from data import daily, universe
 from portfolio.backtest import run

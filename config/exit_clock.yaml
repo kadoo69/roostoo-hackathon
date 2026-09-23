@@ -1,0 +1,105 @@
+meta:
+  declared_utc: '2026-09-20'
+  declared_before_any_backtest: true
+  requested_by: operator
+  purpose: >-
+    decouple the exit clock from the entry clock - keep 4h entries and the 4h
+    channel, but check the exit level more often than once every four hours
+  justification_ref: DECISIONS.md#exit-clock-declaration
+cost_of_this_sweep:
+  ledger_before: 572
+  configs_added: 12
+  all_counted_as_trials: true
+
+premise:
+  mechanism: |
+    DECISIONS.md#donchian-lowtf-outcome measured the same twenty-day channel on
+    1h bars at 68.9% a year, Sharpe 1.99, Sortino 3.23, against 24.2%, 0.86 and
+    1.29 on daily bars, with annual turnover of 25 times NAV and cost drag of
+    1.3% in BOTH cases. It attributed the difference to two separable effects,
+    and named the first as exit granularity - "a stop checked twenty-four times
+    a day releases a losing position hours rather than up to a day after the
+    level breaks, and crypto drawdowns are fast."
+    That entry also names the second effect: a maximum over 480 hourly closes
+    exceeds the maximum over 20 daily closes on 100% of days, so the hourly
+    channel is a strictly more selective ENTRY. The two effects were never
+    separated. This sweep separates them by holding the entry clock fixed at 4h
+    and moving only the exit clock.
+
+  live_observation: |
+    On 2026-09-19 the three bots' combined P&L went from +2,564 at 17:18 UTC to
+    +513 at 17:41 with zero orders placed, because bot_a_4h and bot_c_5names had
+    no decision point until 20:00 UTC. On 2026-09-20 the same books gave back
+    from +3,223 at 00:00 UTC to -3,775 at 02:00 UTC. bot_b_1h cut gross from 30%
+    to 10% through that window; the 4h books did not move.
+    Live exit distances measured on 2026-09-19 show the same thing structurally:
+    bot_a's channel floors sat 3.9% to 28.9% below spot, bot_b's sat 0.2% to
+    1.2% below.
+
+  why_this_is_not_the_rejected_take_profit: |
+    DECISIONS.md#take-profit-outcome rejected profit targets on this book
+    because they truncate the right tail that Sortino rewards. Checking an
+    existing trailing floor more often truncates nothing. It cannot cause an
+    exit at a price the 4h rule would not also have exited at eventually; it
+    only changes WHEN. The expected effect is on the left tail and on maximum
+    drawdown, not on the distribution of winners.
+
+  failure_mode_to_watch: |
+    A faster exit check will fire on intrabar noise that the 4h close would have
+    recovered from, converting recoverable dips into realised losses and raising
+    turnover. DECISIONS.md#asymmetry-outcome measured exactly this for ATR
+    stops - all eight configurations lost because a stop fires during the
+    drawdowns a trend needs to hold through. If the same thing happens here the
+    finding is that this book's edge requires sitting through intrabar damage,
+    and the 4h clock is load-bearing rather than incidental.
+
+  null_hypothesis: |
+    A faster exit clock does not improve holdout Screen 3 or holdout maximum
+    drawdown relative to the 4h baseline, once the extra turnover is charged.
+
+books:
+  top5_momentum: the bot_c_5names live configuration
+  all_signals_div20: the bot_a_4h live configuration
+
+rule:
+  entry: unchanged. 20-bar 4h channel high, evaluated at the 4h close.
+  ranking: unchanged, and re-ranked only on 4h closes.
+  exit_level: |
+    Unchanged. The 10-bar low of the 4h channel, computed on 4h closes strictly
+    before the current 4h bar, so the level is fixed for the whole 4h bar.
+  exit_check: |
+    The fixed level is compared against the close of every bar of the exit
+    clock inside that 4h bar. The position is released at the first such close
+    below the level, at that close. No intrabar high or low is used, so no
+    assumption is made about the path within the faster bar either.
+  no_look_ahead: |
+    At each faster close, both the level and the price are known. Re-entry is
+    only possible at the next 4h close, so a position released early cannot be
+    re-bought inside the same 4h bar.
+
+grid:
+  exit_clock: ['4h', '2h', '1h']
+  exit_bars: [10, 15]
+  books: 2
+  configs: 12
+  note: |
+    exit_clock 4h at exit_bars 10 IS the live configuration and is the baseline.
+    It is included in the count because it is re-measured here.
+
+method:
+  fit_window: ['2023-01-01', '2025-01-01']
+  holdout_window: ['2025-01-01', '2026-09-19']
+  fee_bps: 5
+  reported: [screen3, sharpe, sortino, calmar, max_drawdown, skew,
+             p_return_positive, p_clears_screen2, annual_turnover,
+             annual_cost_drag, mean_hold_bars, mean_gross]
+  turnover_is_the_cost: |
+    A faster exit clock can only raise turnover. The comparison is therefore
+    reported net of the pre-registered fee and the turnover is reported beside
+    it, because an improvement that disappears at 10 bps is not an improvement.
+  selection_rule: |
+    None. A change is adopted only if it improves BOTH windows, matching
+    DECISIONS.md#concentration-timeframe-outcome.
+  deployment_rule: |
+    A passing configuration changes bot_a_4h and bot_c_5names only after the
+    measured effect is recorded here.

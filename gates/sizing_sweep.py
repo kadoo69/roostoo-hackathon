@@ -64,7 +64,9 @@ def stats(dr):
     sh = float(dr.mean() / dr.std() * np.sqrt(365))
     so = float(dr.mean() * 365 / down) if down > 0 else 0.0
     cm = cagr / abs(dd) if dd < 0 else 0.0
-    cap = lambda v: float(np.clip(v, -5, 5))
+    def cap(v):
+        return float(np.clip(v, -5, 5))
+
     n = len(dr) - WINDOW + 1
     m = np.stack([dr.to_numpy()[i:i + WINDOW] for i in range(n)])
     e14 = np.cumprod(1.0 + m, axis=1)

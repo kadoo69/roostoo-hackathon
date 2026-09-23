@@ -7,7 +7,7 @@ import pandas as pd
 
 from core.config import prereg
 from data import daily, intraday
-from portfolio.asymmetric import Params, screen3, simulate
+from portfolio.asymmetric import screen3
 from portfolio.backtest import PERIODS_PER_YEAR, evaluate
 
 warnings.filterwarnings("ignore")

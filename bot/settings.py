@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 import yaml
@@ -44,6 +44,10 @@ class Settings:
     ranking_rule: str | None
     n_positions: int | None
     momentum_bars: int
+    regime_gate: str
+    min_cushion_pct: float
+    full_deployment: bool = False
+    booking: dict = field(default_factory=dict)
 
     @property
     def bars_per_day(self) -> int:
@@ -87,6 +91,10 @@ def load(path: str | Path) -> Settings:
         venue=os.environ.get("BOT_VENUE", cfg["meta"].get("venue", "roostoo")),
         ranking_rule=s.get("ranking_rule"),
         n_positions=(int(s["n_positions"]) if s.get("n_positions") else None),
+        regime_gate=s.get("regime_gate", "always_on"),
+        min_cushion_pct=float(s.get("min_cushion_pct", 1.0)),
+        full_deployment=bool(s.get("full_deployment", False)),
+        booking=dict(cfg.get("booking") or {}),
         momentum_bars=int(s.get("momentum_bars", 20)),
     )
 

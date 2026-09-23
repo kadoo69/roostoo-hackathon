@@ -1,0 +1,126 @@
+meta:
+  name: paper_lab_v7
+  frozen: true
+  declared_utc: '2026-09-20'
+  mode: public_data_paper_only
+  mechanism: Prospectively compare risk-controlled allocations against the unmodified
+    channel and concentration controls.
+  supersedes: paper_lab_v6
+  why_a_new_root: fee_bps changed from 10.0 to 5.0 on operator instruction - the minimum
+    exchange charge, which is the LIMIT/maker fee at preregistration.yaml costs.spot_limit_fee
+    and the rate every live bot already assumes. v6 used 10 bps, the MARKET rate,
+    so its arms were charged double what the live books are. Aligning makes paper
+    and live comparable. Note the schedule is still costs.confirmed=false and needs
+    empirical confirmation by 2026-10-01; 5 bps is the favourable end of an unconfirmed
+    range.
+  evidence_ref: DECISIONS.md#meanrev-xs-outcome
+base_config: config/donchian_4h.yaml
+initial_nav: 100000.0
+poll_seconds: 60
+warmup_bars: 240
+fee_bps: 5.0
+fill_model: later_observed_quote_cross_at_limit
+min_comparison_days: 28
+selection: descriptive_only_no_automatic_promotion
+candidates:
+- name: channel_1h
+  interval: 1h
+  family: channel
+- name: channel_4h
+  interval: 4h
+  family: channel
+- name: channel_8h
+  interval: 8h
+  family: channel
+- name: channel_1d
+  interval: 1d
+  family: channel
+- name: flow_4h
+  interval: 4h
+  family: flow_entry
+- name: btc_hold
+  interval: 4h
+  family: benchmark
+- name: ranked5_4h
+  interval: 4h
+  family: ranked
+- name: ranked5_hourlyexit
+  interval: 4h
+  family: ranked
+  exit_interval: 1h
+  selection_basis: 'Forward comparison only, no promotion. NOTE added 2026-09-20:
+    DECISIONS.md#exit-clock-outcome has since measured this idea in backtest - 0 of
+    12 arms improved both windows and holdout max drawdown got WORSE (-33.0% to -36.3%
+    on the ranked book). It is kept as a forward arm precisely because it now has
+    a prior that says it should fail, which makes it a real test rather than a hopeful
+    one.'
+- name: balanced_12_equal
+  interval: 4h
+  family: channel
+  selection_basis: Selected among balanced candidates on earlier fit window only;
+    not superior to incumbent on every criterion.
+  allocation:
+    n_positions: 12
+    sizing: equal
+    momentum_bars: 40
+    risk_bars: 90
+    max_gross: 0.8
+    max_single: 0.2
+    min_weight: 0.02
+    target_vol: 0.25
+- name: balanced_5_equal
+  interval: 4h
+  family: channel
+  selection_basis: Assessment-informed diagnostic; not a validated winner.
+  allocation:
+    n_positions: 5
+    sizing: equal
+    momentum_bars: 40
+    risk_bars: 90
+    max_gross: 0.8
+    max_single: 0.2
+    min_weight: 0.02
+    target_vol: 0.25
+- name: xs_reversal_45d_illiquid
+  interval: 1d
+  family: xs_reversal
+  formation_bars: 45
+  rebalance_bars: 7
+  n_positions: 5
+  sleeve:
+    rank_min: 31
+    rank_max: 66
+  selection_basis: 'The 1 of 48 configurations positive on both windows at DECISIONS.md#meanrev-xs-outcome
+    (illiquid sleeve, 45d formation, 7d hold, fit +1.460 / holdout +0.276). Spread
+    guard widened to 40 bps on operator instruction, from the live 5 bps, because
+    at 5 bps the arm held nothing: all five picks were blocked at 6.9 to 33.8 bps.
+    WHAT THIS DOES NOT DO: it does not make those names cheaper. The lab fills passively
+    at a later observed quote cross with no queue and no depth model, so on a 34 bps
+    book the fill arrives mainly when the market has already moved against the order.
+    Any return this arm shows is an UPPER bound and the realised quoted spread is
+    logged per holding so the gap is visible rather than assumed.'
+  max_spread_bps: 40.0
+- name: xs_reversal_45d_liquid
+  interval: 1d
+  family: xs_reversal
+  formation_bars: 45
+  rebalance_bars: 7
+  n_positions: 5
+  selection_basis: CONTROL for xs_reversal_45d_illiquid. Identical rule on the liquid
+    pool, where the literature and the backtest both say reversal should FAIL. If
+    the illiquid arm leads this one, the liquidity mechanism is doing the work; if
+    they move together, it is not reversal that is being measured.
+- name: xs_momentum_45d_illiquid
+  interval: 1d
+  family: xs_reversal
+  formation_bars: 45
+  rebalance_bars: 7
+  n_positions: 5
+  direction: momentum
+  sleeve:
+    rank_min: 31
+    rank_max: 66
+  selection_basis: SIGN CONTROL, widened to the SAME 40 bps as the reversal arm so
+    the comparison is not a spread-guard artifact. If only the reversal arm were widened,
+    any lead it showed would just be it holding more names.
+  max_spread_bps: 40.0

@@ -8,10 +8,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from bot import portfolio
 from bot.report import from_equity
 from bot.settings import load
-from bot.strategy import evaluate_book
 from core.config import RESULTS
 from data import daily, flow, universe as ru
 from signals import donchian

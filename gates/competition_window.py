@@ -21,14 +21,15 @@ SCREEN2 = 0.05
 ANN = 365.0
 
 
-def windows(net: pd.Series) -> pd.DataFrame:
-    r = net.dropna()
-    idx = r.index
-    vals = r.to_numpy(dtype=float)
-    n = len(vals) - WINDOW + 1
-    if n <= 0:
+def window_stats(mat: np.ndarray, idx) -> pd.DataFrame:
+    """Per-window return, drawdown and Screen 3 composite for a matrix of daily returns.
+
+    One implementation, shared by every gate that scores 14-day windows, so a
+    harness can never disagree with the metric it is scoring against.
+    CLAUDE.md records the cost of letting a harness reimplement its own logic.
+    """
+    if mat.size == 0:
         return pd.DataFrame()
-    mat = np.stack([vals[i:i + WINDOW] for i in range(n)])
     eq = np.cumprod(1.0 + mat, axis=1)
     ret = eq[:, -1] - 1.0
     dd = (eq / np.maximum(1.0, np.maximum.accumulate(eq, axis=1)) - 1.0).min(axis=1)
@@ -43,9 +44,19 @@ def windows(net: pd.Series) -> pd.DataFrame:
     comp = (w["sortino"] * np.clip(sortino, -cap, cap)
             + w["sharpe"] * np.clip(sharpe, -cap, cap)
             + w["calmar"] * np.clip(calmar, -cap, cap))
-    return pd.DataFrame({"start": idx[:n], "ret": ret, "maxdd": dd,
+    return pd.DataFrame({"start": list(idx), "ret": ret, "maxdd": dd,
                          "sharpe": sharpe, "sortino": sortino, "calmar": calmar,
                          "screen3": comp}).set_index("start")
+
+
+def windows(net: pd.Series) -> pd.DataFrame:
+    r = net.dropna()
+    vals = r.to_numpy(dtype=float)
+    n = len(vals) - WINDOW + 1
+    if n <= 0:
+        return pd.DataFrame()
+    mat = np.stack([vals[i:i + WINDOW] for i in range(n)])
+    return window_stats(mat, r.index[:n])
 
 
 def describe(w: pd.DataFrame, hold: pd.DataFrame) -> dict:

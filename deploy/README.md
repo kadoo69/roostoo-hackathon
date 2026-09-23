@@ -100,15 +100,25 @@ shadow days beforehand.
 
 Reads the journals directly, so it reflects whatever the bots have actually
 written rather than a separate copy of the state.
-It serves one page and one `/api/state` endpoint, refreshes every five seconds,
-and uses only the standard library so it runs on the EC2 instance with no extra
-dependencies.
+It serves the desk at `/`, deeper diagnostics at `/analysis`, and JSON at
+`/api/state` and `/api/analysis`. The desk refreshes every five seconds.
 
-It shows, per bot: equity and an equity sparkline, P&L and return, drawdown from
-peak, gross exposure, open positions with weights, closed trades with realised
-return and holding period, realised net P&L, fees, win rate and profit factor,
-plus Sharpe, Sortino, Calmar and the Screen 3 composite once three daily marks
-exist.
+The desk follows the competition objective in explicit order. First is a
+return-sorted leaderboard for every live portfolio. Sharpe, Sortino and Calmar
+appear beside return only when enough complete daily marks exist. Next comes a
+strategy-logic matrix showing signal, ranking, sizing, gate, control and the
+exact distinction between decision data and research-only data. The market
+panel publishes scanner dispersion plus funding, open interest, futures taker
+ratio, order-book imbalance/depth and aggregate-trade concentration. A source
+inventory ranks all requested feeds by cost and usefulness and marks each one
+`LIVE`, `STALE`, `WIRED` or `PLANNED`; catalog membership alone never earns a
+green badge.
+
+Below those portfolio-level panels it shows, per bot: equity and an equity
+sparkline, P&L and return, drawdown from peak, gross exposure, open positions
+with weights, closed trades with realised return and holding period, realised
+net P&L, fees, win rate and profit factor, plus Sharpe, Sortino, Calmar and the
+Screen 3 composite once three daily marks exist.
 
 Read the badges first.
 `live` means a cycle landed within five minutes, `stale` means the bot stopped.

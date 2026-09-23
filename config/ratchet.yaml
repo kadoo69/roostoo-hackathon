@@ -1,0 +1,102 @@
+meta:
+  declared_utc: '2026-09-20'
+  declared_before_any_backtest: true
+  requested_by: operator
+  purpose: >-
+    tighten the Donchian exit lookback as a position's unrealised gain grows,
+    so accumulated profit is protected without capping the upside
+  justification_ref: DECISIONS.md#ratchet-declaration
+cost_of_this_sweep:
+  ledger_before: 704
+  configs_added: 26
+  all_counted_as_trials: true
+
+premise:
+  measured_problem: |
+    Reconstructed on 2,966 completed donchian_4h trades and 2,747
+    momentum_top5_4h trades since 2023: winners realise +9.29% against a peak
+    of +14.08%, keeping 66% of the peak. The top 5% by peak realise +47.12%
+    against +68.55%, keeping 69% and surrendering 21 percentage points.
+    Mean give-back across all trades is 4.17pp against a mean realised return
+    of +4.12%, so the exit costs about what the strategy earns.
+
+  why_the_two_obvious_fixes_are_already_dead: |
+    A take-profit caps the winner. DECISIONS.md#take-profit-outcome tested
+    twelve and none beat baseline, because skew collapses from 2.38 to
+    0.90-1.68 and Sortino is paid by the uncapped right tail.
+    A uniformly faster exit tightens LOSERS too. DECISIONS.md#exit-clock-outcome
+    tested twelve and holdout maximum drawdown got WORSE in every one, because
+    the stop fires during the drawdowns a trend needs to hold through.
+    This rule is neither: the lookback tightens only as unrealised gain grows,
+    and it never places a ceiling on the position.
+
+  mechanism: |
+    A fixed 10-bar low is a constant-width trailing stop measured in TIME. Early
+    in a trade that width is appropriate, because the position has no profit to
+    protect and needs room. Late in a large winner the same width is measured
+    against a much larger accumulated gain, so the same ten bars of give-back
+    costs far more. Tightening the lookback with unrealised gain holds the
+    give-back roughly proportional rather than letting it scale with the win.
+
+  the_control_is_the_whole_test: |
+    Every ratchet arm is compared against BOTH the live baseline (fixed 10 bars)
+    AND the uniform-tightening arms (fixed 3, 5 and 7 bars).
+    If a ratchet at tight_bars = 5 does no better than simply running exit_bars
+    = 5 on every position, the asymmetry contributes nothing and the result is
+    just a shorter stop wearing a more complicated rule. Beating the baseline
+    is not the test. Beating its own uniform equivalent is.
+
+  failure_mode_to_watch: |
+    Large winners are large because they survive mid-trend consolidations. The
+    top 5% of trades peak at +62% to +69%, and a position that far ahead will
+    be on the tightest lookback precisely when a routine pullback arrives.
+    The rule may therefore destroy the tail it was built to protect. If skew
+    falls the way it did under take-profits, that is the same defect arriving
+    by a different route and the family is rejected on the same grounds.
+
+  null_hypothesis: |
+    No ratchet configuration beats its matched uniform-lookback control on
+    holdout Screen 3 and holdout skew simultaneously, on both windows.
+
+rule:
+  unrealised_gain: close / entry_price - 1, on closes only, no intrabar
+  lookback_schedule: |
+    gain <  trigger_gain  ->  base_bars   (10, the live setting)
+    gain >= trigger_gain  ->  tight_bars
+    The exit level remains the MINIMUM CLOSE over that lookback, so the rule
+    only changes how far back the floor looks, never what kind of level it is.
+  never_loosens: |
+    The lookback may only shorten within a trade. A position that gives back
+    enough to fall under trigger_gain keeps the tight lookback, because a
+    floor that widens again would let an already-protected gain escape.
+  entry_unchanged: 20-bar channel high on the same clock. Nothing about entry moves.
+  no_ceiling: |
+    There is no target and no cap. A winner can run indefinitely; only the
+    distance it is allowed to retrace changes.
+
+grid:
+  books: [donchian_4h, momentum_top5_4h]
+  trigger_gain: [0.05, 0.10, 0.20]
+  tight_bars: [3, 5, 7]
+  base_bars: 10
+  uniform_controls: [3, 5, 7, 10]
+  configs: 26
+
+method:
+  fit_window: ['2023-01-01', '2025-01-01']
+  holdout_window: ['2025-01-01', '2026-09-19']
+  fee_bps: 5
+  reported: [screen3, sharpe, sortino, calmar, max_drawdown, skew,
+             p_return_positive, p_clears_screen2, annual_turnover,
+             annual_cost_drag, mean_kept_share_of_peak, mean_hold_bars]
+  mean_kept_share_of_peak: |
+    Reported explicitly because it is the quantity the rule targets. A
+    configuration that improves Screen 3 without improving kept-share is
+    working through some other channel and the stated mechanism is wrong.
+  selection_rule: |
+    None. A configuration is a candidate only if it beats its matched uniform
+    control on BOTH windows on Screen 3 AND does not reduce skew below the
+    baseline. Six families here have reversed after passing a weaker test.
+  deployment_rule: |
+    A passing configuration goes live only as a paper arm beside its uniform
+    control, never straight into a funded book.

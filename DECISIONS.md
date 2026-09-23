@@ -98,6 +98,586 @@ Searches that return nothing still consume the family-wise error budget.
 A trial that was run and discarded is indistinguishable, statistically, from one that was run and reported, and omitting it inflates the Deflated Sharpe Ratio of whatever survives.
 The ledger at `config/trials.yaml` is append-only for this reason.
 
+## trial-counting-rule
+
+The raw ledger length is not the only defensible denominator, and this section states the rule that decides, so that the question is settled rather than re-argued.
+
+`n_trials` enters `gates/gate04_deflated_sharpe.py` at exactly one place.
+It is the `n` of `expected_max_sharpe`, which is the expected maximum of `n` independent draws from the null.
+Its meaning is therefore the number of candidates whose MAXIMUM is being reported, not the amount of compute that was spent.
+Those two quantities are equal only when every evaluated configuration was eligible to be the thing that got deployed.
+
+**The rule.**
+For a deflated Sharpe applied to strategy S, N is the number of configurations that were eligible to be deployed instead of S, scored on the same objective, on the same sample.
+
+Applied uniformly to every row of the ledger:
+
+1. A row counts if it carries a score on S's objective and a better score would have displaced S.
+2. A row that states of itself that it was never a candidate does not count, because no maximum can be taken over it. This covers `per_asset_attribution_not_a_candidate`, `sensitivity_grid_not_selection`, `lookahead_control`, `regime_partition`, and the rows noted `not deployable`.
+3. A row that is a re-evaluation of an already-counted configuration rather than a new one does not count. This covers `walk_forward_fold`, where seven folds are seven measurements of one candidate.
+4. A row scored on a different objective forms a different family. Screen 3 composite, `p_qual` and `ev` rows deflate whatever was selected on those objectives, not the Sharpe-selected book.
+5. Nulls count. Abandoned searches count. Failing to record a score is never a discount, so an unscored row that was genuinely a candidate still counts.
+6. Ties break toward counting.
+
+**The rule was written and committed before the resulting number was computed.**
+That ordering is the only thing that separates a counting rule from a fitted one, and a rule chosen after seeing which number helps is not a correction, it is the same search it claims to correct for.
+
+**Applied to the ledger at 754 rows:**
+
+| bucket | rows |
+|---|---|
+| excluded, never a candidate or a re-evaluation (clauses 2 and 3) | 120 |
+| Screen 3 / EV family (clause 4) | 164 |
+| **Sharpe family, the denominator for Gate 4** | **470** |
+
+Those are the counts at 754 rows, the ledger size when the rule was written.
+The ledger is append-only so all four numbers move; `core.config.trial_counts_by_family` is the live figure and the gate artifact records whatever held when it ran.
+Nothing below changes, because the conclusion does not turn on a few rows either way.
+
+**Outcome: the rule does not recover Gate 4, and this closes the question.**
+
+| N | null expected max Sharpe | flagship DSR | passes 0.95 |
+|---|---|---|---|
+| 754, raw ledger | 1.806 | 0.8009 | no |
+| **470, this rule** | **1.726** | **0.8444** | **no** |
+| 94 | 1.325 | 0.9500 | the largest N that would pass |
+
+No honest reading of this ledger reaches 94.
+Getting there would mean discarding roughly seven eighths of the work, including grids that were unambiguously searches for a winner.
+
+The two remaining levers close as well, and they close by arithmetic rather than by judgement:
+
+- **More observations cannot do it in time.** At N=470 the minimum track record length is 3,579 daily observations, about 9.8 years. The book has 1,358, about 3.7 years. At N=754 it is 5,145, about 14.1 years.
+- **A higher realised Sharpe cannot do it either.** At T=1358 the flagship would need an annual Sharpe of 2.498 at N=470, or 2.576 at N=754, against the 2.206 it has. Confirming the fee schedule moves Sharpe by roughly 0.11 per 5 bps in the favourable direction at most, which is an order too small.
+
+**Therefore Gate 4 is not recoverable, and no further research should be spent trying.**
+The raw Sharpe of 2.206 is real and the strategy may well work.
+What is established is that this sample cannot distinguish it from the best of 470 null draws at 95% confidence, and the submission must say exactly that rather than choosing a denominator that flatters it.
+
+Both numbers are reported together from here on, never one instead of the other.
+`trial_count()` continues to return the raw 754 so that no artifact is silently re-based; the rule is a stated reading of that number, not a replacement for it.
+
+## rotation-hysteresis-outcome
+
+Declared at `config/rotation_hysteresis.yaml` before any backtest, from arXiv:2606.00060's cost-aware execution filter.
+Full literature context at `RESEARCH_SHORT_HORIZON.md`.
+
+**Zero of nine arms is a result worth acting on, and the two that pass the letter of the criteria are inside this repo's own noise.**
+
+| book | lambda | turnover removed | fit Screen 3 | holdout Screen 3 | vs random control | drawdown | verdict |
+|---|---|---|---|---|---|---|---|
+| momentum_top5 | 1 | 1.1% | -0.0020 | +0.0165 | +0.0206 | +0.2pp | fail, fit window |
+| momentum_top5 | 2 | 2.5% | +0.0027 | +0.0244 | +0.0415 | +0.6pp | passes, but see below |
+| momentum_top5 | 4 | 4.7% | +0.0059 | +0.0199 | +0.0209 | +0.9pp | passes, but see below |
+| momentum_top3 | 1 | 1.3% | +0.0032 | -0.0260 | -0.0445 | -1.0pp | fail |
+| momentum_top3 | 2 | 3.1% | +0.0069 | -0.0318 | -0.0162 | -2.1pp | fail |
+| momentum_top3 | 4 | 6.1% | -0.0008 | -0.0654 | -0.0598 | -2.3pp | fail |
+
+The two passing arms improve fit Screen 3 by 0.0027 and 0.0059.
+`DECISIONS.md#sizing-sweep-outcome` already calls a spread of **0.027** on that same statistic noise.
+These are four to ten times smaller than the threshold this repo has already committed to treating as indistinguishable from zero, so they are not read as a finding.
+
+**The mechanical reason the filter cannot bite is the same reason the paper's rule does not transfer.**
+`lambda * 10 bps` is at most 40 bps, against 40-bar momentum score dispersion measured in whole percent.
+Almost no rotation clears the bar: turnover falls by 1.1% to 6.1% across the grid.
+Making it bite would need `lambda` around 50 to 100, at which point it is no longer cost-aware, it is an arbitrary hysteresis band with a free parameter fitted to the data.
+
+**The declared failure mode fired, on the book where it was predicted to.**
+The declaration said hysteresis may do nothing but hold stale names through drawdowns, and to read maximum drawdown even if Sharpe improved.
+On `momentum_top3` drawdown worsens monotonically with lambda, to -2.3 points, while holdout Screen 3 falls monotonically to -0.0654.
+With three names a blocked rotation is a third of the book, so the stale-holding cost scales with concentration. On `momentum_top5` drawdown mildly improves instead.
+
+**The nonsense control earned its place.**
+A random arm blocking the same fraction of rotations makes the holdout WORSE than baseline on `momentum_top5` at every lambda.
+So the small positive effect there is score-gap selection rather than turnover reduction, and is the right sign.
+It is simply an order of magnitude too small to act on. Without this control the +0.024 would have looked like a mechanism rather than a coin flip, which is the mistake `#exit-clock-outcome` records.
+
+**Equivalence was asserted before any arm was read.**
+`gates/rotation_hysteresis.py` refuses to run unless `rotate(live, score, n, gap=0)` reproduces the unconditional top-n book exactly.
+It caught a real discrepancy on the first run: two 2018 rows where a live name had no momentum score yet was treated as eligible at negative infinity, where `score.where(live).rank()` correctly drops it.
+Both rows sit outside the fit and holdout windows and would have changed nothing, which is exactly why an assertion rather than an eyeball was needed.
+At `gap=0` the top-5 arm reproduces the committed `concentration_tf.json` holdout figures of Screen 3 3.4095 and Sharpe 1.7864 to the digit.
+
+Fifteen rows recorded: nine scored arms and six `nonsense_control` rows, which are excluded from the Sharpe family by `#trial-counting-rule` clause 2 because a deliberately random rule was never deployable.
+No live bot is changed.
+
+## passive-fill-adverse-selection
+
+arXiv:2502.18625 measures a negative correlation between a maker order's fill probability and its post-fill return on the Binance BTC perpetual.
+The mechanism is mechanical rather than statistical: if the next price move is against a resting top-of-book order, that order fills with probability 1.
+A trader who never crosses is therefore filled preferentially on the trades that were about to go wrong and missed on the ones about to go right.
+
+This repo is limit-first by design and never crosses.
+`portfolio/backtest.py` sets `crossing = 0.0` whenever `execution == "LIMIT"`, so every backtest in this repo charges the limit fee and **zero spread** and assumes the intended trade happens at the bar close.
+There is no adverse-selection term anywhere in the cost model, and `costs/model.py` `spot_round_trip_bps` likewise returns fees only for LIMIT.
+This matters because it is NOT a fee question: confirming the schedule with the organisers, which is the top priority elsewhere, would leave it untouched.
+
+The true cost is not directly measurable without live fills, but it is bracketed by two ends the repo can already compute, using its own `daily.half_spread_bps`:
+
+- **optimistic**, what the repo assumes today: fee only, the passive fill captures the full spread with certainty
+- **pessimistic**: fee plus the full half spread, the passive fill captures no spread advantage at all
+
+Mean half spread across the panel is 4.17 bps. Scored on the OOS window from 2023:
+
+| book | assumption | Sharpe | Sortino | Calmar | Screen 3 |
+|---|---|---|---|---|---|
+| donchian_4h | fee only | 2.205 | 4.276 | 4.571 | 3.743 |
+| donchian_4h | fee + half spread | 2.163 | 4.179 | 4.385 | 3.636 |
+| | **delta** | **-0.042** | -0.096 | -0.186 | **-0.107** |
+| momentum_top5 | fee only | 2.427 | 4.793 | 10.387 | 4.145 |
+| momentum_top5 | fee + half spread | 2.355 | 4.629 | 9.590 | 4.058 |
+| | **delta** | **-0.071** | -0.164 | -0.797 | -0.087 |
+| momentum_top3 | fee only | 2.382 | 5.034 | 13.379 | 4.215 |
+| momentum_top3 | fee + half spread | 2.314 | 4.865 | 11.912 | 4.140 |
+| | **delta** | **-0.068** | -0.169 | -1.467 | -0.075 |
+
+**The assumption is optimistic but bounded, and the bound is small.**
+Even at the pessimistic end, where a passive fill is priced as if it captured nothing at all, `donchian_4h` loses 0.042 Sharpe and 0.107 Screen 3 and every book survives.
+The reason is holding period: these books turn over 305 to 1730 units of weight over 3.7 years at a 4h clock, so a 4 bps per-side term is amortised over multi-day moves.
+
+**This is why the existing priority ordering is right.**
+Fee uncertainty is worth 0.114 Sharpe per 5 bps on `donchian_4h`; adverse selection is worth at most 0.042 in total.
+Confirming the schedule is roughly three times more valuable than resolving the fill model, so `ORGANISER_QUESTIONS.md` stays first.
+
+The finding would invert at a shorter holding period, which is a further reason not to shorten it.
+A book trading hourly would pay this term on every leg with a far smaller expected move to amortise it against, and that is exactly the regime where arXiv:2608.21888 measures a 1.3 bps gross edge.
+This is recorded as a re-scoring of already-counted configurations and adds no trials, per `#trial-counting-rule` clause 3.
+
+## scalper-v1-outcome
+
+Built on operator instruction as a separate paper-only family, declared at `config/scalper_v1.yaml` with a binding kill criterion written before any backtest.
+
+**Zero of 64 configurations survive. The family is killed by its own pre-registered criterion, and it fails in precisely the way the declaration predicted.**
+
+The criterion was median per-trade net return above 0 bps AND mean above the 10 bps round trip, on at least 200 holdout trades:
+
+| | result |
+|---|---|
+| arms with 200+ holdout trades | 64 of 64 |
+| **arms with a positive MEDIAN** | **64 of 64** |
+| arms with mean above 10 bps | **0 of 64** |
+| arms with mean above **zero** | **0 of 64** |
+
+**Every single configuration has a positive median trade and a negative mean trade.**
+The best arm (30m, `ret>=0.008`, `ofi_z>=2.0`, 0.5 ATR target, 8-bar time stop) wins **66.5%** of its trades, shows a median of **+26.72 bps**, and loses **-5.93 bps per trade on average**.
+
+This is the declared failure mode, verbatim: "a small target with a wide stop manufactures a high win rate while losing money, which is the textbook way to make a scalper look good. Win rate is therefore NOT reported as a headline and the median is. Expect high win rate with negative expectancy."
+
+**A 66% win rate with negative expectancy is the single most dangerous shape in trading, and this family produces it in all 64 arms.** Had the criterion been win rate, or median, or "does it feel like it is working", every arm would have passed.
+
+### The controls locate a real but insufficient signal
+
+All four at the same specification:
+
+| arm | n | median bps | mean net bps | **mean GROSS bps** | win rate |
+|---|---|---|---|---|---|
+| **divergence** | 559 | +26.72 | **-5.93** | **+4.07** | 0.665 |
+| sign_flip (ride instead of fade) | 560 | +24.38 | -17.04 | -7.04 | 0.625 |
+| no_flow_gate (fade without flow) | 7202 | +23.27 | -13.13 | -3.13 | 0.629 |
+| random (same rate, ignores flow) | 214 | +13.41 | -14.68 | -4.68 | 0.603 |
+
+The ordering is coherent and it replicates `#flow-scalp-outcome` exactly: fading beats riding by 11.1 bps, the flow gate beats no gate by 7.2 bps, and both beat random. **The taker-flow conditioner carries genuine information, worth about +4.07 bps GROSS per trade.**
+
+It is not enough. Against a 10 bps round trip a +4.07 bps gross edge is a -5.93 bps net loss, and no threshold, target, time stop or cost gate in the grid closes a 6 bps gap. Raising the flow threshold from 1.5 to 2.0 improves the mean from -9.90 to -5.93 and cuts trades from 1673 to 559 - the same trade-off arXiv:2608.21888 describes as "trading fewer, better bars shrinks the opportunity count faster than it grows the edge".
+
+This is now the **third independent measurement** of the same quantity in this repo, agreeing to within a few basis points: `#scalp-meanrev-outcome` (0 of 54), `#flow-scalp-outcome` (0 of 72, +3 to +11 bps gross), and this (0 of 64, +4.07 bps gross). arXiv:2608.21888 measures 1.3 bps across 183 pairs. **Sub-hourly gross edge on liquid crypto is real and is roughly 1 to 11 basis points. The round trip is 10. That is the whole story and it should not be measured a fourth time.**
+
+### Scope limits that also bind
+
+Only BTC, ETH, SOL, XRP and DOGE have 5m history cached. Five names is not a cross-section and nothing here generalises to the 30-name pool.
+Every bar that would have touched both target and stop is resolved as a **stop**, which is the unfavourable assumption; a favourable resolution would flatter these numbers and would be wrong.
+
+**No live bot is created.** The declaration's promotion clause allowed a paper bot only on a pass, and there is no pass.
+
+67 rows recorded, 3 of them `nonsense_control`.
+
+## fast-exit-sizing-outcome
+
+Declared at `config/fast_exit_sizing.yaml`. The thread from `#reversal-reentry-outcome`: the fast exit without re-entry is the only arm to improve a holdout twice, and both prior tests rejected it on the fit window **at a fixed position size**. The question neither asked was whether it buys SIZE.
+
+**The hypothesis is refuted directly. The fast exit does not truncate the left tail, it deepens it, at every size tested.**
+
+| divisor | d fit S3 | d holdout S3 | d maxDD | d Sharpe | d CAGR | verdict |
+|---|---|---|---|---|---|---|
+| 20 | -0.0787 | +0.0687 | **-0.72pp** | +0.054 | +0.020 | fail |
+| 10 | -0.0920 | +0.2064 | **-0.52pp** | +0.105 | +0.076 | fail |
+| 5 | -0.0809 | +0.1835 | **-1.70pp** | +0.101 | +0.108 | fail |
+| 3 | -0.0663 | +0.3300 | **-1.51pp** | +0.155 | +0.215 | fail |
+
+Zero of four pass. Drawdown is worse at **every** divisor, which is the declared failure mode and kills the premise: a rule that deepens the drawdown cannot be what lets you carry more of it.
+
+**The shape of the failure is worth recording.** The fit-window penalty is roughly constant in size (-0.066 to -0.092) while the holdout gain grows with concentration (+0.069 at 1/20 to +0.330 at 1/3). That is what a window-specific artifact looks like when exposure is raised: more gross amplifies whatever that window happened to do, in both directions. It is not evidence of a mechanism, and it is the third independent time this exit has won a holdout and lost a fit window.
+
+**This closes the fast-exit thread.** Three implementations, three different sweeps, same answer: it improves the holdout, fails the fit window, and worsens drawdown. Do not open it a fourth time without new data rather than a new parameterisation.
+
+### The sizing curve is the useful by-product
+
+Measured on the slow clock, so it is independent of the exit question:
+
+| divisor | mean gross | P(clears Screen 2) | holdout Screen 3 | maxDD | holdout CAGR |
+|---|---|---|---|---|---|
+| 20 (live `donchian_4h`) | 0.184 | 0.2248 | **2.9297** | **-17.65%** | 0.644 |
+| 10 | 0.323 | 0.2752 | 2.5488 | -25.09% | 0.843 |
+| 5 | 0.467 | 0.3567 | 2.4902 | -33.61% | 1.119 |
+| 3 | 0.560 | **0.3925** | 2.0741 | -39.73% | 1.069 |
+
+Qualification probability rises monotonically with size and Screen 3 falls monotonically, with no interior point where both improve. That is `#beta-is-the-only-screen3-lever` measured directly on the flagship book rather than inferred, and it quantifies the trade in `#competition-book-selection`.
+
+**It also confirms the book choice made there.** Sizing `donchian_4h` up to 1/3 reaches P(Screen 2) 0.3925 with holdout Screen 3 of 2.07 and -39.7% drawdown. `momentum_top3_4h` reaches **0.4283 with Screen 3 of 3.33** at a comparable -43.2%. The momentum ranking is therefore adding real value over brute concentration: better on BOTH axes at similar drawdown. Raising the divisor is not a substitute for it.
+
+Note CAGR peaks at divisor 5 (1.119) and falls at 3 (1.069): past that point concentration costs return as well as Screen 3.
+
+Eight rows recorded. No live bot is changed.
+
+## reversal-reentry-outcome
+
+Declared at `config/reversal_reentry.yaml` on operator instruction, explicitly without regard to the prior exit nulls.
+
+**This was a genuinely new mechanism, not a fifth repeat, and it still fails.**
+The four prior exit families all made the EXIT faster while RE-ENTRY stayed on the slow clock.
+`signals/exit_clock.py` says so in its own docstring, and `#exit-clock-outcome` records the failure mode as the book re-entering "at the next 4h close at a HIGHER price".
+This arm lifts exactly that constraint: fast exit on a floor break, fast re-entry when price reclaims the floor.
+
+**Zero of 24 arms pass, and the hypothesis is refuted in its own direction.**
+
+| arm | fit Screen 3 | holdout Screen 3 | holdout maxDD | turnover |
+|---|---|---|---|---|
+| momentum_top5 baseline, slow clock | **4.4786** | 3.5563 | **-36.87%** | 2060 |
+| fast exit, NO re-entry | 4.4052 | **3.7510** | -39.71% | 2447 |
+| fast exit + re-entry, best (rc=50) | 4.4145 | 3.6858 | -38.98% | 2497 |
+| fast exit + re-entry, worst (rc=0) | 4.4110 | 3.6640 | -40.05% | 2576 |
+
+**Re-entry makes it worse, not better.**
+Every re-entry arm scores below `fast_exit_no_reentry` on the holdout, 3.66 to 3.69 against 3.751, at higher turnover.
+Re-entering after a reclaim is not catching false breaks cheaply; it is buying back into continued weakness.
+The reclaim margin behaves monotonically in the direction that says so: the wider the margin, the less often it re-enters, and the better it does (rc=0 -> 3.664, rc=50 -> 3.686). The best version of this rule is the one that re-enters least.
+
+**The declared failure mode fired.** Maximum drawdown worsens in every arm, by 2.1 to 3.2 points, exactly as `#exit-clock-outcome` found.
+
+### The turnover-matched control is what settles it
+
+The sweep's built-in random control was mis-calibrated and traded no more than the baseline, so it proved nothing. It was recalibrated by binary search until its turnover matched the best arm to within 0.8 units, and then compared:
+
+| | fit Screen 3 | holdout Screen 3 | holdout Sharpe | maxDD |
+|---|---|---|---|---|
+| real, floor breaks | 4.4052 | 3.7510 | 2.0317 | -39.71% |
+| random, same turnover | **4.4813** | 3.5703 | 1.9179 | -37.77% |
+| **real minus random** | **-0.0761** | **+0.1807** | **+0.1138** | |
+
+**The rule beats a coin flip out of sample and LOSES to it in sample.**
+A real mechanism beats random on both windows. One that wins on one and loses on the other at matched turnover is a window-dependent artifact, and this repo has been shown that shape before.
+Without the matched control the +0.18 holdout gain would have read as a finding.
+
+### What is worth keeping
+
+The fast exit alone, with no re-entry, is the only arm that improves the holdout at all, and it is the same arm `#exit-clock-outcome` already rejected on the same fit-window grounds. That replication is the useful part: two independent implementations, built months apart, agree on both the sign and the reason.
+
+Live corroboration is already running: `donchian_1h` is the small-timeframe book in the stack, and on 2026-09-20 it had the highest trade count of any book, the most dust, and the lowest return.
+
+33 rows recorded, 5 of them `nonsense_control`. No live bot is changed.
+
+## restart-telemetry
+
+The dashboard's "Process integrity" card counted every `resumed` lifecycle event and told the reader "non-zero means the supervisor respawned a dead worker".
+
+On 2026-09-20 it reported 1 to 3 restarts across the stack with **zero crashes**.
+The events were an operator stop/start and a one-shot `--once` diagnostic, both of which restore saved state exactly as a respawn does.
+There is no worker death anywhere in the run: `live/<bot>.out` contains no `exited code=` line and every error journal is empty.
+
+This is `CLAUDE.md`'s own "telemetry can lie without trading being wrong" a second time, and its cost is specific: a book that looks unhealthy because someone ran a diagnostic sends the reader hunting for a fault that never happened.
+
+Three states are distinguishable and are now reported separately by `bot/health.py`:
+
+| signal | source | meaning |
+|---|---|---|
+| **crashes** | `exited code=` in `live/<bot>.out` | the supervisor's own record; a worker actually died. **This is the health signal.** |
+| resumes | `resumed` lifecycle events with `mode: continuous` | operator activity |
+| probes | lifecycle events with `mode: once` | diagnostics |
+
+`bot/run.py` now records `mode` on the lifecycle event. Events written before that are counted as `legacy_resumes` rather than silently reclassified as either.
+
+## dust-trades-distort-count-statistics
+
+A count-weighted statistic gives a 5 dollar rounding residue the same vote as a 20,000 dollar position.
+
+On 2026-09-20 `donchian_1h` reported 11 closed trades, a 72.7% win rate and a **payoff ratio of 2,156**.
+Five of those trades were TRX round trips of 3 to 19 dollars notional whose net P&L was under a cent.
+Stripping them: **6 material trades, all winners**, and no payoff ratio at all because there is no material loser to divide by.
+The `avg_loss` of -0.005 that produced the 2,156 was half a cent.
+
+`bot/blotter.py` now splits the two at a stated `DUST_NOTIONAL` of 50 dollars and reports **both** `win_rate` (material only) and `win_rate_all_trades`, so the threshold cannot hide anything.
+It is a reporting threshold and changes no trading decision.
+Note this compounds a limit already recorded: win rate is meaningless below about 30 closed trades regardless, so neither number is readable yet.
+
+## live-rebalance-chases-drift
+
+The dust above is not a reporting artifact. It is real turnover paying real fees, and **the backtest never charged for it.**
+
+The two measure different things:
+
+- **Backtest turnover** is `|w_t - w_{t-1}|` on TARGET weights. A target that does not change contributes zero.
+- **The live book** calls `deltas(target, current)` where `current` is the DRIFTED ACTUAL weight. A held position's weight moves with its mark, so an unchanged target still emits an order every cycle.
+
+At a 5% target on a 100,000 book, a 0.1% price move produces a 5 dollar order, a 0.5% move a 25 dollar order. `min_notional` was 1 dollar, so all of them passed.
+
+**The fix needed no new parameter.** `preregistration.yaml` already carries `portfolio.no_trade_band: 0.25` with `no_trade_band_is_fitted: false` and a grid containing exactly one value. `portfolio/construct.py` implements it and several gates apply it; the live path did not use it anywhere. `bot/portfolio.deltas` now defaults to the pre-registered value.
+
+An open or a close is never suppressed, because one side is zero and the move therefore always exceeds `band * max(|tw|, |cw|)`. Only drift is suppressed.
+
+### The band tested on the backtest is a null, and that is consistent
+
+`#no-trade-band-live-outcome`: applying the same 0.25 band inside the backtest changes `momentum_top5` and `momentum_top3` **not at all** - the results are bit-identical - and moves `donchian_4h` by +0.17 holdout Screen 3 on a 1.2% turnover reduction.
+
+That null is the point rather than a disappointment.
+The momentum books hold equal weights of exactly 1/n, so every target move is a full open or close and nothing is ever a partial rebalance for a band to suppress.
+The backtest has no drift to suppress **because it never modelled drift in the first place**, which is precisely the divergence.
+The band matters live and cannot matter in backtest, so the backtest could never have found this.
+
+## no-trade-band-live-outcome
+
+Declared at `config/no_trade_band_live.yaml`. Six configurations, the pre-registered value against no band, three books.
+
+| book | band | turnover | fit Screen 3 | holdout Screen 3 | holdout Sharpe | holdout maxDD |
+|---|---|---|---|---|---|---|
+| donchian_4h | 0.00 | 456.0 | 4.3809 | 2.6234 | 1.5627 | -17.66% |
+| donchian_4h | 0.25 | 450.4 | 4.3762 | **2.7953** | 1.5940 | **-16.93%** |
+| momentum_top5 | 0.00 | 2035.8 | 4.4427 | 3.4095 | 1.7864 | -32.92% |
+| momentum_top5 | 0.25 | 2035.8 | 4.4427 | 3.4095 | 1.7864 | -32.92% |
+| momentum_top3 | 0.00 | 2834.3 | 4.5027 | 3.3266 | 1.6277 | -43.23% |
+| momentum_top3 | 0.25 | 2834.3 | 4.5027 | 3.3266 | 1.6277 | -43.23% |
+
+`donchian_4h` fails the declared bar: holdout Screen 3 improves but the fit window does NOT (4.3762 against 4.3809), and the pass criterion required both.
+Drawdown improves by 0.7 points, which is the declared failure mode not firing rather than a finding.
+The momentum arms are identical to the digit.
+
+**No book is changed on the strength of this.** The live `deltas` change stands on the drift argument above, which this sweep cannot speak to.
+
+## max-return-levers-outcome
+
+Three remaining levers on 14-day portfolio return, scored on the return distribution rather than Screen 3. Reasoning and the full tables are in `HANDOVER.md` section 4e.
+
+**L1, concentration: top3 is the floor and going past it is overfitting.** Holdout median falls 3.12 (top3) to 0.44 (top2) to **-2.56** (top1) while the FIT window keeps improving, 4.10 to 4.71. top1 carries an **81.8% drawdown**. The trap is that P(>20%) keeps RISING to top1, 0.168 to 0.220: the far tail improves because the book becomes a lottery ticket, not because it gets better. A reader optimising only the far tail picks the worst book on the list.
+
+**L2, BTC floor when nothing signals: undecided, and deliberately so.** `momentum_top3_full` holds 100% cash 14.5% of the time. Filling it with BTC lowers the holdout median 3.12 to 2.63 and P(>5%) 0.467 to 0.454, while raising P(>10%) 0.321 to **0.347** and P(>20%) 0.168 to **0.182**, at a cost of 8 points of drawdown. Whether that is a good trade depends on where the top-20 cut falls: below ~5% the floor loses, at ~10% or above it wins. That is question 6 of `ORGANISER_QUESTIONS.md` and it is not resolvable from price data. **Not adopted**, because it spends 8 points of Calmar for a benefit conditional on an unknown.
+
+**L3, the derisk ramp costs about 1 point of return.** Ramping exposure to zero over the final 2 of 14 days moves holdout median 3.12 to 2.09 and P(>5%) 0.467 to 0.432; a 3-day ramp costs 1.52 points. **The cost is measured and the benefit is not**: the drawdown figures here come from the full daily series and do not reflect the ramp, so its protective value is unquantified. Do not remove the ramp on this table alone. Either measure the protection or decide it as a risk preference.
+
+Six rows recorded. The only configuration adopted from this work is `momentum_top3_full`, already live as a gated arm.
+
+## full-deployment-outcome
+
+Operator confirmed the official rules: **Screen 2 advances the top 20 per region ranked on portfolio return, `(Final - Initial) / Initial`**, and Screen 3 scores only the survivors. Returns are therefore the primary objective and the composite is secondary.
+
+Every prior sweep in this repo scored Screen 3. This one scores the 14-day RETURN DISTRIBUTION, which is what Screen 2 actually measures. Beating a rank cut is a **right-tail** problem, not a median one.
+
+### The candidate books on Screen 2's own metric, holdout
+
+| book | gross | median % | P(>5%) | P(>10%) | P(>20%) | p99 % | worst % |
+|---|---|---|---|---|---|---|---|
+| donchian 1/20 (live) | 0.30 | 0.27 | 0.210 | 0.091 | 0.021 | 23.2 | -10.0 |
+| donchian 1/10 | 0.47 | 0.17 | 0.264 | 0.169 | 0.044 | 32.4 | -13.6 |
+| donchian 1/5 | 0.62 | 0.77 | 0.345 | 0.218 | 0.077 | 33.3 | -21.0 |
+| donchian 1/3 | 0.72 | 0.38 | 0.384 | 0.233 | 0.093 | 39.1 | -32.0 |
+| momentum top5 (live) | 0.62 | 1.28 | 0.370 | 0.261 | 0.137 | 68.8 | -21.4 |
+| **momentum top3 (live)** | 0.72 | **1.92** | **0.428** | **0.288** | **0.164** | **128.2** | -31.0 |
+| BTC hold | 1.00 | 0.05 | 0.230 | 0.091 | 0.016 | 23.3 | -29.8 |
+
+`momentum_top3` wins every right-tail measure, and it beats `donchian 1/3` at **identical 0.72 gross** on all of them with a shallower worst case. The momentum ranking is producing the tail, not the exposure. BTC hold carries full gross and has a ten-times thinner right tail at P(>20%).
+
+**This confirms `#competition-book-selection` on the metric that actually decides it**, rather than on the Screen 3 proxy used there.
+
+### Idle cash is the largest remaining drag
+
+`momentum_top3_4h` averages **0.72 gross** because only two of its three slots typically fire, leaving a third of the book in cash. Under a return-ranked objective that cash contributes nothing.
+
+Full deployment spreads the book across whatever signalled:
+
+| book | window | gross | median % | P(>5%) | P(>10%) | P(>20%) | maxDD % |
+|---|---|---|---|---|---|---|---|
+| top3 fixed 1/n | fit | 0.73 | 3.32 | 0.458 | 0.364 | 0.220 | **-31.8** |
+| top3 FULL | fit | 0.83 | **4.10** | **0.476** | **0.389** | **0.242** | -49.2 |
+| top3 fixed 1/n | hold | 0.72 | 1.92 | 0.428 | 0.288 | 0.164 | -43.23 |
+| top3 FULL | hold | 0.85 | **3.12** | **0.467** | **0.321** | **0.168** | -43.32 |
+
+**It improves the right tail on BOTH windows**, which nothing else tested in this session has managed. Holdout median 14-day return rises 1.92% to 3.12% with maximum drawdown essentially unchanged.
+
+**The cost, stated plainly.** The FIT window drawdown deteriorates from -31.8% to -49.2% while the holdout stays flat. The honest reading is that this configuration CAN produce a ~50% drawdown and the holdout simply did not contain the path that produces one. Calmar is 0.3 of the Screen 3 composite, so what this buys in Screen 2 it may hand back in Screen 3. **It is the right trade only while qualification binds.**
+
+### What was changed
+
+`bot/portfolio.target_weights` gained an opt-in `full_deployment` flag, **off by default**, so every existing book is byte-identical. Gross is still capped on GROSS and never on a scalar.
+
+`momentum_top3_full` runs live as a **gated arm against `momentum_top3_4h`**, identical in every other respect, so the treatment is the sizing alone. It is not a replacement and the forward comparison is not readable for 28 days.
+
+## competition-book-selection
+
+**`momentum_top3_4h` is the competition entry. `donchian_4h` is not.**
+This reverses the reading that the robust book is the safe choice, and the reason is that Screen 2 is a hard cut rather than a preference.
+
+### The forward evidence cannot arrive in time, so this is decided on what is already known
+
+Nothing in `paper_lab_v8` or the cushion A/B is readable before **28 complete days**, which lands **2026-10-18**.
+The competition runs **2026-10-04 to 2026-10-17** and therefore ENDS the day before the first forward comparison becomes readable.
+Every forward experiment now running completes after it can influence anything.
+They remain worth running as crash canaries; they are not selection inputs, and treating them as such would be reading a lead the repo's own `min_comparison_days` forbids.
+
+### Screen 2 binds, and the ranking on it is the reverse of the ranking on quality
+
+| book | P(clears Screen 2) | Screen 3 median | max drawdown | Sharpe |
+|---|---|---|---|---|
+| **momentum_top3_4h** | **0.4283** | 3.327 | **-43.2%** | 1.628 |
+| momentum_top5_4h | 0.3697 | 3.409 | -32.9% | 1.786 |
+| btc_hold | 0.3026 | 2.150 | -53.0% | 1.147 |
+| donchian_4h | 0.2335 | 2.512 | -17.7% | 2.206 |
+
+`donchian_4h` has the best Sharpe and the shallowest drawdown in the repo and **qualifies least often of the four**.
+At 1/20 sizing it ran 15% gross and 85% cash on 2026-09-20, which cannot produce a top-20 raw return over fourteen days.
+A book that does not clear Screen 2 scores nothing on Screen 3, so its quality is unrealisable.
+
+This is `#beta-is-the-only-screen3-lever` applied rather than merely recorded: within a fortnight the composite is governed by the sign of the window's return, which is governed by beta, so cutting beta cuts P(positive), P(qualifying) and the composite together.
+There is no interior point where both improve. The concentrated book is not the reckless choice, it is the only one with a ticket.
+
+### What is being accepted, stated plainly
+
+- **-43.2% maximum drawdown**, the deepest of any configuration measured here, against -32.9% at top5.
+- At its deployed parameters `momentum_top3_4h` is **worse than `momentum_top5_4h` on every risk-adjusted measure** (`#top3-deployed-parameters-were-never-measured`): Sharpe 1.628 against 1.786, Sortino 3.346 against 3.434, Calmar 5.958 against 6.160, Screen 3 3.327 against 3.410.
+  It wins on exactly one axis, qualification probability, 0.4283 against 0.3697.
+- **Gate 4 still fails** at DSR 0.8445 against 0.95 and is unrecoverable (`#trial-counting-rule`). This selection does not repair that and the submission must say so.
+
+So the choice is a bet that the rank gate binds. It is chosen on a stated objective, not on a backtest ranking.
+
+### The one input that would reverse it
+
+How many entrants advance from Screen 2 per region, and how large the field is.
+If the cut is loose enough that most reasonable entries survive, qualification stops binding and `donchian_4h`'s 2.206 Sharpe and -17.7% drawdown become the better book on the composite that then decides the rank.
+This is question 6 in `ORGANISER_QUESTIONS.md` and it is worth more than any backtest available.
+**Do not treat this selection as settled until that answer arrives.**
+
+## cold-start-chases-the-bar
+
+A book started mid-bar buys at whatever the price is when it starts, not at the bar close its signal was computed on.
+
+Measured on 2026-09-20. The 4h bar labelled 08:00 closes at 12:00 UTC:
+
+| book | ENAUSDT buy | price | vs the close |
+|---|---|---|---|
+| donchian_4h | 12:00:33 | 0.2070 | at the close |
+| momentum_top5_4h | 12:00:34 | 0.2069 | at the close |
+| **momentum_top3_4h** | **12:08:24** | **0.2114** | **+2.17%** |
+
+`momentum_top3_4h` was started at 12:08 and immediately bought a signal generated eight minutes earlier, after the name had already moved 2.17%.
+On a 31.8% position that is **0.69pp of NAV given away at the first trade**, before any market move, and it is most of the gap between that book and its siblings for the rest of the session.
+
+This is not the signal, the sizing or the fee schedule. It is cold start.
+The bot has no notion that the bar it is acting on has gone stale: `bot/run.py` evaluates on the first cycle and places whatever the current target implies.
+
+It matters more than it looks because the effect scales with concentration.
+The same 2.17% cost `donchian_4h` 0.11pp at 1/20 sizing and `momentum_top3_4h` 0.69pp at 1/3.
+Any future comparison between books started at different times is confounded by this, and the 2026-09-20 session is one: `momentum_top3_4h` began 8 minutes late and carried the penalty all session.
+
+**Do not read a cross-book comparison whose members were started at different points inside a bar.**
+Restart the whole stack together, which `./run_bots.sh start` does, or wait for the next bar close before reading anything.
+
+Not yet fixed. The candidate fix is to refuse the first entry into a name whose bar close is already more than a set fraction of a bar old, and take it at the next close instead.
+That is an execution rule with a free parameter, so it needs a declaration and a control before it goes in, and it must not be confused with the exit-tightening families that have already failed four times.
+
+## markout-instrumentation
+
+`#passive-fill-adverse-selection` bounded the unmodelled cost in backtest at 0.042 Sharpe.
+Bounding is not measuring, and no backtest can measure it, because the quantity is the price path after a fill the backtest assumes always happened.
+
+Three things were added so it can be measured forward, at zero trial cost.
+
+**The reference quote at submission**, in `Executor.prepare`: `ref_bid`, `ref_ask`, `ref_mid`, `ref_spread_bps`.
+Without this there is no baseline, and it is unrecoverable after the fact - the order journal held only the limit price.
+
+**Per-cycle marks**, in the cycle snapshot, scoped to held symbols plus anything traded in the last `MARKOUT_RETAIN_S`.
+The retention window exists so an EXIT still has forward marks after its position is gone.
+Marking the whole universe every cycle would add roughly 6 MB a day across the stack for data nothing reads.
+
+**`bot/markout.py`**, which computes, for a fill at price `p` on side `s` with mid `m(h)` at horizon `h`:
+
+    markout_bps(h) = sign(s) * (m(h) - p) / p * 1e4
+
+at 60s, 300s, 900s and 3600s, and reports it per bot on the dashboard.
+A negative mean is the price moving against the trade after it was made, in basis points, directly comparable to the fee.
+
+**Markout is not slippage and the distinction is the whole point.**
+Slippage is fill price against intended price and says whether the order was executed well; this repo already has it.
+Markout is the price path after the fill and says whether the order was executed *against*.
+
+### The limitation that governs how the number may be read
+
+**In dry run every order fills at its own limit price by assumption, so no fill is ever declined, and fill SELECTION is therefore not being measured at all.**
+What the number measures in dry run is entry timing: when the book decided to trade, which way price went next.
+The two quantities differ precisely in the cases arXiv:2502.18625 is about, namely the orders that would NOT have filled.
+
+`bot/markout.py` detects this from the order stream and refuses the stronger claim.
+With every order journaled as `dry_run` the verdict reads "DRY RUN - entry timing, NOT adverse selection"; the adverse-selection verdict is reachable only from a stream of real `fill` events.
+Both paths are covered by tests.
+Real adverse selection therefore remains blocked on the API keys in `ORGANISER_QUESTIONS.md`, which is one more reason that request is the top priority.
+
+### First readings, which are not yet readable
+
+`donchian_1h` is the only book trading often enough to have produced any: mean entry edge **+1.10 bps** against the mid at submission, and a 60-second mean of **-18.94 bps** across **3** fills.
+The entry edge is the limit-inside-the-touch working as designed.
+The 60-second figure is the predicted sign and **must not be read**, at n=3 against a stated minimum of 30, and it is entry timing rather than adverse selection in any case.
+It is recorded here only so that a later session can see whether the sign persisted or reverted.
+
+All six books were restarted on the instrumented code at 2026-09-20T13:20Z, which also resumes the forward-evidence accumulation that `HANDOVER.md` section 9 makes priority 2.
+No signal, no sizing and no execution rule changed. This is measurement only and adds no trials.
+
+## top3-deployed-parameters-were-never-measured
+
+`config/momentum_top3_4h.yaml` is live and its `measured_basis` cites `results/concentration.json`: holdout Screen 3 +3.098 at N=3 against +2.957 at N=5, maximum drawdown -42.4% against -33.0%.
+
+Those numbers are from a sweep that hardcodes `momentum_bars = 20`.
+`gates/concentration.py` `rank_score` computes momentum as `close / close.shift(20)` with no parameter.
+The deployed book runs `momentum_bars: 40`, and the only sweep that varies that parameter, `gates/concentration_tf.py`, fixes `n_positions: 5`.
+The deployed configuration, 4h with `momentum_bars=40` at `n=3`, therefore sits in the gap between the two sweeps and had never been measured.
+
+It has now been measured on the same code path, with `n=5` recomputed first as a reproduction check.
+All nine fit and holdout statistics reproduced the committed `concentration_tf.json` values exactly, so the harness is the same one that produced the reference.
+
+| holdout, 4h, momentum_bars=40 | n=3 (deployed) | n=5 |
+|---|---|---|
+| Sharpe | 1.628 | **1.786** |
+| Sortino | 3.346 | **3.434** |
+| Calmar | 5.958 | **6.160** |
+| Screen 3 | 3.327 | **3.410** |
+| max drawdown | **-43.2%** | -32.9% |
+| P(clears Screen 2) | **0.4283** | 0.3697 |
+
+**At the deployed parameterisation the N=3-over-N=5 ordering reverses on every risk-adjusted measure.**
+The config claims N=3 buys +0.141 of Screen 3 for 9.4 points more drawdown.
+At `momentum_bars=40` it actually costs **-0.083** of Screen 3 for **10.3** points more drawdown.
+
+The book's stated purpose survives this and its rationale is unchanged.
+It was declared for Screen 2 qualification rather than for the Screen 3 composite, and P(clears Screen 2) is still materially higher at N=3, 0.4283 against 0.3697.
+What does not survive is the claim that N=3 is also the better Screen 3 book. It is not, at the parameters it runs.
+
+Two conventions are worth restating from this.
+A sweep that hardcodes a parameter another config exposes is a gap, not a measurement, and citing across the two is citing a different strategy.
+`meta.measured_basis` is a factual claim and ages exactly like a hardcoded path does.
+
+This was recorded as one trial, `4h_mb40_n3`. The `n=5` recomputation is a re-evaluation of an already-counted configuration and does not count, per `DECISIONS.md#trial-counting-rule` clause 3.
+
+## paper-lab-v8-fee-revert
+
+`paper_lab_v7` ran at `fee_bps: 5.0`, the LIMIT rate at `preregistration.yaml` `costs.spot_limit_fee`, which is the rate the live books assume and is internally consistent with this lab's passive fill model.
+That is the correct point estimate and it is the wrong rate to run a robustness lab at.
+
+`costs.confirmed` is still false.
+Five bps is the favourable end of an unconfirmed range and it assumes an always-maker fill; 10 bps is Binance standard spot and the declared `costs.spot_market_fee`, so it is the unfavourable end of the same range.
+A forward comparison is only worth reading if it survives the bad case, because an arm that leads at 5 bps and loses at 10 has said nothing that can be acted on before the schedule is confirmed.
+
+The sensitivity is not cosmetic.
+Measured over full history, net, `donchian_4h` loses 0.114 Sharpe per 5 bps and the concentrated books lose about 0.20, which puts both concentrated books below the hurdle at 10 bps while `donchian_4h` clears to roughly 15.
+
+The fee is inside the experiment hash, so this is `paper_lab_v8` rather than an edit to v7.
+v7 ran 0.5 hours and is retired with no forward evidence lost.
+Revisit when `costs.confirmed` flips, deadline 2026-10-01.
+
 ## upstream-defects
 
 Binance's own kline archive contains defects, and they are repaired explicitly rather than silently.
@@ -1362,6 +1942,468 @@ Running live bots at intervals the backtest ranks well below 4h would spend supe
 One-hour operation is already observable through `bot_b_1h`, which runs the unranked channel at 1h, so the two intervals worth watching live are both covered.
 If the 4h configuration degrades in forward testing, the ranked variants at 8h are the next candidates and their parameters are already measured.
 
+## strong-retraced-outcome
+
+**Zero of 24 configurations pass.** The state the operator identified live - a name that has run hard but sits just below its entry channel - is worse than simply requiring the new high, in every configuration tested.
+
+The comparison that matters is against the `new_high` control, which applies the SAME strength filter but demands a new 20-bar high, so the only difference is the retrace. On the holdout the retraced arm loses to it in all 24 cells, by 1.17 to 2.85 of Screen 3. On `donchian_4h` at strength >= 30% the retraced arm scores +0.028 to +0.995 against the control's +1.52 to +1.59; on `momentum_top5_4h` it scores -0.183 to +2.390 against +2.24 to +2.85.
+
+The `weak_retraced` control settles what the strength filter is doing. At the tightest retrace the two controls are close - +2.264 weak against +2.359 new-high on `donchian_4h` - so most of the performance in this family comes from the retrace window being narrow, not from the coin having been strong. Requiring 30% strength actively HURTS: it cuts entries from 467 to 166 and roughly halves holdout Screen 3.
+
+Every arm also shows the fit-versus-holdout gap that has become this repo's signature. Fit Screen 3 sits between +3.49 and +4.39 for all 24, while holdout ranges -0.18 to +2.39. The fit window cannot discriminate here at all.
+
+**The live observation that motivated this was real and the inference from it was wrong.** On 2026-09-20 the books held TRXUSDT at +1.0% over seven days while declining ENAUSDT at +52.4% and AVAXUSDT at +34.2%, both around 5% below their 20-bar high. That looked like the rule missing obvious winners. Measured across every name and the full history, buying that state is worse than waiting for the high - the pullback from a spike resolves downward often enough to erase the advantage of entering cheaper.
+
+Twenty-four trials recorded, ledger 730 to 754. No live bot is changed.
+## exit-walkforward-outcome
+
+`DECISIONS.md#ratchet-outcome` left one question open: the holdout preferred `exit_bars` = 3 while the fit window preferred the live 10, so adopting 3 would have been selection on the test set. This runs the honest version - a process that re-picks the lookback on an expanding window using only past data, trades the next 90 days with that pick, and stitches the result.
+
+Thirty-three blocks per book from 2018-08-17, choices of 3, 5, 7, 10 and 15 bars, minimum one year of training before the first pick.
+
+**Re-selecting is worse than leaving the parameter alone, in both books.**
+
+| book | walk-forward | fixed 3 | fixed 5 | fixed 7 | **fixed 10 (live)** | fixed 15 |
+|---|---|---|---|---|---|---|
+| donchian_4h | +2.822 | +3.010 | +3.170 | +3.029 | **+3.373** | +3.278 |
+| momentum_top5_4h | +3.837 | +3.772 | +3.900 | +3.597 | **+3.896** | +4.017 |
+
+On `donchian_4h` the walk-forward is the WORST of the six options, losing 0.55 of Screen 3 to the live setting and losing to every fixed alternative including the ones it was choosing between. On `momentum_top5_4h` it again loses to the live setting and carries the worst maximum drawdown of any arm at -46.6% against -35% to -41% for the fixed choices.
+
+The pick distribution explains it. The process chose 15 bars in 17 of 33 blocks for `donchian_4h` and 20 of 33 for `momentum_top5_4h` - it kept selecting the LONGEST lookback, not the short one the holdout favoured. An honest process would rarely have held 3 at all, so the +3.183 holdout figure for `exit_bars` = 3 was never capturable.
+
+**The live setting of 10 is well chosen on the long record**, ranking first or second of six on the full 2018-2026 span in both books. The fit-versus-holdout conflict at `#ratchet-outcome` is therefore not evidence that 10 is wrong; it is evidence that 2023-2025 and 2025-2026 disagree about the lookback and neither predicts the other.
+
+This closes the exit-lookback question. `exit_bars` stays at 10, and the reason is now measured rather than defaulted: no selection rule tested beats not selecting.
+
+No trials are added. Nothing was selected and no configuration was created; the walk-forward is a measurement of a PROCESS, and the five fixed settings are already in the ledger from `#ratchet-outcome`.
+
+## coin-selection-does-not-persist
+
+Tested 2026-09-20 after an operator request to trade only the coins with the most predictable patterns and the most exploitable counterparties.
+
+Per-coin Sharpe under the live 20/10 channel rule was measured on the fit window and on the holdout, for the 38 names with enough history in both, net of 5 bps.
+
+**The ranking does not persist. Spearman is +0.091 with p = 0.586**, which is indistinguishable from zero, and sign agreement is 27 of 38.
+
+The direction of the failure is worse than mere noise:
+
+| group, chosen on the FIT window | mean fit Sharpe | mean holdout Sharpe |
+|---|---|---|
+| top 8 coins | +1.60 | **+0.50** |
+| bottom 8 coins | -0.26 | **+0.61** |
+| all 38 coins | - | +0.43 |
+
+**The eight worst coins in the fit window went on to beat the eight best.** Selecting names on past edge would have actively hurt, and holding everything liquid beat both halves of the selection.
+
+BTCUSDT is the clearest single case: the best coin in the fit window at +1.93, and -0.31 in the holdout.
+
+This is the same failure already recorded at `DECISIONS.md#sizing-sweep-outcome`, where the fit argmax was the holdout's worst setting, now measured on the cross-section rather than on a parameter. It is the quantitative case for keeping the point-in-time top-30-by-ADV universe rule exactly as it is: the rule exists to stop the book choosing names on history, and the cost of overriding it is measurable.
+
+### What this does NOT refute
+
+The result is about past RETURNS as a selector. It says nothing about selecting on who is trading, which is a different observable: `data/microstructure.py` records that the top 5% of trades carry 76.6% of BTC notional, and `data/futures.py` records funding, open interest and top-account positioning per name.
+
+Those cannot be backtested here, because `/api/v3/depth` is a snapshot endpoint with no history and the futures ratio endpoints serve roughly 30 days. They are published by the scanner and can only be validated forward. That limitation was recorded before the data was integrated, at `DECISIONS.md#data-integration-2026-09-20`, and it still binds.
+
+No trials are added: nothing was selected and no configuration was created.
+
+## ratchet-declaration
+
+Declared 2026-09-20 at `config/ratchet.yaml`, before any backtest, after a measurement of how much of each winner the exit surrenders.
+
+Reconstructed on 2,966 completed `donchian_4h` trades and 2,747 `momentum_top5_4h` trades since 2023: winners realise +9.29% against a peak of +14.08%, keeping 66% of the peak, and the top 5% by peak realise +47.12% against +68.55%, surrendering 21 percentage points.
+Mean give-back across all trades is 4.17pp against a mean realised return of +4.12%, so the exit costs roughly what the strategy earns.
+
+The rule shortens the exit LOOKBACK as unrealised gain grows, latched so it can never widen again inside a trade. It is not a take-profit, because there is no ceiling and a winner can run indefinitely, and it is not a uniformly faster exit, because a losing position keeps the full base lookback.
+
+**The control was declared as the whole test.** Every ratchet arm is scored against the uniform arm running that same tight lookback on every position, not against the live baseline, because a shorter stop can beat the baseline by accident and the question is whether the ASYMMETRY contributes anything.
+
+## ratchet-outcome
+
+**The asymmetry is worth nothing: 0 of 18 ratchet arms pass.**
+
+Against its own matched uniform control the ratchet loses on the holdout in 13 of 18 cells, and where it wins the margin is small and unsupported by its neighbours. On `donchian_4h` every ratchet arm is beaten by its uniform equivalent, by up to 0.718 of Screen 3. Skew is lower than the matched control in all 18 cells, which is the declared kill criterion arriving directly.
+
+The mechanism is therefore refuted as stated. Tightening only on winners does not protect accumulated gain better than tightening on everything; the benefit of a short lookback comes from the lookback, not from where it is applied.
+
+### The control is the finding, and it fails the repo's own adoption standard
+
+Shortening `exit_bars` from the live 10 to 3, uniformly, improves the holdout on every dimension at once:
+
+| book | bars | fit S3 | hold S3 | skew | maxDD | kept share | cost drag |
+|---|---|---|---|---|---|---|---|
+| donchian_4h | **10 (live)** | **+4.381** | +2.622 | +1.96 | -17.7% | 0.577 | 4.5% |
+| donchian_4h | 3 | +3.989 | **+3.183** | **+3.26** | **-13.3%** | **0.823** | 7.1% |
+| momentum_top5_4h | **10 (live)** | **+4.385** | +2.953 | +2.40 | -33.0% | 0.566 | 20.1% |
+| momentum_top5_4h | 3 | +4.319 | **+3.454** | **+3.66** | **-29.4%** | **0.830** | 23.7% |
+
+Higher composite, higher skew, shallower drawdown and 25 percentage points more of each peak retained, with the extra turnover already charged.
+
+**It is not adopted, because the fit window disagrees.** Both books score their best fit-window Screen 3 at the live setting of 10 and their best holdout at 3. `DECISIONS.md#concentration-timeframe-outcome` sets the standard that a change is adopted only when both windows agree, and `#sizing-sweep-outcome` measured what happens otherwise: the fit argmax was the holdout's worst setting.
+Taking bars = 3 here would be selecting on the holdout, which is the single most repeated failure in this repository.
+It is also the boundary of the declared grid, so the apparent optimum may lie outside what was tested and the estimate is an extrapolation.
+
+### This does not contradict the exit-clock null, and the difference is worth keeping
+
+`DECISIONS.md#exit-clock-outcome` found that checking the exit MORE OFTEN made holdout drawdown worse in all twelve arms. This sweep finds that a TIGHTER LEVEL checked at the same frequency makes it better.
+Those are different interventions. The first releases a position part-way through a 4h bar on intrabar noise the bar close would have survived; the second still decides only on 4h closes, but against a 3-bar low rather than a 10-bar low. The clock is load-bearing; the lookback width is not.
+
+Twenty-six trials are recorded, taking the ledger from 704 to 730. No live bot is changed.
+
+### Two measurement defects were found and fixed inside this gate
+
+`gates/concentration.stats` does not report skew, so the first run printed +0.00 for every arm on the declared kill criterion. Skew is now computed locally.
+Kept-share was a mean of per-trade ratios and produced values such as -37, because a trade with a peak of +0.1% yields an arbitrarily large ratio. It is now an aggregate of realised over peak across trades whose peak reached at least 2%.
+
+## meanrev-xs-declaration
+
+Declared 2026-09-20 at `config/meanrev_xs.yaml`, before any backtest, after an operator request for a mean-reversion bot built on research rather than on a parameter search.
+
+The design came from two papers rather than from a grid.
+Dobrynskaya, *Cryptocurrency Momentum and Reversal* (2,000 largest coins, 2014-2020), finds momentum up to two to four weeks and significant reversal only **beyond one month**.
+Zhang et al., *Up or down? Short-term reversal, momentum, and liquidity effects in cryptocurrency markets* (IRFA 78, 2021), finds daily and weekly reversal to be an **illiquidity** effect, with the largest and most tradeable coins showing daily and weekly **momentum** instead.
+
+That second result is the important one for this repo, because the live pool is the top 30 names by ADV, which is exactly the segment the literature says should show momentum and not reversal at short horizons.
+It is the most likely explanation for two nulls already recorded: `#scalp-meanrev-outcome` (54 configs, price-only, 5m to 30m) and `#flow-scalp-outcome` (72 configs, order-flow divergence), both run on the five most liquid names in the universe.
+Neither tested the horizon or the liquidity segment where the published effect lives. This sweep tested both.
+
+The falsification was declared as a **liquidity contrast** rather than a threshold: every configuration runs on the liquid sleeve (top 30 by ADV) and the illiquid sleeve (ranks 31-66), and every horizon also runs sign-flipped as momentum.
+The literature predicts reversal wins on the illiquid sleeve at short horizons, momentum wins on the liquid sleeve there, and reversal wins on both beyond one month.
+
+## meanrev-xs-outcome
+
+**The mean-reversion hypothesis fails on this universe, and it fails in a way that partly validates the measurement.**
+
+Reversal beats its own momentum control on both windows in **1 of 24 sleeve-horizon cells**, and that one cell contradicts the literature it was built from: liquid, one-day formation, seven-day hold, at +0.488 on the fit window and +0.186 on the holdout, where the papers predict momentum should win.
+
+Of the 48 configurations, six are positive on both windows and **five of them are momentum**. The single reversal survivor is illiquid, 45-day formation, seven-day hold, at fit +1.460 and holdout +0.276.
+
+### The liquid-sleeve prediction is confirmed, which is the reassuring part
+
+At formations of one, three and seven days on the liquid sleeve, momentum beats reversal in five of six cells, exactly as Zhang et al. predict.
+The sweep reproduces a known published result on the segment where it is documented, so the construction is not obviously broken. That is the check the sign-control arm existed to provide.
+
+### The illiquid-sleeve prediction is not confirmed
+
+Short-horizon reversal on the illiquid sleeve matches the prediction in only 4 of 12 cells, and the two clearest short-horizon cells run the wrong way: three-day formation with a one-day hold gives momentum +0.092 against reversal -0.750, and seven-day formation with a seven-day hold gives momentum +0.299 against reversal -0.103.
+The published effect is measured across 1,160 to 2,000 coins including genuinely microcap names; the 63 names below the top 30 on a single venue are not that population, and this is the most likely explanation.
+
+### The beyond-one-month prediction fails on the liquid sleeve entirely
+
+All six cells at 30, 45 and 60-day formation on the liquid sleeve show momentum beating reversal, on both windows.
+On the illiquid sleeve only the 45-day cell matches; 30 and 60 days do not, so the one match has no support from its neighbours and reads as noise.
+
+### Two practical facts settle it independent of the statistics
+
+**Daily rebalancing is arithmetically dead.** At a one-day hold, annual turnover is 554 to 574 times NAV and cost drag is **27 to 29% of NAV a year** at 5 bps. No configuration at that holding period can matter.
+
+**The sleeve where the effect is supposed to live is largely untradeable here.** Against the live `max_spread_bps` of 5.0, a single tick already exceeds the limit for 27% of illiquid-sleeve names against 9% of liquid ones, with BONK at 33.7 bps, STO at 25.0 and SHIB at 18.6. The execution layer would refuse a large part of the book, which is the same skipped-order leak recorded at `#flow-scalp-outcome`.
+
+### No bot is created
+
+The best reversal configuration scores a holdout Screen 3 of +0.276 against +2.490 for `momentum_top5_4h` and +2.512 for `donchian_4h`, both already live. Building it would mean running something an order of magnitude worse than what exists, on the least tradeable part of the venue.
+
+Forty-eight trials are recorded, taking the ledger from 656 to 704. The research was not wasted: it explains two earlier nulls that were previously unexplained, and it is the reason this one was cheap.
+
+## competition-oos-declaration
+
+Declared 2026-09-20 at `config/competition_oos.yaml`, after an operator request to test the live bots out of sample on Binance history under the competition's own framework and identify when each works.
+
+The request said to optimise 14-day Sharpe, Sortino and Calmar across timeframes. That was not done, deliberately.
+Taking the argmax of an out-of-sample composite is selection on the test set, and `DECISIONS.md#sizing-sweep-outcome` measured the consequence directly: the fit argmax was the holdout's WORST setting, at 2.169 against the holdout best of 2.810.
+What is produced instead is the DISTRIBUTION of 1,345 rolling 14-day windows per book since 2023, plus a conditional analysis of which observable starting states precede good and bad windows.
+Every conditioner is lagged one day, so a relationship found here could have been acted on rather than merely observed. Nothing is promoted and no trials are added; the ledger stands at 656.
+
+## competition-oos-outcome
+
+### The distribution, 1,345 windows each since 2023
+
+| book | median S3 | P(ret>0) | P(ret>5%) | median ret | worst window |
+|---|---|---|---|---|---|
+| donchian_4h | +2.512 | 0.576 | 0.234 | +0.66% | -10.04% |
+| momentum_top5_4h | +2.490 | 0.563 | **0.386** | +1.42% | **-20.74%** |
+| donchian_1h | +2.189 | 0.550 | 0.188 | +0.48% | -13.40% |
+| btc_hold | +2.150 | 0.557 | 0.303 | +0.86% | -29.76% |
+
+Every book has p05 of -5.000 and p95 of +5.000: **both caps bind**, which is the sign-indicator property recorded in prior work, now confirmed on every configuration simultaneously. Within a fortnight the composite is close to a function of the sign of the return.
+
+The two live books split cleanly by role. `donchian_4h` has the highest probability of a positive fortnight and the shallowest tail; `momentum_top5_4h` has the highest probability of clearing the Screen 2 return proxy, at 0.386 against 0.303 for BTC, and pays for it with a -20.74% worst window. That is the qualification-versus-composite tension of `#beta-is-the-only-screen3-lever` appearing as a choice between two live bots rather than as a parameter.
+
+### Dispersion is the condition that matters, and it is specific to the strategy
+
+Median Screen 3 by tercile of cross-sectional dispersion measured the day before the window opens:
+
+| book | low | mid | high |
+|---|---|---|---|
+| donchian_4h | +0.49 | +2.28 | **+3.72** |
+| donchian_1h | -0.07 | +1.29 | **+3.19** |
+| momentum_top5_4h | -0.28 | +2.23 | **+3.69** |
+| btc_hold | +2.31 | +1.44 | +2.42 |
+
+Monotone for all three trend books and **absent for BTC hold**, which is what makes it a property of the strategy rather than of the market. In the bottom dispersion tercile the trend books are worth nothing at all - two of the three have a negative median composite and P(return > 0) of 0.493 to 0.507, a coin flip.
+
+Realised BTC volatility ranks windows almost as well, and for `momentum_top5_4h` it is the stronger of the two: -0.90 in the low tercile against +3.65 in the high, with P(return > 0) moving from 0.478 to 0.712.
+
+### What goes wrong
+
+**Quiet, compressed markets.** Low dispersion and low volatility together are where every trend book fails, and it fails by being flat rather than by losing: median return -0.19% for the ranked book and +0.09% for `donchian_4h`, with the cost drag still being paid. The rule enters on breakouts that do not extend, pays 5 bps a leg, and gives the fortnight back in fees.
+
+**Being long the wrong kind of strength.** The worst windows are -10% to -21% and they are not in quiet markets, they are in the high-dispersion bucket where the books are otherwise best. The same condition that produces the good windows produces the worst ones; dispersion widens the whole distribution rather than shifting it.
+
+### The counter-intuitive result, and why it is not a reason to time the market
+
+All four books, including BTC itself, score HIGHER with BTC below its 200-day average than above it: `momentum_top5_4h` at +3.48 against +1.09, `donchian_4h` at +2.98 against +2.06.
+
+This is not evidence that bear markets are good. It is that in the 2023-2026 sample the sub-200DMA periods were also the high-volatility, high-dispersion ones, and volatility is the operative variable. The partition is confounded, and `#gate8-regime-outcome` already measured the strategy profitable in all three regimes, so no regime gate follows from it.
+
+### Breadth is not the useful conditioner
+
+Breadth shows no monotone relationship in any book - `donchian_4h` runs +2.39, +2.71, +2.51 across terciles. This matters operationally: the scanner publishes breadth prominently, and this says breadth is the wrong field to watch. **Dispersion is the field that carries the information**, and it is already published beside it.
+
+## data-integration-2026-09-20
+
+Three datasets were added on 2026-09-20 and each closes a limitation this repo had MEASURED, which is the only reason any of them is here.
+
+**Futures positioning** (`data/futures.py`: funding, open interest, taker ratio, top-account ratio) closes `DECISIONS.md#correlation-cap-outcome`.
+That sweep found no reweighting could raise effective bets past 1.32 from a baseline of 1.28, because the price correlation matrix had no structure left to exploit.
+Crowding is a different observable and that null does not refute it.
+
+**L2 book imbalance** (`data/microstructure.py:book`) and **trade profile** (`:trade_profile`) close the two halves of `DECISIONS.md#flow-scalp-outcome`.
+That sweep found a real divergence effect - fit +9.26 bps against holdout +11.42, dose-responding to the flow threshold - that failed because bar-aggregated `taker_buy_quote` says nothing about resting liquidity and cannot separate one sweep from many small orders.
+Measured on BTCUSDT the same day, **the top 5% of trades carried 76.6% of notional**, which is the quantity a bar-level taker ratio destroys.
+
+### Limits recorded before use, not discovered later
+
+`openInterestHist` and the ratio endpoints serve roughly 30 days, so anything built on them is validatable on a month rather than on years.
+`/api/v3/depth` is a snapshot endpoint with **no history at all**, so book imbalance can only ever be validated forward.
+That asymmetry is why all three are PUBLISHED by the scanner and none is fed to a sweep: a backtest of a dataset that does not exist historically would be a backtest of nothing.
+
+### Nothing here gates a trade
+
+`bot/regime.py` is untouched and the only live gate remains the per-coin cushion rule.
+These fields are observability until a forward record exists, and no trials are added to the ledger, which stands at 656.
+
+The first reading is already informative. On 2026-09-20 `AVAXUSDT` showed an open-interest z-score of 4.06 with OI up 15.3% over six bars and 73.9% of top accounts long, while being the largest position in both 4h books.
+Whether that is a warning or noise is exactly what the forward record is for.
+
+### Books restarted
+
+All five live books were reset to 100,000 on 2026-09-20T08:11Z at the operator's request.
+The prior record, including the -5,379 combined drawdown that motivated the day's work, is preserved at `live/archive/20260920T081118Z/` rather than deleted.
+
+## scanner-declaration
+
+Declared 2026-09-20 at `config/scanner.yaml`, before any backtest, in response to an operator observation that overall crypto was down while many individual coins were up.
+
+The observation is confirmed. The live scan on 2026-09-20 found 53 of 66 venue names above their entry channel while all three live books were down 1.2% to 2.7%, with cross-sectional dispersion of 3.22% over six bars and a median coin return of -2.03%.
+The problem the books have is not direction. It is that they hold 1.28 to 1.49 effective bets, measured at `DECISIONS.md#correlation-cap-outcome`, in a universe that is visibly dispersed.
+
+`bot/scanner.py` classifies every name independently using the same 20-bar entry and 10-bar exit channel the live bots trade, and publishes `live/scanner/state.json` atomically.
+It holds no capital and places no orders. One scan serves every executor, and a scanner defect cannot silently become a trade.
+
+**It is not a market-regime timer, and that distinction is the point.**
+`DECISIONS.md#gate8-regime-outcome` measured this strategy profitable in all three market regimes - bull +307%/yr, bear +20.4% at Sharpe 0.71, range +23.7% - so a market-wide gate could only remove exposure from periods that already earn.
+Jev's regime arm is separately held to log-only for the same reason, and its live record is three judgments, one of which called "expanding" at 0.98 confidence during the 2026-09-20 drawdown.
+Per-coin state is a different object.
+
+### The control arm is the design
+
+`bot/regime.py` defaults every executor to `always_on`, which returns the caller's target dict unmodified and is verified to leave the existing bots bit-for-bit unchanged.
+A missing, stale or malformed scan degrades to `always_on`; it never degrades to holding nothing, because an infrastructure failure must not become a trading decision.
+
+Two gated arms now run beside the controls they must be read against:
+
+| arm | control | difference |
+|---|---|---|
+| `bot_e_cushion_4h` | `bot_a_4h` | blocks new entries with cushion below 2% |
+| `bot_f_cushion_top5` | `bot_c_5names` | same gate on the momentum top-5 book |
+
+The gate touches new entries only. It never gates a name already held and never touches exits, because the evidence against model-driven early exits is the strongest in this repository: eight ATR stop configurations lost, none of six take-profit variants beat baseline, and a faster exit clock made holdout drawdown worse in all twelve arms at `DECISIONS.md#exit-clock-outcome`.
+
+**No backtest supports this gate.** It is running forward precisely because four sweeps on 2026-09-20 returned 162 nulls between them and each additional in-sample search raises the deflated-Sharpe hurdle any survivor must clear.
+A lead over the control is not to be read before 28 complete days, matching the floor set at `DECISIONS.md#prospective-paper-lab`.
+The scanner adds no trials to the ledger because it selects nothing; the two gated arms will be recorded when their forward record is scored.
+
+## flow-scalp-declaration
+
+Declared 2026-09-20 at `config/flow_scalp.yaml`, before any backtest, after an operator request for a fast scalper driven by price discrepancies, volume and order flow.
+
+`DECISIONS.md#scalp-meanrev-outcome` had already killed 54 configurations of a price-only mean-reversion scalper, and that null is not re-litigated here.
+It established that the median 5m bar does not pay a 10 bps round trip and that the extremity of a price deviation does not predict its reversion.
+It did not test whether a deviation is CONFIRMED by flow, which is a different question.
+
+Binance klines carry `taker_buy_quote`, so signed aggressor volume is observable per bar without book reconstruction: `ofi = 2 * taker_buy_quote / quote_volume - 1`.
+The hypothesis is divergence rather than level. A price fall on net BUY aggression is a fall nobody is selling into and should revert; a fall on net SELL aggression is informed and should continue.
+The sign-flipped continuation arm is tested alongside it as the falsification.
+
+**A per-trade floor was pre-registered instead of a Sharpe threshold.** A configuration is interesting only if its mean gross return per trade exceeds 20 bps on BOTH windows, twice the LIMIT round trip.
+This was fixed before any result was seen, because `#scalp-meanrev-outcome` had shown that net Sharpe at this horizon ranks configurations by how much they trade rather than by whether they earn.
+
+## flow-scalp-outcome
+
+**Zero of 72 configurations clear the floor**, but unlike the price-only sweep this one is not empty, and the distinction matters.
+
+The divergence arm systematically beats its sign-flipped control.
+Median holdout edge is -0.97 bps for divergence against -1.34 for continuation, and the maxima are +11.42 against +1.47.
+The effect also shows a coherent dose-response: every one of the top four configurations sits at the strongest flow threshold tested, `ofi_z >= 2.0`, and 15m and 30m bars beat 5m, where aggregation is coarsest.
+Fit and holdout agree in magnitude rather than reversing, which is rare in this repo: 15m at +9.26 fit against +11.42 holdout, 30m at +11.38 against +9.09.
+So the mechanism appears to be real. It is simply too small and too rare to trade.
+
+**The edge is carried by three trades and the median trade loses money.**
+At 15m the holdout mean is +11.42 bps over 65 trades; dropping the best three leaves +3.48.
+At 30m the holdout mean is +9.09 over 123 trades and +3.35 without its top three.
+Median trade return is negative in three of the four window-interval combinations, at -30.54, -32.82 and -41.01 bps.
+That is the payoff shape the 1.5-ATR target against a 1.0-ATR stop was always going to produce, and it is the direct opposite of the operator's stated goal of consistently taking profits.
+
+It is also not a scalper by any reasonable use of the word.
+The best configuration fires 65 times in 21 months, or roughly one trade every ten days across five symbols.
+
+The honest summary is that bar-aggregated aggressor imbalance carries a small amount of genuine short-horizon information, that it survives out of sample where price-only extremity did not, and that at 3 to 11 bps per trade against a 10 bps round trip there is nothing here to trade.
+Recovering more would require true order-flow imbalance from book updates rather than a per-bar taker share, which is the limitation recorded in the declaration's `failure_mode_to_watch`.
+
+Seventy-two trials are recorded in `config/trials.yaml`, taking the ledger from 584 to 656. No live bot is created.
+
+## exit-clock-declaration
+
+Declared 2026-09-20 at `config/exit_clock.yaml`, before any backtest.
+The entry, the 4h channel and the exit LEVEL are held fixed at the live bots' settings; only the frequency at which the fixed level is compared against price changes, to 2h or 1h.
+
+The mechanism came from `DECISIONS.md#donchian-lowtf-outcome`, which measured the same twenty-day channel at Sharpe 1.99 on 1h bars against 0.86 on daily at identical turnover and cost drag, and attributed part of it to exit granularity - "a stop checked twenty-four times a day releases a losing position hours rather than up to a day after the level breaks."
+That entry also named a second, confounded effect: the hourly channel is a strictly more selective ENTRY. The two were never separated, and this sweep separates them.
+
+The declaration recorded the failure mode to watch: a faster check fires on intrabar noise the 4h close would have recovered from, which is what `DECISIONS.md#asymmetry-outcome` measured for ATR stops when all eight configurations lost.
+
+## exit-clock-outcome
+
+**Zero of 12 configurations pass, and the result inverts the thesis.**
+
+Maximum drawdown, the statistic the change was supposed to improve, gets WORSE on the holdout in every fast arm.
+`top5_momentum` runs -33.0% at the 4h baseline and -36.3% at a 1h exit clock; `all_signals_div20` runs -17.7% against -18.4%.
+The 2h arms are no better, at -36.7% and -17.7%.
+
+Holdout Screen 3 does rise for two arms - `top5_momentum` 1h/10 at 3.375 against 2.953, and `all_signals_div20` 1h/10 at 2.889 against 2.622 - but both FAIL the fit window, at 4.315 against 4.385 and 4.303 against 4.381.
+Fit-window P(14d > 0) also falls in every 1h arm. No arm improves both windows on any of the three declared criteria simultaneously.
+
+The declared failure mode is what happened.
+A faster check releases a position into a dip the 4h close would have held through, and the channel then re-enters at the next 4h close at a higher price. This is `DECISIONS.md#asymmetry-outcome` arriving from a third direction: stops fail on this book whether they are ATR-based, take-profit-based, or the existing channel floor checked more often.
+The exit clock is load-bearing rather than incidental, and the granularity half of `#donchian-lowtf-outcome` does not survive separation from the entry-selectivity half.
+
+### Two look-ahead defects were found in this sweep's own code, and the second was only caught by a control
+
+Both are the same mistake: **Binance bars are labelled by OPEN time, so the 4h row labelled 04:00 holds a close from 08:00.**
+
+The first was in `signals/exit_clock.py`, which mapped each fast bar onto the slow bar with the same or an earlier label and so read up to four hours of future price. It produced `top5_momentum` holdout Sharpe 7.29, maximum drawdown of -11.9% and Screen 3 pinned at the 5.0 cap. It was caught because the reported turnover was identical to baseline, which is impossible if a faster clock is exiting earlier.
+
+The second survived that fix, in `gates/exit_clock.py`, where the 4h momentum RANKING was carried onto the fast index with a label-matched `reindex(method="ffill")`.
+It produced a holdout Sharpe of 3.72, a 114x return multiple and an apparently clean pass on both windows, and it was invisible to inspection because the 4h arms are immune - on the slow clock the reindex is a no-op, so only the fast arms were inflated.
+
+It was caught by a falsification control rather than by reading the code.
+**A random exit firing at the same rate as the real one, ignoring the stop level entirely, returned 27,594x against the real rule's 114x at Sharpe 7.65 against 3.72.**
+A nonsense rule beating the real rule can only mean the harness is generating the return, and that is what sent the search back to the alignment.
+A one-bar execution delay had moved the result by almost nothing (112.94x against 114.19x), so the delay test alone would have passed the broken code.
+
+Both are now fixed by aligning on bar CLOSE times through `signals.exit_clock.to_fast`, which is verified to be the identity when the two clocks are equal, and `signals.exit_clock.position` is verified to reproduce `signals.donchian.position` exactly in that case.
+
+`bot/feed.py` was audited and is clean: `closed_bars` filters on `close_time <= now`, so the live bots never see a forming bar.
+`data.universe.pit_top_n` lags ADV by `.shift(1)` before the daily-to-4h forward fill, so the pre-existing gates do not carry this defect.
+
+Twelve trials are recorded in `config/trials.yaml`, taking the ledger from 572 to 584. No live bot is changed.
+
+## correlation-cap-declaration
+
+Declared 2026-09-20 at `config/correlation_cap.yaml`, before any backtest, after a live measurement on the same day.
+`bot_c_5names` held five names at 99% gross and had 1.49 effective bets; `bot_a_4h` held ten names at 50% gross and had 1.68.
+Pairwise 1h return correlation across the held names was 0.551 over the prior 200 hours and 0.833 through the 00:00-04:00 UTC drawdown, in which BTC fell 1.06% while AVAX fell 6.90%, TAO 5.46% and ENA 4.85%.
+
+The declaration's central feature is a control rather than a rule.
+`DECISIONS.md#beta-is-the-only-screen3-lever` established that the composite and the qualification probability are collinear within a fortnight because both are produced by beta, and `DECISIONS.md#sizing-sweep-outcome` measured that capping gross below 1.0 hurts.
+Any correlation rule that reduces exposure therefore moves Screen 3 up and P(Screen 2) down on its own, and a sweep reporting only Screen 3 would credit the rule for an effect a constant haircut produces.
+So every arm that changes mean gross exposure is scored against a **beta-matched control**: the same baseline book scaled by one constant chosen so its mean gross over the window equals that arm's.
+
+Three arms were declared. `scale` multiplies weights by a function of effective bets, which reduces gross and is confounded.
+`reweight` sets weights inversely to each name's mean correlation to the rest of the book at **constant gross**, so it is the only unconfounded arm.
+`cluster_cap` clusters at a correlation threshold and keeps at most N names per cluster, changing both composition and gross.
+
+## correlation-cap-outcome
+
+**Zero of 24 arms pass**, and the reason is that this book has no correlation structure left to exploit.
+
+Mean effective bets is 1.28 at baseline on the holdout and no arm moves it past 1.32.
+That is the whole result. `reweight`, the one arm that holds gross constant and can therefore only work by changing composition, raises effective bets from 1.28 to 1.31 and holdout Screen 3 from 2.953 to 3.000, which is inside the noise of every other comparison in this repo.
+The prediction recorded in the declaration's `mechanism_at_risk` is confirmed: every name in a long-only book of crypto majors and large alts loads on the same factor, a reweighting cannot manufacture diversification that the covariance does not contain, and the only lever on this book's risk is its size.
+
+**`cluster_cap` is the trap the design was built to catch, and it would have been adopted without the control and the two-window rule.**
+On the holdout alone it looks decisive: `top5_momentum` at threshold 0.7 and one name per cluster scores 3.365 against a matched control of 2.819, and `all_signals_div20` at the same setting scores 3.043 against 2.533.
+Both reverse on the fit window. `top5_momentum` scores 4.337 against a control of 4.390 there, and its fit P(14d > 0) is 0.573 against the control's 0.599.
+A holdout-only reading would have produced the seventh reversing family in this repo.
+
+The `scale` arm is the cleanest demonstration that exposure reduction is not diversification.
+It leaves effective bets untouched, as it must, because effective bets is scale-invariant.
+At exponent 1.0 on `all_signals_div20` it cuts mean gross from 0.296 to 0.064 and holdout Screen 3 falls from 2.622 to 1.835 while its matched control sits at 2.471, so the rule is worse than simply holding less by the same amount.
+Its holdout P(14d > 0) rises to 0.570 against the control's 0.531, which is the collinearity behaving exactly as `#beta-is-the-only-screen3-lever` describes rather than a finding.
+
+One reporting defect was found and fixed mid-sweep.
+The first run reported effective bets computed on the weights entering each transform rather than leaving it, which made every arm show an identical figure and would have concealed the central question of whether any rule diversified.
+`signals/correlation.py` now measures effective bets on the weights the book actually holds, and the sweep was re-run.
+
+No live bot is changed. Twenty-four trials are recorded in `config/trials.yaml`, taking the ledger from 548 to 572.
+The live observation that motivated the sweep stands and is not refuted: the books really do hold about 1.5 independent positions. What is refuted is that a correlation-aware weighting can fix it.
+
+## scalp-meanrev-declaration
+
+Declared 2026-09-20 at `config/scalp_meanrev.yaml`, before any backtest, in response to an operator request for a scalper with explicit take-profit and take-loss targets and a mean-reversion strategy.
+
+The mechanism was taken from this repo's own measurements rather than assumed.
+`results/fast_horizon.json` ran a Donchian breakout on 5m bars over BTC/ETH/SOL/XRP/DOGE and recorded a gross Sharpe of -0.2159 before any fee, against +0.4517 for the same rule at 15m.
+A momentum rule with negative gross Sharpe is direct evidence that moves at that horizon revert, so the opposite sign has positive gross expectancy, and `DECISIONS.md#fast-horizon-outcome` already states it in words: a 5m breakout is noise that mean-reverts.
+
+The declaration also recorded why a take-profit is the correct object here when `DECISIONS.md#take-profit-outcome` rejected one on the 4h trend book.
+A trend has no terminal value, so capping it truncates the right tail that Sortino rewards.
+A mean-reversion trade's thesis is that price returns to a reference level, so that level is the target and holding past it is holding past the edge.
+The prior evidence against take-profits is not transferable and was not counted against this family.
+
+The binding constraint was stated in advance as arithmetic rather than statistical.
+`results/fast_horizon.json` measured a median absolute bar return of 8.823 bps at 5m, 15.537 bps at 15m and 21.447 bps at 30m, against a 10 bps LIMIT round trip and a 20 bps MARKET round trip.
+The median 5m bar does not pay for its own round trip, so selectivity was designed in rather than tuned: entries fire only in the tail of the deviation distribution.
+
+## scalp-meanrev-outcome
+
+The family is a null on every configuration tested, and it fails on the constraint the declaration named in advance.
+
+**Zero of 54 configurations have a positive holdout net Sharpe** at either end of the fee schedule.
+The best is 30m z3.0 tp1.5 sl2.0 at -2.59, and the range across the grid is -2.59 to -21.36 at 5 bps.
+Seven configurations have a positive holdout *gross* Sharpe, all at 5m, and their per-trade edge is between +0.26 and +0.67 bps against a 10 bps round trip.
+
+The per-trade arithmetic is the whole result.
+Mean gross return per trade on the holdout ranges from +0.67 bps to -14.52 bps across the grid.
+Not one configuration earns a per-trade edge that covers even the LIMIT round trip, and the closest is short by more than 9 bps.
+This is the outcome the declaration predicted, and it is a property of the horizon rather than of the parameters.
+
+Selectivity does not rescue it, which falsifies the design's central premise.
+Raising `entry_z` from 2.0 to 3.0 at 5m moves the holdout edge from -0.28 to -0.68 bps at tp1.0/sl1.0, and cuts trade count from 29,100 to 5,829 without improving the edge per trade.
+A more extreme deviation is not followed by a proportionally larger reversion, so there is no threshold at which the rule clears its cost.
+
+**A high fit-versus-holdout Spearman here is an artifact, and the distinction matters.**
+On net Sharpe the rank correlation is +0.968, which looks like strong out-of-sample agreement and would ordinarily support selection.
+On per-trade edge it is -0.108.
+The reason is that net Sharpe at this horizon is dominated by cost drag, and turnover is almost perfectly stable across windows, so the fit window predicts how much a configuration will *trade* rather than whether it will *earn*.
+Sign agreement on the edge is 22 of 54, worse than the 27 a coin flip would give.
+Any future sweep in this repo that reports a high fit/holdout rank correlation on a cost-dominated metric should be checked against the same decomposition before the correlation is read as validation.
+
+The fit window would also have chosen catastrophically.
+Thirty-seven of 54 configurations show a positive edge on the fit window and only 7 do on the holdout, and the 15m and 30m blocks reverse sign almost uniformly: 15m z2.5 tp1.5 sl1.5 earns +3.35 bps on the fit window and -3.88 bps on the holdout.
+
+The declaration's own kill rule fires independently of any of this.
+It stated that measured skew worse than -1.0 makes the family undeployable regardless of Sharpe, and **52 of 54 configurations have holdout skew below -1.0**, ranging to -4.49.
+That is the predicted failure mode: a bracket with a fixed stop on a reverting signal wins often and small and loses rarely and large, which is exactly the shape the competition's Sortino weighting punishes.
+
+The same-bar ambiguity convention is not responsible.
+Resolving a bar that touches both brackets in favour of the target instead of the stop moves the 15m z2.5 tp1.0 sl1.5 holdout edge from -0.19 bps to +2.08 bps, because only 29 of 938 trades are ambiguous.
+Both readings are far below the 10 bps hurdle, so the pessimistic convention is not what kills the family and no optimistic reading rescues it.
+
+No live bot is created. Fifty-four trials are recorded in `config/trials.yaml`, taking the ledger from 494 to 548.
+
 ## take-profit-outcome
 
 Take-profit exits were tested across twelve configurations on the 4h momentum-ranked top-five book, and they do not help.
@@ -1386,3 +2428,841 @@ Take-profits fail because they cut positions during the advances a trend exists 
 The channel exit is already both the stop and the target, and adding either one on top of it makes the system worse.
 
 No change is made to any bot.
+
+## sizing-exit-terminal-review
+
+The subsequent operator request combined Roostoo ticker verification, position sizing, clearer terminal monitoring and profit protection after a short live P&L reversal.
+The declarations, methods, numerical findings and remaining limitations are recorded in `results/allocation_exit_review.md`.
+Six bounded allocations and two controls were tested at two costs, followed by five exit rules at two costs; all configurations were registered before evaluation.
+The sizing study charges drift turnover and executes at next opens rather than assuming free constant-weight rebalancing.
+The exit study checks completed hourly closes, fills at following opens, and blocks re-entry after a full overlay exit until the selected state resets.
+The earlier take-profit implementation could immediately re-enter while its selected mask stayed true, so its conclusions apply to that particular policy rather than every profit-protection mechanism.
+Fixed 8% full and half targets underperformed the channel control in the later assessment.
+The hourly floor improved recent Sharpe, Sortino, Calmar and drawdown, but deteriorated in the earlier fit period; it is forward-tested rather than promoted as a validated improvement.
+Balanced 12 is the fit-only selection among balanced candidates; balanced 5 is an explicitly assessment-informed diagnostic, and neither dominates the incumbent under every cost and metric.
+The new `paper_lab_v2` runs ten public-data-only independent portfolios, with v1 records retained separately and no authenticated exchange orders.
+Balanced candidates exclude names above the unchanged spread threshold before ranking and enforce cash and slot reservations without crediting unfilled exits.
+The terminal uses verified Roostoo pair mappings, includes price marks, actual and target weights, exit floors, concentration, exclusions, and separate historical versus forward metric sections.
+Thirty-three tests passed, and browser checks verified strategy selection, research controls, native pair labels and the corrected mobile layout.
+
+## competition-execution-hardening
+
+The subsequent competition-readiness request exposed automatic retries of order-creation requests after ambiguous transport or response failures.
+Order creation now fails without retry and the executor latches a submission block pending reconciliation; read-only query retries remain available.
+This protection is in-memory only, so the authenticated runner remains blocked until durable restart-safe intent reconciliation exists.
+Quote and quantity validation now rejects malformed, non-finite, crossed and untradable inputs before constructing an order.
+Allocation validates policy bounds, uses the declared risk window and rechecks portfolio volatility after minimum-weight pruning.
+The new read-only `bot.readiness` command checks freshness, pending reservations, mark-to-equity consistency and fill-to-wallet reconciliation without contacting a venue or enabling execution.
+Its first inspection passed all ten current paper books while explicitly retaining competition deployment blockers.
+No service restart or strategy promotion occurred; a changed lab fingerprint requires a separately identified experiment rather than overwriting prior provenance.
+Details and release boundaries are in `results/competition_hardening_2026_09_20.md`.
+
+## derisk-ramp-protection-outcome
+
+`HANDOVER.md` section 4e measured what the end-of-window derisk ramp costs and said plainly that its benefit was unmeasured, because the drawdown column in that table came from the full daily series and therefore never saw the ramp fire.
+A rule whose cost is measured and whose benefit is not will always look like a bad rule, so the ramp could not be decided on that evidence.
+`gates/derisk_ramp.py` closes the gap by applying the ramp WINDOW RELATIVE: it tapers into the end of every rolling 14-day window exactly as it tapers into the end of the one real one, which is the only alignment that measures the rule actually deployed.
+Declaration is `config/derisk_ramp.yaml`, no argmax is taken, nothing is promoted and the trial ledger is untouched.
+The liquidation turnover the ramp itself causes is charged at the same 5 bps as every other trade, because measuring a protective rule without charging for the protection would repeat the error recorded at `#passive-fill-adverse-selection`.
+
+The exact deployed ramp is the 68-hour linear taper from 2026-10-15T00:00Z to 2026-10-17T20:00Z, which is the final three days of the fourteen.
+Holdout, `momentum_top3_full`, 614 windows, ramp off then on:
+
+| | median ret | P(>5%) | P(>20%) | p05 ret | worst ret | median maxDD | P(maxDD <= -25%) | median Screen 3 |
+|---|---|---|---|---|---|---|---|---|
+| no ramp | 3.14% | 0.467 | 0.168 | -19.24% | -28.67% | -12.67% | 0.0912 | 3.066 |
+| exact ramp | 2.10% | 0.435 | 0.160 | -18.45% | -25.81% | -11.82% | 0.0684 | 2.547 |
+
+**The protection is real, it is measurable, and it is small.**
+The worst 14-day window improves by 2.86 points, the fifth percentile by 0.79, and the probability of touching the 25% kill switch inside the window falls from 9.12% to 6.84%, which is 56 windows to 42.
+Conditional on landing in the worst decile of windows the ramp helps 74.2% of the time, with a median gain of 1.43 points of return and 0.75 points of drawdown.
+The same measurement on the control `momentum_top3_4h` agrees: kill-switch probability 6.84% to 4.72%, worst window -30.97% to -28.90%.
+The stylised 2-day and 3-day variants reconcile with the cost table already in section 4e and differ from the exact ramp by less than this repo's declared noise threshold, so the ramp's exact span is not a lever.
+
+**The cost is larger and it falls precisely where the prize is.**
+Median return loses 1.04 points, P(>5%) loses 3.3 points, and the Screen 3 composite loses 0.519.
+Screen 3 falls despite the ramp improving the Calmar denominator, because cutting exposure cuts the return that is the numerator of all three of Sortino, Sharpe and CAGR over the same fourteen days.
+The ramp is therefore negative on BOTH screens, not a trade of one against the other.
+
+Two findings here are counterintuitive and both matter.
+
+The paired median change in return is **+0.365 points**, and the ramp improves 53.8% of individual windows, while the distribution's median falls by 1.04 points.
+Both are true at once because the final three days of a crypto fortnight are slightly negative more often than they are positive, so cutting exposure usually adds a little, and occasionally subtracts a lot.
+In the best decile of windows the ramp costs a median of 4.80 points.
+That payoff profile - wins often and small, loses rarely and large - is short volatility on the right tail, and the right tail is the product being bought at Screen 2.
+
+The mechanism is measurable directly and is not an inference from the paired counts.
+Across the 614 holdout windows the final three days return a **median of -0.06% and a mean of +1.82%**, and are negative **50.5%** of the time.
+The ramp forgoes a segment whose typical outcome is a fraction below zero and whose average outcome is strongly positive.
+Giving up a right-skewed segment is a poor trade whenever the objective is the right tail, and at Screen 2 it always is.
+
+Second, the protection operates entirely inside the region where the run has already failed.
+Screen 2 advances the top 20 per region on raw return; every outcome below that cut scores identically, which is to say not at all.
+Moving the worst case from -28.67% to -25.81% buys nothing on the objective, because both numbers are equally far from qualifying.
+What the ramp actually does on the competition metric is move probability mass out of the right tail and into the range between -18% and -29%, where no prize exists.
+
+**Verdict.** On the competition's stated objective the ramp is strictly negative and the case for removing it is now measured on both sides rather than on one.
+It survives only as a risk preference the operator holds independently of the competition, or as an operational settlement rule, and the operator should decide it on that basis rather than on a return calculation.
+No configuration is changed by this run, because the ramp is written into six frozen configs and changing a frozen declaration is an operator decision, not a gate's.
+
+## ranking-lookback-mismatch
+
+Found while building `gates/derisk_ramp.py` and reconciling it against the section 4e tables, which it initially missed by 0.6 points of median return.
+`gates/concentration.rank_score("momentum", ...)` scored `close / close.shift(20) - 1`, a 20-bar lookback.
+Every deployed momentum book ranks on `momentum_bars: 40`, and `bot/portfolio.rank_and_select` reads that setting.
+So every gate that called `rank_score` without saying otherwise was scoring a book the bot does not trade.
+
+Affected call sites: `gates/competition_oos.py`, `gates/exit_walkforward.py`, `gates/correlation_cap.py`, `gates/exit_clock.py` and `gates/ratchet.py`.
+The later gates `gates/exit_review.py` and `gates/no_trade_band_live.py` hardcode `shift(40)` and were always correct, which is how the two conventions came to coexist unnoticed.
+
+The fix keeps `rank_score`'s default at 20 so that no committed artifact changes silently, adds an explicit `bars` parameter, and pins `MOM_BARS = 40` at the call sites that model a deployed book.
+`gates/exit_walkforward.py` and `gates/competition_oos.py` were re-run under the corrected lookback.
+
+**Neither conclusion moves.**
+Walk-forward exit selection still stitches to Screen 3 4.017 against a best fixed choice of 4.111 at `exit_bars = 15` and 4.106 at the live `exit_bars = 10`, a gap of 0.005 that is far inside noise, so `#exit-walkforward-outcome` stands and section 5 keeps `exit_bars = 10`.
+`momentum_top5_4h` still dominates every other book on the competition framework, with P(>5%) 0.388 against 0.303 for BTC hold and 0.234 for `donchian_4h`, so `#competition-book-selection` stands.
+The three nulls at `#correlation-cap-outcome`, `#exit-clock-outcome` and `#ratchet-outcome` were NOT re-run.
+They rest on a 20-bar ranking and a future session should know that before citing them; re-running them costs no trials, because a re-measurement of an already-counted configuration is not a new search.
+
+The general lesson is the one already in `CLAUDE.md`: a default value is a silent declaration.
+`rank_score` declared a lookback by defaulting to one, and no config file ever agreed to it.
+
+## compounding-outcome
+
+The operator's objective is maximum 14-day portfolio return, and the stated route was better position sizing and recycling profits.
+`config/compounding.yaml` declared the question and `gates/compounding.py` answers it with a bar-by-bar weight-state simulator that carries explicit positions rather than a target-weight vector, so it can charge the drift trades the vectorised harness has never seen.
+The control reproduces `gates/concentration.net_daily` for `momentum_top3_full` to within **0.011 points** of holdout median 14-day return, and the declaration made that reconciliation a precondition for reading any other arm.
+Eleven configurations were evaluated and ten were added to the ledger; the control is a re-evaluation of an already-counted config and is excluded under `#trial-counting-rule`.
+
+**The framing first, because it removes most of the search space before any test runs.**
+`max_gross` is 1.0 because the competition forbids leverage, not because a sweep chose it.
+Profits are already recycled: `bot/run.mark` values the book mark-to-market every cycle and `target_weights` expresses every position as a fraction of that NAV, so a winning book automatically sizes its next position off a larger base.
+There is no unexploited compounding in the sizing code.
+With leverage unavailable and NAV-relative sizing already in place, "recycle harder" reduces to exactly two degrees of freedom: **how often the book is idle**, and **what happens to a winner's weight between signals**.
+
+### Lever one: idle time. The hypothesis is refuted, and the reason matters.
+
+`momentum_top3_full` is fully deployed whenever anything signals, so slot-level idle cash is already solved.
+What remains is whole-book idle time: roughly 30% of bars produce no channel signal at all.
+Three arms attacked it and all three lost on the holdout.
+
+| arm | fit median | **hold median** | P(>5%) | P(>20%) | worst | median Screen 3 |
+|---|---|---|---|---|---|---|
+| control_rebalance | 4.08 | **3.11** | 0.467 | 0.168 | -28.70% | 3.049 |
+| always_on_xs (no channel gate) | 4.16 | **1.41** | 0.414 | 0.177 | **-38.74%** | 1.517 |
+| always_on_xs_drift | 4.32 | **1.18** | 0.414 | 0.197 | -36.60% | 1.579 |
+| hybrid_fill (momentum fills empty slots) | 3.84 | **1.97** | 0.423 | 0.166 | -31.14% | 2.428 |
+
+**The cash is not idle. The cash IS the position.**
+The channel exit moves the book to cash precisely when the momentum names it ranks are falling, so the 30% is the exit rule's product rather than a drag on it.
+Removing the entry gate does not add 30% more exposure to the same edge; it adds exposure with the stop removed, and the worst 14-day window goes from -28.70% to -38.74%.
+`hybrid_fill` is the gentler version of the same mistake and fails the same way.
+Note what the fit window did: every one of these arms is at or above the control on fit and far below it on holdout, which is the signature this repo has now recorded on concentration, on sizing and on take-profits.
+
+### Lever two: the weight path. The only measurable effect in the sweep, and it is already deployed.
+
+`bot/portfolio.deltas` suppresses any rebalance inside a 25% relative band, so a winner's weight is allowed to grow with its price.
+The backtest has never modelled this: it resets every position to target on every bar, which silently trims winners and tops up losers.
+**The deployed book and the measured book were different books.**
+
+Paired against the control on 614 holdout windows, with a 14-day moving-block bootstrap at B=4000:
+
+| arm | d median | p | d P(>20%) | p | d P(>5%) | p |
+|---|---|---|---|---|---|---|
+| drift_band_25 | +0.017 pp | 0.597 | **+1.95 pp** | **0.011** | -0.33 pp | 0.581 |
+| no_trim | -1.418 pp | 0.033 | -3.26 pp | 0.089 | **-13.52 pp** | 0.000 |
+| always_on_xs | +0.283 pp | 0.871 | +0.98 pp | 0.627 | -5.37 pp | 0.174 |
+| always_on_xs_drift | +0.933 pp | 0.592 | +2.93 pp | 0.247 | -5.37 pp | 0.178 |
+| hybrid_fill | 0.000 pp | 1.000 | -0.16 pp | 0.964 | -4.40 pp | 0.097 |
+
+The drift band buys 1.95 points of P(>20%) at no measurable cost to the median or to P(>5%), and it is the only p below 0.05 that is not a loss.
+**Read it with the correction: 15 tests were run, so Bonferroni takes that 0.011 to 0.165.**
+The claim this supports is therefore modest and it is not a promotion: the live book's right tail is slightly better than every number previously recorded for it, and 43 independent windows cannot resolve how much better.
+
+The band width was swept to test whether 0.25 is a real dial or an accident:
+
+| band | fit median | hold median | P(>5%) | P(>20%) | worst | Screen 3 |
+|---|---|---|---|---|---|---|
+| 0.00 | 4.08 | 3.11 | 0.467 | 0.168 | -28.70% | 3.049 |
+| 0.05 | 4.14 | 3.35 | 0.469 | 0.169 | -28.55% | 3.076 |
+| 0.10 | 4.10 | 3.08 | 0.472 | 0.171 | -28.46% | 3.136 |
+| **0.25 (live)** | 4.10 | 3.02 | 0.464 | **0.187** | -28.38% | 2.918 |
+| 0.40 | 4.27 | 2.69 | 0.453 | **0.191** | -27.46% | 2.844 |
+| 0.60 | 4.13 | 1.95 | 0.440 | 0.151 | -31.69% | 2.452 |
+| 0.80 | 4.64 | 1.74 | 0.427 | 0.158 | -32.12% | 2.434 |
+
+P(>20%) rises monotonically to 0.40 and then breaks down, while the holdout median falls monotonically from 0.05 onward and the FIT median rises to its maximum at the widest band.
+So the dial is real in direction, it has an interior optimum, and past roughly 0.40 drift stops being convexity and becomes a stale portfolio.
+The whole spread of P(>20%) across the sweep is 4 points against a standard error near 5.7 points at 43 independent windows, so **no band value is distinguishable from another** and the pre-registered 0.25 is left where it is.
+Moving to 0.40 would cost 0.33 points of holdout median for 0.4 points of P(>20%), both inside noise, and the only evidence for it is the window used to judge it.
+
+### What this closes
+
+**No arm is promoted. The declared selection rule returns NONE and that is the honest result.**
+
+The deeper finding is that every dial this repo has tested now moves along one frontier.
+Concentration (`#max-return-levers-outcome`), the derisk ramp (`#derisk-ramp-protection-outcome`) and now the weight path and the deployment rule all trade median return against the far tail, in the same direction, with the fit window preferring the aggressive end and the holdout punishing it.
+The dials do not create return. They reallocate it between the median and the tail.
+Only two changes in this repo's history have improved both windows at once, and both are already live: the ranking rule at `#competition-book-selection` and full deployment at `#full-deployment-outcome`.
+
+The practical consequence for the stated objective is that **further sizing work has no expected value**, and the remaining levers that add return rather than move it are the ones outside the strategy: fee confirmation, worth about 3% of NAV on this turnover, and fill quality, which needs the API keys.
+Both are in `ORGANISER_QUESTIONS.md` and neither is a backtest.
+
+## live-excursion-outcome
+
+Operator observation from the dashboard: the books give back too much, with a stated mechanism - that these coins are strongly momentum-driven and strongly correlated at short horizons, so peaks are common and identifiable.
+`gates/live_excursion.py` tests it on the LIVE minute-resolution price paths of positions this repo actually held, reconstructed from the per-cycle `marks` added at `HANDOVER.md` section 4c.
+This is not a repeat of `#take-profit-outcome` or `#ratchet-outcome`, which tested exit rules on 4h history. Same question, independent data.
+Every number is deduplicated to symbol-episodes, because seven correlated books holding ENAUSDT at once is one observation and not seven: 96 closed round trips collapse to **57 episodes across 22 symbols**.
+
+### The observation is correct and the size of it is larger than expected
+
+| | median |
+|---|---|
+| maximum favourable excursion | **+2.77%** |
+| realised return | **+0.85%** |
+| capture, realised over MFE | **0.33** |
+| maximum adverse excursion | -0.75% |
+| where the peak fell in the hold | 0.49 |
+
+Summed across the 57 episodes the give-back is **171.5 points of position return**.
+The median position hands back two thirds of its best moment, and the worst cases are stark: ENAUSDT reached +12.8% and was closed at +2.7%, with its peak **5% of the way into a 36-hour hold**.
+
+### Every rule that books it loses, measured on those same paths
+
+Trailing stops and fixed targets replayed on the observed paths, exit charged 5 bps, no re-entry:
+
+| rule | mean | median | fired | beats actual | vs actual |
+|---|---|---|---|---|---|
+| **actual exits** | **+1.91%** | +0.85% | - | - | - |
+| trail 0.5% | +0.52% | -0.10% | 55 | 24/57 | -1.39 pp |
+| trail 1.0% | +0.48% | -0.20% | 47 | 22/57 | -1.43 pp |
+| trail 1.5% | +0.56% | -0.08% | 39 | 17/57 | -1.35 pp |
+| trail 2.0% | +1.47% | +0.32% | 36 | 16/57 | -0.44 pp |
+| trail 3.0% | +1.98% | +0.50% | 29 | 15/57 | +0.07 pp |
+| trail 5.0% | +1.95% | +0.85% | 15 | 10/57 | +0.04 pp |
+| target 2% | +1.18% | **+1.95%** | 33 | 16/57 | -0.73 pp |
+| target 3% | +1.16% | **+2.02%** | 27 | 12/57 | -0.75 pp |
+| target 8% | +2.02% | +1.07% | 13 | 5/57 | +0.12 pp |
+| target 12% | +2.05% | +0.85% | 7 | 6/57 | +0.14 pp |
+
+**Candidates by the declared rule: NONE.**
+A tight trail cuts mean return by roughly two thirds.
+The four rules with a positive mean delta gain +0.04 to +0.14 points, fire on 7 to 29 of 57 episodes and win on 5 to 15 of them, so they are loose enough to be doing almost nothing and their edge is noise.
+
+**The 2% and 3% targets are the trap and they deserve naming.**
+They raise the MEDIAN outcome from +0.85% to about +2.0% while cutting the MEAN from +1.91% to +1.17%.
+A book running them would show more winning trades, more closed trades and a better-looking blotter while making less money.
+That is `#take-profit-outcome` reproduced on live data from the opposite direction, and it is exactly what "we are not booking enough profits" feels like from the dashboard.
+
+### Why it cannot work: the give-back is real but it is not separable
+
+**The trades with the most to book are the ones that peak last.** MFE against peak position in the hold is Spearman **+0.434, p=0.001**, the only significant relation in the study.
+So any rule tight enough to catch ENAUSDT's peak at 5% of its hold also truncates SUIUSDT, which ran to +21.2% with its peak at 89% of a 32-hour hold and was captured at 0.85.
+
+And nothing observable early tells the two apart:
+
+| predictor | target | Spearman | p |
+|---|---|---|---|
+| return in first 30 min | peak position | -0.141 | 0.294 |
+| return in first 60 min | peak position | -0.167 | 0.216 |
+| return in first 60 min | give-back | +0.001 | 0.994 |
+| return in first 60 min | final realised return | **+0.215** | 0.109 |
+
+The first-hour move does not predict an early peak.
+If anything it leans the other way: a fast start predicts a BETTER final return, median +1.34% against +0.35% for a slow start.
+So the instinct "it ran up quickly, take the money" is pointed at the wrong trades.
+
+### The stated mechanism is inverted on both halves, measured
+
+24 symbols, 1,252 minutes of live marks:
+
+| horizon | mean cross-sectional correlation |
+|---|---|
+| 1 minute | 0.350 |
+| 15 minutes | 0.381 |
+| 60 minutes | 0.407 |
+| 240 minutes | 0.414 |
+
+**Correlation is WEAKEST at the shortest horizon and rises with it**, which is the Epps effect, not the premise.
+The first principal component explains **41.1%** of 1-minute variance, so 59% of what these coins do minute to minute is idiosyncratic and there is no single pattern to time.
+
+The momentum half fails too.
+Mean lag-1 autocorrelation of 1-minute returns across 24 names is **-0.029**: mildly mean-reverting, not trending.
+That is the same sign and roughly the same size as `#scalp-meanrev-outcome` and as arXiv:2608.21888 in `RESEARCH_SHORT_HORIZON.md`, which measured 1.3 bps of edge against a 5 bps round trip across 183 pairs.
+A -0.029 autocorrelation is far below any tradeable threshold at 10 bps.
+
+### What is adopted
+
+Nothing. No exit rule is added and no book changes.
+
+The value of this run is that an independent dataset agrees with the history.
+`#take-profit-outcome` killed targets on 4h bars across 26 configurations; this kills them again on live minute paths the bot actually traded.
+Two datasets, different resolutions, same answer: **the channel exit is already both the stop and the target, and the give-back is the price of the right tail, not a defect in the exit.**
+
+**Sample limits, stated plainly.** About 44 hours, one market regime, 57 independent episodes. That is enough to refute a claim of a large obvious effect and nowhere near enough to establish one. If the next regime differs, this study says nothing about it.
+
+## alpha-flow-declaration
+
+Operator instruction, 2026-09-22: do not treat the existing rules as fixed, build a bot that books profits and churns them back into capital, drive selection from correlation and coin selection, find the trading logic in volume, gamma exposure and order flow, use exploitable alternate data, and ship it for forward testing.
+This entry records what was measured before building, because the build had to be aimed at something.
+53 selectable configurations were evaluated and added to the ledger, which now stands at 525 rows. Declared nonsense controls are not counted.
+
+### The selection axis, measured and exhausted
+
+`taker_buy_quote` is cached for the full history, so aggressor-side order flow is directly computable as `(2*taker_buy_quote - quote_volume)/quote_volume`.
+`#flow-scalp-outcome` only ever tested it at 5, 15 and 30 minutes, so 4h to 3 days was untested.
+
+Cross-sectional Spearman IC against forward returns, fit window:
+
+| feature | 4h | 24h | 3d |
+|---|---|---|---|
+| ofi_1 | -0.002 (t -0.6) | -0.001 (t -0.3) | -0.004 (t -0.9) |
+| ofi_6 | -0.000 (t -0.1) | -0.005 (t -1.0) | -0.004 (t -0.8) |
+| ofi_18 | -0.002 (t -0.4) | -0.005 (t -1.2) | +0.005 (t +1.1) |
+| vol_surge | -0.006 (t -1.3) | -0.006 (t -1.2) | -0.011 (t -2.3) |
+| avg_trade_z | -0.003 (t -0.6) | -0.003 (t -0.7) | +0.003 (t +0.8) |
+
+**Order flow has no cross-sectional information at these horizons.** Nothing reaches |t| of 1.3 except a volume-surge reading that is negative, which is the wrong sign for a momentum book.
+
+As ranking rules inside the channel-gated set, holdout median 14-day return against the live rule's 3.12%:
+
+| ranker | hold median | worst | Screen 3 |
+|---|---|---|---|
+| **momentum_40 (live)** | **3.12** | -28.67 | **3.066** |
+| mom_x_ofi | 2.70 | -29.71 | 2.861 |
+| ofi_18 | 1.61 | -37.54 | 2.490 |
+| ofi_6 | 0.85 | -36.31 | 1.539 |
+| low_beta | 0.62 | -43.76 | 1.445 |
+| vol_surge | 0.37 | -0.00 | 0.891 |
+| avg_trade | 0.27 | -32.55 | 0.670 |
+| idio_40 (correlation residual) | 0.10 | **-67.09** | 0.409 |
+| high_beta | -0.68 | -46.74 | -0.519 |
+
+The one combination worth naming is `mom_x_ofi`, which reaches P(>10%) of 0.334 against momentum's 0.321 while losing 0.4 points of median. It is not better and it is not adopted.
+
+**Why coin selection is structurally a weak lever here, in one number.** Mean correlation of each name to the equal-weight universe return at 4h is **0.835**, with a p10 of 0.698 and a p90 of 0.945.
+Roughly 16% of a coin's 4h variance is idiosyncratic, so selecting between names is mostly selecting how much beta to hold, and selecting ON the residual is actively destructive at a -67% worst window.
+This is the mechanism behind `#coin-selection-does-not-persist`, which observed the same thing from the outside.
+
+### Funding-rate crowding: the strongest fit signal in the repo, and it does not replicate
+
+A funding panel was built from Binance perpetuals and cached at `data/cache/alt/funding_panel.parquet`: **10,731 timestamps by 51 names back to 2020**, about 24 names per timestamp. This repo had never used it.
+
+Cumulative 18-bar funding against forward 3-day returns scores IC **-0.068 with t = -7.1** on the fit window, three times the magnitude of anything else measured here and the economically right sign: crowded longs pay to be long, and then underperform.
+
+It fails three ways.
+
+**It does not replicate.** Inside the perp-covered universe the 24h IC goes from -0.054 (t -5.8) on fit to **+0.008 (t +0.6)** on holdout. The sign flips and the significance is gone. At 3 days it partly survives at -0.040 (t -3.0) but no book built on it makes money.
+
+**Coverage is non-random.** Only **46% of fired candidates have a perpetual listing** and 55% of bars have no coverage at all, because perps exist for the majors and not for the rest. A veto built on it therefore removes the majors and concentrates the book into thin names: every threshold takes holdout median from 3.12% to at best 1.15% and the worst window from -28.7% to about -51%.
+
+**The nonsense control settles it.** Vetoing the LEAST crowded names instead reproduces the baseline exactly, at 3.12% and an identical -28.67% worst window. A real signal would have hurt there. A coverage artifact does exactly what was observed.
+
+**And the covered universe is a worse universe on its own.** Trading only perp-listed names, with no veto at all, takes holdout median to **-1.44%** and the worst window to -54.5%. That is `#roostoo-universe-pool-size` again: a filter inside an already-filtered list removes the names carrying the book.
+
+The time-series version does not work either. Market-wide funding in the top quintile precedes a **+0.599%** mean next-24h universe return on fit and **-0.004%** on holdout.
+
+### Booking profits: all three forms tested, and the result is not what was expected
+
+Tested in the bar-by-bar weight-state simulator from `#compounding-outcome`, which carries explicit positions and charges every trade it generates.
+
+**Recycling into the same target is arithmetically a rebalance.** Every ladder that books a slice and immediately redeploys it across the same equal-weight target lands within 0.09 points of the control on holdout median and pays fees for the privilege: 3.07% to 3.10% against the control's 3.11%. Selling a slice of a winner and buying it straight back is not booking a profit, it is a round trip.
+
+**Redeploying into NEW names is worse than holding the cash.** On every pairing tested, funding the next-ranked fired names with skimmed cash lost to simply letting the cash idle: 2.44 against 3.59, 1.92 against 3.47, 2.78 against 3.15, 2.85 against 3.52, 2.42 against 3.34. It dilutes the book into lower-ranked names.
+
+**Skimming into cash improved both windows, and then the control took most of it back.** A ladder that skims 40% of a position each time it gains 5% from its reference, holding the proceeds, takes fit median 4.08 to 5.00 and holdout median 3.11 to **3.59**, with median drawdown -12.67 to **-8.43** and mean gross 0.699 to **0.511**.
+
+Two things must be said about that before anyone reads it as alpha.
+
+The return gain is **not significant**: paired block bootstrap on 43 independent holdout windows gives p = 0.14 on the median delta, and p between 0.54 and 0.92 for the neighbouring settings.
+And the drawdown gain is **reproduced by a random-timing nonsense control** that skims at the same hazard rate with no reference to price, landing at a median drawdown of -11.2 to -11.4 against the control's -12.67, on gross of 0.62.
+So the drawdown improvement is exposure reduction, not timing, and what remains is a median improvement inside noise.
+
+The frontier is visible across the grid exactly as it is everywhere else in this repo: tight steps raise the median and cut P(>20%) from 0.168 to 0.134, loose steps raise P(>20%) to 0.199 and cut the median to 2.44.
+
+### Alternate data: what exists, and why most of it cannot be backtested at all
+
+| source | what it gives | history |
+|---|---|---|
+| Binance `taker_buy_quote` | true aggressor imbalance | **full**, already tested above, null |
+| Binance funding | positioning cost | **full**, tested above, does not replicate |
+| Binance open interest | leverage build-up | **30 days only** |
+| Binance long/short account ratio | retail positioning | **30 days only** |
+| Deribit option OI and IV | **dealer gamma exposure** | **snapshot only, no history at all** |
+
+`data/options.py` computes dealer gamma from Deribit, which carries essentially all crypto option open interest. It parses strike and expiry from the instrument name, prices Black-Scholes gamma off `mark_iv`, and aggregates to a net figure in dollars of hedging demand per 1% move, plus the gamma flip strike. First reading: BTC net GEX **-425m per 1%** across 645 instruments with the flip at **80,000** and spot at 86,487, so dealers are short gamma and hedging with the move rather than against it.
+
+The dealer-short-calls convention is an assumption that cannot be verified from public data, and the sign of every number depends on it. That is stated in the module.
+
+**None of this is tradeable yet and that is the whole point.** A series with no out-of-sample window cannot be validated before it is collected, so `config/alpha_flow.yaml` carries `alt_data.trades_on_it: false`. The collector runs every 15 minutes and journals each snapshot so that a dataset exists in 30 days. That is the only honest route from "gamma exposure sounds exploitable" to "gamma exposure is or is not exploitable here".
+
+### What was built
+
+`config/alpha_flow.yaml`, `bot/alpha_flow_run.py`, `bot/alt_data.py`, `data/options.py`, and `tests/test_alpha_flow.py`.
+
+The bot is `momentum_top3_full` plus the skim ladder at 5% and 40%, with booked cash idling, subclassing `Bot` so cold-start suppression, the drift band, kill switches, mirror checks and markout instrumentation are inherited unchanged. Its control is `momentum_top3_full`, identical in every other respect. It is wired into `run_bots.sh` as `alphaflow` and is running.
+
+It is deployed as a **forward test on operator instruction**, not as a validated improvement, and `config/alpha_flow.yaml` says so in `meta.honest_status_of_the_skim`.
+What to watch is stated there too: if the skim is only reducing exposure, the forward return will track the control while gross sits near 0.51, and nothing has been gained.
+
+### Amendment 2026-09-22: the ladder was not booking consistently, and the fix was the slice not the step
+
+Operator: "I want it to book profits consistently."
+Measured on the 59 live symbol-episodes, the original 5% step fired on only **36% of positions and the median position booked zero times**, so the ladder was not doing what it had been asked to do.
+
+Firing rate by step, live episodes:
+
+| step | episodes that book | median skims per episode |
+|---|---|---|
+| 1% | 80% | 2 |
+| 2% | 58% | 1 |
+| 3% | 46% | 0 |
+| 5% (original) | 36% | 0 |
+| 8% | 22% | 0 |
+
+**Tightening the step alone is the one thing in this whole grid that is significantly harmful.** Holdout P(>20%) against the control: 1% takes it 0.168 to 0.070 at **p=0.004**, 2% to 0.093 at **p=0.022**, 3% to 0.103 at **p=0.046**. Every median-return delta in the same grid sits at p between 0.68 and 0.95. So the only statistically real effect of booking harder is the loss of the right tail, which is the thing Screen 2 qualification depends on.
+
+**Cutting the slice at the same time removes the cost.** Booking more often but taking less each time:
+
+| setting | skims | d median | p | d P(>20%) | p |
+|---|---|---|---|---|---|
+| 5% x 40% (original) | 1,970 | +0.332 pp | 0.681 | -0.0342 | 0.266 |
+| **3% x 15% (adopted)** | **2,989** | +0.329 pp | 0.678 | **-0.0081** | **0.732** |
+| 3% x 25% | 2,989 | +0.277 pp | 0.742 | -0.0293 | 0.268 |
+| 2% x 15% | 3,952 | -0.103 pp | 0.908 | -0.0195 | 0.429 |
+
+`3% x 15%` books **52% more often than the original setting while its right-tail delta is four times smaller and less significant than the original's own**. Consistency was bought from the slice size, not from the tail.
+
+Amended before the bot held any position, so no forward evidence was invalidated. `2% x 15%` remains available if more frequency is wanted: 58% of positions book with a median of one skim, at d P(>20%) of -0.0195, p=0.43 - still not significant, but twice the tail cost for no median gain.
+
+## rsi-band-outcome
+
+Operator request: test buying the RSI cross up through 50 and selling at 70, on smaller timeframes, on coins filtered to those that follow the pattern.
+`config/rsi_band.yaml` declared it, `gates/rsi_band.py` ran it, artifact `results/rsi_band.json`. Three configurations, ledger now 528.
+15-minute bars for the 55 names that have ever been in the PIT top-30 were downloaded for this (`data/cache/panel_15m.parquet`), because only five symbols were cached at 5m and five names is not a cross-section.
+
+`signals/rsi.py` is Wilder's RSI with Wilder's SEED, validated against the published 33-point series at 70.46 and 66.25 against the book's 70.53 and 66.32, the residual being rounded intermediates in the published table.
+This matters: a bare `ewm(adjust=False)` seeded from the first change is a faster indicator that crosses 50 more often, and the entire signal here is a level cross.
+
+### The rule, holdout, all coins
+
+| interval | trades/day | win rate | mean GROSS | mean net @10bps | median net | median hold | reached RSI 70 |
+|---|---|---|---|---|---|---|---|
+| 15m | 99.6 | 0.381 | **-0.36 bps** | -20.36 bps | -30.68 bps | 0.8h | **11%** |
+| 1h | 23.7 | 0.382 | **-1.33 bps** | -21.33 bps | -43.04 bps | 3.0h | **12%** |
+| 4h | 5.7 | 0.383 | +9.36 bps | -10.64 bps | -64.59 bps | 12.0h | **14%** |
+
+**At 15m and 1h the rule is negative BEFORE costs.** That is a stronger result than the usual cost failure in this repo: there is no gross edge to lose. At 4h there is a small gross edge of 9.36 bps and it does not survive a 10 bps round trip.
+
+**The rule almost never does what it is named after.** Only 11 to 14% of trades ever reach RSI 70. The other 86 to 89% exit on the opposite cross, RSI falling back through 50, which is the losing leg. The win rate is 0.38 at every interval.
+
+Note the shape: median net is far worse than mean net at every interval, so the mean is being carried by a thin right tail of trend continuations. That is a trend-following payoff wearing an oscillator's clothes, and the 50-to-70 band truncates exactly the tail that pays. It is `#take-profit-outcome` again, arrived at from a third direction.
+
+### The coin filter does not survive its own selection, and the control proves it
+
+The filter was fitted on the fit window, ranked by mean net basis points per trade with a minimum of 10 trades per coin, and applied to the holdout. The bottom quartile was carried forward as a nonsense control.
+
+| interval | FIT top | FIT bottom | HOLDOUT top | HOLDOUT bottom | persistence rho |
+|---|---|---|---|---|---|
+| 15m | +4.02 | -22.63 | **-20.19** | -19.71 | **-0.109** |
+| 1h | +12.55 | -50.37 | **-22.91** | -25.42 | **-0.002** |
+| 4h | +58.40 | -50.63 | **-36.92** | **-14.46** | **-0.024** |
+
+In the fit window the filter looks devastating: at 4h the top quartile averages +58.40 bps per trade against -50.63 for the bottom, a spread of 109 bps.
+Out of sample the entire spread is gone, and at 4h it **inverts**: the coins the filter rejected beat the coins it selected by 22 bps per trade.
+Per-coin rank persistence is -0.109, -0.002 and -0.024. All three are zero or negative.
+
+This is an independent replication of `#coin-selection-does-not-persist` on a completely unrelated rule. That entry measured Spearman 0.091 at p=0.586 on the channel book and found the eight worst coins beating the eight best; this finds the same thing on an oscillator band across three timeframes.
+**"Filter the coins that follow this pattern" is not a strategy, it is a description of the fit window.** The pattern does not belong to the coin.
+
+### Verdict
+
+**Candidates by the declared rule: NONE.** Nothing is adopted and nothing is deployed.
+The rule fails the cost screen at all three intervals and fails it before costs at two of them, and the coin filter that was supposed to rescue it has zero out-of-sample content.
+
+Useful by-products kept: `signals/rsi.py` with a validated Wilder implementation and seven tests, and a 15-minute panel for the traded universe that did not exist before.
+
+## booking-flattened-the-book
+
+A defect I introduced on 2026-09-22 while making the skim ladder a shared capability, caught within minutes by its own telemetry, and worth recording in full because it has two distinct causes and the second is the more dangerous one.
+
+### What happened
+
+Operator asked for booking across the fleet, so the ladder moved out of `bot/alpha_flow_run.py` into `bot/booking.py` and the base `Bot` began applying it to any config carrying a `booking` block.
+Booking is an intrabar exit, so `trades_every_cycle()` was made to return true whenever booking is enabled.
+
+At 16:03:38 UTC, on a cycle that was **not** a bar close, `donchian_4h_cushion`, `donchian_1h` and `momentum_top5_cushion` sold their entire books.
+
+### Cause one: an empty target is not "no opinion", it is "sell everything"
+
+`bot/run.py` computes `channels = evaluate_book(...) if fresh else {}`.
+On a cycle that is not a bar close, `channels` is empty by construction, so `compute_target` returns `{}`.
+That was harmless while `trades_every_cycle()` was false, because `deltas` was never called on those cycles.
+Turning it true made `deltas({}, current)` run every minute, and `deltas` correctly reads an empty target against a held book as a full liquidation.
+
+The fix is to carry the held book forward on a non-fresh cycle rather than computing a target from channels that were never evaluated, and to let only the ladder move it.
+
+**The general lesson: a flag that changes WHEN a function is called can be as destructive as changing what it returns.** Nothing about `compute_target` or `deltas` was wrong. The damage came from calling a correct function at a moment its precondition did not hold.
+
+### Cause two: the no-trade band silently ate every skim
+
+Caught by the regression test written for cause one, not by observation, and it would have been much harder to find in the wild.
+
+`bot/portfolio.deltas` suppresses any move inside a 25% relative band, which is correct for price drift and is why `#live-rebalance-chases-drift` exists.
+A 15% skim on a held position is a move of 15% of that weight, which is **inside** the 25% band.
+So every skim the ladder generated would have been suppressed, and the booking bots would have run for days generating skim events in the journal while never placing a single order.
+
+That failure mode is worse than the liquidation. The liquidation was loud and immediate. This one would have looked exactly like a working system: skims logged, no orders, weights unchanged, and a forward A/B that quietly measured nothing.
+
+`deltas` now takes a `force` set. A skim is a deliberate trade of a declared size, not drift, so it is exempt from the band.
+
+### Damage and repair
+
+Paper only, dry run, no real orders. Three books were flattened and `momentum_top5_cushion` was left **stuck**: its channel state still said seventeen names were held while it had no position, so it could never re-enter until each of those channels exited and broke out again.
+State was reconciled to actual holdings on all three, `skim_refs` cleared, and a `state_repair` record written to each lifecycle journal.
+Their forward records carry a discontinuity at 2026-09-22T16:03Z and should not be read across it.
+
+### What is now guarded
+
+`tests/test_booking_cycle.py`, five tests:
+- carrying the book forward emits no orders when nothing has gained
+- an empty target against a held book IS a full liquidation, asserted as a fact so the guard above has a stated reason
+- a skim inside the band is suppressed WITHOUT `force` and placed WITH it
+- booking is enabled on exactly the four books that declare it
+- every gated control is left without booking
+
+### Which books carry booking, and which deliberately do not
+
+| book | booking | why |
+|---|---|---|
+| `alpha_flow` | ON | the declared booking forward test |
+| `donchian_4h_cushion` | ON | not a control; confounded with the cushion treatment, stated in its config |
+| `momentum_top5_cushion` | ON | not a control; same confound, stated in its config |
+| `donchian_1h` | ON | a comparison book and nobody's control, so it confounds nothing |
+| `donchian_4h` | **off** | control for `donchian_4h_cushion` |
+| `momentum_top5_4h` | **off** | control for `momentum_top5_cushion` |
+| `momentum_top3_4h` | **off** | control for `momentum_top3_full` |
+| `momentum_top3_full` | **off** | control for `alpha_flow` |
+| `scalper_live` | **off** | it already exits on target, stop and time; a second exit rule on top would fight the first |
+
+Four controls are left clean on purpose. Turning booking on everywhere would give the operator what was asked for and destroy every forward comparison in the repo at the same time, which is a trade nobody stated and I am not making silently.
+
+## booking-on-every-bot
+
+Operator instruction 2026-09-22, after being shown what it costs: **enable booking on every bot, controls included.**
+
+The cost was stated before the change and is restated here so no future reader mistakes the result for a measurement.
+Four books were clean controls: `donchian_4h` for the cushion arm, `momentum_top5_4h` for its cushion arm, `momentum_top3_4h` for `momentum_top3_full`, and `momentum_top3_full` for `alpha_flow`.
+**From 2026-09-22 every one of those pairs measures its own treatment ON TOP OF booking rather than against a no-booking baseline.** No reading may be carried across that boundary, and the boundary is recorded in each config's `booking.control_status_lost`.
+`alpha_flow`'s reason for existing is gone with it: it was the booking arm against a non-booking control, and now every book is a booking book. It continues as the alt-data collector.
+
+`scalper_live` is included with a stated interaction: it already exits on its own target, stop and time clock, so the ladder is a second profit-taking rule layered on the first and the two will sometimes fire on the same move.
+
+All nine books run the identical declared ladder, 3% step and 15% slice, `recycle: false`, asserted by `tests/test_booking_cycle.py`.
+
+### The third defect, found in the same session as the first two
+
+`bot/booking.py` seeded a reference price only where `held <= 0`, which is the fresh-entry branch.
+A position that already existed when booking was switched on therefore had no reference, and `ref = refs.get(sym) or px` silently recomputed the reference as the CURRENT price on every cycle.
+`px >= ref * 1.03` is then never true, so **every pre-existing position could never book, ever.**
+
+Observed directly: `donchian_4h` held 18 positions with 0 skim references.
+
+This is the same failure class as the no-trade band in `#booking-flattened-the-book`: a system that logs activity, places no orders and measures nothing, while looking healthy from the outside. The `or px` idiom is what hid it, because a missing value and a valid value took the same code path.
+
+The fix seeds the reference lazily from the current mark, so a pre-existing position starts its ladder from the moment booking is enabled. Verified after restart: 18 holdings, 18 references, on every book.
+
+### Three defects in one feature, and what that says
+
+The ladder is roughly forty lines and it shipped three distinct bugs: an empty target read as a liquidation, a deliberate trade eaten by a drift suppressor, and a reference that was never persisted. None was a logic error inside the ladder itself. All three were interactions with machinery that was already correct - the cycle's freshness contract, the no-trade band, and the state file.
+
+**The lesson is about where to look.** Every one was found by asking "what does this new flag change about when existing code runs", not by re-reading the new code. Two of the three were caught by tests written for the first one. The thing that would have hidden all three in production is that a suppressed trade and a trade that was never wanted look identical in a journal.
+
+`bot/run.py` now carries `target_from_channels()`, which is false for `bot/scalper_run.py`, because carrying holdings forward between bar closes would have silenced every intrabar stop and target that book has.
+
+## testnet-live
+
+Operator asked for the bots to place real orders on Binance paper trading. `config/testnet_live.yaml` now runs authenticated against `testnet.binance.vision` and is placing real orders against a real matching engine. `./run_bots.sh testnet`.
+
+### What had to be built first
+
+`bot/run.py` opened with `if not settings.dry_run: raise RuntimeError("live_orders_blocked_until_restart_reconciliation_is_implemented")`.
+That guard was correct and it blocked Roostoo as much as testnet, so it was on the competition's critical path regardless of this request.
+
+The window it stood for is small and real. `Executor.send` makes an HTTP call and then journals the result. A process that dies in between leaves an order that may exist at the venue with nothing local knowing it, and the next start recomputes a target from stale holdings and submits again.
+
+`bot/intents.py` closes it. The intent is written and **fsynced before** the call, resolved after, and every unresolved intent is settled against the venue on startup before a single new order may be sent. If any cannot be settled the submission block stays on and the reason is journalled.
+
+Venue matching differs and the difference is not cosmetic. Binance accepts `newClientOrderId`, so an intent maps to an order **exactly**, and `query_by_client_id` is used. Roostoo's `place_order` has no such field, so an unresolved Roostoo intent can only be matched on pair, side, quantity and a timestamp window. That path reports `matched_by: heuristic` and is never silently treated as certain. Both clients now take `client_order_id` so the executor has one signature.
+
+### Four live-only defects, none of which a dry run can produce
+
+**1. An empty universe meant "adopt everything".** `adopt_wallet` restricts to `self.universe`, but on a book that has never persisted state the universe is empty, and empty fell through to unrestricted. Binance testnet seeds accounts with several hundred non-zero balances, so the bot adopted **487 positions and submitted 469 orders in one cycle**, reading equity as $444,275. The universe is now resolved before the wallet is read, and a wallet read with no universe adopts nothing and says so.
+
+**2. A resting order locks the asset, and holdings do not show it.** The bot sold a position, the LIMIT rested, `holdings` still showed the full quantity, and the next cycle sold it again. The venue answered `-2010 insufficient balance` fifteen times and the error-rate kill switch **halted the book**. `Executor.refresh_pending` now lists resting orders once per cycle and `send` skips a pair that already has one. A dry run can never show this because `apply_dry_fill` settles instantly.
+
+**3. Binance requires `symbol` on a cancel and Roostoo does not.** `sweep_unfilled` cancelled by order id alone, which produced `-1105 Parameter 'symbol' was empty` on every sweep and walked the error rate back toward the kill switch. The pair is now passed, which satisfies both venues.
+
+**4. `wallet_positions` counts `free + lock` as holdings.** Correct for valuation, wrong for sizing a sell. Defect 2 masks it for now because a pair with a resting order is skipped entirely; it is recorded here because the moment partial fills appear it will matter on its own.
+
+This is exactly what `CLAUDE.md` says the interim venue is for: a backtest multiplies weight vectors and never formats an order. Every one of these four is invisible until an order reaches a real exchange.
+
+### What the testnet book is and is not
+
+It is `donchian_1h`'s rule and ladder pointed at a different venue, with its own journal, so the nine paper records are untouched. Pool cut to 12 names. Mirror check disabled, because testnet prices are synthetic and diverge from mainnet by far more than the 50 bps deviation limit.
+
+**Read fills and rejections. Never read returns.** Testnet prices are not real prices, the account holds about 9,600 USDT against the 100,000 every paper book assumes, and P&L here means nothing.
+
+One book, not nine, for a reason: `adopt_wallet` treats the venue wallet as authoritative, and all nine bots share a single testnet API key. Pointing them all at it would have each bot claim the whole wallet and try to rebalance the others' positions away. Nine live books needs nine API keys.
+
+### Still blocked on Roostoo
+
+`.env` carries both Roostoo lines commented out and marked NOT YET ISSUED. Setting `ROOSTOO_DRY_RUN=0` there would fail every authenticated call, cross the 0.25 error-rate kill switch within about five cycles, and a halt empties the target set, which flattens the book. Question 3 of `ORGANISER_QUESTIONS.md` is what unblocks it.
+
+Also noted from the public endpoint: `exchangeInfo` reports `InitialWallet: {"USD": 50000}` while every config and backtest here assumes **100,000**. Worth confirming with the organisers - it halves every notional and could put small positions under the minimum order size.
+
+## declaration-anchors
+
+Eight frozen configs cite a `*-declaration` anchor in this file that was never written: `#concentration-declaration`, `#concentration-timeframe-declaration`, `#fast-horizon-declaration`, `#paper-lab-v3-declaration`, `#sizing-sweep-declaration`, `#strong-retraced-declaration`, `#take-profit-declaration` and `#testnet-mirror-scope`.
+
+Found 2026-09-22 by `tests/test_doc_anchors.py`, which now fails the build on a citation that resolves to nothing.
+
+**They are not being written retroactively.** A declaration is a claim made BEFORE a test runs, and inventing one after the fact is the exact failure the declare-before-you-test rule exists to prevent. Writing them now would produce eight entries that look like pre-registrations and are not.
+
+**The declaration each one refers to is the config file itself.** `config/<family>.yaml` carries `meta.declared_before_any_backtest`, the mechanism, the failure mode and the decision rule, and the gate refuses to run if that flag is false. The outcome then lands here under `#<family>-outcome`. The configs were written expecting a matching entry on this side and none was ever made.
+
+So the convention, stated plainly for the first time:
+
+- **the declaration lives in `config/<family>.yaml`**, before any backtest, enforced in code
+- **the outcome lives in `DECISIONS.md#<family>-outcome`**, after
+- a `*-declaration` anchor in this file is only warranted when the reasoning did not fit in the config, as with `#ratchet-declaration`, `#meanrev-xs-declaration`, `#flow-scalp-declaration` and the others that do exist
+
+The dead references are left in the frozen configs rather than edited, because amending a frozen declaration to fix a footnote is a worse precedent than a footnote that points at this entry. `tests/test_doc_anchors.py` carries them as a known-dead allowlist naming this anchor, so a NEW dead reference still fails.
+
+## positioning-history
+
+Written 2026-09-23. **The claim that open interest and long/short ratios have 30 days of history was a limit of the REST API, not of the data.**
+`DATA_SOURCES.md`, `data/futures.py`, `bot/alt_data.py` and `config/alpha_flow.yaml` all stated it, and `#alpha-flow-declaration` used it to rule positioning out of any fit-and-holdout test.
+`data.binance.vision` archives the same fields at 5-minute resolution from 2021-12-01, including delisted contracts: open interest in USD, top-trader account and position long/short, all-account long/short, and the futures taker buy/sell volume ratio.
+Funding and hourly premium-index klines are archived monthly from 2020.
+`data/vision.py` reads all three and caches one hourly parquet per perpetual under `data/cache/vision/`.
+`data/macro.py` adds three market series that also have real history: Deribit DVOL hourly from 2021-03, DefiLlama total stablecoin supply daily from 2017, and the Coinbase BTC-USD premium over Binance BTCUSDT hourly from 2021.
+
+### The 46% coverage figure was a construction artifact
+
+`#alpha-flow-declaration` said only 46% of fired candidates have a perpetual listing, so any funding veto strips the majors.
+Its panel had 51 columns keyed on SPOT names, which gave it no row for BONK, PEPE, SHIB or FLOKI, whose perps list as `1000X`.
+With spot names mapped to perps through `data.vision.perp_symbol`, all 55 Roostoo-tradable names that have ever been in the PIT top 30 have a perp, and positioning data covers **89.5% of live candidate-bars in 2022, 98.9% in 2023-24 and 99.9% in 2025-26**.
+The funding null itself survives the correction (see the outcome below); the reason given for it does not.
+
+### Three stamping defects, found before the numbers were read
+
+1. **The archive writes 0.0 where no reading was recorded.** BTC and ETH open interest read zero for hours on 2022-03-07. Its log is `-inf`, which silently turned every 180-day z-score it touched into NaN or infinity, and the first run's `crowding` correlations came back `NaN` on the fit window. `vision.panel` now treats any non-positive metrics value as missing. `tests/test_positioning.py`.
+2. **The taker ratio's `create_time` is the START of its 5-minute volume bucket.** The row created at 20:00 covers 20:00-20:05. An hourly bucket closed on the right handed each 4h bar five minutes of future taker flow. **It manufactured the only significant positive per-coin reading in the run**: `taker_ls_24h` holdout IC at 24h was **+0.025, t=+2.35** with the leak and **-0.003, t=-0.30** without it.
+3. **The REST series stamped T equals the archive row created at T-5 minutes** for open interest and both long/short ratios, measured directly on 2026-09-21. A right-closed bucket therefore also misaligned the live and backtest features by one reading.
+
+Both 2 and 3 have the same fix: an hourly bucket `[T-1h, T)` stamped T, so the :55 reading is the last one a bar closing at T may see.
+After the fix, `bot.alt_data.positioning` reproduces `gates.positioning_edges.features` at a past hour to within **5e-7 on open interest, 5e-9 on premium and 4e-4 on the ratios** (REST rounds ratios to four decimals). Evidence at `results/positioning_live_parity.txt`.
+Funding agrees to within 6% on ENA, because the gate evaluates its 72-hour window at the last settlement and the live collector at the bar close; stated, not material.
+
+The lesson generalises the open-time bar rule in `CLAUDE.md`: **every archive field has its own stamp convention, and a single field's convention can leak even when its neighbours do not.** Measure each against a live source before trusting a join.
+
+## positioning-edges-outcome
+
+Declaration: `config/positioning_edges.yaml`, written before any backtest; one post-hoc follow-up declared in the same file under `followup` after the main run was read.
+Harness: `gates/positioning_edges.py` and `gates/squeeze_priority.py`. Artifacts: `results/positioning_edges.json`, `results/squeeze_priority.json`.
+Ledger 969 -> **980** (ten declared arms, one post-hoc arm).
+
+**The base book is `momentum_top3_full` with the deployed 3% x 15% ladder**, because every live book runs the ladder now and a no-booking control no longer exists anywhere.
+The simulator steps hourly and reproduces the live cycle: entries and the rank at 4h closes, `min(want, held)` so a held name is never topped up while booking is on, the 25% drift band on everything but a deliberate skim, and the ladder checked every hour.
+With the ladder and the band switched off it reconciles to `gates.concentration.net_daily` at **0.008pp of holdout median** with a daily-return correlation of 0.99998.
+
+Three windows: **2022 (pre)**, which no positioning signal had ever been scored on and which contains LUNA and FTX; fit 2023-24; holdout 2025 to 2026-09-19.
+
+### Result: nothing passes. No trading or booking rule changes.
+
+Median 14-day return and P(>5%), deployed ladder on every arm:
+
+| arm | 2022 | 2023-24 | 2025-26 |
+|---|---|---|---|
+| **control** | **-0.78 / 0.263** | **+4.91 / 0.498** | **+3.42 / 0.433** |
+| X1 breakout needs rising OI | -1.83 / 0.159 | +3.24 / 0.456 | +3.01 / 0.435 |
+| X2 funding veto, as-of | -0.78 / 0.263 | +5.13 / 0.505 | +3.51 / 0.436 |
+| X3 top-trader vs retail tilt | -0.64 / 0.263 | +2.95 / 0.428 | +2.26 / 0.393 |
+| X4 negative-funding priority (post-hoc) | -1.47 / 0.271 | +4.89 / 0.496 | +2.26 / 0.425 |
+| M1 crowding gate, 0.5x | -0.23 / 0.289 | +4.30 / 0.481 | +3.46 / 0.438 |
+| M2 washout BTC sleeve | -1.07 / 0.271 | +5.01 / 0.501 | +3.32 / 0.438 |
+| M3 implied-below-realised gate | -0.56 / 0.266 | +4.91 / 0.498 | +3.51 / 0.433 |
+| M4 Coinbase discount gate | -0.50 / 0.260 | +5.02 / 0.503 | +2.84 / 0.425 |
+| M5 stablecoin contraction gate | -0.81 / 0.177 | +3.76 / 0.459 | +2.73 / 0.407 |
+| B1 book crowded winners | -0.70 / 0.280 | +4.50 / 0.485 | +2.47 / 0.391 |
+| B2 book on market crowding | -0.93 / 0.263 | +4.89 / 0.496 | +3.42 / 0.433 |
+
+The declared rule required improving median AND P(>5%) on all three windows. **No arm does.**
+
+**The nearest miss is M1**, the market crowding gate: better in 2022 (+0.55pp, P(>5%) 0.263 -> 0.289) and marginally better on holdout (+0.04pp), worse on fit (-0.61pp), and it beats its own run-length-preserving random-timing control by 0.7pp on holdout.
+It is recorded, not deployed. The gate fires 10.6% of the time and the per-window paired median delta is zero by construction for a rare gate, so the declared p-value test cannot distinguish it from nothing; a rule that needs a better test to pass is not one that passed.
+
+**X2 is the earlier funding null, re-run on the corrected data, and it is still a null.** Removing high-funding names is a small gain on fit and holdout and does nothing in 2022, where the veto never fires.
+
+**B1 and B2 are the booking arms, and booking on positioning is harmful or inert.** B1 costs 0.95pp of holdout median and 0.042 of P(>5%); B2 fires 34 times in nearly five years.
+
+### The one robust observation, and why it is not a rule
+
+The X2 nonsense control inverted the veto: remove the LOWEST-funding candidates instead.
+It cost **1.5 to 2.0pp in 2022, 0.3 to 1.4pp in 2023-24 and 2.2 to 3.7pp in 2025-26**, at each of three removal fractions (6.3%, 10%, 20%), nine of nine cells, while removing the highest-funding candidates was neutral.
+Mean 3-day forward return by funding quintile among live candidates is flat and non-monotone in every window, so the effect is not in the average candidate; it is in the few runners a concentrated top-3 book lives on.
+
+X4 was declared to see whether that could be turned into a rule by PROMOTING negative-funding breakouts. It cannot: median falls 0.69pp in 2022 and 1.16pp on holdout, p=0.44, while P(>20%) rises slightly everywhere (0.026 -> 0.035, 0.196 -> 0.210, 0.160 -> 0.165).
+Random priority for the same share of candidates is far worse again (holdout median +0.46%), so negative funding carries information relative to noise, but **momentum already captures it**: the squeeze runners are worth keeping, not promoting.
+**The operational consequence is a prohibition, not a rule: never add a veto that can remove negative-funding breakouts.**
+
+### Diagnostics, for the record
+
+Cross-sectional IC at 24h and 3 days inside the PIT top 30, t from the non-overlapping IC series:
+
+- `funding_3d` is negative in all three windows at 3 days (-0.052, -0.073, -0.015) and significant only on fit (t -3.7). Same shape as `#alpha-flow-declaration`.
+- `top_vs_global_24h` is significant on holdout only (-0.042, t -2.1 at 3 days) and absent in 2022 (the top-trader position ratio starts later). X3 used it with the positive sign its mechanism predicted, and lost.
+- Nothing else reaches |t| of 2 on more than one window.
+
+Market series against forward equal-weight and BTC returns, non-overlapping samples:
+
+- **Coinbase premium** is positive against BTC's 3-day return in all three windows (t +1.1, +2.9, +1.3). It is the only series with the same sign everywhere. M4 used its extreme tail as a gate and lost; the linear relationship is too weak to size on.
+- **DVOL change and implied-minus-realised** are positive against 14-day equal-weight return on fit (t +2.5) and holdout (t +1.2 to +1.4) and not in 2022.
+- Aggregate open interest, aggregate funding and stablecoin supply have no stable sign.
+
+These are twelve features by three horizons by three windows. The number of cells above |t| of 2 is what chance would supply.
+
+### What was built and what changed in the bots
+
+- `data/vision.py`, `data/macro.py`: the history above, cached and point-in-time stamped.
+- `bot/alt_data.py`: the collector now logs each per-coin feature and each market input **in the gate's own definition**, with perp symbol mapping, so the competition fortnight produces a forward log comparable row for row with these tables. `trades_on_it` stays false.
+- The collector now runs on a **daemon thread**. A collection is about six HTTP calls per symbol at a 20-second timeout each, and it used to run inline in the cycle, so a slow venue could have stalled order management for minutes. `collect` now starts a worker when due and hands over each finished snapshot exactly once; an exception becomes a journalled `error` field, never a raise.
+- No change to any book's signal, rank, sizing or ladder.
+
+### Sources on the operator's list that were not tested, and why
+
+| source | reason |
+|---|---|
+| Order-book depth | no free spot history; the futures `bookDepth` archive starts 2023 and depth is not the binding constraint under a 5 bps spread gate |
+| Individual Binance trades | carry nothing the cached `taker_buy_quote` columns do not, and those are null at `#alpha-flow-declaration` |
+| Hyperliquid | funding and OI for the same names as Binance on a shorter history |
+| Dune, exchange flows, token unlocks, DEX | paid keys, or no point-in-time history for these 55 names |
+| Google Trends, Reddit, social | not point-in-time: Trends rescales its whole history on every query, so any backtest on it leaks |
+
+## live-validation-2026-09-23
+
+Operator: "test the bots and strats on live data." Every deployed book was run through the live code path on the live bar, then compared with what the vectorised rule holds on the same live bars.
+
+### The validation gate could not run
+
+`gates/live_validation.py` still loaded `config/bot_a_4h.yaml`, deleted in the 2026-09 rename, never applied the momentum rank so it had never validated a ranked book, and probed for a `RuntimeError` guard that `bot/intents.py` replaced. It now runs every deployed book through `universe.select`, closed bars, the channel state, `rank_and_select`, `target_weights` and `Executor.prepare`, and checks each against the backtest: channel cells, the momentum rank against `gates.concentration.rank_score`, gross, passive limits, the spread gate, venue quantity step, notional. Nine books, nine passes.
+
+**Its first rewrite produced a false alarm worth recording.** It reported Roostoo 18 bps off Binance at the median with 20 of 23 names materially off, which would halt books through the mirror kill switch. Three direct reads at the same moment gave **0.0 bps**. The gate had taken Roostoo quotes before validating nine books and compared them minutes later with fresh Binance prices. The harness, not the venue. It now re-reads the ticker immediately before the comparison.
+
+### The defect: live channel state advanced one bar at a time and never caught up
+
+`bot/strategy.evaluate` moved a persisted `held` flag forward using ONLY the latest bar. Any bar close the process did not see was lost for good: downtime, a crash and respawn, a book started mid-trend, a name that joined the universe after its breakout. The book then sat flat through a trend the backtest held, until the next fresh 20-bar high.
+
+`bot/verify.signal_parity` could not see this, because it replays every bar in order, which is exactly what the live bot does not do.
+
+Measured live on 2026-09-23 against the rule run over 300 live bars, dust excluded:
+
+| book | rule holds | live holds (excluding dust) | missing | held but not in the rule's set |
+|---|---|---|---|---|
+| donchian_4h | 19 | 16 | BTC, ETH, PEPE | none |
+| donchian_4h_cushion | 19 | 7 | 12 names | none |
+| donchian_1h | 6 | 2 | ADA, TRUMP, UNI, XRP | none |
+| momentum_top5_cushion | 5 | 4 | ARB, NEAR, PEPE, SUI | **ADA, WLD, XLM, about 20k dollars each** |
+| alpha_flow | 3 | 2 | SUI, UNI | **ADA, 33k dollars** |
+
+The last column is the same defect one step on: a ranked book that never saw most of the fired set ranked its top N from the few names it had, so it holds names the rule would have ranked out.
+
+**The forward A/B pairs were measuring start times, not treatments.** `donchian_4h_cushion` held 7 names against its control's 16 because it was started later, not because of its cushion.
+
+**Economically, over a fortnight, it is noise.** Scored on 14-day windows, a book that starts flat and enters only on fresh breakouts against one that starts holding what the rule holds: median delta **0.00pp** on fit and holdout for both `donchian_4h` and `momentum_top3_full`, P(>5%) within 0.011, P(>20%) within 0.010. Breakouts on 4h bars come often enough that a flat book catches up within a day or two. So this is a fidelity defect that corrupts forward evidence and restart behaviour, not a return lever, and no trial is added.
+
+### The fix
+
+`bot/strategy.replay_book` replays the backtest's own `signals.donchian.position` over the fetched matrix to get the state at the previous bar, then applies `evaluate` to the latest bar so `action` still reads enter, exit, hold or flat. `Bot.cycle` fetches `REPLAY_BARS = 150` bars and uses it at every bar close.
+
+The window was measured, not chosen: replaying from flat over N bars against the full-history state at 400 random timestamps, 2023 onward, gave **zero mismatches at every N from 60 to 300 on 4h** (53,312 cells) and one mismatch in 54,079 at N=60 on 1h, zero from 100. 150 carries margin.
+
+Any disagreement between the replayed and the persisted state at a bar close, other than a same-bar entry or exit, is journalled as `channel_state_resynced`, so a resync is visible rather than silent.
+
+After the fix the gate's parity check covers 2,967 cells per 4h book with 0 mismatches, and every 4h book fires the same 19 names.
+
+**Consequence at the next bar close after the restart:** books that were missing names buy them at that close, at a price later than the backtest's entry. That is the unavoidable cost of catching up, it is paid once, and it is the same cost a fresh book pays at the competition start.
+
+### Smaller findings
+
+- **Dust.** Sells rounded down to the venue step leave residues such as 0.0099999 AVAX, about 0.11 dollars, counted as holdings. Below `min_notional` so never traded; a comparison of holdings must exclude them.
+- **RTK's `grep` wrapper returns "0 matches" for an alternation pattern** (`a|b`) that plain grep finds. Use `rtk proxy grep -E` when searching for more than one name.
+
+### The biggest gap: the ranked books' edge sits in names live execution refuses
+
+Found in the same live test. `PEPEUSDT` was refused 75 times across the fleet with `spread_exceeds_limit`. Its Roostoo tick is **20.6 bps**, and Roostoo quotes one tick wide, so its spread can never be under the 5 bps execution gate. The rule fires on it, the rank selects it, the order is refused, and the slot sits in cash until the next bar close, when it happens again.
+
+`#spread` says spread was meant to be a **universe filter** at 5 bps. Neither the backtest universe (`gates.concentration.context`) nor the live one (`bot.universe.select`) applies it. Only execution does. So every gate in this repo scored these names at fee-only cost, and no live book can hold them.
+
+The momentum rank concentrates on exactly these names. The filter removes only **0.2% to 0.4% of selected name-bars**, yet in the holdout it removes 23 distinct names while selected, including PEPE, BONK, FLOKI, SHIB, 1000CHEEMS, TRUMP, WIF, TAO, ARB, NEAR and ADA at their low-price moments.
+
+Median 14-day return and P(>5%), vectorised, current tick size in bps at each bar's price:
+
+| book | assumed by every gate (fee only) | + half tick per side | + full tick per side | + 2 ticks per side | tick-filtered universe | **live today** (refused slot idles) |
+|---|---|---|---|---|---|---|
+| momentum_top3_full, holdout | 3.12 / 0.467 | 2.96 / 0.464 | 2.74 / 0.453 | 2.35 / 0.441 | 1.41 / 0.428 | **1.20 / 0.420** |
+| momentum_top3_full, fit | 4.10 / 0.476 | 3.92 / 0.474 | 3.77 / 0.470 | 3.42 / 0.466 | 4.08 / 0.477 | 4.17 / 0.477 |
+| momentum_top5_4h, holdout | 1.28 / 0.370 | 1.16 / 0.366 | 0.98 / 0.366 | 0.74 / 0.358 | 0.75 / 0.347 | **0.69 / 0.344** |
+| donchian_4h, holdout | 0.27 / 0.210 | 0.26 / 0.208 | 0.24 / 0.208 | 0.21 / 0.205 | 0.04 / 0.195 | **0.02 / 0.195** |
+
+Three readings.
+
+1. **The live ranked book is worth about 1.2% holdout median, not 3.1%.** Nearly two thirds of the headline number was earned in names the bot is not allowed to buy.
+2. **Paying their spread is better than excluding them.** Even at two full ticks per side, which overstates the cost of a passive order at the touch, the book keeps 2.35% against 1.41% filtered. The fit window agrees on the direction for the paid-spread arms and shows no loss from filtering, so the effect is concentrated in 2025-26, when the meme names led.
+3. **Which way to fix it is an execution-rule decision and is left to the operator.** The candidates: accept a one-tick quote regardless of its size in bps, since one tick is the venue's floor and cannot be an abnormal spread, and keep refusing anything wider than the larger of 5 bps and one tick; or apply the tick filter to the universe, so live matches a lower backtest exactly. The first also raises a fill question the backtest cannot answer: a buy on a one-tick-wide book cannot improve inside the touch, so it posts at the bid and fills only when the market comes to it, and an unfilled order is cancelled after 15 minutes and not retried until the next bar close.
+
+Reproduce with `python3 -m gates.tick_universe`; `tick_bps = PairSpec.tick / close` at each bar, using the venue's current tick.
+
+**Operator decision, 2026-09-23: trade them.** `Executor.prepare` now always accepts a one-tick quote, and still refuses any quote wider than both `max_spread_bps` and one tick, so an abnormal widening is refused exactly as before (ARB at two ticks, 9 bps, still is). A plan accepted only because it is one tick wide carries `wide_tick: true`.
+A dry-run fill on such a plan is charged at the FAR side of the quote, not at the bot's own passive price, because a paper fill at the touch on a 20 bps tick would book the whole tick as profit on every round trip. That makes the paper books conservative relative to the passive order the venue will actually see, which matches the backtest's paid-spread arms.
+`tests/test_bot_safety.py` covers the one-tick acceptance, the two-tick refusal, a tight name never being flagged, and the far-side paper fill.
+**Still unmeasured, and only measurable with Roostoo keys:** how often a passive buy at the bid of a one-tick book fills inside the 15-minute timeout. An unfilled entry is not retried until the next bar close.
+
+### The collector had been running once per 4h, not every 15 minutes
+
+Found by checking the running process after restart: zero `alt_data` snapshots. `bot/alpha_flow_run.py` collected inside `compute_target`, and since booking was enabled on 2026-09-22 `Bot.cycle` calls `compute_target` only at a bar close. The collector declared at 900 seconds therefore ran once per 4h bar, and nothing in any log said so. Collection now happens in a `cycle` override after the base cycle, every cycle, throttled and threaded by `bot/alt_data.Collector`. The fourth instance of `CLAUDE.md`'s "a flag that changes WHEN a function is called" in this repo.
+
+## lowtf-paper-bots
+
+Operator instruction, 2026-09-23: "reset all bots and add lower timeframe paper bots."
+Five paper bots added: `donchian_30m`, `donchian_15m`, `momentum_top3_1h`, `momentum_top3_30m`, `momentum_top3_15m`.
+Each is the deployed rule with identical parameters **in bars** (20/10 channel, 40-bar momentum, top 3, full deployment, the 3% x 15% ladder), so it is the same rule on a faster clock and nothing was fitted.
+
+They were measured before launch on the same basis as every other book since `#live-validation-2026-09-23`: 5 bps fee plus each coin's own tick per side, PIT top-30 universe carried to the fast clock at bar close. `gates/lowtf_paper_bots.py`, `results/lowtf_paper_bots.json`. Holdout median 14-day return, fit in brackets:
+
+| bot | median | P(>5%) | worst | turnover per 14d | fee + tick drag per 14d |
+|---|---|---|---|---|---|
+| donchian_1h (existing) | +0.17 (+0.42) | 0.205 | -13.9 | 13.1x | 0.86% |
+| donchian_30m | -0.45 (-0.84) | 0.168 | -12.4 | 26.0x | 1.72% |
+| donchian_15m | -2.42 (-2.46) | 0.096 | -16.7 | 51.3x | 3.39% |
+| momentum_top3_1h | -5.04 (+0.40) | 0.301 | -38.9 | 93.5x | 6.28% |
+| momentum_top3_30m | -9.94 (-6.26) | 0.290 | -38.1 | 188.1x | 12.62% |
+| momentum_top3_15m | **-21.32** (-21.37) | 0.112 | -50.4 | 384.1x | **25.85%** |
+
+**All five fail, and the ranked ones fail by cost.** A 40-bar momentum rank re-sorts on every bar, so turnover doubles each time the clock halves, and at 15m the book pays a quarter of its capital every fortnight. The live bots' 25% drift band will suppress some of that churn, which the backtest does not model, so the live figures may come in less bad; they will not come in positive on this evidence. This is the repo's standing result that faster is worse (`CLAUDE.md`, "Faster is not better here"), now measured on the deployed books.
+
+They run on paper only, as forward evidence, on explicit operator instruction. Never candidates, never promoted, nobody's control. Each config carries its backtest verdict in `meta` and a falsification line. Five trials added.
+
+The 30m and 15m numbers use the 55-name 15m cache, which covers every Roostoo-tradable name that has been in the top 30; the 1h numbers use the full 264-name panel.
+
+### Found on the first fresh start: a full-deployment book could not afford its last buy
+
+Minutes after the reset, `momentum_top3_15m` placed three buys of about 33,330 dollars each and held two. The third, WLD, cost 33,326 plus the 5 bps fee against 33,311 of cash left. `apply_dry_fill` refused it silently, while the order journal had already recorded it as a `dry_run` fill. The book believed it had bought a name it did not hold, the blotter reconstructs from that journal, and a real venue would have rejected the same order for insufficient balance. It is also why the pre-reset `momentum_top3_full` sat at 0.68 gross on two names.
+
+`Bot.cycle` now sends sells before buys and passes every buy through `Bot.fit_to_cash`, which shrinks it so notional plus fee fits the cash available, or skips it as `insufficient_cash` if what is left is under the venue minimum. A paper fill that is still refused is journalled as `dry_fill_refused` instead of vanishing. Full deployment therefore runs at about 0.9995 gross instead of 1.0, which no gate can distinguish.
+
+**Open, live venues only:** on a real venue a sell is a resting limit order, so its cash arrives only when it fills. A rotation that sells A and buys B will buy less B than intended, and because a held name is never topped up while booking is on, B stays underweight until it exits. Dry run cannot show this; it needs Roostoo keys to measure.
+
+The fleet was reset a second time at the same moment, on this code, so every book's record starts clean. The first reset's state is archived beside the pre-reset state.

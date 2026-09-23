@@ -1,0 +1,107 @@
+meta:
+  name: scanner_v1
+  frozen: true
+  declared_utc: '2026-09-20'
+  declared_before_any_backtest: true
+  mode: publishes_state_only_never_trades
+  justification_ref: DECISIONS.md#scanner-declaration
+
+premise:
+  operator_observation: |
+    Overall crypto is down while many individual coins are up. Confirmed on the
+    live scan of 2026-09-20: 53 of 66 venue names (80.3%) are above their entry
+    channel while the three live books are down 1.2% to 2.7%. The problem is
+    not direction, it is that the book holds one and a half independent bets
+    (measured 1.28-1.49 effective bets) in a universe showing wide dispersion.
+
+  what_this_process_is: |
+    A scanner that classifies EVERY name in the universe independently and
+    publishes that state to a file. It places no orders and holds no capital.
+    Executor bots read the file. Separating the two means one scan serves every
+    executor, and a scanner defect cannot silently become a trade.
+
+  what_this_process_is_not: |
+    It is not a market-regime timer. DECISIONS.md#gate8-regime-outcome measured
+    the strategy profitable in ALL THREE market regimes - bull +307%/yr, bear
+    +20.4% at Sharpe 0.71, range +23.7% - so a market-wide gate could only
+    remove exposure from periods that already earn. Per-COIN state is a
+    different object and is what is published here.
+
+  honesty_requirement: |
+    Every consumer defaults to `always_on`, which must reproduce the ungated
+    book bit-for-bit. Any gate is then measurable against its own always_on
+    control rather than against a baseline that differs in other ways. This is
+    the discipline that caught cluster_cap at DECISIONS.md#correlation-cap-outcome,
+    where a holdout-only reading would have adopted a rule that reverses.
+
+per_coin_state:
+  trend_up: held or price above the 20-bar entry channel
+  at_risk: held but within at_risk_pct of the exit floor
+  pending: flat and within pending_pct of the entry level
+  flat: everything else
+  cushion_pct: (close / exit_floor - 1) * 100, the room before the exit fires
+
+universe_state:
+  pct_long: share of scanned names in trend_up
+  dispersion: |
+    Cross-sectional standard deviation of trailing k-bar returns across the
+    universe. High dispersion means names are moving independently and the book
+    genuinely holds more bets; low dispersion means one bet wearing many
+    tickers, which is what produced the 2026-09-20 drawdown at a measured 0.833
+    pairwise correlation.
+  median_cushion_pct: median cushion across held names
+  breadth_trend: pct_long now minus pct_long one scan-window ago
+
+publishes:
+  path: live/scanner/state.json
+  atomic: write to a temp file and rename, so a reader never sees a half file
+  staleness_contract: |
+    Consumers must treat the file as unusable beyond max_age_s and fall back to
+    always_on. A scanner that dies must degrade to the current behaviour, never
+    to no trading and never to stale state.
+  max_age_s: 900
+
+enrichment:
+  declared_utc: '2026-09-20'
+  rationale: |
+    Three datasets are added because each closes a limitation this repo has
+    MEASURED, not because they are available.
+
+    futures positioning (funding, open interest, taker and top-account ratios)
+      closes DECISIONS.md#correlation-cap-outcome, where no reweighting raised
+      effective bets past 1.32 because price covariance had no structure left.
+      Crowding is a different observable and that null does not refute it.
+
+    book imbalance (L2 depth)
+      closes DECISIONS.md#flow-scalp-outcome, where a real divergence effect
+      (fit +9.26 bps, holdout +11.42, dose-responding to the flow threshold)
+      failed because bar-aggregated taker share says nothing about RESTING
+      liquidity.
+
+    trade profile (aggTrades)
+      closes the other half of the same limitation. Measured on BTCUSDT on
+      2026-09-20, the top 5% of trades carried 76.6% of notional, so a bar
+      taker ratio cannot distinguish one hand from a crowd.
+
+  limits_stated_before_use: |
+    openInterestHist and the ratio endpoints serve only ~30 days, so anything
+    built on them is validatable on a month and not on years.
+    L2 depth has NO history at all - it is a snapshot endpoint - so book
+    imbalance can only ever be validated forward. That is why these are
+    PUBLISHED by the scanner and not fed to a sweep: a backtest of them would
+    be a backtest of data that does not exist.
+
+  enrich_top_n: 12
+  enrich_every_n_scans: 3
+  never_gates_a_trade: |
+    Nothing here reaches bot/regime.py. The gate remains the per-coin cushion
+    rule alone. These fields are observability until a forward record exists.
+
+scan:
+  interval: 4h
+  entry_bars: 20
+  exit_bars: 10
+  at_risk_pct: 2.0
+  pending_pct: 3.0
+  dispersion_bars: 6
+  poll_seconds: 300

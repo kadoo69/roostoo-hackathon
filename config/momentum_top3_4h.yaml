@@ -1,0 +1,71 @@
+meta:
+  name: momentum_top3_4h
+  frozen: true
+  declared_utc: '2026-09-20'
+  description: Donchian 20/10 on 4h, momentum-ranked TOP 3 of the top-30 pool at 1/3
+    each.
+  purpose: Built for Screen 2, not for Screen 3. preregistration.yaml sets the gate
+    as raw_return_rank_top20_per_region, so the book must OUT-RETURN 80% of the field
+    rather than merely finish positive.
+  evidence_ref: DECISIONS.md#concentration-outcome
+  measured_basis: 'N=3 is already in results/concentration.json and already counted
+    in the trial ledger, so this bot adds no trials. Holdout: Screen 3 +3.098 vs +2.957
+    at N=5, P(clearing the 5% return proxy) 0.404 vs 0.363, maximum drawdown -42.4%
+    vs -33.0%.'
+  the_tradeoff_stated_plainly: This is the most concentrated book in the repo and
+    carries the deepest drawdown of any configuration ever measured here. It buys
+    a 4.1 point higher qualification probability with 9.4 points more drawdown. That
+    is the right trade ONLY if the rank gate is what binds. If the composite binds
+    instead, donchian_4h is the better book.
+  caution: N=3 was NOT chosen by the fit window - the fit window scores 4.407 at N=3
+    against 4.380 at N=20, a spread of 0.027 that DECISIONS.md#sizing-sweep-outcome
+    calls noise. It is chosen on a stated objective (qualification), not on a backtest
+    ranking.
+strategy:
+  interval: 4h
+  entry_bars: 20
+  exit_bars: 10
+  top_n_pool: 30
+  ranking_rule: momentum
+  n_positions: 3
+  momentum_bars: 40
+  weight_divisor: 20
+  max_gross: 1.0
+  quote: USDT
+  universe_refresh_hours: 24
+  max_spread_bps: 5.0
+  min_history_bars: 30
+  regime_gate: always_on
+execution:
+  order_type: LIMIT
+  limit_offset_bps: 1.0
+  limit_timeout_s: 900
+  poll_seconds: 60
+risk:
+  max_drawdown: 0.25
+  max_error_rate: 0.25
+  max_ticker_age_s: 120
+  mirror_max_deviation_bps: 50.0
+  derisk_start_utc: '2026-10-15T00:00:00+00:00'
+  derisk_end_utc: '2026-10-17T20:00:00+00:00'
+booking:
+  enabled: true
+  step_pct: 0.03
+  skim_fraction: 0.15
+  recycle: false
+  min_skim_notional: 10.0
+  added_utc: '2026-09-22'
+  added_by: operator instruction to book profits on every bot, controls included
+  parameters_ref: DECISIONS.md#alpha-flow-declaration
+  parameters_basis: '3 percent step with a 15 percent slice. Tightening the step alone is the
+    only statistically significant effect in the ladder grid and it is harmful - holdout
+    P(>20%) falls 0.168 to 0.070 at a 1 percent step, p=0.004. Cutting the slice at the same
+    time removes that cost. Step and slice move together or not at all.'
+  honest_status: 'Not a validated improvement. The holdout return gain is p=0.14 and the
+    drawdown gain is reproduced by a random-timing nonsense control, so it is exposure
+    reduction rather than timing.'
+  control_status_lost: 'This book was the clean control for momentum_top3_full. The operator was shown that
+  enabling booking here ends that comparison and instructed to proceed on 2026-09-22.
+  From this timestamp the pair measures the cushion or sizing treatment ON TOP OF
+  booking, not against a no-booking baseline, and no reading may be carried across
+  the boundary. DECISIONS.md#booking-on-every-bot'

@@ -6,8 +6,12 @@ import json
 from collections import deque
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import urlsplit
+from urllib.parse import parse_qs, urlsplit
 
+import pandas as pd
+import yaml
+
+from bot.report import from_equity
 from bot.settings import ROOT
 
 
@@ -42,21 +46,48 @@ def accounting(book: dict) -> dict:
     positions = []
     for symbol in sorted(set(lots) | set(book.get("holdings", {}))):
         queue = lots.get(symbol, [])
-        qty = sum(l[0] for l in queue)
+        qty = sum(lot[0] for lot in queue)
         held = book.get("holdings", {}).get(symbol, 0)
         if abs(qty - held) > max(1e-8, held * 1e-9):
             raise ValueError(f"inventory_mismatch:{symbol}")
         if qty > 1e-12:
-            basis = sum(l[0] * (l[1] + l[2]) for l in queue)
+            basis = sum(lot[0] * (lot[1] + lot[2]) for lot in queue)
             positions.append({"symbol": symbol, "quantity": held,
-                              "average_entry": sum(l[0] * l[1] for l in queue) / qty,
+                              "average_entry": sum(lot[0] * lot[1] for lot in queue) / qty,
                               "cost_basis": basis})
     return {"realized": realized, "positions": positions, "closed": closed[-100:][::-1]}
+
+
+def trace_records(directory: Path, name: str, stream: str, limit: int = 100) -> list[dict]:
+    """Read a bounded tail from one candidate's append-only trace stream."""
+    if stream not in {"decisions", "orders", "fills"}:
+        raise ValueError("invalid_trace_stream")
+    records = []
+    for path in sorted((directory / name).glob(f"{stream}-*.jsonl"))[-2:]:
+        for line in path.read_text().splitlines():
+            try:
+                records.append(json.loads(line))
+            except json.JSONDecodeError:
+                continue
+    return records[-limit:][::-1]
+
+
+def bot_logs(directory: Path, name: str) -> dict:
+    state = json.loads((directory / "state.json").read_text())
+    if name not in state["books"]:
+        raise KeyError("unknown_bot")
+    return {"name": name,
+            "decisions": trace_records(directory, name, "decisions"),
+            "orders": trace_records(directory, name, "orders"),
+            "fills": trace_records(directory, name, "fills")}
 
 
 def snapshot(directory: Path, now: dt.datetime | None = None) -> dict:
     now = now or dt.datetime.now(dt.timezone.utc)
     state = json.loads((directory / "state.json").read_text())
+    declaration = ROOT / "config" / f"{directory.name}.yaml"
+    config = yaml.safe_load(declaration.read_text()) if declaration.exists() else {}
+    strategies = {candidate["name"]: candidate for candidate in config.get("candidates", [])}
     last = state.get("last_cycle")
     age = max(0, (now - dt.datetime.fromisoformat(last)).total_seconds()) if last else None
     errors = []
@@ -74,34 +105,74 @@ def snapshot(directory: Path, now: dt.datetime | None = None) -> dict:
         fills = [e for e in book.get("events", []) if e.get("event") == "fill"]
         initial = book["cash"] - sum((e["quantity"] * e["price"] * (1 if e["side"] == "SELL" else -1) - e.get("fee", 0)) for e in fills)
         ledger = accounting(book)
+        pairs = state.get("venue_pairs", {})
+        for event in book.get("events", []):
+            if event.get("pair"):
+                pairs.setdefault(event["symbol"], event["pair"])
+        for position in ledger["positions"]:
+            symbol = position["symbol"]
+            mark = book.get("marks", {}).get(symbol)
+            value = mark * position["quantity"] if mark is not None else None
+            floor = book.get("exits", {}).get(symbol)
+            position.update({"pair": pairs.get(symbol, "Unverified"), "mark": mark,
+                             "value": value, "weight": value / equity if value is not None else None,
+                             "unrealized": value - position["cost_basis"] if value is not None else None,
+                             "floor": floor, "cushion": mark / floor - 1 if mark and floor else None,
+                             "target": book.get("target", {}).get(symbol, 0)})
+        pending = [{**event, "pair": pairs.get(event["symbol"], event.get("pair", "Unverified"))} for event in book["pending"]]
+        values = [p["value"] for p in ledger["positions"] if p["value"] is not None]
+        effective = sum(values) ** 2 / sum(v * v for v in values) if values else 0
+        performance = None
+        complete_days = 0
+        if history:
+            series_daily = pd.Series([p["equity"] for p in history], index=pd.to_datetime([p["time"] for p in history], utc=True)).resample("1d").last().iloc[1:-1]
+            complete_days = int(series_daily.notna().sum())
+            if complete_days >= 28 and not series_daily.isna().any():
+                performance = from_equity(series_daily)
         stride = max(1, len(history) // 500)
         series = history[::stride]
         if history and series[-1] != history[-1]:
             series.append(history[-1])
+        trace = {"path": str(directory / name), "last_decision": None,
+                 "decision_records": 0, "event_records": 0, **book.get("trace", {})}
         bots.append({"name": name, "equity": equity, "initial": initial,
                      "pnl": equity - initial, "return": equity / initial - 1 if initial else 0,
                      "cash": book["cash"], "gross": latest.get("gross", 0),
                      "drawdown": equity / book["peak"] - 1,
                      "fees": book["fees"], "halted": book["halted"], "fills": len(fills),
-                     "turnover": book["turnover"], "pending": book["pending"],
+                     "turnover": book["turnover"], "pending": pending,
+                     "policy": book.get("policy", {}), "strategy": strategies.get(name, {}),
+                     "target": book.get("target", {}),
+                     "excluded": [{"pair": pairs.get(s, "Unverified"), **v} for s, v in book.get("excluded", {}).items()],
+                     "effective_positions": effective, "performance": performance, "complete_days": complete_days,
+                     "interval": book.get("interval", ""), "next_bar": book.get("next_bar"),
+                     "exit_rule": book.get("exit_rule", "Completed-bar channel exit"),
+                     "trace": trace,
                      "series": series, "events": book.get("events", [])[-300:][::-1],
                      "unrealized": equity - initial - ledger["realized"], **ledger})
+    research = ROOT / "results/allocation_review.json"
+    allocation = json.loads(research.read_text()) if research.exists() else None
+    exits_path = ROOT / "results/exit_review.json"
+    exits = json.loads(exits_path.read_text()) if exits_path.exists() else None
     return {"generated": now.isoformat(), "asof": last, "age_seconds": age,
             "stale": age is None or age > 180, "started": state["started"],
             "sha": state["sha"], "universe": state.get("universe", {}).get("selected", []),
             "ranking_count": state.get("universe", {}).get("ranking_count", 0),
             "mirror_bps": state.get("mirror_worst_bps"), "errors": errors[-10:][::-1],
-            "bots": bots}
+            "bots": bots, "venue_pairs": state.get("venue_pairs", {}),
+            "venue_verified_at": state.get("venue_verified_at"), "allocation_research": allocation,
+            "exit_research": exits, "experiment": directory.name}
 
 
 class Handler(BaseHTTPRequestHandler):
-    directory = ROOT / "live/paper_lab_v1"
+    directory = ROOT / "live/paper_lab_v9"
 
     def log_message(self, *args):
         return
 
     def do_GET(self):
-        path = urlsplit(self.path).path
+        parsed = urlsplit(self.path)
+        path = parsed.path
         status = 200
         if path == "/api/state":
             kind = "application/json"
@@ -111,9 +182,18 @@ class Handler(BaseHTTPRequestHandler):
             except (OSError, ValueError, KeyError, TypeError) as exc:
                 status = 503
                 body = json.dumps({"error": f"Paper snapshot unavailable: {type(exc).__name__}"}).encode()
+        elif path == "/api/bot":
+            kind = "application/json"
+            try:
+                name = parse_qs(parsed.query).get("name", [""])[0]
+                payload = bot_logs(self.directory, name)
+                body = json.dumps(payload, allow_nan=False).encode()
+            except (OSError, ValueError, KeyError, TypeError) as exc:
+                status = 404
+                body = json.dumps({"error": f"Bot logs unavailable: {type(exc).__name__}"}).encode()
         elif path == "/":
             kind = "text/html; charset=utf-8"
-            body = Path(__file__).with_suffix(".html").read_bytes()
+            body = Path(__file__).with_name("terminal.html").read_bytes()
         else:
             status, kind, body = 404, "text/plain", b"Not found"
         self.send_response(status)

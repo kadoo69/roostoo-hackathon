@@ -20,6 +20,11 @@ candidates:
   - {name: flow_4h, interval: 4h, family: flow_entry}
   - {name: btc_hold, interval: 4h, family: benchmark}
   - {name: ranked5_4h, interval: 4h, family: ranked}
+  - name: ranked5_hourlyexit
+    interval: 4h
+    family: ranked
+    exit_interval: 1h
+    selection_basis: Assessment-informed hypothesis. Earlier fit window deteriorates; forward comparison only, no promotion.
   - name: balanced_12_equal
     interval: 4h
     family: channel

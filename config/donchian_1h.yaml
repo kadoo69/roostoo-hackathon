@@ -1,0 +1,51 @@
+meta:
+  name: donchian_1h
+  frozen: true
+  declared_utc: '2026-09-19'
+  description: Donchian channel breakout on 1h bars, intraday, long only, top-30 liquidity
+    pool
+  evidence_ref: DECISIONS.md#donchian-lowtf-outcome
+  gate4_ref: DECISIONS.md#gate4-rerun-outcome
+  gate4_verdict: FAIL at N=351, DSR 0.8687 against 0.95 threshold
+strategy:
+  interval: 1h
+  entry_bars: 20
+  exit_bars: 10
+  top_n_pool: 30
+  weight_divisor: 20
+  max_gross: 1.0
+  quote: USDT
+  universe_refresh_hours: 24
+  max_spread_bps: 5.0
+  min_history_bars: 30
+execution:
+  order_type: LIMIT
+  limit_offset_bps: 1.0
+  limit_timeout_s: 300
+  poll_seconds: 30
+risk:
+  max_drawdown: 0.25
+  max_error_rate: 0.25
+  max_ticker_age_s: 120
+  mirror_max_deviation_bps: 50.0
+  derisk_start_utc: '2026-10-15T00:00:00+00:00'
+  derisk_end_utc: '2026-10-17T20:00:00+00:00'
+booking:
+  enabled: true
+  step_pct: 0.03
+  skim_fraction: 0.15
+  recycle: false
+  min_skim_notional: 10.0
+  added_utc: '2026-09-22'
+  added_by: operator request to book profits across the fleet
+  parameters_ref: DECISIONS.md#alpha-flow-declaration
+  parameters_basis: '3 percent step with a 15 percent slice. Tightening the step ALONE is the
+    only statistically significant effect in the ladder grid and it is harmful - holdout
+    P(>20%) falls 0.168 to 0.070 at a 1 percent step, p=0.004. Cutting the slice at the same
+    time removes that cost: 3x15 books 52 percent more often than 5x40 with a right-tail delta
+    of -0.008 at p=0.73. Step and slice move together or not at all.'
+  honest_status: 'Not a validated improvement. The holdout return gain is p=0.14 and the
+    drawdown gain is reproduced by a random-timing nonsense control, so it is exposure
+    reduction rather than timing. Deployed on operator instruction as forward evidence.'
+  confound_warning: 'donchian_1h is a comparison book, not a candidate, and is nobody''s control, so booking
+  here confounds nothing.'

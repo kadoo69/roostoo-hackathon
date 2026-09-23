@@ -1,0 +1,128 @@
+meta:
+  declared_utc: '2026-09-20'
+  declared_before_any_backtest: true
+  requested_by: operator
+  purpose: >-
+    scalp price-versus-order-flow divergence, using aggressor imbalance and
+    trade intensity rather than price alone
+  justification_ref: DECISIONS.md#flow-scalp-declaration
+cost_of_this_sweep:
+  ledger_before: 584
+  configs_added: 72
+  all_counted_as_trials: true
+
+premise:
+  operator_statement: |
+    Scalp fast profits from price discrepancies, using volume and order flow.
+
+  why_this_is_not_refuted_by_the_previous_null: |
+    DECISIONS.md#scalp-meanrev-outcome killed 54 configurations of a PRICE-ONLY
+    mean-reversion scalper. Every one of them decided from the close alone. It
+    established that the median 5m bar (8.8 bps) does not pay a 10 bps round
+    trip and that extremity of price deviation does not predict reversion.
+    It did NOT test whether the deviation is CONFIRMED by flow, which is a
+    different question with a different mechanism. That null stands and is not
+    being re-litigated; this is a separate hypothesis on the same bars.
+
+  mechanism: |
+    Binance klines carry taker_buy_quote, so signed aggressor volume is directly
+    observable: ofi = 2 * taker_buy_quote / quote_volume - 1, in [-1, +1]. This
+    is the sign of who crossed the spread, which is the quantity Cont, Kukanov
+    and Stoikov show carries short-horizon price information.
+    The hypothesis is DIVERGENCE, not level. A price fall on net BUY aggression
+    is a fall no one is actually selling into - inventory or a single sweep
+    moved the print, not information - and should revert. A price fall on net
+    SELL aggression is informed and should continue. The same rule with the
+    sign flipped is the continuation arm, and both are tested, because if only
+    one works the other is the falsification.
+
+  binding_constraint: |
+    Unchanged and still arithmetic. Median absolute bar return is 8.823 bps at
+    5m, 15.537 at 15m and 21.447 at 30m against a 10 bps LIMIT round trip.
+    Flow can only help by SELECTING better bars, never by making a bar bigger.
+    The pre-registered success criterion is therefore stated in per-trade terms
+    below, not in Sharpe, because a Sharpe computed on a book that loses 2 bps
+    per trade is arithmetic noise around a negative number.
+
+  pre_registered_success_criterion: |
+    A configuration is interesting ONLY if its holdout mean gross return per
+    trade exceeds 20 bps, which is twice the LIMIT round trip and covers the
+    MARKET round trip with margin. Anything below that is recorded as a null
+    however good its Sharpe looks. This threshold is fixed here, before any
+    result is seen, because the previous sweep showed that at this horizon net
+    Sharpe is dominated by turnover and ranks configurations by how much they
+    trade rather than by whether they earn.
+
+  failure_mode_to_watch: |
+    taker_buy_quote is aggregated per bar, so it cannot distinguish one large
+    sweep from many small buys, and it says nothing about resting liquidity.
+    A bar-level flow imbalance is a coarse proxy for true OFI, which needs book
+    updates. If the divergence arm shows nothing and the continuation arm shows
+    nothing, the honest reading is that 5m aggregation has destroyed the
+    information, not that order flow is uninformative.
+
+  null_hypothesis: |
+    Neither the divergence nor the continuation arm produces a holdout mean
+    gross return per trade above 20 bps at any grid point.
+
+universe:
+  symbols: [BTCUSDT, ETHUSDT, SOLUSDT, XRPUSDT, DOGEUSDT]
+  basis: the five names with cached 5m history; majors are also where bar-level
+    aggressor data is least polluted by thin-book artifacts.
+
+features:
+  ofi: 2 * taker_buy_quote / quote_volume - 1, computed per bar
+  ofi_z: z-score of ofi over lookback_bars, trailing, no centring on the future
+  ret_k: close / close.shift(k) - 1 over the same lookback horizon k
+  vol_z: z-score of quote_volume over lookback_bars
+  trade_intensity: z-score of trades count over lookback_bars
+  all_shifted: |
+    Every feature is computed on bars up to and including the signal bar, and
+    the entry fills at the NEXT bar's open, exactly as the previous sweep did.
+
+arms:
+  divergence: |
+    Long when price fell but aggressors were buying.
+    ret_k <= -ret_thresh AND ofi_z >= +ofi_thresh
+  continuation: |
+    Long when price rose and aggressors were buying - the sign-flipped control.
+    ret_k >= +ret_thresh AND ofi_z >= +ofi_thresh
+
+filters:
+  require_volume: vol_z >= vol_min, so the bar carries enough flow for the
+    imbalance to mean anything. vol_min is swept including 0, which disables it.
+
+exits:
+  identical_to_the_previous_sweep: |
+    Volatility-scaled bracket on ATR, intrabar high/low, stop taken when a
+    single bar touches both, plus a time stop. Reusing the audited simulator
+    rather than writing a second one is deliberate.
+  tp_atr: 1.5
+  sl_atr: 1.0
+  max_hold_bars: 12
+
+grid:
+  interval: ['5m', '15m', '30m']
+  arm: ['divergence', 'continuation']
+  ret_thresh: [0.002, 0.004]
+  ofi_thresh: [1.0, 1.5, 2.0]
+  vol_min: [0.0, 1.0]
+  lookback_bars: 48
+  atr_bars: 48
+  max_concurrent: 5
+  weight_per_position: 0.2
+  configs: 72
+
+method:
+  fit_window: ['2023-01-01', '2025-01-01']
+  holdout_window: ['2025-01-01', '2026-09-19']
+  fee_bps: [5, 10]
+  reported: [mean_gross_bps, median_gross_bps, win_rate, trades_per_day,
+             net_sharpe, gross_sharpe, screen3, max_drawdown, skew,
+             pct_target, pct_stop, mean_bars_held]
+  selection_rule: |
+    None. The 20 bps per-trade floor is a gate, not a ranking. A configuration
+    that clears it on the holdout must also clear it on the fit window before it
+    is called anything other than noise.
+  deployment_rule: |
+    No live bot without a separate forward paper period, regardless of result.

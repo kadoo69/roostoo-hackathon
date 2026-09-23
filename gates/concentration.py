@@ -40,14 +40,14 @@ def context(pool):
     return close, qv, sel, pos
 
 
-def rank_score(rule, close, qv, pos):
+def rank_score(rule, close, qv, pos, bars: int = 20):
     if rule == "liquidity":
         return qv.rolling(180).median().shift(1)
     if rule == "breakout":
         upper = close.rolling(20).max().shift(1)
         return (close / upper - 1.0)
     if rule == "momentum":
-        return close / close.shift(20) - 1.0
+        return close / close.shift(bars) - 1.0
     if rule == "lowvol":
         return -close.pct_change().rolling(20).std().shift(1)
     raise ValueError(rule)
@@ -83,7 +83,9 @@ def stats(dr):
     sh = float(dr.mean() / dr.std() * np.sqrt(365))
     so = float(dr.mean() * 365 / down) if down > 0 else 0.0
     cm = cagr / abs(dd) if dd < 0 else 0.0
-    cap = lambda v: float(np.clip(v, -5, 5))
+    def cap(v):
+        return float(np.clip(v, -5, 5))
+
     k = len(dr) - WINDOW + 1
     m = np.stack([dr.to_numpy()[i:i + WINDOW] for i in range(k)])
     r14 = np.cumprod(1.0 + m, axis=1)[:, -1] - 1.0

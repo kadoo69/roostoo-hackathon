@@ -17,6 +17,10 @@ class RoostooError(RuntimeError):
     pass
 
 
+class AmbiguousOrderError(RoostooError):
+    pass
+
+
 @dataclass(frozen=True)
 class PairSpec:
     pair: str
@@ -117,6 +121,8 @@ class RoostooClient:
                 r.raise_for_status()
                 payload = r.json()
             except Exception as exc:
+                if path in {"/v3/place_order", "/v6/short_open", "/v6/short_close"}:
+                    raise AmbiguousOrderError(f"{method}:{path}:outcome_unknown_reconcile_before_retry") from exc
                 if attempt + 1 == self.max_retries:
                     raise RoostooError(f"{method}:{path}:{exc}") from exc
                 time.sleep(0.5 * 2**attempt)
@@ -150,7 +156,15 @@ class RoostooClient:
         return self._request("GET", "/v3/balance", signed=True)["Wallet"]
 
     def place_order(self, pair: str, side: str, quantity: float,
-                    price: float | None = None) -> dict:
+                    price: float | None = None,
+                    client_order_id: str | None = None) -> dict:
+        """`client_order_id` is accepted for a uniform signature and NOT sent.
+
+        The Roostoo API exposes no client-order-id field, so an unresolved
+        intent on this venue can only be matched heuristically. bot/intents.py
+        reports that as `matched_by: heuristic` rather than pretending to
+        certainty it does not have.
+        """
         spec = self._spec_cache.get(pair) if hasattr(self, "_spec_cache") else None
         params: dict[str, Any] = {
             "pair": pair, "side": side.upper(),

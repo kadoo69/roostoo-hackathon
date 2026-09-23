@@ -1,0 +1,188 @@
+[
+ {
+  "book": "donchian",
+  "interval": "1h",
+  "names": 264,
+  "fit": {
+   "n_windows": 719,
+   "median_pct": 0.422,
+   "mean_pct": 1.348,
+   "p_gt5": 0.1474,
+   "p_gt10": 0.0654,
+   "p_gt20": 0.0236,
+   "worst_pct": -7.69,
+   "median_maxdd_pct": -2.91,
+   "median_screen3": 1.931,
+   "turnover_per_14d": 11.5,
+   "cost_drag_per_14d_pct": 0.73
+  },
+  "holdout": {
+   "n_windows": 614,
+   "median_pct": 0.168,
+   "mean_pct": 1.424,
+   "p_gt5": 0.2052,
+   "p_gt10": 0.0782,
+   "p_gt20": 0.0358,
+   "worst_pct": -13.9,
+   "median_maxdd_pct": -3.64,
+   "median_screen3": 0.679,
+   "turnover_per_14d": 13.1,
+   "cost_drag_per_14d_pct": 0.86
+  }
+ },
+ {
+  "book": "donchian",
+  "interval": "30m",
+  "names": 55,
+  "fit": {
+   "n_windows": 719,
+   "median_pct": -0.837,
+   "mean_pct": -0.179,
+   "p_gt5": 0.1043,
+   "p_gt10": 0.0389,
+   "p_gt20": 0.0014,
+   "worst_pct": -19.04,
+   "median_maxdd_pct": -3.58,
+   "median_screen3": -2.399,
+   "turnover_per_14d": 22.6,
+   "cost_drag_per_14d_pct": 1.43
+  },
+  "holdout": {
+   "n_windows": 614,
+   "median_pct": -0.448,
+   "mean_pct": 0.394,
+   "p_gt5": 0.1678,
+   "p_gt10": 0.0879,
+   "p_gt20": 0.0033,
+   "worst_pct": -12.4,
+   "median_maxdd_pct": -4.4,
+   "median_screen3": -1.334,
+   "turnover_per_14d": 26.0,
+   "cost_drag_per_14d_pct": 1.72
+  }
+ },
+ {
+  "book": "donchian",
+  "interval": "15m",
+  "names": 55,
+  "fit": {
+   "n_windows": 719,
+   "median_pct": -2.457,
+   "mean_pct": -1.876,
+   "p_gt5": 0.057,
+   "p_gt10": 0.007,
+   "p_gt20": 0.0014,
+   "worst_pct": -13.57,
+   "median_maxdd_pct": -4.32,
+   "median_screen3": -4.2,
+   "turnover_per_14d": 45.2,
+   "cost_drag_per_14d_pct": 2.86
+  },
+  "holdout": {
+   "n_windows": 614,
+   "median_pct": -2.419,
+   "mean_pct": -2.226,
+   "p_gt5": 0.0961,
+   "p_gt10": 0.0342,
+   "p_gt20": 0.0016,
+   "worst_pct": -16.67,
+   "median_maxdd_pct": -5.73,
+   "median_screen3": -3.73,
+   "turnover_per_14d": 51.3,
+   "cost_drag_per_14d_pct": 3.39
+  }
+ },
+ {
+  "book": "momentum_top3_full",
+  "interval": "1h",
+  "names": 264,
+  "fit": {
+   "n_windows": 719,
+   "median_pct": 0.404,
+   "mean_pct": 7.424,
+   "p_gt5": 0.4298,
+   "p_gt10": 0.3449,
+   "p_gt20": 0.2114,
+   "worst_pct": -35.24,
+   "median_maxdd_pct": -12.47,
+   "median_screen3": 0.77,
+   "turnover_per_14d": 87.1,
+   "cost_drag_per_14d_pct": 5.53
+  },
+  "holdout": {
+   "n_windows": 614,
+   "median_pct": -5.042,
+   "mean_pct": 3.579,
+   "p_gt5": 0.3013,
+   "p_gt10": 0.2573,
+   "p_gt20": 0.1906,
+   "worst_pct": -38.92,
+   "median_maxdd_pct": -16.99,
+   "median_screen3": -2.515,
+   "turnover_per_14d": 93.5,
+   "cost_drag_per_14d_pct": 6.28
+  }
+ },
+ {
+  "book": "momentum_top3_full",
+  "interval": "30m",
+  "names": 55,
+  "fit": {
+   "n_windows": 719,
+   "median_pct": -6.262,
+   "mean_pct": -0.526,
+   "p_gt5": 0.2921,
+   "p_gt10": 0.2323,
+   "p_gt20": 0.1363,
+   "worst_pct": -38.02,
+   "median_maxdd_pct": -15.61,
+   "median_screen3": -3.126,
+   "turnover_per_14d": 178.3,
+   "cost_drag_per_14d_pct": 11.34
+  },
+  "holdout": {
+   "n_windows": 614,
+   "median_pct": -9.939,
+   "mean_pct": -1.174,
+   "p_gt5": 0.2899,
+   "p_gt10": 0.241,
+   "p_gt20": 0.1596,
+   "worst_pct": -38.15,
+   "median_maxdd_pct": -18.8,
+   "median_screen3": -3.915,
+   "turnover_per_14d": 188.1,
+   "cost_drag_per_14d_pct": 12.62
+  }
+ },
+ {
+  "book": "momentum_top3_full",
+  "interval": "15m",
+  "names": 55,
+  "fit": {
+   "n_windows": 719,
+   "median_pct": -21.37,
+   "mean_pct": -17.082,
+   "p_gt5": 0.0946,
+   "p_gt10": 0.0737,
+   "p_gt20": 0.0431,
+   "worst_pct": -47.51,
+   "median_maxdd_pct": -24.85,
+   "median_screen3": -4.439,
+   "turnover_per_14d": 365.2,
+   "cost_drag_per_14d_pct": 23.26
+  },
+  "holdout": {
+   "n_windows": 614,
+   "median_pct": -21.322,
+   "mean_pct": -16.738,
+   "p_gt5": 0.1124,
+   "p_gt10": 0.0863,
+   "p_gt20": 0.0391,
+   "worst_pct": -50.44,
+   "median_maxdd_pct": -27.14,
+   "median_screen3": -4.282,
+   "turnover_per_14d": 384.1,
+   "cost_drag_per_14d_pct": 25.85
+  }
+ }
+]

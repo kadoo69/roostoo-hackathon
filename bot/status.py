@@ -38,7 +38,7 @@ def summarise(name: str) -> dict:
         "wall_hours": round((f["ts"].iloc[-1] - f["ts"].iloc[0]).total_seconds() / 3600, 2),
         "median_cycle_gap_s": round(float(gaps.median()), 1) if len(gaps) else None,
         "max_cycle_gap_s": round(float(gaps.max()), 1) if len(gaps) else None,
-        "restarts": sum(1 for l in life if l.get("event") == "resumed"),
+        "restarts": sum(1 for ev in life if ev.get("event") == "resumed"),
         "halts": int(f.get("halt", pd.Series(dtype=bool)).fillna(False).sum()),
         "errors": len(errors),
         "order_events": events,
@@ -55,9 +55,11 @@ def summarise(name: str) -> dict:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("bots", nargs="*",
-                    default=["bot_a_4h", "bot_b_1h", "bot_c_5names"])
+                    default=["donchian_4h", "donchian_4h_cushion", "donchian_1h",
+                             "momentum_top5_4h", "momentum_top5_cushion"])
     a = ap.parse_args()
-    print(json.dumps([summarise(b) for b in (a.bots or ["bot_a_4h", "bot_b_1h", "bot_c_5names"])],
+    print(json.dumps([summarise(b) for b in (a.bots or ["donchian_4h", "donchian_4h_cushion", "donchian_1h",
+                             "momentum_top5_4h", "momentum_top5_cushion"])],
                      indent=2, default=str))
     return 0
 

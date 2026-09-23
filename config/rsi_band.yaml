@@ -1,0 +1,63 @@
+meta:
+  name: rsi_band
+  declared_before_any_backtest: true
+  declared_utc: '2026-09-22'
+  requested_by: operator
+  rule_as_stated: 'Buy when RSI crosses up through 50, sell when RSI reaches 70. Test it on
+    smaller timeframes and on coins filtered to those that follow the pattern.'
+  mechanism: 'RSI 50 is the midpoint of the Wilder oscillator, so a cross up through it marks the
+    point where average gains overtake average losses over the lookback. The claim is that a coin
+    entering that state continues to 70 more often than it reverses, which is a momentum
+    continuation claim measured on an oscillator instead of on price. 70 is a fixed profit target
+    and the rule has no stop, so the exit is either the target or the opposite cross.'
+  why_the_coin_filter_is_the_real_experiment: 'Selecting the coins that historically obey the rule
+    and then reporting their performance is circular. DECISIONS.md#coin-selection-does-not-persist
+    already measured per-coin edge persistence at Spearman 0.091, p=0.586, with the eight worst
+    coins beating the eight best out of sample. So the filter is tested the only way that means
+    anything: it is FITTED on one window and APPLIED to the next, and the bottom-ranked coins are
+    carried forward as a nonsense control. If the top-ranked selection does not beat the
+    bottom-ranked selection out of sample, the filter is noise and the pattern does not belong to
+    the coin.'
+  failure_mode: 'The rule is profitable gross and dies on cost, because a 50-to-70 band on a small
+    timeframe trades often for a small move. This is the same shape as
+    DECISIONS.md#scalp-meanrev-outcome and #flow-scalp-outcome, and the screen below is built to
+    show it rather than hide it: every number is reported gross AND net at two fee levels.'
+  second_failure_mode: The filter is unstable, so the coins that obeyed the rule in the fit window
+    are not the coins that obey it in the holdout, and the top and bottom selections are
+    indistinguishable out of sample.
+grid:
+  rsi_period: 14
+  entry_level: 50
+  exit_level: 70
+  intervals: ['15m', '1h', '4h']
+  stop: none
+  exit_on_opposite_cross: true
+  variants:
+    banded: sell at RSI 70 or on the cross back down through 50, whichever comes first
+    uncapped: 'sell ONLY on the cross back down through 50. Added 2026-09-22 on operator
+      request after the banded run showed median net far worse than mean net at every interval,
+      which says the mean is carried by a thin tail of continuations and the 70 cap truncates
+      exactly that tail. If that reading is right the uncapped arm should have a HIGHER mean and
+      a LOWER median than the banded one. If the mean does not rise, the tail was not there and
+      the rule is simply bad.'
+  max_concurrent: 3
+  weight_per_position: 0.3333
+  pool: 30
+  configs: 6
+method:
+  fit: ['2023-01-01', '2025-01-01']
+  holdout: ['2025-01-01', '2026-09-19']
+  fee_bps: [5, 10]
+  coin_filter:
+    fitted_on: fit window only
+    rank_by: mean net return per trade
+    selections: [top_quartile, bottom_quartile, all_coins]
+    applied_to: holdout only
+  reported: [trades, trades_per_day, win_rate, mean_gross_bps, mean_net_bps, median_net_bps,
+             total_net_return, hold_bars_median, pct_exited_at_target]
+  decision_rule: 'A configuration is a candidate only if mean NET basis points per trade is
+    positive at 10 bps AND the fitted top-quartile coin selection beats the bottom-quartile
+    selection out of sample. No argmax over the grid is taken. Mean, not median: a band rule with
+    a fixed target and no stop produces a positive median and a negative mean by construction,
+    which is exactly how DECISIONS.md#scalper-v1-outcome failed.'
+  trials_added: 6

@@ -1,0 +1,38 @@
+meta:
+  name: cold_start_entry_suppression
+  declared_utc: '2026-09-20'
+  declared_before_any_backtest: true
+  requested_by: operator
+  evidence_ref: DECISIONS.md#cold-start-chases-the-bar
+  mechanism: A book with no persisted bar memory treats the most recent CLOSED bar
+    as fresh on its first cycle and opens positions at the live price, which may be
+    minutes or hours past the close the signal was computed on. Measured 2026-09-20,
+    momentum_top3_4h started at 12:08 and bought ENAUSDT at 0.2114 against 0.2069
+    for the books that traded the 12:00 close, giving away 2.17% on a 31.8% position,
+    or 0.69pp of NAV, at its very first trade. Every backtest in this repo fills at
+    the bar close, so a cold-start entry is priced at something the backtest never
+    modelled.
+  rule: On the first cycle of a process whose last_bar was NOT restored from state,
+    record the latest bar as seen and suppress orders that would OPEN a position not
+    already held. Exits, reductions and halts are unaffected. The book enters at the
+    next genuine bar close, which is the price the backtest assumes.
+  why_no_free_parameter: A staleness tolerance in bars or basis points would be a
+    fitted parameter and would need its own grid and control. Waiting for the next
+    close has no parameter and reproduces the backtest exactly, which is the stronger
+    property. Preferring explicit over implicit is a standing convention here.
+  why_orders_and_not_targets: Emptying the target set is how a HALT flattens the book.
+    Suppressing entries by clearing targets would therefore SELL any position adopted
+    from a venue wallet on a cold start. The suppression is applied to the order list
+    and only to opening orders, so it cannot flatten anything.
+  failure_mode_to_watch: A trend book that refuses a late entry may miss the move
+    entirely, and the missed entries are not a random sample - they are the names that
+    had already run, which in a momentum book are the ones most likely to keep running.
+    The cost is bounded at one bar of delay per cold start, and it is paid ONCE per
+    process start rather than per trade. If forward logs ever show suppressed entries
+    systematically outperforming taken ones, revisit.
+  what_this_is_not: This is NOT an exit rule. DECISIONS.md records four separate
+    failures of tightening exits on this book (#asymmetry-outcome, #take-profit,
+    #exit-clock-outcome, #ratchet-outcome). Nothing here touches an exit.
+  trial_cost: Zero. This changes no signal, no sizing and no ranking. It aligns live
+    entry pricing with the price every backtest already assumed, so it is a defect fix
+    rather than a configuration to be searched.

@@ -1,0 +1,47 @@
+meta:
+  name: reversal_reentry
+  declared_utc: '2026-09-20'
+  declared_before_any_backtest: true
+  requested_by: operator
+  operator_instruction: Test a reversal-booking rule with re-entry on a faster clock,
+    explicitly without regard to the prior nulls.
+  why_this_is_not_a_fifth_repeat: The four prior exit families all made the EXIT faster
+    while RE-ENTRY stayed on the slow clock. signals/exit_clock.py says so in its own
+    docstring - "a position released early cannot be re-entered until the next slow
+    close, which is what stops the faster clock from quietly becoming a faster ENTRY
+    clock too" - and DECISIONS.md#exit-clock-outcome records the failure mode as "a
+    faster check releases a position into a dip the 4h close would have held through,
+    and the channel then re-enters at the next 4h close at a HIGHER price". The cost
+    of a false exit in those tests was therefore paid at slow-clock latency. This arm
+    lifts exactly that constraint. It is a new mechanism, not a re-run.
+  mechanism: Book the position when price breaks the channel floor on the FAST clock.
+    If the break was false, re-enter on the fast clock as soon as price reclaims the
+    floor by a stated margin, rather than waiting for the next slow close. If false
+    breaks are common and reclaims are quick, the fast exit captures real reversals
+    while the fast re-entry makes false ones cheap.
+  failure_mode_to_watch: Whipsaw. Every exit-reclaim pair pays a full round trip. A
+    margin of zero will oscillate across the floor and bleed fees; a large margin
+    re-enters so late that it reproduces the slow-clock penalty the arm exists to
+    avoid. Expect an interior optimum or no effect at all. Turnover must be read
+    alongside Screen 3, and a Sharpe gain bought with 5x turnover is not a finding.
+  look_ahead_guard: Binance bars are labelled by OPEN time. All slow-to-fast mapping
+    goes through signals.exit_clock.to_fast, which aligns on CLOSE times. The gate
+    asserts that a fast==slow run reproduces signals.donchian.position exactly before
+    any arm is read. This bit twice before, at DECISIONS.md#exit-clock-outcome.
+  control: A nonsense arm that exits and re-enters at the SAME RATE at random,
+    ignoring the floor entirely. If the real rule does not beat it, the effect is
+    turnover, not reversal detection.
+grid:
+  books: [donchian_4h, momentum_top5]
+  slow_interval: 4h
+  fast_interval: 1h
+  entry_bars: 20
+  exit_bars: 10
+  reclaim_margin_bps: [0, 10, 25, 50]
+  max_cycles_per_slow_bar: [1, 2, 99]
+method:
+  fit_window: ['2023-01-01', '2025-01-01']
+  holdout_window: ['2025-01-01', null]
+  pass_requires: improvement on BOTH windows on Screen 3, beating the random control
+    on the holdout, and maximum drawdown no worse than 2 points against the slow-clock
+    baseline.

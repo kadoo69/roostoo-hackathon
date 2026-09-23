@@ -1,0 +1,126 @@
+meta:
+  declared_utc: '2026-09-20'
+  declared_before_any_backtest: true
+  requested_by: operator
+  purpose: >-
+    a selective intraday mean-reversion scalper with explicit take-profit and
+    stop-loss targets, tested as a separate family from the trend book
+  justification_ref: DECISIONS.md#scalp-meanrev-declaration
+cost_of_this_sweep:
+  ledger_before: 494
+  configs_added: 54
+  all_counted_as_trials: true
+
+premise:
+  operator_statement: |
+    Build a scalper with set take-profit and take-loss targets, and a
+    mean-reversion strategy, for a smoother Sharpe.
+
+  mechanism: |
+    Measured in this repo, not assumed. results/fast_horizon.json ran a Donchian
+    BREAKOUT on 5m bars over BTC/ETH/SOL/XRP/DOGE and recorded gross_sharpe
+    -0.2159 BEFORE any fee. A momentum rule with negative gross Sharpe is direct
+    evidence that moves at that horizon revert - the opposite sign of the same
+    signal has positive gross expectancy. At 15m the same breakout has
+    gross_sharpe +0.4517, so reversion weakens as the bar lengthens and the
+    effect is specific to the fastest horizon. DECISIONS.md#fast-horizon-outcome
+    already states the conclusion in words - "a 5m breakout is noise that
+    mean-reverts". This family trades that noise.
+
+  why_take_profit_is_correct_here: |
+    DECISIONS.md#take-profit-outcome rejected take-profits on the 4h momentum
+    book because a trend has no terminal value, so capping it truncates the right
+    tail that Sortino rewards. A mean-reversion trade is the opposite object. Its
+    thesis is that price returns to a reference level, so that level IS the
+    target and holding past it is holding past the edge. A take-profit does not
+    truncate a mean-reversion tail, it realises the thesis. The prior evidence
+    against take-profits is therefore not transferable and is not counted against
+    this family.
+
+  binding_constraint: |
+    Cost, and it is arithmetic rather than statistical.
+    results/fast_horizon.json measured median absolute bar return of 8.823 bps at
+    5m, 15.537 bps at 15m and 21.447 bps at 30m. A LIMIT round trip costs 10 bps
+    at the pre-registered fee schedule and a MARKET round trip 20 bps plus
+    spread. The median 5m bar does not pay for its own round trip. Any scalper
+    that trades every bar is dead before it starts, so this one only fires in the
+    tail of the deviation distribution where expected reversion is a multiple of
+    the hurdle. Selectivity is the design, not a tuning knob.
+
+  failure_mode_to_watch: |
+    Mean reversion and trend are the same trade with opposite signs, so a
+    reversion book is structurally short momentum and will lose its worst money
+    in exactly the fast directional moves the trend book is built to catch.
+    Expect negative correlation to bot_a/bot_c and a left tail. The stop-loss is
+    what bounds it. If measured skew is worse than -1.0 the family is not
+    deployable regardless of Sharpe.
+
+  null_hypothesis: |
+    After the pre-registered fee schedule, the family's holdout Screen 3 does not
+    exceed zero and its net Sharpe does not exceed the same book traded on
+    randomly shuffled entry signals.
+
+universe:
+  symbols: [BTCUSDT, ETHUSDT, SOLUSDT, XRPUSDT, DOGEUSDT]
+  basis: |
+    The five names with 5m history already cached in this repo. Majors are also
+    the correct universe for a scalper on the merits, because spread and impact
+    dominate at this horizon and the alt book bot_c holds is untradeable at 15m
+    in size.
+  acknowledged_limitation: |
+    Five names is a narrow cross-section. A positive result here is a candidate,
+    not a deployment, until it replicates on a wider universe.
+
+signal:
+  reference: rolling mean of close over lookback_bars
+  deviation: z = (close - mean) / rolling_std(close, lookback_bars)
+  side: long only. No shorts. Roostoo is spot and the repo is long-only.
+  entry: z <= -entry_z at bar close
+  no_look_ahead: |
+    Mean and std are computed on bars strictly before the entry bar, and the
+    entry fills at the NEXT bar's open, never at the signal bar's close.
+
+exits:
+  evaluated_intrabar: true
+  take_profit: entry_price * (1 + tp_atr * atr_pct)
+  stop_loss: entry_price * (1 - sl_atr * atr_pct)
+  time_stop: max_hold_bars, closed at that bar's close
+  same_bar_ambiguity: |
+    If a bar's low touches the stop AND its high touches the target, the STOP is
+    recorded as the fill. This is the pessimistic assumption and is chosen
+    deliberately - the optimistic one manufactures edge that does not exist.
+  atr_pct: |
+    atr(atr_bars) / close, so both targets are volatility-scaled and the rule is
+    not a disguised volatility filter. That specific defect is recorded at
+    DECISIONS.md#take-profit-outcome for fixed-percentage targets.
+
+grid:
+  interval: ['5m', '15m', '30m']
+  entry_z: [2.0, 2.5, 3.0]
+  tp_atr: [1.0, 1.5]
+  sl_atr: [1.0, 1.5, 2.0]
+  lookback_bars: 48
+  atr_bars: 48
+  max_hold_bars: 24
+  max_concurrent: 5
+  weight_per_position: 0.2
+  configs: 54
+
+method:
+  fit_window: ['2023-01-01', '2025-01-01']
+  holdout_window: ['2025-01-01', '2026-09-19']
+  fee_bps: [5, 10]
+  fee_basis: |
+    preregistration.yaml costs, which are UNCONFIRMED. Both ends of the schedule
+    are reported because this family's viability is a cost question, and
+    reporting only the favourable end would be selection.
+  reported: [net_sharpe, gross_sharpe, sortino, calmar, screen3, max_drawdown,
+             skew, win_rate, trades_per_day, mean_hold_bars, annual_cost_drag,
+             p_return_positive, p_clears_screen2]
+  selection_rule: |
+    None. A configuration is a candidate only if it clears the null on BOTH
+    windows, matching DECISIONS.md#concentration-timeframe-outcome. Selecting on
+    the fit window alone is what this repo has repeatedly measured to reverse.
+  deployment_rule: |
+    No live bot is created from this sweep without a separate forward paper
+    period. Six prior families in this repo reversed out of sample.

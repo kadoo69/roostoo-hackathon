@@ -1,0 +1,104 @@
+meta:
+  name: alpha_flow
+  frozen: true
+  declared_utc: '2026-09-22'
+  requested_by: operator
+  description: 'Profit-booking forward test. Momentum top-3 core with a ladder that skims a
+    fraction of a winner each time it gains a step, plus a per-cycle alternate-data collector
+    for the signals that have no history and therefore cannot be backtested at all.'
+  control: momentum_top3_full. Identical universe, channel, ranking, pool and gross cap. The
+    only treatment is the skim ladder.
+  operator_request: 'Book profits and churn them back into capital; use correlation, coin
+    selection, volume, gamma exposure and order flow; build it for forward testing.'
+  what_the_analysis_found: 'DECISIONS.md#alpha-flow-declaration. Order flow, volume surge,
+    average trade size, idiosyncratic residual selection and beta selection were all tested as
+    cross-sectional rankers and all failed. Funding-rate crowding had the strongest fit-window
+    signal in the repo (IC -0.068 at 3 days, t -7.1) and did not replicate out of sample
+    (t +0.6 at 24h). Recycling booked cash back into the same equal-weight target is
+    arithmetically a rebalance and merely pays fees; redeploying it into lower-ranked names is
+    worse than holding it. Skimming into cash was the only variant that improved both windows.'
+  honest_status_of_the_skim: 'On the holdout the skim improves median 14-day return 3.11 to 3.59
+    and median drawdown -12.67 to -8.43, but the return gain is NOT significant (paired block
+    bootstrap p=0.14) and the drawdown gain is reproduced by a random-timing nonsense control,
+    so it is exposure reduction rather than timing. It is deployed as a forward test on operator
+    instruction, not as a validated improvement.'
+  what_to_watch: Median 14-day return against momentum_top3_full, and mean gross exposure. If
+    the skim is only reducing exposure, the return will track the control while gross sits near
+    0.51 and nothing has been gained.
+strategy:
+  interval: 4h
+  entry_bars: 20
+  exit_bars: 10
+  top_n_pool: 30
+  ranking_rule: momentum
+  n_positions: 3
+  momentum_bars: 40
+  weight_divisor: 20
+  max_gross: 1.0
+  quote: USDT
+  universe_refresh_hours: 24
+  max_spread_bps: 5.0
+  min_history_bars: 30
+  regime_gate: always_on
+  full_deployment: true
+booking:
+  enabled: true
+  step_pct: 0.03
+  skim_fraction: 0.15
+  amended_utc: '2026-09-22'
+  amended_before_any_position: true
+  amendment_reason: 'Operator asked for CONSISTENT booking. At the original 5% step only 36% of
+    live positions ever booked and the median position booked zero times, so the ladder was not
+    doing what it was asked to do. Booking more often by tightening the step ALONE is measurably
+    bad: at 1% the holdout P(>20%) falls 0.168 to 0.070 at p=0.004, at 2% to 0.093 at p=0.022 and
+    at 3% to 0.103 at p=0.046, and those are the only statistically significant effects in the
+    whole ladder grid. Cutting the SLICE at the same time removes that cost: 3% x 15% fires 2,989
+    times against 1,970 for 5% x 40%, a 52% increase in booking events, while the right-tail
+    delta falls to -0.008 at p=0.73, which is smaller and far less significant than the original
+    setting''s own -0.034 at p=0.27. Consistency was bought from the slice size, not from the tail.'
+  alternative_if_more_is_wanted: '2% x 15% fires 3,952 times and 58% of live positions book with a
+    median of one skim each, at d_P(>20%) -0.0195, p=0.43. Still not significant, but twice the
+    tail cost of 3% x 15% for the same median. Operator decision, not a measured improvement.'
+  recycle: false
+  recycle_reason_ref: DECISIONS.md#alpha-flow-declaration
+  min_skim_notional: 10.0
+  basis: Each position carries a reference price set at entry. Every time the mark reaches the
+    reference times one plus step_pct, skim_fraction of the CURRENT position is sold and the
+    reference is reset to the mark, so a runner is booked repeatedly on the way up and a
+    position that never gains is never touched.
+alt_data:
+  enabled: true
+  trades_on_it: false
+  trades_on_it_reason: 'GEX has no history anywhere, so a rule on it would be an unvalidated live
+    bet. Open interest, long/short ratios, taker ratio, funding and premium DO have history in
+    the data.binance.vision archive, and every rule built on them failed the pre-declared test at
+    DECISIONS.md#positioning-edges-outcome. The collector logs each feature in the gate''s own
+    definition so the competition fortnight can be laid next to those tables.'
+  amended_utc: '2026-09-23'
+  amendment: the 30-day claim for open interest and ratios was a REST limit, not a data limit.
+  refresh_seconds: 900
+  sources:
+    deribit_gex:
+      currencies: [BTC, ETH]
+      fields: [net_gex_usd_per_1pct, net_gex_ratio, gamma_flip_strike, spot_above_flip, regime]
+      history_available: false
+    binance_open_interest:
+      period: 1h
+      history_available: REST 30 days; data.binance.vision archive 5-minute from 2021-12
+    binance_funding:
+      history_available: full, already tested and recorded as a null
+    binance_long_short_ratio:
+      period: 1h
+      history_available: REST 30 days; data.binance.vision archive 5-minute from 2021-12
+risk:
+  max_drawdown: 0.25
+  max_error_rate: 0.25
+  max_ticker_age_s: 120
+  mirror_max_deviation_bps: 50.0
+  derisk_start_utc: '2026-10-15T00:00:00+00:00'
+  derisk_end_utc: '2026-10-17T20:00:00+00:00'
+execution:
+  order_type: LIMIT
+  limit_offset_bps: 1.0
+  limit_timeout_s: 900
+  poll_seconds: 60

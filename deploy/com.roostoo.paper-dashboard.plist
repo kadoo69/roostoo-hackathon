@@ -2,7 +2,7 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
 <key>Label</key><string>com.roostoo.paper-dashboard</string>
-<key>ProgramArguments</key><array><string>/opt/anaconda3/bin/python3</string><string>-m</string><string>bot.paper_dashboard</string></array>
+<key>ProgramArguments</key><array><string>/opt/anaconda3/bin/python3</string><string>-m</string><string>bot.paper_dashboard</string><string>--directory</string><string>/Users/aaravmahajan/roostoo-hackathon/live/paper_lab_v9</string></array>
 <key>WorkingDirectory</key><string>/Users/aaravmahajan/roostoo-hackathon</string>
 <key>RunAtLoad</key><true/><key>KeepAlive</key><true/>
 <key>ThrottleInterval</key><integer>30</integer>

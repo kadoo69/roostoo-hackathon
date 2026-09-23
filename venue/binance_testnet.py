@@ -109,12 +109,26 @@ class BinanceTestnetClient:
                           for b in acct["balances"]
                           if float(b["free"]) + float(b["locked"]) > 0}}
 
+    def query_by_client_id(self, client_order_id: str, pair: str) -> dict | None:
+        """Exact intent-to-order match. bot/intents.py depends on this being exact."""
+        try:
+            return self._request("GET", "/api/v3/order",
+                                 {"symbol": pair.replace("/", ""),
+                                  "origClientOrderId": client_order_id}, signed=True)
+        except RoostooError as exc:
+            if "-2013" in str(exc) or "does not exist" in str(exc).lower():
+                return None
+            raise
+
     def place_order(self, pair: str, side: str, quantity: float,
-                    price: float | None = None) -> dict:
+                    price: float | None = None,
+                    client_order_id: str | None = None) -> dict:
         symbol = pair.replace("/", "")
         spec = (self._specs or self.exchange_info())[pair]
         params: dict[str, Any] = {"symbol": symbol, "side": side.upper(),
                                   "quantity": spec.format_qty(quantity)}
+        if client_order_id:
+            params["newClientOrderId"] = client_order_id
         if price is None:
             params["type"] = "MARKET"
         else:
@@ -125,7 +139,7 @@ class BinanceTestnetClient:
         cummulative = float(r.get("cummulativeQuoteQty", 0) or 0)
         fills = r.get("fills") or []
         commission = sum(float(f.get("commission", 0) or 0) for f in fills)
-        maker = all(not f.get("isMaker", False) is False for f in fills) if fills else None
+        maker = all(f.get("isMaker", False) is not False for f in fills) if fills else None
         return {"Success": True, "OrderDetail": {
             "OrderID": r.get("orderId"), "Status": r.get("status"),
             "Role": ("MAKER" if maker else "TAKER") if fills else None,

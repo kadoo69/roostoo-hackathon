@@ -9,7 +9,7 @@ import yaml
 
 from core.config import RESULTS, ROOT, prereg
 from costs.model import CostModel
-from data import daily, flow, intraday, universe
+from data import daily, flow, intraday
 from portfolio.backtest import PERIODS_PER_YEAR, evaluate, run
 from portfolio.construct import holding_period_days
 from signals.volume import REGISTRY, book

@@ -1,0 +1,61 @@
+meta:
+  name: fast_exit_sizing
+  declared_utc: '2026-09-20'
+  declared_before_any_backtest: true
+  requested_by: operator
+  operator_instruction: Push the fast-exit thread and take bigger positions accurately on
+    a short timeframe.
+  evidence_ref: DECISIONS.md#reversal-reentry-outcome
+  the_thread: The fast exit WITHOUT re-entry is the only arm that has improved a holdout twice,
+    in two independent implementations built months apart (DECISIONS.md#exit-clock-outcome
+    and DECISIONS.md#reversal-reentry-outcome). Both rejected it on the FIT window at a FIXED
+    position size. Neither asked the question this declaration asks.
+  mechanism: If checking the channel floor hourly instead of every four hours genuinely truncates
+    the left tail, then the constraint it relaxes is SIZE. A book whose worst outcomes are
+    cut can carry more gross exposure for the same drawdown. The test is therefore not 'does
+    the fast exit raise Sharpe at fixed size' - twice answered no - but 'does it raise the
+    size at which a given drawdown is tolerable'. Screen 2 ranks on RAW RETURN, so size is
+    the binding lever for qualification.
+  why_bigger_size_cannot_rescue_a_scalper: Position size scales the per-trade edge and the
+    per-trade cost by the same factor. DECISIONS.md#scalp-meanrev-outcome measured 0 of 54
+    configurations with a positive holdout net Sharpe and a per-trade edge of +0.67 to -14.52
+    bps against a 10 bps round trip; arXiv:2608.21888 measures 1.3 bps at best across 183
+    pairs. Those are RATIOS and are invariant to size. This declaration therefore does NOT
+    test a sub-hourly ENTRY rule. It tests sizing of an existing 4h entry whose edge is established,
+    with a faster exit.
+  leverage_constraint: The competition is 1x. Gross exposure is hard-capped at 1.0 and the
+    cap is applied to GROSS, never to a volatility scalar. CLAUDE.md records a prior defect
+    where capping the scalar let the book reach 1.45x. Size is raised by cutting the weight
+    divisor, not by borrowing.
+  failure_mode_to_watch: Concentration raises drawdown faster than it raises return, and the
+    fast exit worsened drawdown by 2.1 to 3.2 points in every arm of DECISIONS.md#reversal-reentry-outcome.
+    The likely outcome is that the fast exit does NOT buy size and simply compounds the concentration
+    penalty. Read maximum drawdown first, Screen 3 second, raw return third.
+  control: Every sizing is run with BOTH exits, so the fast exit is always compared against
+    the identical book on the slow clock at the SAME size. Size is not the treatment; the
+    exit is.
+grid:
+  book: donchian_4h_entry
+  slow_interval: 4h
+  fast_interval: 1h
+  entry_bars: 20
+  exit_bars: 10
+  weight_divisors:
+  - 20
+  - 10
+  - 5
+  - 3
+  exits:
+  - slow_4h
+  - fast_1h
+  max_gross: 1.0
+method:
+  fit_window:
+  - '2023-01-01'
+  - '2025-01-01'
+  holdout_window:
+  - '2025-01-01'
+  - null
+  pass_requires: At a given divisor the fast exit must improve Screen 3 on BOTH windows AND
+    not worsen maximum drawdown, against the slow exit at the SAME divisor. A gain that appears
+    only at one size is a size effect, not an exit effect.

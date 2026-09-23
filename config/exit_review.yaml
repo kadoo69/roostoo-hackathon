@@ -1,0 +1,12 @@
+meta:
+  declared_utc: '2026-09-19'
+  declared_before_test: true
+  mechanism: Protect accumulated gains or react faster to trend deterioration without changing entry selection.
+  failure_mode: Early exits miss trend continuation and incur extra costs. Close-based exits cannot guarantee stop prices.
+base: ranked_top5_momentum40_4h_donchian20_10
+variants: [channel_only, hourly_floor10, take8_full, take8_half, protect5_trail3]
+cost_bps_per_side: [10, 20]
+entry: Execute at the first hourly open after a completed 4h selection signal.
+exits: Evaluate completed hourly closes; execute at next hourly open. No intrabar high/low trigger or assumed stop-price fill.
+reentry: After an overlay exit, remain blocked until the 4h selected state turns off and subsequently on again.
+selection: Report all three ratios and drawdown at both costs in disjoint 2023-2024 and 2025-onward windows. No automatic adoption or claim of fresh holdout.

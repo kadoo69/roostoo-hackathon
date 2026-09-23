@@ -1,0 +1,32 @@
+meta:
+  name: no_trade_band_live
+  declared_utc: '2026-09-20'
+  declared_before_any_backtest: true
+  evidence_ref: DECISIONS.md#dust-trades-distort-count-statistics
+  observation: 5 of donchian_1h's 11 closed trades on 2026-09-20 were round trips
+    of 3 to 19 dollars on a 100,000 book, net P&L under a cent each. They are weight-drift
+    rebalances, not positions. They pay a full round trip in fees and they distort
+    every count-weighted statistic.
+  mechanism: A relative no-trade band suppresses a rebalance until the target differs
+    from the held weight by more than the band, so drift inside the band costs nothing.
+    Turnover falls and the fee drag falls with it.
+  why_this_is_not_a_new_parameter: 0.25 is already in preregistration.yaml at portfolio.no_trade_band
+    with no_trade_band_is_fitted false, a grid containing exactly one value, and a
+    justification at DECISIONS.md#no-trade-band. portfolio/construct.py implements it
+    and several gates already apply it. This tests APPLYING the declared value, not
+    choosing one, so the grid is one value per book and no search occurs.
+  honest_note_on_the_baseline: The band is applied inconsistently today. gates/gate04
+    applies it to the family comparison but NOT to selected_donchian, and gates/concentration.py
+    and concentration_tf.py do not apply it either, which is where the deployed momentum
+    numbers come from. Live therefore MATCHES its own backtest - both churn. This is
+    not a live-versus-backtest divergence, it is a cost both of them pay.
+  failure_mode_to_watch: A band delays entries and exits alike. On a channel book the
+    exit is the risk control, so a band that postpones an exit deepens drawdown. Read
+    maximum drawdown, not only Sharpe and turnover. This is adjacent to the four exit
+    families that already failed and must be judged on the same evidence bar.
+  pass_requires: improvement on BOTH windows on Screen 3, AND maximum drawdown no worse
+    than 1 point, AND a turnover reduction large enough to be worth the change.
+grid:
+  books: [donchian_4h, momentum_top5, momentum_top3]
+  bands: [0.0, 0.25]
+  band_source: preregistration.yaml portfolio.no_trade_band

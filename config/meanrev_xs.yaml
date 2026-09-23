@@ -1,0 +1,100 @@
+meta:
+  declared_utc: '2026-09-20'
+  declared_before_any_backtest: true
+  requested_by: operator
+  purpose: >-
+    cross-sectional mean reversion built from the published crypto reversal
+    literature rather than from a parameter search
+  justification_ref: DECISIONS.md#meanrev-xs-declaration
+cost_of_this_sweep:
+  ledger_before: 656
+  configs_added: 48
+  all_counted_as_trials: true
+
+research_basis:
+  sources: |
+    Dobrynskaya, "Cryptocurrency Momentum and Reversal" (2,000 largest coins,
+    2014-2020) and Zhang et al., "Up or down? Short-term reversal, momentum and
+    liquidity effects in cryptocurrency markets", Int. Review of Financial
+    Analysis 78 (2021).
+
+  what_the_literature_actually_says: |
+    1. Momentum dominates on horizons up to two to four weeks; significant
+       REVERSAL appears only beyond one month.
+    2. Daily and weekly reversal is an ILLIQUIDITY effect. The handful of
+       largest and most tradeable coins exhibit daily and weekly MOMENTUM
+       rather than reversal. Reversal in small coins is driven mostly by low
+       trading volume; momentum in large coins by high market capitalisation.
+
+  why_this_matters_more_than_the_parameters: |
+    The live pool is the top 30 names by ADV, which is precisely the segment
+    the literature says should show MOMENTUM at short horizons, not reversal.
+    That is the most likely explanation for two nulls already recorded here:
+    DECISIONS.md#scalp-meanrev-outcome (54 configs, price-only, 5m-30m) and
+    DECISIONS.md#flow-scalp-outcome (72 configs, order-flow divergence), both
+    run on the five most liquid names in the universe.
+    Neither tested the horizon or the liquidity segment where the effect is
+    documented to live. This sweep tests both.
+
+design:
+  the_falsification_is_the_liquidity_contrast: |
+    Every configuration is run on TWO sleeves: the liquid sleeve (top 30 by
+    ADV, the live trading pool) and the illiquid sleeve (ranks 31-66 of the
+    venue list). The literature predicts short-horizon reversal works on the
+    illiquid sleeve and fails on the liquid one.
+    If short-horizon reversal appears on BOTH sleeves equally, the mechanism is
+    not illiquidity and the result should be distrusted however good it looks,
+    because it would contradict the paper it was built from.
+    That contrast is the test. A number without it is not evidence.
+
+  sign_control: |
+    Each formation window is also run as MOMENTUM, the sign-flipped arm. At
+    short horizons on the liquid sleeve the literature predicts the momentum
+    arm should WIN. A reversal sweep that cannot reproduce the known momentum
+    result on the segment where it is documented has a construction fault.
+
+  long_only: |
+    Roostoo is spot and this repo is long-only, so reversal means buying the
+    biggest losers rather than shorting the winners. This removes the
+    short leg the papers use and is expected to cost a large part of the
+    published effect. It is stated here so the shortfall is not later
+    presented as a surprise.
+
+universe:
+  liquid_sleeve: top 30 by 180-day median quote volume, the live pool
+  illiquid_sleeve: ranks 31-66 of the venue-tradeable list
+  spread_guard: |
+    The illiquid sleeve is where the effect is expected AND where costs are
+    worst. Net returns are reported at 5 and 10 bps and the realised turnover
+    is reported beside them, because an illiquid-sleeve edge that dies on
+    spread is a null, not a finding.
+
+grid:
+  formation_days: [1, 3, 7, 30, 45, 60]
+  holding_days: [1, 7]
+  sleeve: [liquid, illiquid]
+  direction: [reversal, momentum]
+  n_positions: 5
+  weight: equal, 1/5, long only, gross capped at 1.0
+  configs: 48
+
+method:
+  fit_window: ['2023-01-01', '2025-01-01']
+  holdout_window: ['2025-01-01', '2026-09-19']
+  fee_bps: [5, 10]
+  reported: [net_sharpe, gross_sharpe, sortino, calmar, screen3, max_drawdown,
+             skew, annual_turnover, annual_cost_drag, p_return_positive,
+             p_clears_screen2, mean_gross]
+  pre_registered_expectation: |
+    Stated before running so the result can contradict it. On the LIQUID
+    sleeve, momentum should beat reversal at formation 1 to 7 days. On the
+    ILLIQUID sleeve, reversal should beat momentum at those same horizons.
+    At formation 30 to 60 days reversal should beat momentum on both sleeves.
+  selection_rule: |
+    None. A configuration is a candidate only if it beats its sign-flipped
+    control on BOTH windows AND the liquidity contrast runs in the direction
+    the literature predicts. Beating a baseline is not enough; six families in
+    this repo have reversed out of sample after passing a weaker test.
+  deployment_rule: |
+    A passing configuration goes live only as a paper arm beside a control,
+    never straight into a funded book.

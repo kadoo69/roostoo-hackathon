@@ -70,7 +70,9 @@ def stats(dr):
     sh = float(dr.mean() / dr.std() * np.sqrt(365))
     so = float(dr.mean() * 365 / down) if down > 0 else 0.0
     cm = cagr / abs(dd) if dd < 0 else 0.0
-    cap = lambda v: float(np.clip(v, -5, 5))
+    def cap(v):
+        return float(np.clip(v, -5, 5))
+
     return {"cagr": round(cagr, 5), "sharpe": round(sh, 4),
             "sortino": round(so, 4), "calmar": round(cm, 4),
             "max_drawdown": round(dd, 5),

@@ -4,7 +4,6 @@ import datetime as dt
 import io
 import zipfile
 from concurrent.futures import ThreadPoolExecutor
-from pathlib import Path
 from xml.etree import ElementTree
 
 import pandas as pd

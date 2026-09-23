@@ -9,7 +9,7 @@ import pandas as pd
 from core import artifacts
 from core.config import RESULTS, gate_config
 from data import daily, flow, universe as ru
-from gates.gate08_regime import book, net_returns, stats, to_daily
+from gates.gate08_regime import net_returns, stats, to_daily
 
 warnings.filterwarnings("ignore")
 INTERVAL = "4h"

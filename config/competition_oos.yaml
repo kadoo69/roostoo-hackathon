@@ -1,0 +1,60 @@
+meta:
+  declared_utc: '2026-09-20'
+  declared_before_any_backtest: false
+  honesty_note: |
+    This is DESCRIPTIVE, not a search. It adds no configurations and selects
+    nothing, so it adds no trials to the ledger. Every book measured here is a
+    config already running live and already counted.
+  purpose: >-
+    characterise each live bot under the competition's own framework - rolling
+    14-day windows scored on Screen 3 - and identify the conditions under which
+    each one works and fails
+  justification_ref: DECISIONS.md#competition-oos-declaration
+
+premise:
+  why_this_is_not_optimisation: |
+    The operator asked to optimise 14-day Sharpe, Sortino and Calmar across
+    timeframes. Doing that literally would mean picking the timeframe with the
+    best out-of-sample composite, which is selection on the test set and is the
+    exact failure this repo has recorded six times. DECISIONS.md#sizing-sweep-outcome
+    is the clearest case: the fit argmax was the holdout's WORST setting.
+    So no argmax is taken and no configuration is promoted. What is produced is
+    the DISTRIBUTION of 14-day outcomes for each already-declared book, plus a
+    conditional analysis of which starting states precede good and bad windows.
+    A conditional finding is actionable without being fitted, because the
+    condition is observable on the morning the window starts.
+
+  what_a_single_14_day_number_cannot_tell_you: |
+    The competition is one draw from this distribution. DECISIONS.md#beta-is-the-only-screen3-lever
+    established that within a fortnight the composite and the qualification
+    probability are collinear because both are produced by beta, so the spread
+    of outcomes matters more than the centre.
+
+books:
+  donchian_4h: every signalling name at 1/20 on 4h bars
+  donchian_1h: the same rule on 1h bars
+  momentum_top5_4h: momentum-ranked top five of the 30-name pool at 1/5 on 4h
+  btc_hold: the pre-registered benchmark
+
+conditioning_variables:
+  measured_at_window_start_only: |
+    Every conditioner is computed from data available BEFORE the window opens,
+    so a relationship found here could have been acted on. A condition read
+    from inside the window would be hindsight dressed as a rule.
+  btc_above_200dma: market regime, the partition used at DECISIONS.md#gate8-regime-outcome
+  breadth_pct_long: share of the pool above its entry channel
+  dispersion: cross-sectional stdev of trailing 6-bar returns across the pool
+  btc_vol_30d: realised volatility of BTC over the prior 30 days
+  book_gross_at_start: the book's own gross exposure on day one of the window
+
+method:
+  window_days: 14
+  oos_start: '2023-01-01'
+  fee_bps: 5
+  reported_per_book: [n_windows, n_independent, median_screen3, p05, p95,
+                      p_screen3_positive, p_return_positive, p_clears_screen2,
+                      median_return, worst_return, median_maxdd, worst_maxdd]
+  reported_per_condition: |
+    Median Screen 3 and P(return > 0) within each bucket, with the bucket's
+    window count, so a difference computed on few windows is visibly thin.
+  selection_rule: none. Nothing is promoted from this analysis.

@@ -5,13 +5,13 @@ import pytest
 
 from bot.execution import Executor
 from bot.journal import Journal
-from bot.paper_lab import advance, comparison, fresh_book, nav, settle, submit
+from bot.paper_lab import advance, comparison, fresh_book, nav, settle, submit, trace_candidate
 from bot.settings import load
 from venue.roostoo import PairSpec
 
 
 def settings():
-    return replace(load("config/bot_a_4h.yaml"), entry_bars=3, exit_bars=2, min_history_bars=4)
+    return replace(load("config/donchian_4h.yaml"), entry_bars=3, exit_bars=2, min_history_bars=4)
 
 
 def frame(values):
@@ -120,3 +120,22 @@ def test_comparison_never_selects_short_sample_winner():
     assert result["winner"] is None
     assert result["status"] == "insufficient_forward_evidence"
     assert result["bots"][0]["metrics"] is None
+
+
+def test_each_candidate_gets_append_only_decision_and_event_logs(tmp_path):
+    journal = Journal("paper_lab_test/test_bot", tmp_path)
+    book = fresh_book(1000)
+    book["events"] = [{"event": "submitted", "symbol": "BTCUSDT", "side": "BUY",
+                       "quantity": 1, "price": 100, "time": 1}]
+    book["target"] = {"BTCUSDT": .4}
+    candidate = {"name": "test_bot", "family": "channel", "interval": "4h",
+                 "selection_basis": "unit test"}
+    trace_candidate(journal, "paper_lab_test", candidate, book, {"BTCUSDT": 100}, 0,
+                    pd.Timestamp("2026-09-21T00:00:00Z"))
+    decisions = journal.read("decisions")
+    orders = journal.read("orders")
+    assert decisions[0]["bot"] == "test_bot"
+    assert decisions[0]["target"] == {"BTCUSDT": .4}
+    assert orders[0]["event"] == "submitted"
+    assert book["trace"]["decision_records"] == 1
+    assert book["trace"]["event_records"] == 1

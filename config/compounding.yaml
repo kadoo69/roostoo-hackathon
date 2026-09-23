@@ -1,0 +1,60 @@
+meta:
+  name: compounding
+  declared_before_any_backtest: true
+  declared_utc: '2026-09-21'
+  question: With gross exposure hard-capped at 1.0 by competition rule, what is actually left of
+    "recycle the profits"? Measure the two degrees of freedom that remain.
+  why_now: Operator objective is maximum 14-day portfolio return. Leverage is not available, so
+    compounding harder cannot mean betting more than the account. It can only mean being idle less
+    often and letting winners' weights grow between signals. Neither has ever been backtested.
+  the_two_levers:
+    idle_time: momentum_top3_full averages 0.699 gross because roughly 30% of bars produce no
+      channel signal at all. That is not slot-level idle cash, which full deployment already
+      solved. It is whole-book idle time, and the only ways to remove it are to hold something
+      else or to stop requiring a breakout.
+    weight_path: 'The backtest resets every position to its target weight on every bar, which
+      silently trims winners and tops up losers. The LIVE bot does not. bot/portfolio.deltas
+      suppresses any move inside a 25% relative band, so held weights drift with price. The
+      deployed book and the measured book are therefore different books, and the difference is
+      exactly the convexity that a right-tail objective wants.'
+  mechanism: Screen 2 scores (Final - Initial)/Initial, a geometric quantity. Geometric return is
+    maximised by compounding a larger base for longer, so a rule that keeps capital deployed and
+    lets a winner's share of the book grow should dominate on the median AND on the right tail,
+    while paying for it in drawdown. If it does not, the assumption that idle time is the drag is
+    wrong and the entry gate is earning its cash.
+  failure_mode: Drift and always-on both raise drawdown more than they raise return, because the
+    channel exit is what converts a 40-bar momentum score into a book with a stop. Removing the
+    gate removes the stop.
+  arms:
+  - control_rebalance
+  - drift_band_25
+  - no_trim
+  - always_on_xs
+  - always_on_xs_drift
+  - hybrid_fill
+  trials_added: 6
+  trials_justification: Six weight-path rules are evaluated and one may be selected, so all six
+    count. DECISIONS.md#trial-counting. Gate 4 is already settled unrecoverable at
+    DECISIONS.md#trial-counting-rule, so the marginal deflation cost is not the reason to be
+    sparing; the reason is that the fit window has reversed on the holdout in every sizing sweep
+    this repo has run. See DECISIONS.md#sizing-sweep-outcome.
+  decision_rule: Nothing is promoted on the FIT window. An arm is a candidate only if it improves
+    the HOLDOUT median 14-day return AND holdout P(>5%) without raising holdout worst-window
+    return by more than 5 points against control_rebalance. Any arm that wins on fit and loses on
+    holdout is recorded as a null and named as such.
+  reconciliation_check: control_rebalance must reproduce gates/concentration net_daily for
+    momentum_top3_full to within 0.1 points of holdout median 14-day return, or the simulator is
+    wrong and no arm's number may be read. This check exists because
+    DECISIONS.md#ranking-lookback-mismatch was found exactly this way.
+grid:
+  pool: 30
+  interval: 4h
+  entry_bars: 20
+  exit_bars: 10
+  n_positions: 3
+  momentum_bars: 40
+  max_gross: 1.0
+  fee: 0.0005
+  drift_band: 0.25
+  fit: ['2023-01-01', '2025-01-01']
+  holdout: ['2025-01-01', '2026-09-19']

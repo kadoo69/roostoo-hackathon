@@ -4,7 +4,6 @@ import argparse
 import json
 from collections import deque
 
-import numpy as np
 import pandas as pd
 
 from bot.journal import Journal
@@ -30,6 +29,12 @@ def _fill(o: dict) -> dict | None:
             "fee": float(qty) * float(px) * float(fee_rate),
             "order_id": o.get("order_id"), "event": o["event"],
             "role": o.get("role")}
+
+
+# A round trip below this notional cannot move any value-weighted statistic but
+# gets a full vote in every count-weighted one. It is a rounding residue, not a
+# position. Stated in absolute terms because the books run a fixed 100k NAV.
+DUST_NOTIONAL = 50.0
 
 
 def build(bot: str) -> dict:
@@ -77,16 +82,36 @@ def build(bot: str) -> dict:
             if lot["remaining"] <= 1e-12:
                 q.popleft()
 
-    open_lots = [{"symbol": s, "entry_ts": l["ts"], "qty": round(l["remaining"], 10),
-                  "entry_price": l["price"],
-                  "cost_basis": round(l["remaining"] * l["price"], 4)}
-                 for s, q in lots.items() for l in q if l["remaining"] > 1e-12]
+    open_lots = [{"symbol": s, "entry_ts": lot["ts"], "qty": round(lot["remaining"], 10),
+                  "entry_price": lot["price"],
+                  "cost_basis": round(lot["remaining"] * lot["price"], 4)}
+                 for s, q in lots.items() for lot in q if lot["remaining"] > 1e-12]
 
     t = pd.DataFrame(closed)
     stats = {"closed_trades": len(t), "open_lots": len(open_lots),
              "fills": len(fills), "skipped_orders": skipped,
              "order_errors": errors}
     if len(t):
+        # Count-based statistics give a $5 rounding residue the same vote as a
+        # $20,000 position. On 2026-09-20 three of donchian_1h's eleven "closed
+        # trades" were TRX round trips of $3 to $19 whose net P&L was under a
+        # cent, which alone produced a payoff ratio of 2,156 and moved win rate
+        # by 9 points. DECISIONS.md#dust-trades-distort-count-statistics
+        #
+        # The floor is a REPORTING threshold and changes no trading decision.
+        # Both sets are always returned so it cannot hide anything.
+        t = t.assign(notional=(t.qty.abs() * t.entry_price).round(6))
+        material = t[t.notional >= DUST_NOTIONAL]
+        dust = t[t.notional < DUST_NOTIONAL]
+        stats.update({
+            "dust_trades": int(len(dust)),
+            "dust_notional_floor": DUST_NOTIONAL,
+            "material_trades": int(len(material)),
+            "dust_net_pnl": round(float(dust.net_pnl.sum()), 4) if len(dust) else 0.0,
+            "win_rate_all_trades": round(float((t.net_pnl > 0).mean()), 4),
+        })
+        if len(material):
+            t = material
         wins = t[t.net_pnl > 0]
         losses = t[t.net_pnl <= 0]
         stats.update({
@@ -113,11 +138,13 @@ def build(bot: str) -> dict:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("bots", nargs="*",
-                    default=["bot_a_4h", "bot_b_1h", "bot_c_5names"])
+                    default=["donchian_4h", "donchian_4h_cushion", "donchian_1h",
+                             "momentum_top5_4h", "momentum_top5_cushion"])
     ap.add_argument("--csv", action="store_true")
     a = ap.parse_args()
     out = []
-    for b in (a.bots or ["bot_a_4h", "bot_b_1h", "bot_c_5names"]):
+    for b in (a.bots or ["donchian_4h", "donchian_4h_cushion", "donchian_1h",
+                             "momentum_top5_4h", "momentum_top5_cushion"]):
         r = build(b)
         out.append(r)
         if a.csv:

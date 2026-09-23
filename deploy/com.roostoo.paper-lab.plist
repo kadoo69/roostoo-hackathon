@@ -10,6 +10,8 @@
     <string>/opt/anaconda3/bin/python3</string>
     <string>-m</string>
     <string>bot.paper_lab</string>
+    <string>--config</string>
+    <string>/Users/aaravmahajan/roostoo-hackathon/config/paper_lab_v9.yaml</string>
   </array>
   <key>WorkingDirectory</key><string>/Users/aaravmahajan/roostoo-hackathon</string>
   <key>RunAtLoad</key><true/>

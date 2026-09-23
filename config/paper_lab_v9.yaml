@@ -1,0 +1,156 @@
+meta:
+  name: paper_lab_v9
+  frozen: true
+  declared_utc: '2026-09-21'
+  mode: public_data_paper_only
+  mechanism: >-
+    Prospectively compare the existing channel, flow, benchmark, ranking and
+    cross-sectional controls with a paper-derived liquid-winner rule and three
+    bounded sizing maps on the same top-30 ADV universe and timestamps.
+  supersedes: paper_lab_v8
+  why_a_new_root: >-
+    Candidate-level append-only trace logs and four new research arms change
+    both the experiment declaration and executable code. A new root prevents
+    mixing their forward records with v8. No prior state is copied.
+  evidence_ref: RESEARCH_PORTFOLIO_RETURN.md#6-implemented-forward-experiment-paper-lab-v9
+base_config: config/donchian_4h.yaml
+initial_nav: 100000.0
+poll_seconds: 60
+warmup_bars: 240
+fee_bps: 10.0
+fill_model: later_observed_quote_cross_at_limit
+min_comparison_days: 28
+selection: descriptive_only_no_automatic_promotion
+candidates:
+- name: channel_1h
+  interval: 1h
+  family: channel
+- name: channel_4h
+  interval: 4h
+  family: channel
+- name: channel_8h
+  interval: 8h
+  family: channel
+- name: channel_1d
+  interval: 1d
+  family: channel
+- name: flow_4h
+  interval: 4h
+  family: flow_entry
+- name: btc_hold
+  interval: 4h
+  family: benchmark
+- name: ranked5_4h
+  interval: 4h
+  family: ranked
+- name: ranked5_hourlyexit
+  interval: 4h
+  family: ranked
+  exit_interval: 1h
+  selection_basis: >-
+    Forward control only. Historical exit-clock testing did not improve both
+    windows and worsened holdout drawdown; no automatic promotion.
+- name: balanced_12_equal
+  interval: 4h
+  family: channel
+  allocation:
+    n_positions: 12
+    sizing: equal
+    momentum_bars: 40
+    risk_bars: 90
+    max_gross: 0.8
+    max_single: 0.2
+    min_weight: 0.02
+    target_vol: 0.25
+- name: balanced_5_equal
+  interval: 4h
+  family: channel
+  allocation:
+    n_positions: 5
+    sizing: equal
+    momentum_bars: 40
+    risk_bars: 90
+    max_gross: 0.8
+    max_single: 0.2
+    min_weight: 0.02
+    target_vol: 0.25
+- name: xs_reversal_45d_illiquid
+  interval: 1d
+  family: xs_reversal
+  formation_bars: 45
+  rebalance_bars: 7
+  n_positions: 5
+  sleeve: {rank_min: 31, rank_max: 66}
+  max_spread_bps: 40.0
+  selection_basis: >-
+    Illiquid reversal research arm. Passive-cross fills have no queue or depth,
+    so any performance is an upper bound and must be read with quoted spreads.
+- name: xs_reversal_45d_liquid
+  interval: 1d
+  family: xs_reversal
+  formation_bars: 45
+  rebalance_bars: 7
+  n_positions: 5
+  selection_basis: Liquid-universe sign control for the illiquid reversal arm.
+- name: xs_momentum_45d_illiquid
+  interval: 1d
+  family: xs_reversal
+  formation_bars: 45
+  rebalance_bars: 7
+  n_positions: 5
+  direction: momentum
+  sleeve: {rank_min: 31, rank_max: 66}
+  max_spread_bps: 40.0
+  selection_basis: Same-spread sign control for the illiquid reversal arm.
+
+# Direct, deliberately slow translation of Begusic and Kostanjcar (2019):
+# recent winners inside the liquid pool, equal weighted, rebalanced biweekly.
+- name: liquid_winner_14d
+  interval: 1d
+  family: xs_reversal
+  direction: momentum
+  formation_bars: 14
+  rebalance_bars: 14
+  n_positions: 9
+  selection_basis: >-
+    Paper mechanism arm: top 30 percent of the 30-name ADV-screened Roostoo
+    intersection by 14-day return; equal weight and 14-day rebalance. The paper
+    used a broader historical universe, so this is a forward translation, not
+    a claimed replication.
+
+# Position-sizing experiment. Signal, universe, clock, caps and fee model are
+# identical across the three arms; only the sizing map changes.
+- name: top3_equal_full
+  interval: 4h
+  family: channel
+  selection_basis: Bounded equal-weight control for the two portfolio-aware sizing arms.
+  allocation: &top3_bounded
+    n_positions: 3
+    sizing: equal
+    momentum_bars: 40
+    risk_bars: 90
+    max_gross: 1.0
+    max_single: 0.45
+    min_weight: 0.20
+    target_vol: 10.0
+    full_deployment: true
+- name: top3_invvol_full
+  interval: 4h
+  family: channel
+  selection_basis: >-
+    Slow inverse-volatility hypothesis; all fields match top3_equal_full except
+    sizing, so the paired delta isolates volatility scaling.
+  allocation:
+    <<: *top3_bounded
+    sizing: inverse_vol
+- name: top3_conviction_full
+  interval: 4h
+  family: channel
+  selection_basis: >-
+    Arm A from HANDOVER section 4i. Weight the same selected names by bounded
+    exp(0.35 * robust momentum z-score) divided by slow volatility. This is a
+    paper-only hypothesis until paired forward evidence accumulates.
+  allocation:
+    <<: *top3_bounded
+    sizing: conviction_vol
+    conviction_eta: 0.35

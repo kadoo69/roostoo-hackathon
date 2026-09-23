@@ -32,9 +32,9 @@ def xsec_momentum(p, members, lookback=20, quantile=0.2):
 
 
 def donchian_breakout(p, members, lookback=20):
-    c, h, l = p["close"], p["high"], p["low"]
-    up = h.rolling(lookback).max().shift(1)
-    dn = l.rolling(lookback).min().shift(1)
+    c, high, low = p["close"], p["high"], p["low"]
+    up = high.rolling(lookback).max().shift(1)
+    dn = low.rolling(lookback).min().shift(1)
     sig = pd.DataFrame(0.0, index=c.index, columns=c.columns)
     sig = sig.mask(c > up, 1.0).mask(c < dn, -1.0)
     return _neutralise(sig.where(c.notna()), members)

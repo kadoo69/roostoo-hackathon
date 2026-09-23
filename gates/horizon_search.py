@@ -5,12 +5,9 @@ import warnings
 import numpy as np
 import pandas as pd
 
-from core.config import prereg
-from costs.model import CostModel
-from data import daily, intraday, universe
 from portfolio import overlay
-from portfolio.backtest import PERIODS_PER_YEAR, evaluate, run
-from portfolio.construct import apply_no_trade_band, cap_net_exposure, holding_period_days
+from portfolio.backtest import evaluate
+from portfolio.construct import apply_no_trade_band, cap_net_exposure
 
 warnings.filterwarnings("ignore")
 SPLIT = "2023-01-01"

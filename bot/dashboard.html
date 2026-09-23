@@ -67,21 +67,72 @@ tbody tr:hover{background:#151a20}
 .chips{display:flex;gap:5px;flex-wrap:wrap;padding:11px 14px}
 .chip{font-size:10.5px;font-family:var(--mono);padding:3px 7px;border-radius:3px;background:var(--dnbg);color:var(--dn);border:1px solid #48191c}
 .note{font-size:11px;color:var(--faint);padding:0 2px}
+.priority{display:grid;grid-template-columns:1.3fr repeat(2,1fr);gap:10px}
+.pcard{background:var(--panel);border:1px solid var(--line);border-top:2px solid var(--line2);border-radius:7px;padding:14px 16px}
+.pcard.primary{border-top-color:var(--up)} .pcard.secondary{border-top-color:var(--acc)}
+.pcard .ord{font:600 9px/1 var(--mono);color:var(--faint);letter-spacing:.12em;text-transform:uppercase}
+.pcard .goal{font-size:18px;margin:7px 0 3px}.pcard .why{font-size:11px;color:var(--dim)}
+.scroll{overflow:auto}.lead tbody tr:first-child{background:var(--upbg)}
+.lead td,.lead th{white-space:nowrap}.rank{color:var(--faint);width:36px}
+.status{display:inline-block;padding:2px 7px;border:1px solid var(--line2);border-radius:10px;font:600 9px/1.3 var(--mono);letter-spacing:.05em;text-transform:uppercase}
+.status.live{color:var(--up);border-color:#245f36;background:var(--upbg)}
+.status.stale{color:var(--dn);border-color:#5e292c;background:var(--dnbg)}
+.status.wired{color:var(--warn);border-color:#5a4518;background:var(--warnbg)}
+.status.planned{color:var(--faint)}
+.stars{color:var(--warn);letter-spacing:.08em}.logic td{vertical-align:top}.logic .desc{font-family:var(--sans);color:var(--dim);white-space:normal;min-width:180px}
+.marketgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border-bottom:1px solid var(--line)}
+.source-note{padding:10px 14px;color:var(--dim);font-size:11px;border-top:1px solid var(--line)}
+@media(max-width:850px){.priority{grid-template-columns:1fr}.marketgrid{grid-template-columns:repeat(2,1fr)}}
 </style></head><body>
 <header>
- <div class="brand"><h1>Roostoo Trading Desk</h1><span id="mode">—</span></div>
+ <div class="brand"><h1>Roostoo Trading Desk</h1><span id="mode">—</span><a href="#returns" style="color:#4493f8;text-decoration:none;font-size:11px">Returns</a><a href="#market-intelligence" style="color:#4493f8;text-decoration:none;font-size:11px">Market</a><a href="#data-sources" style="color:#4493f8;text-decoration:none;font-size:11px">Sources</a><a href="/analysis" style="color:#4493f8;text-decoration:none;font-size:11px;border:1px solid #1e252e;padding:4px 10px;border-radius:5px;margin-left:8px">Analysis →</a></div>
  <div class="hstat" id="hstat"></div>
 </header>
 <main>
+ <section><div class="sect">Decision order · 14-day competition</div><div class="priority">
+  <div class="pcard primary"><div class="ord">Priority 01</div><div class="goal">Portfolio return</div><div class="why">Rank every live book by marked NAV return. This decides qualification.</div></div>
+  <div class="pcard secondary"><div class="ord">Priority 02</div><div class="goal">Sharpe · Sortino · Calmar</div><div class="why">Read after return and only with enough complete daily observations.</div></div>
+  <div class="pcard"><div class="ord">Priority 03</div><div class="goal">Data confidence</div><div class="why">Freshness, coverage and whether a feed is decision input or research-only.</div></div>
+ </div></section>
+ <section class="panel" id="returns"><div class="ph"><div><div class="pt">Portfolio return leaderboard</div><div class="psub">sorted by net return · ratios are secondary and never replace missing history</div></div><div class="tags"><span class="tag warn">14 day objective</span></div></div><div class="scroll"><table class="lead"><thead><tr><th>#</th><th>portfolio</th><th>state</th><th class="r">return</th><th class="r">net p&amp;l</th><th class="r">equity</th><th class="r">drawdown</th><th class="r">gross</th><th class="r">positions</th><th class="r">sharpe</th><th class="r">sortino</th><th class="r">calmar</th><th>evidence</th></tr></thead><tbody id="leaderboard"></tbody></table></div></section>
+ <section class="panel"><div class="ph"><div><div class="pt">Strategy logic</div><div class="psub">what each bot trades, how it sizes, and which feeds may influence orders</div></div></div><div class="scroll"><table class="logic"><thead><tr><th>portfolio</th><th>signal</th><th>ranking</th><th>sizing</th><th>gate</th><th>control</th><th>decision data</th><th>research-only data</th></tr></thead><tbody id="logic"></tbody></table></div></section>
+ <section class="panel" id="market-intelligence"><div class="ph"><div><div class="pt">Live market intelligence</div><div class="psub">Binance spot + derivatives + microstructure · observability until forward validation</div></div><div id="scanstate"></div></div><div id="scanner"></div></section>
+ <section class="panel" id="data-sources"><div class="ph"><div><div class="pt">Data source stack</div><div class="psub">priority, cost, usefulness, integration and freshness</div></div></div><div class="scroll"><table><thead><tr><th>priority</th><th>dataset</th><th>cost</th><th>usefulness</th><th>method</th><th>status</th><th class="r">coverage</th><th>role</th></tr></thead><tbody id="sources"></tbody></table></div><div class="source-note">Direct structured APIs are used for exchange, derivatives and on-chain feeds. Web extraction belongs only on webpage-only sources such as unlock calendars or social pages; it is not placed in the trading path.</div></section>
  <section><div class="sect">Market breadth · Donchian 20/10 on 4h</div><div id="breadth"></div></section>
- <section><div class="sect">Insights</div><div class="ins" id="ins"></div></section>
- <section><div class="sect">Bots</div><div class="bots" id="bots"></div></section>
+ <section><div class="sect">Operator insights</div><div class="ins" id="ins"></div></section>
+ <section><div class="sect">Bot detail · positions, trades and execution quality</div><div class="bots" id="bots"></div></section>
  <div class="note" id="foot"></div>
 </main>
 <script>
 const N=(v,d=2)=>v==null||Number.isNaN(v)?'—':Number(v).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d});
 const S=v=>v==null?'dim':(v>0?'up':v<0?'dn':'dim');
 const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const age=s=>s==null?'—':s<60?`${Math.round(s)}s`:s<3600?`${Math.round(s/60)}m`:`${(s/3600).toFixed(1)}h`;
+const stars=n=>'★'.repeat(n)+'☆'.repeat(5-n);
+
+function leaderboardBlock(rows){
+ if(!rows||!rows.length)return '<tr><td colspan="13" class="empty">no portfolio journals found</td></tr>';
+ return rows.map(r=>`<tr><td class="rank">${r.rank}</td><td><b>${esc(r.bot)}</b>${r.control_of?`<div class="faint">arm vs ${esc(r.control_of)}</div>`:''}</td><td><span class="status ${r.live?'live':'stale'}">${r.live?'live':'stale '+age(r.age_s)}</span></td><td class="r ${S(r.return_pct)}"><b>${N(r.return_pct,3)}%</b></td><td class="r ${S(r.pnl)}">${N(r.pnl)}</td><td class="r">${N(r.equity,0)}</td><td class="r ${r.drawdown_pct<0?'dn':'dim'}">${N(r.drawdown_pct,2)}%</td><td class="r">${N((r.gross||0)*100,0)}%</td><td class="r">${r.positions??0}</td><td class="r">${r.sharpe==null?'—':N(r.sharpe)}</td><td class="r">${r.sortino==null?'—':N(r.sortino)}</td><td class="r">${r.calmar==null?'—':N(r.calmar)}</td><td class="faint">${r.observations>=2?`${r.observations} daily returns`:`collecting · ${r.days||0} day(s)`}</td></tr>`).join('');
+}
+
+function logicBlock(rows){
+ if(!rows||!rows.length)return '<tr><td colspan="8" class="empty">no strategy configs loaded</td></tr>';
+ return rows.map(r=>`<tr><td><b>${esc(r.bot)}</b></td><td>${esc(r.signal)}</td><td>${esc(r.ranking)}</td><td>${esc(r.sizing)}</td><td>${esc(r.gate)}</td><td>${r.control_of?esc(r.control_of):'<span class="faint">control</span>'}</td><td class="desc">${esc(r.decision_data)}</td><td class="desc">${esc(r.research_data)}</td></tr>`).join('');
+}
+
+function sourcesBlock(rows){
+ return (rows||[]).map(r=>`<tr><td class="rank">${String(r.rank).padStart(2,'0')}</td><td><b>${esc(r.name)}</b></td><td>${esc(r.cost)}</td><td><span class="stars" aria-label="${r.usefulness} out of 5">${stars(r.usefulness)}</span></td><td class="faint">${esc(r.method)}</td><td><span class="status ${r.status}">${esc(r.status)}</span></td><td class="r">${r.coverage||'—'}</td><td class="desc">${esc(r.purpose)}</td></tr>`).join('');
+}
+
+function scannerBlock(s){
+ const badge=document.getElementById('scanstate');
+ if(!s){badge.innerHTML='<span class="status wired">no sample</span>';return '<div class="empty">Scanner is wired but no state file is available.</div>'}
+ badge.innerHTML=`<span class="status ${s.live?'live':'stale'}">${s.live?'live':'stale'} · ${age(s.age_s)}</span>`;
+ const u=s.universe||{}, cards=[['dispersion',u.dispersion_pct==null?'—':N(u.dispersion_pct,2)+'%'],['coins long',u.pct_long==null?'—':N(u.pct_long,1)+'%'],['median move',u.median_ret_pct==null?'—':N(u.median_ret_pct,2)+'%'],['at risk',u.n_at_risk??(s.by_state||{}).at_risk??0]].map(([k,v])=>`<div class="m"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('');
+ const c=(s.crowding||[]).slice(0,10);
+ const table=c.length?`<div class="scroll"><table><thead><tr><th>symbol</th><th class="r">funding ann.</th><th class="r">funding z</th><th class="r">OI 6 bars</th><th class="r">OI z</th><th class="r">taker B/S</th><th class="r">book imbalance</th><th class="r">10bp depth</th><th class="r">top 5% trade share</th></tr></thead><tbody>${c.map(x=>`<tr><td>${esc(x.symbol)}</td><td class="r ${S(-(x.funding_ann_pct||0))}">${x.funding_ann_pct==null?'—':N(x.funding_ann_pct,2)+'%'}</td><td class="r">${x.funding_z==null?'—':N(x.funding_z,2)}</td><td class="r ${S(x.oi_chg_6b_pct)}">${x.oi_chg_6b_pct==null?'—':N(x.oi_chg_6b_pct,2)+'%'}</td><td class="r">${x.oi_z==null?'—':N(x.oi_z,2)}</td><td class="r">${x.taker_buy_sell==null?'—':N(x.taker_buy_sell,2)}</td><td class="r ${S(x.book_imbalance)}">${x.book_imbalance==null?'—':N(x.book_imbalance,3)}</td><td class="r">${x.depth_10bps_usd==null?'—':N(x.depth_10bps_usd,0)}</td><td class="r">${x.top5pct_notional_share==null?'—':N(x.top5pct_notional_share*100,1)+'%'}</td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">No enriched futures/trade/book sample yet.</div>';
+ return `<div class="marketgrid">${cards}</div>${table}`;
+}
 
 function eqChart(s){
  if(!s||s.length<2)return '<div class="empty">collecting equity marks…</div>';
@@ -124,6 +175,16 @@ function tradeTable(t){
  return `<table><thead><tr><th>symbol</th><th class="r">net ret</th><th class="r">p&l</th><th class="r">held</th></tr></thead><tbody>${
   t.slice(0,12).map(x=>`<tr><td>${esc(x.symbol)}</td><td class="r ${S(x.net_return_pct)}">${N(x.net_return_pct,2)}%</td><td class="r ${S(x.net_pnl)}">${N(x.net_pnl)}</td><td class="r faint">${N(x.hold_hours,1)}h</td></tr>`).join('')}</tbody></table>`;
 }
+function markoutBlock(m){
+ if(!m||m.error)return '<div class="empty">markout unavailable</div>';
+ const hs=Object.entries(m.horizons||{});
+ const have=hs.some(([,v])=>v.n>0);
+ const head=`<div class="empty" style="margin-bottom:6px">${esc(m.verdict||'')}</div>`;
+ if(!have)return head+`<div class="empty">${m.n_fills||0} fills seen, ${m.n_with_reference_quote||0} with a reference quote. Marks began 2026-09-20; nothing earlier can be marked out.</div>`;
+ const edge=m.mean_entry_edge_bps!=null?`<div class="empty" style="margin-bottom:6px">mean entry edge vs mid at submission: <b>${N(m.mean_entry_edge_bps,2)} bps</b></div>`:'';
+ return head+edge+`<table><thead><tr><th>horizon</th><th class="r">n</th><th class="r">mean bps</th><th class="r">median</th><th class="r">% neg</th></tr></thead><tbody>${
+  hs.map(([k,v])=>`<tr><td>${esc(k)}</td><td class="r faint">${v.n}</td><td class="r ${S(v.mean_bps)}">${v.mean_bps==null?'—':N(v.mean_bps,2)}</td><td class="r ${S(v.median_bps)}">${v.median_bps==null?'—':N(v.median_bps,2)}</td><td class="r faint">${v.pct_negative==null?'—':N(v.pct_negative*100,0)+'%'}</td></tr>`).join('')}</tbody></table>`;
+}
 function botPanel(b){
  const m=b.meta||{},s=b.blotter||{},p=b.performance;
  const tags=[b.live?'<span class="tag on">live</span>':'<span class="tag off">stale</span>',
@@ -150,7 +211,9 @@ function botPanel(b){
   <div class="split">
    <div class="sub"><div class="sh"><span>open positions</span><span>${N(b.gross*100,0)}% gross</span></div>${posTable(b.positions)}</div>
    <div class="sub"><div class="sh"><span>closed trades</span><span>${s.win_rate!=null?N(s.win_rate*100,0)+'% win':''}</span></div>${tradeTable(b.closed)}</div>
-  </div></div>`;
+  </div>
+  <div class="sub" style="margin-top:8px"><div class="sh"><span>post-fill markout · adverse selection</span><span class="faint">${(b.markout&&b.markout.n_fills)||0} fills</span></div>${markoutBlock(b.markout)}</div>
+  </div>`;
 }
 async function tick(){
  try{
@@ -158,12 +221,16 @@ async function tick(){
   const A=d.bots[0]||{};
   document.getElementById('mode').textContent=(A.meta&&A.meta.dry_run?'paper trading · live prices':'LIVE ORDERS')+' · '+(A.meta?A.meta.venue:'');
   const tot=d.bots.reduce((a,b)=>a+(b.pnl||0),0), eq=d.bots.reduce((a,b)=>a+(b.equity||0),0);
-  document.getElementById('hstat').innerHTML=[
+	  document.getElementById('hstat').innerHTML=[
    ['combined p&l',`<span class="${S(tot)}">${N(tot)}</span>`],['equity',N(eq,0)],
    ['bots live',d.bots.filter(b=>b.live).length+'/'+d.bots.length],
    ['cycles',d.bots.reduce((a,b)=>a+(b.cycles||0),0)]
-  ].map(([l,n])=>`<div class="hs"><div class="l">${l}</div><div class="n num">${n}</div></div>`).join('');
-  document.getElementById('breadth').innerHTML=breadthBlock(d.breadth,d.breadth_updated);
+	  ].map(([l,n])=>`<div class="hs"><div class="l">${l}</div><div class="n num">${n}</div></div>`).join('');
+	  document.getElementById('leaderboard').innerHTML=leaderboardBlock(d.leaderboard);
+	  document.getElementById('logic').innerHTML=logicBlock(d.strategy_logic);
+	  document.getElementById('sources').innerHTML=sourcesBlock(d.sources);
+	  document.getElementById('scanner').innerHTML=scannerBlock(d.scanner);
+	  document.getElementById('breadth').innerHTML=breadthBlock(d.breadth,d.breadth_updated);
   const ins=[]; d.bots.forEach(b=>(b.insights||[]).forEach(i=>ins.push([b.bot,i])));
   const seen=new Set();
   document.getElementById('ins').innerHTML=ins.filter(([bot,i])=>{const k=bot+i.key;if(seen.has(k))return false;seen.add(k);return true})

@@ -7,7 +7,7 @@ import pandas as pd
 from scipy import stats
 
 from core import artifacts
-from core.config import gate_config, trial_count
+from core.config import gate_config, trial_count, trial_counts_by_family
 from costs.model import CostModel
 from data import daily, intraday
 from gates.asymmetry_test import SPLIT, context
@@ -145,6 +145,8 @@ def main() -> int:
     artifacts.require_passed("g1_data_integrity")
 
     n = trial_count()
+    families = trial_counts_by_family()
+    n_sharpe = families["sharpe"]
     candidates = candidate_returns()
 
     variants = {
@@ -155,7 +157,7 @@ def main() -> int:
     report = {}
     for vname, var in variants.items():
         block = {"trial_sharpe_variance_per_obs": round(var, 8), "counts": {}}
-        for n_trials in (1, 21, n):
+        for n_trials in sorted({1, 21, n_sharpe, n}):
             a = stats.norm.ppf(1.0 - 1.0 / n_trials) if n_trials >= 2 else 0.0
             b = stats.norm.ppf(1.0 - 1.0 / (n_trials * np.e)) if n_trials >= 2 else 0.0
             sr0 = (np.sqrt(var) * ((1.0 - EULER) * a + EULER * b)
@@ -180,6 +182,12 @@ def main() -> int:
                  if isinstance(v, dict) and k != "btc_hold_1d")
     artifacts.write(GATE, passed, {
         "n_trials": n,
+        "n_trials_sharpe_family": n_sharpe,
+        "trial_families": families,
+        "counting_rule_ref": "DECISIONS.md#trial-counting-rule",
+        "counting_rule_note": "The raw ledger length and the Sharpe-family count are "
+                              "reported together and neither replaces the other. "
+                              "The gate verdict uses the raw count. Both fail.",
         "threshold_min_dsr": cfg["min_dsr_probability"],
         "variance_note": "homogeneous_42 is the estimator established at N=131; "
                          "wide_sample adds the low-timeframe channel trials",

@@ -1,0 +1,90 @@
+meta:
+  declared_utc: '2026-09-20'
+  declared_before_any_backtest: true
+  requested_by: operator
+  purpose: >-
+    test the state the operator identified live - a name that has run hard but
+    is still below its entry channel, so the current rule declines it
+  justification_ref: DECISIONS.md#strong-retraced-declaration
+cost_of_this_sweep:
+  ledger_before: 730
+  configs_added: 24
+  all_counted_as_trials: true
+
+premise:
+  live_observation: |
+    On 2026-09-20 the books held TRXUSDT, up 1.0% over seven days, while
+    declining ENAUSDT (+52.4%), AVAXUSDT (+34.2%) and PEPEUSDT (+18.1%).
+    All three were in trend_up state yet 5.2% to 5.8% below the 20-bar high,
+    because 20 bars on a 4h clock is only 3.3 days and each had spiked and
+    pulled back inside that window. The rule bought the weakest of the six
+    names available because it was the only one printing a new 3.3-day high.
+
+  why_this_is_not_the_reversal_null: |
+    DECISIONS.md#meanrev-xs-outcome killed cross-sectional reversal - buying
+    the biggest LOSERS - on 48 configurations. This state is the opposite
+    population: names with strong positive trailing returns that happen to be
+    off their local high. A coin up 52% in a week is not a loser, and the
+    reversal null says nothing about it.
+    It is equally not the existing breakout rule, which requires a NEW high and
+    by construction excludes every name tested here.
+
+  why_it_is_not_obviously_free_money: |
+    The same state describes a blow-off top three bars after it forms. The
+    condition cannot distinguish a healthy pullback in an advance from the
+    first leg down of a reversal, and the per-coin work at
+    DECISIONS.md#coin-selection-does-not-persist showed that picking names on
+    recent strength did not persist out of sample at p = 0.586.
+
+  the_selection_bias_this_design_removes: |
+    The hypothesis came from looking at four coins that are up TODAY, which is
+    selection on the outcome. It is therefore tested across every name and the
+    full history, never on those four, and it is scored against two controls
+    that share its universe.
+
+controls:
+  new_high_control: |
+    Same strength filter, but entry requires a NEW 20-bar high - the live rule
+    restricted to strong names. If this matches or beats the retraced arm, the
+    retrace adds nothing and the strength filter is doing the work.
+  weak_retraced_control: |
+    Same retrace filter with the strength condition INVERTED. If this performs
+    equally, the strength condition adds nothing and the rule is just buying
+    dips, which is already refuted.
+  both_controls_required: |
+    The hypothesis is credited only if it beats BOTH on BOTH windows. Beating
+    the live baseline is not evidence, because these arms trade a different and
+    more selective population.
+
+rule:
+  strength: close / close.shift(strong_bars) - 1 >= strong_thresh
+  retrace: 0 < (upper20 / close - 1) <= retrace_max, so the name is BELOW the
+    20-bar high but within retrace_max of it
+  entry: at the bar close where both hold; fills at the next bar's open
+  exit: |
+    Unchanged 10-bar channel low, plus a maximum hold. The exit is deliberately
+    the live one so that any difference measured is attributable to the ENTRY
+    state and not to a second change.
+  long_only: spot venue, no shorts
+
+grid:
+  books: [donchian_4h, momentum_top5_4h]
+  strong_bars: 42
+  strong_thresh: [0.15, 0.30]
+  retrace_max: [0.03, 0.06, 0.10]
+  max_hold_bars: [20, 40]
+  configs: 24
+
+method:
+  fit_window: ['2023-01-01', '2025-01-01']
+  holdout_window: ['2025-01-01', '2026-09-19']
+  fee_bps: 5
+  reported: [screen3, sharpe, sortino, calmar, max_drawdown, skew,
+             p_return_positive, p_clears_screen2, annual_turnover,
+             n_entries, mean_gross]
+  selection_rule: |
+    None. A configuration is a candidate only if it beats BOTH controls on BOTH
+    windows. Seven families in this repo have reversed out of sample after
+    passing a weaker test, and one of them reversed today.
+  deployment_rule: |
+    A passing configuration goes live only as a paper arm beside both controls.

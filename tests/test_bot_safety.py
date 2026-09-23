@@ -7,13 +7,12 @@ import pytest
 from bot import feed, portfolio, risk, verify
 from bot.execution import Executor
 from bot.journal import Journal
-from bot.run import Bot
 from bot.settings import load
 from venue.roostoo import PairSpec, RoostooClient
 
 
 def settings():
-    return load("config/bot_a_4h.yaml")
+    return load("config/donchian_4h.yaml")
 
 
 def executor(tmp_path):
@@ -80,6 +79,193 @@ def test_ticker_records_server_timestamp(monkeypatch):
     assert client.last_ticker_server_time_ms == 123456
 
 
-def test_authenticated_orders_remain_blocked_until_reconciliation_exists():
-    with pytest.raises(RuntimeError, match="restart_reconciliation"):
-        Bot(replace(settings(), dry_run=False))
+def test_a_live_executor_writes_its_intent_before_it_calls_the_venue(tmp_path):
+    """The whole point: the record must survive the process dying mid-submit."""
+    from bot.intents import IntentLog
+
+    log = IntentLog("test", tmp_path)
+    seen = {}
+
+    class DyingClient:
+        def place_order(self, pair, side, quantity, price=None, client_order_id=None):
+            seen["cid"] = client_order_id
+            seen["intents_on_disk"] = len(log.unresolved())
+            raise RuntimeError("process died here")
+
+    ex, spec = executor(tmp_path)
+    ex.client = DyingClient()
+    ex.intents = log
+    ex.settings = replace(settings(), dry_run=False)
+    plan = {"pair": spec.pair, "symbol": "BTCUSDT", "side": "BUY", "quantity": 1.0,
+            "price": 100.0, "type": "LIMIT"}
+    with pytest.raises(RuntimeError):
+        ex.send(plan)
+    assert seen["intents_on_disk"] == 1, "intent must be durable BEFORE the venue call"
+    assert seen["cid"], "the venue must be given the intent id so it can be matched later"
+    assert len(log.unresolved()) == 1
+
+
+def test_a_placed_order_resolves_its_intent(tmp_path):
+    from bot.intents import IntentLog
+
+    log = IntentLog("test2", tmp_path)
+
+    class OkClient:
+        def place_order(self, pair, side, quantity, price=None, client_order_id=None):
+            return {"OrderDetail": {"OrderID": 7, "Status": "FILLED"}}
+
+    ex, spec = executor(tmp_path)
+    ex.client = OkClient()
+    ex.intents = log
+    ex.settings = replace(settings(), dry_run=False)
+    ex.send({"pair": spec.pair, "symbol": "BTCUSDT", "side": "BUY", "quantity": 1.0,
+             "price": 100.0, "type": "LIMIT"})
+    assert log.unresolved() == []
+
+
+def test_an_intent_that_cannot_be_settled_keeps_live_submission_blocked(tmp_path):
+    from bot.intents import IntentLog, reconcile
+
+    log = IntentLog("test3", tmp_path)
+    log.open_intent({"pair": "BTC/USD", "symbol": "BTCUSDT", "side": "BUY",
+                     "quantity": 1.0, "price": 100.0, "type": "LIMIT"})
+
+    class UnreachableClient:
+        def query_by_client_id(self, cid, pair):
+            raise TimeoutError("venue unreachable")
+
+        def query_order(self, pair=None):
+            raise TimeoutError("venue unreachable")
+
+    report = reconcile(log, UnreachableClient())
+    assert report["still_unknown"] == 1
+    assert report["clean"] is False
+
+
+def test_a_clean_reconciliation_unblocks_live_submission(tmp_path):
+    from bot.intents import IntentLog, reconcile
+
+    log = IntentLog("test4", tmp_path)
+    log.open_intent({"pair": "BTC/USD", "symbol": "BTCUSDT", "side": "BUY",
+                     "quantity": 1.0, "price": 100.0, "type": "LIMIT"})
+
+    class KnowsNothingLanded:
+        def query_by_client_id(self, cid, pair):
+            return None
+
+    report = reconcile(log, KnowsNothingLanded())
+    assert report["clean"] is True
+    assert report["settled"] == 1
+    assert log.unresolved() == []
+
+
+def test_a_pair_with_a_resting_order_is_not_ordered_again(tmp_path):
+    """A resting LIMIT locks the asset; holdings do not show it. Without this
+    guard the bot re-sends every cycle and the venue answers -2010."""
+    ex, spec = executor(tmp_path)
+    ex.settings = replace(settings(), dry_run=False)
+    ex.pending_pairs = {"BTCUSDT"}
+    rec = ex.send({"pair": spec.pair, "symbol": "BTCUSDT", "side": "SELL",
+                   "quantity": 1.0, "price": 100.0, "type": "LIMIT"})
+    assert rec["skipped"] == "order_already_pending"
+
+
+def test_a_dry_run_never_reports_pending_pairs(tmp_path):
+    ex, _ = executor(tmp_path)
+    ex.pending_pairs = {"BTCUSDT"}
+    assert ex.refresh_pending() == set()
+
+
+def test_a_stale_cancel_carries_the_pair_because_binance_requires_it(tmp_path):
+    seen = {}
+
+    class Client:
+        def query_order(self, pending_only=None, **kw):
+            return {"OrderDetails": [{"OrderID": 11, "Pair": "BTC/USDT",
+                                      "CreateTimestamp": 0, "Status": "NEW"}]}
+
+        def cancel_order(self, order_id=None, pair=None):
+            seen["order_id"], seen["pair"] = order_id, pair
+            return {}
+
+    ex, _ = executor(tmp_path)
+    ex.client = Client()
+    ex.settings = replace(settings(), dry_run=False)
+    ex.sweep_unfilled()
+    assert seen == {"order_id": 11, "pair": "BTC/USDT"}
+
+
+def _wide_tick_executor(tmp_path):
+    spec = PairSpec("PEPE/USD", 8, 0, 1.0, "crypto", True)
+    return Executor(RoostooClient(), {spec.pair: spec}, settings(), Journal("test", tmp_path)), spec
+
+
+def test_a_one_tick_quote_is_accepted_however_wide_in_bps(tmp_path):
+    ex, spec = _wide_tick_executor(tmp_path)
+    q = {"PEPE/USD": {"MaxBid": 0.00000485, "MinAsk": 0.00000486, "LastPrice": 0.00000485}}
+    plan = ex.prepare({"symbol": "PEPEUSDT", "side": "BUY", "quantity": 5_000_000.0}, q)
+    assert not plan.get("skipped")
+    assert plan["wide_tick"] is True and plan["ref_spread_bps"] > 20
+    assert plan["price"] == 0.00000485
+
+
+def test_a_two_tick_quote_wider_than_the_limit_is_still_refused(tmp_path):
+    ex, _ = _wide_tick_executor(tmp_path)
+    q = {"PEPE/USD": {"MaxBid": 0.00000485, "MinAsk": 0.00000487, "LastPrice": 0.00000486}}
+    plan = ex.prepare({"symbol": "PEPEUSDT", "side": "BUY", "quantity": 5_000_000.0}, q)
+    assert plan["skipped"] == "spread_exceeds_limit"
+
+
+def test_a_tight_name_is_never_marked_wide_tick(tmp_path):
+    ex, _ = executor(tmp_path)
+    q = {"BTC/USD": {"MaxBid": 100000.00, "MinAsk": 100000.01, "LastPrice": 100000.0}}
+    plan = ex.prepare({"symbol": "BTCUSDT", "side": "BUY", "quantity": 0.1}, q)
+    assert plan["wide_tick"] is False
+
+
+def test_a_paper_fill_on_a_wide_tick_name_is_charged_the_far_side(tmp_path, monkeypatch):
+    from bot.run import Bot
+    b = Bot.__new__(Bot)
+    b.s = settings()
+    b.cash, b.holdings = 1000.0, {}
+    plan = {"symbol": "PEPEUSDT", "side": "BUY", "quantity": 1e7, "price": 0.00000485, "type": "LIMIT",
+            "ref_bid": 0.00000485, "ref_ask": 0.00000486, "wide_tick": True}
+    b.apply_dry_fill(plan)
+    assert abs((1000.0 - b.cash) - 1e7 * 0.00000486 * 1.0005) < 1e-9
+
+
+def _paper_bot(tmp_path, cash):
+    from bot.run import Bot
+    b = Bot.__new__(Bot)
+    b.s = settings()
+    b.cash, b.holdings = cash, {}
+    spec = PairSpec("LTC/USD", 2, 3, 1.0, "crypto", True)
+    b.executor = Executor(RoostooClient(), {spec.pair: spec}, b.s, Journal("test", tmp_path))
+    return b
+
+
+def test_a_buy_is_shrunk_so_notional_plus_fee_fits_the_cash(tmp_path):
+    b = _paper_bot(tmp_path, 33310.74)
+    plan = {"symbol": "LTCUSDT", "pair": "LTC/USD", "side": "BUY", "type": "LIMIT",
+            "quantity": 531.9, "price": 62.66, "notional": 33328.85}
+    got = b.fit_to_cash(plan, b.cash)
+    assert got["quantity"] * got["price"] * 1.0005 <= b.cash
+    assert got["cash_capped_from"] == 33328.85
+    assert b.apply_dry_fill(got) is True
+
+
+def test_a_buy_that_cannot_reach_the_minimum_is_skipped_not_faked(tmp_path):
+    b = _paper_bot(tmp_path, 0.5)
+    plan = {"symbol": "LTCUSDT", "pair": "LTC/USD", "side": "BUY", "type": "LIMIT",
+            "quantity": 1.0, "price": 62.66, "notional": 62.66}
+    assert b.fit_to_cash(plan, b.cash)["skipped"] == "insufficient_cash"
+
+
+def test_a_refused_paper_fill_reports_false():
+    from bot.run import Bot
+    b = Bot.__new__(Bot)
+    b.s = settings()
+    b.cash, b.holdings = 10.0, {}
+    assert b.apply_dry_fill({"symbol": "LTCUSDT", "side": "BUY", "quantity": 1.0, "price": 62.66,
+                             "type": "LIMIT"}) is False
+    assert b.holdings == {}

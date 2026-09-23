@@ -27,8 +27,20 @@ class Store:
         tmp.replace(self.path)
 
 
-def wallet_positions(wallet: dict, quote: str = "USD") -> tuple[dict[str, float], float]:
+def wallet_positions(wallet: dict, quote: str = "USD",
+                     universe: set[str] | None = None) -> tuple[dict[str, float], float]:
+    """Venue wallet to (holdings, cash).
+
+    `universe` restricts what the bot will CLAIM as its own. The Roostoo
+    competition account starts as pure cash, so claiming everything is correct
+    there and `universe` is left None. A Binance testnet account is pre-seeded
+    with several hundred non-zero balances, and a bot that adopts all of them
+    believes it holds ~500 positions and tries to liquidate every one on its
+    first cycle. Anything outside the universe is reported, not adopted.
+    DECISIONS.md#testnet-live
+    """
     holdings: dict[str, float] = {}
+    ignored: dict[str, float] = {}
     cash = 0.0
     coins = wallet.get("Coins", wallet) if isinstance(wallet, dict) else {}
     for coin, detail in (coins or {}).items():
@@ -38,5 +50,14 @@ def wallet_positions(wallet: dict, quote: str = "USD") -> tuple[dict[str, float]
         if coin.upper() in (quote, "USD", "USDT"):
             cash = total
         elif total > 0:
-            holdings[f"{coin.upper()}USDT"] = total
+            sym = f"{coin.upper()}USDT"
+            if universe is None or sym in universe:
+                holdings[sym] = total
+            else:
+                ignored[sym] = total
+    if ignored:
+        holdings_ignored.update(ignored)
     return holdings, cash
+
+
+holdings_ignored: dict[str, float] = {}

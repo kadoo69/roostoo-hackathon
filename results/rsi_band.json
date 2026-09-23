@@ -1,0 +1,664 @@
+{
+ "declaration": "config/rsi_band.yaml",
+ "rule": "buy RSI cross up 50; banded sells at 70, uncapped sells only on cross back down",
+ "intervals": {
+  "15m": {
+   "banded": {
+    "all_coins": {
+     "fee_5bps": {
+      "trades": 62357,
+      "trades_per_day": 99.6,
+      "win_rate": 0.381,
+      "mean_gross_bps": -0.36,
+      "mean_net_bps": -10.36,
+      "median_net_bps": -20.68,
+      "total_net_pct": -6459.27,
+      "median_bars_held": 3,
+      "median_hours_held": 0.75,
+      "pct_exited_at_target": 0.1095
+     },
+     "fee_10bps": {
+      "trades": 62357,
+      "trades_per_day": 99.6,
+      "win_rate": 0.381,
+      "mean_gross_bps": -0.36,
+      "mean_net_bps": -20.36,
+      "median_net_bps": -30.68,
+      "total_net_pct": -12694.97,
+      "median_bars_held": 3,
+      "median_hours_held": 0.75,
+      "pct_exited_at_target": 0.1095
+     }
+    },
+    "fit_all_coins": {
+     "fee_5bps": {
+      "trades": 65329,
+      "trades_per_day": 89.37,
+      "win_rate": 0.3791,
+      "mean_gross_bps": 1.02,
+      "mean_net_bps": -8.98,
+      "median_net_bps": -21.1,
+      "total_net_pct": -5869.04,
+      "median_bars_held": 3,
+      "median_hours_held": 0.75,
+      "pct_exited_at_target": 0.1041
+     },
+     "fee_10bps": {
+      "trades": 65329,
+      "trades_per_day": 89.37,
+      "win_rate": 0.3791,
+      "mean_gross_bps": 1.02,
+      "mean_net_bps": -18.98,
+      "median_net_bps": -31.1,
+      "total_net_pct": -12401.94,
+      "median_bars_held": 3,
+      "median_hours_held": 0.75,
+      "pct_exited_at_target": 0.1041
+     }
+    },
+    "filter": {
+     "n_coins_ranked": 40,
+     "k": 10,
+     "top_quartile": [
+      "ZENUSDT",
+      "PEPEUSDT",
+      "XLMUSDT",
+      "HBARUSDT",
+      "TRXUSDT",
+      "CFXUSDT",
+      "AAVEUSDT",
+      "PENDLEUSDT",
+      "BONKUSDT",
+      "TAOUSDT"
+     ],
+     "bottom_quartile": [
+      "ADAUSDT",
+      "SHIBUSDT",
+      "WLDUSDT",
+      "ICPUSDT",
+      "NEARUSDT",
+      "LINKUSDT",
+      "FLOKIUSDT",
+      "TONUSDT",
+      "APTUSDT",
+      "ENAUSDT"
+     ],
+     "fit_top_mean_net_bps": 4.02,
+     "fit_bottom_mean_net_bps": -22.63,
+     "holdout_top": {
+      "trades": 10699,
+      "trades_per_day": 17.09,
+      "win_rate": 0.3724,
+      "mean_gross_bps": -0.19,
+      "mean_net_bps": -20.19,
+      "median_net_bps": -28.23,
+      "total_net_pct": -2160.61,
+      "median_bars_held": 3,
+      "median_hours_held": 0.75,
+      "pct_exited_at_target": 0.1164
+     },
+     "holdout_bottom": {
+      "trades": 9818,
+      "trades_per_day": 15.68,
+      "win_rate": 0.381,
+      "mean_gross_bps": 0.29,
+      "mean_net_bps": -19.71,
+      "median_net_bps": -34.12,
+      "total_net_pct": -1934.9,
+      "median_bars_held": 3,
+      "median_hours_held": 0.75,
+      "pct_exited_at_target": 0.1096
+     },
+     "persistence_spearman": -0.1086,
+     "n_common": 40
+    }
+   },
+   "uncapped": {
+    "all_coins": {
+     "fee_5bps": {
+      "trades": 62357,
+      "trades_per_day": 99.56,
+      "win_rate": 0.3679,
+      "mean_gross_bps": 2.04,
+      "mean_net_bps": -7.96,
+      "median_net_bps": -21.85,
+      "total_net_pct": -4962.26,
+      "median_bars_held": 3,
+      "median_hours_held": 0.75,
+      "pct_exited_at_target": 0.0
+     },
+     "fee_10bps": {
+      "trades": 62357,
+      "trades_per_day": 99.56,
+      "win_rate": 0.3679,
+      "mean_gross_bps": 2.04,
+      "mean_net_bps": -17.96,
+      "median_net_bps": -31.85,
+      "total_net_pct": -11197.96,
+      "median_bars_held": 3,
+      "median_hours_held": 0.75,
+      "pct_exited_at_target": 0.0
+     }
+    },
+    "fit_all_coins": {
+     "fee_5bps": {
+      "trades": 65329,
+      "trades_per_day": 89.33,
+      "win_rate": 0.3671,
+      "mean_gross_bps": 1.89,
+      "mean_net_bps": -8.11,
+      "median_net_bps": -22.09,
+      "total_net_pct": -5296.11,
+      "median_bars_held": 3,
+      "median_hours_held": 0.75,
+      "pct_exited_at_target": 0.0
+     },
+     "fee_10bps": {
+      "trades": 65329,
+      "trades_per_day": 89.33,
+      "win_rate": 0.3671,
+      "mean_gross_bps": 1.89,
+      "mean_net_bps": -18.11,
+      "median_net_bps": -32.09,
+      "total_net_pct": -11829.01,
+      "median_bars_held": 3,
+      "median_hours_held": 0.75,
+      "pct_exited_at_target": 0.0
+     }
+    },
+    "filter": {
+     "n_coins_ranked": 40,
+     "k": 10,
+     "top_quartile": [
+      "ZENUSDT",
+      "TRXUSDT",
+      "HBARUSDT",
+      "PEPEUSDT",
+      "XLMUSDT",
+      "CRVUSDT",
+      "CFXUSDT",
+      "AVAXUSDT",
+      "ADAUSDT",
+      "PENDLEUSDT"
+     ],
+     "bottom_quartile": [
+      "TAOUSDT",
+      "ARBUSDT",
+      "LTCUSDT",
+      "LINKUSDT",
+      "SHIBUSDT",
+      "TONUSDT",
+      "LISTAUSDT",
+      "FLOKIUSDT",
+      "ENAUSDT",
+      "POLUSDT"
+     ],
+     "fit_top_mean_net_bps": 8.67,
+     "fit_bottom_mean_net_bps": -24.22,
+     "holdout_top": {
+      "trades": 11418,
+      "trades_per_day": 18.23,
+      "win_rate": 0.3541,
+      "mean_gross_bps": -0.02,
+      "mean_net_bps": -20.02,
+      "median_net_bps": -29.35,
+      "total_net_pct": -2285.84,
+      "median_bars_held": 3,
+      "median_hours_held": 0.75,
+      "pct_exited_at_target": 0.0
+     },
+     "holdout_bottom": {
+      "trades": 10811,
+      "trades_per_day": 17.27,
+      "win_rate": 0.3677,
+      "mean_gross_bps": -0.48,
+      "mean_net_bps": -20.48,
+      "median_net_bps": -33.84,
+      "total_net_pct": -2213.69,
+      "median_bars_held": 3,
+      "median_hours_held": 0.75,
+      "pct_exited_at_target": 0.0
+     },
+     "persistence_spearman": 0.0542,
+     "n_common": 40
+    }
+   }
+  },
+  "1h": {
+   "banded": {
+    "all_coins": {
+     "fee_5bps": {
+      "trades": 14826,
+      "trades_per_day": 23.68,
+      "win_rate": 0.3822,
+      "mean_gross_bps": -1.33,
+      "mean_net_bps": -11.33,
+      "median_net_bps": -33.04,
+      "total_net_pct": -1680.43,
+      "median_bars_held": 3,
+      "median_hours_held": 3.0,
+      "pct_exited_at_target": 0.1231
+     },
+     "fee_10bps": {
+      "trades": 14826,
+      "trades_per_day": 23.68,
+      "win_rate": 0.3822,
+      "mean_gross_bps": -1.33,
+      "mean_net_bps": -21.33,
+      "median_net_bps": -43.04,
+      "total_net_pct": -3163.03,
+      "median_bars_held": 3,
+      "median_hours_held": 3.0,
+      "pct_exited_at_target": 0.1231
+     }
+    },
+    "fit_all_coins": {
+     "fee_5bps": {
+      "trades": 15630,
+      "trades_per_day": 21.36,
+      "win_rate": 0.3952,
+      "mean_gross_bps": 7.32,
+      "mean_net_bps": -2.68,
+      "median_net_bps": -30.06,
+      "total_net_pct": -418.34,
+      "median_bars_held": 3,
+      "median_hours_held": 3.0,
+      "pct_exited_at_target": 0.1207
+     },
+     "fee_10bps": {
+      "trades": 15630,
+      "trades_per_day": 21.36,
+      "win_rate": 0.3952,
+      "mean_gross_bps": 7.32,
+      "mean_net_bps": -12.68,
+      "median_net_bps": -40.06,
+      "total_net_pct": -1981.34,
+      "median_bars_held": 3,
+      "median_hours_held": 3.0,
+      "pct_exited_at_target": 0.1207
+     }
+    },
+    "filter": {
+     "n_coins_ranked": 39,
+     "k": 9,
+     "top_quartile": [
+      "ENAUSDT",
+      "CRVUSDT",
+      "FETUSDT",
+      "SEIUSDT",
+      "AAVEUSDT",
+      "TRXUSDT",
+      "APTUSDT",
+      "SOLUSDT",
+      "CFXUSDT"
+     ],
+     "bottom_quartile": [
+      "HBARUSDT",
+      "LISTAUSDT",
+      "WLDUSDT",
+      "SHIBUSDT",
+      "TAOUSDT",
+      "BONKUSDT",
+      "XLMUSDT",
+      "POLUSDT",
+      "PEPEUSDT"
+     ],
+     "fit_top_mean_net_bps": 12.55,
+     "fit_bottom_mean_net_bps": -50.37,
+     "holdout_top": {
+      "trades": 2617,
+      "trades_per_day": 4.18,
+      "win_rate": 0.3783,
+      "mean_gross_bps": -2.91,
+      "mean_net_bps": -22.91,
+      "median_net_bps": -38.21,
+      "total_net_pct": -599.56,
+      "median_bars_held": 3,
+      "median_hours_held": 3.0,
+      "pct_exited_at_target": 0.1318
+     },
+     "holdout_bottom": {
+      "trades": 1685,
+      "trades_per_day": 2.7,
+      "win_rate": 0.3691,
+      "mean_gross_bps": -5.42,
+      "mean_net_bps": -25.42,
+      "median_net_bps": -54.64,
+      "total_net_pct": -428.4,
+      "median_bars_held": 3,
+      "median_hours_held": 3.0,
+      "pct_exited_at_target": 0.1276
+     },
+     "persistence_spearman": -0.0019,
+     "n_common": 38
+    }
+   },
+   "uncapped": {
+    "all_coins": {
+     "fee_5bps": {
+      "trades": 14801,
+      "trades_per_day": 23.64,
+      "win_rate": 0.364,
+      "mean_gross_bps": 5.71,
+      "mean_net_bps": -4.29,
+      "median_net_bps": -36.77,
+      "total_net_pct": -634.94,
+      "median_bars_held": 3,
+      "median_hours_held": 3.0,
+      "pct_exited_at_target": 0.0
+     },
+     "fee_10bps": {
+      "trades": 14801,
+      "trades_per_day": 23.64,
+      "win_rate": 0.364,
+      "mean_gross_bps": 5.71,
+      "mean_net_bps": -14.29,
+      "median_net_bps": -46.77,
+      "total_net_pct": -2115.04,
+      "median_bars_held": 3,
+      "median_hours_held": 3.0,
+      "pct_exited_at_target": 0.0
+     }
+    },
+    "fit_all_coins": {
+     "fee_5bps": {
+      "trades": 15630,
+      "trades_per_day": 21.29,
+      "win_rate": 0.3814,
+      "mean_gross_bps": 13.37,
+      "mean_net_bps": 3.37,
+      "median_net_bps": -32.7,
+      "total_net_pct": 527.35,
+      "median_bars_held": 3,
+      "median_hours_held": 3.0,
+      "pct_exited_at_target": 0.0
+     },
+     "fee_10bps": {
+      "trades": 15630,
+      "trades_per_day": 21.29,
+      "win_rate": 0.3814,
+      "mean_gross_bps": 13.37,
+      "mean_net_bps": -6.63,
+      "median_net_bps": -42.7,
+      "total_net_pct": -1035.65,
+      "median_bars_held": 3,
+      "median_hours_held": 3.0,
+      "pct_exited_at_target": 0.0
+     }
+    },
+    "filter": {
+     "n_coins_ranked": 39,
+     "k": 9,
+     "top_quartile": [
+      "HBARUSDT",
+      "TRXUSDT",
+      "CRVUSDT",
+      "FETUSDT",
+      "SEIUSDT",
+      "XLMUSDT",
+      "SOLUSDT",
+      "CFXUSDT",
+      "AAVEUSDT"
+     ],
+     "bottom_quartile": [
+      "LISTAUSDT",
+      "TONUSDT",
+      "FLOKIUSDT",
+      "UNIUSDT",
+      "PENDLEUSDT",
+      "TAOUSDT",
+      "PEPEUSDT",
+      "BONKUSDT",
+      "POLUSDT"
+     ],
+     "fit_top_mean_net_bps": 48.94,
+     "fit_bottom_mean_net_bps": -44.79,
+     "holdout_top": {
+      "trades": 2994,
+      "trades_per_day": 4.79,
+      "win_rate": 0.353,
+      "mean_gross_bps": -1.69,
+      "mean_net_bps": -21.69,
+      "median_net_bps": -42.79,
+      "total_net_pct": -649.27,
+      "median_bars_held": 3,
+      "median_hours_held": 3.0,
+      "pct_exited_at_target": 0.0
+     },
+     "holdout_bottom": {
+      "trades": 2161,
+      "trades_per_day": 3.46,
+      "win_rate": 0.3619,
+      "mean_gross_bps": -0.17,
+      "mean_net_bps": -20.17,
+      "median_net_bps": -55.6,
+      "total_net_pct": -435.82,
+      "median_bars_held": 3,
+      "median_hours_held": 3.0,
+      "pct_exited_at_target": 0.0
+     },
+     "persistence_spearman": -0.0785,
+     "n_common": 38
+    }
+   }
+  },
+  "4h": {
+   "banded": {
+    "all_coins": {
+     "fee_5bps": {
+      "trades": 3584,
+      "trades_per_day": 5.73,
+      "win_rate": 0.3834,
+      "mean_gross_bps": 9.36,
+      "mean_net_bps": -0.64,
+      "median_net_bps": -54.59,
+      "total_net_pct": -23.09,
+      "median_bars_held": 3,
+      "median_hours_held": 12.0,
+      "pct_exited_at_target": 0.1415
+     },
+     "fee_10bps": {
+      "trades": 3584,
+      "trades_per_day": 5.73,
+      "win_rate": 0.3834,
+      "mean_gross_bps": 9.36,
+      "mean_net_bps": -10.64,
+      "median_net_bps": -64.59,
+      "total_net_pct": -381.49,
+      "median_bars_held": 3,
+      "median_hours_held": 12.0,
+      "pct_exited_at_target": 0.1415
+     }
+    },
+    "fit_all_coins": {
+     "fee_5bps": {
+      "trades": 3575,
+      "trades_per_day": 4.9,
+      "win_rate": 0.4238,
+      "mean_gross_bps": 35.34,
+      "mean_net_bps": 25.34,
+      "median_net_bps": -42.48,
+      "total_net_pct": 905.89,
+      "median_bars_held": 3,
+      "median_hours_held": 12.0,
+      "pct_exited_at_target": 0.1424
+     },
+     "fee_10bps": {
+      "trades": 3575,
+      "trades_per_day": 4.9,
+      "win_rate": 0.4238,
+      "mean_gross_bps": 35.34,
+      "mean_net_bps": 15.34,
+      "median_net_bps": -52.48,
+      "total_net_pct": 548.39,
+      "median_bars_held": 3,
+      "median_hours_held": 12.0,
+      "pct_exited_at_target": 0.1424
+     }
+    },
+    "filter": {
+     "n_coins_ranked": 37,
+     "k": 9,
+     "top_quartile": [
+      "SEIUSDT",
+      "CRVUSDT",
+      "ARBUSDT",
+      "FILUSDT",
+      "LISTAUSDT",
+      "HBARUSDT",
+      "SOLUSDT",
+      "LTCUSDT",
+      "DOTUSDT"
+     ],
+     "bottom_quartile": [
+      "WLDUSDT",
+      "CFXUSDT",
+      "APTUSDT",
+      "SUIUSDT",
+      "XLMUSDT",
+      "FLOKIUSDT",
+      "SHIBUSDT",
+      "TRXUSDT",
+      "PEPEUSDT"
+     ],
+     "fit_top_mean_net_bps": 58.4,
+     "fit_bottom_mean_net_bps": -50.63,
+     "holdout_top": {
+      "trades": 655,
+      "trades_per_day": 1.05,
+      "win_rate": 0.3786,
+      "mean_gross_bps": -16.92,
+      "mean_net_bps": -36.92,
+      "median_net_bps": -72.19,
+      "total_net_pct": -241.84,
+      "median_bars_held": 3,
+      "median_hours_held": 12.0,
+      "pct_exited_at_target": 0.1221
+     },
+     "holdout_bottom": {
+      "trades": 605,
+      "trades_per_day": 0.97,
+      "win_rate": 0.3736,
+      "mean_gross_bps": 5.54,
+      "mean_net_bps": -14.46,
+      "median_net_bps": -59.54,
+      "total_net_pct": -87.46,
+      "median_bars_held": 3,
+      "median_hours_held": 12.0,
+      "pct_exited_at_target": 0.1471
+     },
+     "persistence_spearman": -0.0237,
+     "n_common": 34
+    }
+   },
+   "uncapped": {
+    "all_coins": {
+     "fee_5bps": {
+      "trades": 3560,
+      "trades_per_day": 5.69,
+      "win_rate": 0.3551,
+      "mean_gross_bps": 5.34,
+      "mean_net_bps": -4.66,
+      "median_net_bps": -64.03,
+      "total_net_pct": -165.87,
+      "median_bars_held": 3,
+      "median_hours_held": 12.0,
+      "pct_exited_at_target": 0.0
+     },
+     "fee_10bps": {
+      "trades": 3560,
+      "trades_per_day": 5.69,
+      "win_rate": 0.3551,
+      "mean_gross_bps": 5.34,
+      "mean_net_bps": -14.66,
+      "median_net_bps": -74.03,
+      "total_net_pct": -521.87,
+      "median_bars_held": 3,
+      "median_hours_held": 12.0,
+      "pct_exited_at_target": 0.0
+     }
+    },
+    "fit_all_coins": {
+     "fee_5bps": {
+      "trades": 3575,
+      "trades_per_day": 4.9,
+      "win_rate": 0.4115,
+      "mean_gross_bps": 70.62,
+      "mean_net_bps": 60.62,
+      "median_net_bps": -46.78,
+      "total_net_pct": 2167.1,
+      "median_bars_held": 4,
+      "median_hours_held": 16.0,
+      "pct_exited_at_target": 0.0
+     },
+     "fee_10bps": {
+      "trades": 3575,
+      "trades_per_day": 4.9,
+      "win_rate": 0.4115,
+      "mean_gross_bps": 70.62,
+      "mean_net_bps": 50.62,
+      "median_net_bps": -56.78,
+      "total_net_pct": 1809.6,
+      "median_bars_held": 4,
+      "median_hours_held": 16.0,
+      "pct_exited_at_target": 0.0
+     }
+    },
+    "filter": {
+     "n_coins_ranked": 37,
+     "k": 9,
+     "top_quartile": [
+      "HBARUSDT",
+      "CRVUSDT",
+      "FETUSDT",
+      "TRXUSDT",
+      "WLDUSDT",
+      "SEIUSDT",
+      "NEARUSDT",
+      "ADAUSDT",
+      "SOLUSDT"
+     ],
+     "bottom_quartile": [
+      "UNIUSDT",
+      "XLMUSDT",
+      "SUIUSDT",
+      "APTUSDT",
+      "FLOKIUSDT",
+      "LISTAUSDT",
+      "SHIBUSDT",
+      "CFXUSDT",
+      "PEPEUSDT"
+     ],
+     "fit_top_mean_net_bps": 265.88,
+     "fit_bottom_mean_net_bps": -71.06,
+     "holdout_top": {
+      "trades": 726,
+      "trades_per_day": 1.17,
+      "win_rate": 0.3512,
+      "mean_gross_bps": 8.17,
+      "mean_net_bps": -11.83,
+      "median_net_bps": -66.62,
+      "total_net_pct": -85.89,
+      "median_bars_held": 3,
+      "median_hours_held": 12.0,
+      "pct_exited_at_target": 0.0
+     },
+     "holdout_bottom": {
+      "trades": 566,
+      "trades_per_day": 0.91,
+      "win_rate": 0.3375,
+      "mean_gross_bps": 10.93,
+      "mean_net_bps": -9.07,
+      "median_net_bps": -86.75,
+      "total_net_pct": -51.34,
+      "median_bars_held": 3,
+      "median_hours_held": 12.0,
+      "pct_exited_at_target": 0.0
+     },
+     "persistence_spearman": 0.1992,
+     "n_common": 33
+    }
+   }
+  }
+ }
+}

@@ -1,0 +1,45 @@
+meta:
+  name: live_excursion
+  declared_before_any_backtest: true
+  declared_utc: '2026-09-22'
+  question: On the positions the bots actually took, how much of each move was left on the table,
+    and would booking at the peak have captured it?
+  why_now: Operator observation from the dashboard that the books give back too much, with a
+    stated mechanism - that these coins are strongly momentum-driven and strongly correlated at
+    short horizons, so peaks are common and identifiable.
+  why_this_is_not_a_repeat: 'DECISIONS.md#take-profit-outcome and DECISIONS.md#ratchet-outcome tested exit
+    rules on 4h HISTORY. This tests them on the LIVE minute-resolution price paths of positions
+    this repo actually held, reconstructed from the per-cycle marks added at
+    HANDOVER.md section 4c. Different data, same question, and an independent dataset is worth
+    more than a repeated one.'
+  mechanism_under_test: If a position's maximum favourable excursion materially exceeds its
+    realised return, and if the peak is identifiable from information available at the time, then
+    a trailing or target exit converts unrealised gain into booked gain.
+  failure_mode: The give-back is real but not separable. The trades with the largest excursions
+    are the ones that peak LATEST, so any rule tight enough to catch an early peak truncates the
+    large winners that carry the book.
+  measurements:
+  - max favourable and adverse excursion per closed round trip
+  - capture ratio, realised divided by MFE
+  - where in the hold the peak fell
+  - trailing-stop and fixed-target exits replayed on the observed paths, charged the exit fee
+  - whether an early peak is predictable from the first 30 or 60 minutes
+  - cross-sectional correlation of the held names at 1, 15, 60 and 240 minutes
+  - lag-1 autocorrelation of 1-minute returns, to test the momentum half of the premise
+  deduplication: The same symbol move appears in up to five books at once. Every headline number
+    is reported on deduplicated symbol-episodes, because seven correlated books holding ENAUSDT
+    is one observation, not seven.
+  no_reentry_assumption: A rule that exits early leaves the book flat until the real exit. That is
+    conservative and it is honest. Re-entry needs a fresh channel break that the live state
+    machine would not have produced.
+  trials_added: 11
+  trials_justification: Six trailing stops and five fixed targets are selectable exit rules and
+    all eleven count. The excursion statistics and the correlation measurements are descriptive
+    and select nothing, so they add none. DECISIONS.md#trial-counting.
+  decision_rule: An exit rule is a candidate only if it beats the actual exits on DEDUPLICATED
+    per-episode mean return AND wins in more than half of episodes. No argmax over the grid is
+    taken and nothing is promoted on this sample alone; 44 hours in one regime cannot establish
+    an exit rule, it can only agree or disagree with the history.
+  sample_limits: About 44 hours, one market regime, 57 to 63 independent symbol-episodes across
+    22 symbols. Strong enough to refute a claim of a large obvious effect, far too small to
+    establish one.

@@ -1,0 +1,169 @@
+meta:
+  name: positioning_edges
+  declared_before_any_backtest: true
+  declared_utc: '2026-09-22'
+  requested_by: operator
+  operator_request: 'Work on the bots for trading logic and booking, using the prioritised data
+    sources (Binance OHLCV, trades, futures, funding, open interest, order book, Hyperliquid,
+    Deribit options, on-chain, DefiLlama, stablecoins, exchange flows, unlocks, DEX, trends,
+    social) where edges can be found.'
+  what_changed_to_make_this_testable: 'DATA_SOURCES.md and data/futures.py said open interest and
+    long/short ratios have 30 days of history. That is true of the REST API only.
+    data.binance.vision archives the same fields at 5 minutes back to 2021-12 including delisted
+    contracts (data/vision.py). Deribit DVOL has hourly history from 2021-03, DefiLlama stablecoin
+    supply daily from 2017, Coinbase hourly candles from 2021 (data/macro.py). None of these has
+    ever been in a fit-and-holdout test here.'
+  what_is_excluded_and_why: 'Order-book depth has no free history (Binance bookDepth archive covers
+    futures only and from 2023, and depth was never the constraint - spread is gated at 5 bps).
+    Dune, exchange flows, token unlocks and DEX data need paid keys or have no point-in-time
+    history for these 55 names. Google Trends and Reddit are not point-in-time (Trends rescales
+    history on every query) and are excluded rather than tested on a leaky series. Hyperliquid
+    funding duplicates Binance funding for the same names with a shorter history. Individual
+    Binance trades add nothing the cached taker_buy_quote columns do not already carry, and those
+    are null at DECISIONS.md#alpha-flow-declaration.'
+  funding_retest_reason: 'The funding panel behind the earlier null was keyed on spot names, so it
+    had no row for BONK, PEPE, SHIB or FLOKI (their perps list as 1000X), and its timestamps carry
+    millisecond jitter on an 8h grid. An exact join onto 4h bars loses rows that an as-of join
+    keeps. The null may be right; the 46% coverage figure it rested on is not established. Retested
+    here with an as-of join at bar CLOSE, and the retest counts as a trial.'
+  base_book: momentum_top3_full with the deployed 3% x 15% skim ladder, cash idles. That is what
+    every deployed book now runs, so every arm is measured against it and not against a
+    no-booking control that no longer exists live.
+  point_in_time_rule: 'Binance bars are labelled by OPEN time. Every alt series is stamped at the
+    moment it became knowable (hourly metrics at the end of the hour, funding at settlement, DVOL
+    and premium at the hourly close, stablecoin supply at the end of its UTC day) and joined with
+    data.vision.asof at the 4h bar CLOSE, never at its label. A decision at bar t earns bar t+1.'
+  windows:
+    pre: ['2022-01-15', '2023-01-01']
+    fit: ['2023-01-01', '2025-01-01']
+    holdout: ['2025-01-01', '2026-09-19']
+  why_three_windows: '2022 has never been scored by any positioning signal because the data did not
+    exist in this repo. It is a bear year with the LUNA and FTX liquidations, which is exactly the
+    regime a crowding signal claims to see. The holdout has been read by hundreds of prior
+    trials on price signals; for these features it is fresh.'
+features:
+  per_coin:
+    oi_chg_24h: log change in open interest USD over 24h
+    oi_chg_3d: log change in open interest USD over 72h
+    funding_3d: mean realised funding over the last nine settlements
+    premium_24h: mean hourly premium index over 24h
+    top_vs_global_24h: 24h change in log(top-trader position L/S) minus 24h change in log(global account L/S)
+    taker_ls_24h: mean futures taker buy/sell volume ratio over 24h, logged
+  market:
+    agg_oi_chg_7d: log change over 7 days of summed OI USD across BTC and ETH
+    agg_funding_7d: mean funding over 7 days across BTC and ETH
+    crowding: z(agg_oi_chg_7d) + z(agg_funding_7d), each z on a trailing 180-day window
+    dvol_vrp: BTC DVOL minus 30-day realised BTC vol, annualised percent
+    dvol_chg_3d: 3-day change in BTC DVOL
+    cb_premium_z: 3-day mean Coinbase premium, z on a trailing 90-day window
+    stable_impulse_30d: 30-day log change in total stablecoin supply
+diagnostics:
+  description: 'Information coefficients, computed before and independent of any book. Cross-
+    sectional Spearman IC of each per-coin feature against forward 24h and 3d returns inside the
+    tradable PIT top-30, with t from the IC time series (non-overlapping samples). Time-series
+    correlation of each market feature against forward 3d and 14d equal-weight universe return and
+    BTC return, with non-overlapping samples. Reported per window.'
+  counts_as_trials: true
+arms:
+  control: base book, deployed ladder
+  X1_oi_confirmed_breakout:
+    rule: exclude a channel-fired name from the rank when oi_chg_24h < 0
+    mechanism: a breakout on falling open interest is short covering, whose fuel is the finite stock
+      of shorts; a breakout on rising open interest is new longs committing capital, which is the
+      trend-follower's premise.
+    failure_mode: rising OI is crowding and reverses; the veto removes the names with the least
+      overhang and keeps the most fragile ones.
+  X2_funding_veto_asof:
+    rule: exclude a channel-fired name when funding_3d > 0.0003 per 8h (about 33% annualised)
+    mechanism: crowded longs pay carry and are first to be liquidated.
+    failure_mode: identical to the earlier null - high funding marks strong trends and the veto
+      removes winners.
+  X3_smart_money_tilt:
+    rule: rank score becomes momentum_40 rank plus top_vs_global_24h rank, equal weight
+    mechanism: top-trader positioning moving against retail positioning is informed flow.
+    failure_mode: top-trader ratio is itself a volume-weighted crowd reading and carries no
+      information over price.
+  M1_crowding_gate:
+    rule: gross cap 0.5 while crowding > 2.0
+    mechanism: leverage building faster than its own history, paid for at rising funding, is the
+      precondition for a liquidation cascade; cutting beta before it is the only protection a
+      long-only book has.
+    failure_mode: crowding peaks inside strong bull legs, so the gate sells the right tail that
+      Screen 2 needs. DECISIONS.md#beta-is-the-only-screen3-lever predicts this.
+  M2_washout_btc:
+    rule: when crowding < -2.0 and the book's gross is below 0.5, hold BTC at the unused gross up
+      to 0.5 for 42 bars (7 days), then release
+    mechanism: forced deleveraging overshoots; the channel book is idle exactly at the bottoms
+      where the deleveraging has already happened.
+    failure_mode: washouts continue (2022) and the arm buys the first leg of a cascade.
+  M3_vrp_gate:
+    rule: gross cap 0.5 while dvol_vrp < -15 (realised vol above implied by 15 points)
+    mechanism: realised vol above implied marks a disorderly market the option market has not
+      priced; momentum crashes cluster there.
+    failure_mode: the condition coincides with violent up-moves too; crypto vol is not
+      downside-only.
+  M4_cb_premium_gate:
+    rule: gross cap 0.5 while cb_premium_z < -2.0
+    mechanism: US spot buyers selling at a discount to offshore is distribution by the marginal
+      price setter of the 2024-2026 market.
+    failure_mode: the premium mostly tracks USDT/USD basis noise and the gate fires at random.
+  M5_stable_contraction_gate:
+    rule: gross cap 0.5 while stable_impulse_30d < 0
+    mechanism: stablecoin supply is dry powder; contraction is capital leaving the system.
+    failure_mode: supply lags price by weeks and the gate fires after the damage.
+  B1_crowded_position_booking:
+    rule: on top of the ladder, skim 25% of any held position that is above its ladder reference
+      when its funding_3d > 0.0003 or its oi_chg_3d > 0.25; at most once per 6 bars per name
+    mechanism: gains made while a coin's own leverage piles up are the gains most likely to be
+      handed back in a liquidation; book those first.
+    failure_mode: identical in effect to random extra skims, i.e. exposure reduction.
+  B2_market_crowding_booking:
+    rule: skim 25% of every held position above its ladder reference when crowding crosses above
+      2.0; at most once per 42 bars
+    mechanism: as M1, applied to profits only rather than to the whole book.
+    failure_mode: as M1.
+nonsense_controls:
+  description: 'Declared, run, and not counted as trials. Every gate and booking arm is paired with a
+    control that fires at the SAME rate at random bars (booking) or randomly permuted gate-on
+    periods preserving run lengths (gates), 20 seeds. Every veto arm is paired with the inverted
+    veto. An arm whose effect the control reproduces is exposure reduction or a coverage
+    artifact, not information.'
+decision_rule: 'An arm is a candidate for deployment only if, against the control, it improves
+  median 14-day return AND P(>5%) on ALL THREE windows, its holdout worst window is no more than 5
+  points worse, its holdout paired block-bootstrap p on the median delta is below 0.10, and its
+  nonsense control does not reproduce more than half of its holdout median gain. Anything else is
+  recorded as a null and named as such. A candidate is deployed as a new book with its own
+  control, never by editing a running book, so that the forward comparison stays readable.'
+trials_added: 10
+trials_justification: 'Ten arms may be selected, so ten count. The IC diagnostics are also
+  recorded, as other-objective rows. Gate 4 is settled unrecoverable
+  (DECISIONS.md#trial-counting-rule), so the marginal deflation cost is not the reason for
+  restraint; the reason is that fitted thresholds have reversed on the holdout in every sweep this
+  repo has run, so every threshold above is fixed in advance and none is swept.'
+followup:
+  declared_utc: '2026-09-23'
+  declared_after_seeing: 'The X2 nonsense control. Removing the LOWEST-funding candidates cost 1.5 to
+    2.0pp of median 14-day return in 2022, 0.3 to 1.4pp in 2023-24 and 2.2 to 3.7pp in 2025-26, at
+    every one of three removal fractions, while removing the HIGHEST-funding candidates was neutral.
+    This arm is therefore POST-HOC. No window is untouched by it; all three were seen before it was
+    written. It is declared anyway, as one arm at one unfitted threshold, because the asymmetry held
+    in nine of nine cells and a 2022 bear year is not the regime it was selected on.'
+  X4_short_squeeze_priority:
+    rule: 'Among channel-fired candidates, any name whose funding_3d is below zero ranks ahead of
+      every name whose funding_3d is at or above zero; momentum_40 orders names inside each group.
+      Names with no funding reading rank with the non-negative group. Top 3, full deployment,
+      deployed ladder.'
+    threshold_is_fitted: false
+    threshold_reason: zero is where shorts start paying longs; it is the sign change, not a quantile.
+    mechanism: A breakout that shorts are paying to fade has forced buyers behind it. Each leg up
+      raises the cost of staying short, so the move feeds itself until the shorts are gone. A
+      concentrated top-3 book earns its Screen 2 tail from exactly this kind of runner.
+    failure_mode: Negative funding marks names the market expects to fall for a reason (unlocks,
+      delisting risk), so priority buys the breakouts most likely to fail, and the effect in the
+      controls was the loss of a few large winners rather than a rule that finds them ex ante.
+    nonsense_control: 'Priority for a random subset of candidates of the same size at every bar, 20
+      seeds. If random priority reproduces the gain, the effect is reshuffling a noisy top 3, not
+      funding.'
+  decision_rule: the same rule as the main arms, all three windows, p < 0.10 on holdout, nonsense not
+    reproducing half the gain.
+  trials_added: 1

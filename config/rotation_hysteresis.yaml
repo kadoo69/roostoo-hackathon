@@ -1,0 +1,64 @@
+meta:
+  name: rotation_hysteresis
+  declared_utc: '2026-09-20'
+  declared_before_any_backtest: true
+  requested_by: operator
+  source: arxiv:2606.00060 (Machine Learning-Based Bitcoin Trading Under Transaction
+    Costs). Its one transferable result is the cost-aware execution filter - change
+    position only when the forecast magnitude exceeds lambda times the transaction
+    cost the change incurs. The paper turns a -64% post-cost loss into +65% annualised
+    with that rule alone, on hourly BTC, and reports that model choice mattered far
+    less than execution discipline.
+  why_the_paper_rule_does_not_transfer_directly: The paper filters on forecast magnitude
+    against cost. This repo has no return forecast, and at donchian_4h's 2.69-day
+    mean hold the expected absolute move is of order 500 bps against a 10 bps round
+    trip, so any filter on expected move size would never bind. The paper's rule
+    matters at hourly horizons precisely because the forecast is small. Translating
+    it literally would be a null by construction.
+  mechanism: The binding cost in this repo is not entry, it is RANK ROTATION. The
+    momentum books pay a full round trip to swap one name for another whose expected
+    edge over the incumbent may be smaller than the cost of the swap. The fee sensitivity
+    says exactly this - donchian_4h loses 0.114 Sharpe per 5 bps while the ranked books
+    lose about 0.20, and OOS turnover is 1311 and 1730 against 305. The cost-aware
+    filter therefore belongs on the ROTATION decision - replace an incumbent only when
+    the challenger's momentum score exceeds the incumbent's by more than lambda round
+    trips.
+  failure_mode_to_watch: Momentum ranks are persistent, so a hysteresis band may do
+    nothing but hold stale names through drawdowns. That is the exit_clock null arriving
+    from the opposite direction - there the book released positions too early, here
+    it may hold them too long. Expect maximum drawdown to WORSEN even if Sharpe improves,
+    and read both.
+  the_control_that_decides_it: A random-hysteresis arm that blocks the SAME FRACTION
+    of rotations, chosen at random rather than by score gap. If the score-gap arm does
+    not beat the random arm, then the effect is turnover reduction alone and any book
+    would get it by trading less. This repo has been wrong before by not running the
+    nonsense control (DECISIONS.md#exit-clock-outcome).
+  trial_cost: 12 scored configurations plus 3 random controls. Gate 4 is already settled
+    unrecoverable at DECISIONS.md#trial-counting-rule, so the marginal DSR cost is not
+    the reason to hesitate; the mechanism above is the reason to proceed.
+grid:
+  books:
+  - donchian_4h
+  - momentum_top5
+  - momentum_top3
+  lambdas:
+  - 0.0
+  - 1.0
+  - 2.0
+  - 4.0
+  round_trip_bps: 10.0
+  interval: 4h
+  momentum_bars: 40
+  pool: 30
+  entry_bars: 20
+  exit_bars: 10
+method:
+  fit_window:
+  - '2023-01-01'
+  - '2025-01-01'
+  holdout_window:
+  - '2025-01-01'
+  - null
+  pass_requires: improvement on BOTH windows on Screen 3, AND beating the random control
+    on the holdout, AND maximum drawdown no worse than 2 points against the lambda=0
+    baseline.

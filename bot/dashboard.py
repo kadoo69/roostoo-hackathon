@@ -13,19 +13,74 @@ from bot.blotter import build as build_blotter
 from bot.journal import Journal
 from bot.report import from_equity
 from bot.insights import breadth, derive
+from bot.analysis import payload as analysis_payload
+from bot.health import report as health_report
+from bot.markout import markouts
 from bot.settings import ROOT, load
 
-BOTS = {"bot_a_4h": "config/bot_a_4h.yaml",
-        "bot_b_1h": "config/bot_b_1h.yaml",
-        "bot_c_5names": "config/bot_c_5names.yaml"}
-EXPECTED_DRAG = {"bot_a_4h": 0.051, "bot_b_1h": 0.193, "bot_c_5names": 0.075}
+# Each gated arm is listed immediately after the control it must be read
+# against. A gated bot's number means nothing on its own.
+# This dict is the ONLY bot registry: bot/compare.py imports it. A bot that runs
+# under its own module still has to be added here or it trades invisibly, which
+# is the stale-hardcoded-list defect already in HANDOVER.md section 8.
+BOTS = {"donchian_4h": "config/donchian_4h.yaml",
+        "donchian_4h_cushion": "config/donchian_4h_cushion.yaml",
+        "donchian_1h": "config/donchian_1h.yaml",
+        "momentum_top5_4h": "config/momentum_top5_4h.yaml",
+        "momentum_top5_cushion": "config/momentum_top5_cushion.yaml",
+        "momentum_top3_4h": "config/momentum_top3_4h.yaml",
+        "momentum_top3_full": "config/momentum_top3_full.yaml",
+        "alpha_flow": "config/alpha_flow.yaml",
+        "scalper_live": "config/scalper_live.yaml",
+        "donchian_30m": "config/donchian_30m.yaml",
+        "donchian_15m": "config/donchian_15m.yaml",
+        "momentum_top3_1h": "config/momentum_top3_1h.yaml",
+        "momentum_top3_30m": "config/momentum_top3_30m.yaml",
+        "momentum_top3_15m": "config/momentum_top3_15m.yaml"}
+CONTROL_OF = {"donchian_4h_cushion": "donchian_4h", "momentum_top5_cushion": "momentum_top5_4h",
+              "momentum_top3_full": "momentum_top3_4h",
+              "alpha_flow": "momentum_top3_full"}
+SCANNER = ROOT / "live" / "scanner" / "state.json"
+EXPECTED_DRAG = {"donchian_4h": 0.051, "donchian_1h": 0.193, "momentum_top5_4h": 0.075,
+                 "donchian_4h_cushion": 0.051, "momentum_top5_cushion": 0.075,
+                 "momentum_top3_4h": 0.075, "momentum_top3_full": 0.085,
+                 "alpha_flow": 0.072,
+                 "scalper_live": 0.50,
+                 "donchian_30m": 0.339,
+                 "donchian_15m": 0.669,
+                 "momentum_top3_1h": 1.219,
+                 "momentum_top3_30m": 2.452,
+                 "momentum_top3_15m": 5.007}
 _BREADTH = {"data": None, "updated": None}
+
+# Product backlog and integration state are deliberately separate. A source can
+# be valuable without being wired, and wired without having a fresh sample. The
+# dashboard must not turn either condition into a green "live" badge.
+SOURCE_CATALOG = (
+    ("Binance OHLCV", "Free", 5, "api", "signal and mark history"),
+    ("Binance trades", "Free", 5, "api", "aggressor and trade-size profile"),
+    ("Binance futures", "Free", 5, "api", "derivatives positioning"),
+    ("Funding", "Free/low", 5, "api", "crowding and carry"),
+    ("Open interest", "Free/low", 5, "api", "position build-up"),
+    ("Order book", "Free", 5, "api", "spread, depth and imbalance"),
+    ("Hyperliquid", "Free", 4, "api", "second-venue perp flow"),
+    ("Deribit options", "Free API", 4, "api", "volatility and skew"),
+    ("Dune on-chain", "Free tier", 4, "api", "custom on-chain queries"),
+    ("DefiLlama", "Free", 4, "api", "TVL, fees and stablecoins"),
+    ("Stablecoin data", "Free", 4, "api", "liquidity impulse"),
+    ("Exchange flows", "Free/low", 4, "api/web", "deposit and withdrawal pressure"),
+    ("Token unlocks", "Free/low", 4, "api/web", "scheduled supply"),
+    ("DEX data", "Free", 4, "api", "on-chain price and volume"),
+    ("Google Trends", "Free", 3, "api/web", "retail attention"),
+    ("Reddit", "Free", 3, "api/web", "community attention"),
+    ("Social sentiment", "Varies", 3, "api/web", "secondary sentiment"),
+)
 
 
 def _breadth_loop():
     while True:
         try:
-            _BREADTH["data"] = breadth(load("config/bot_a_4h.yaml"))
+            _BREADTH["data"] = breadth(load("config/donchian_4h.yaml"))
             _BREADTH["updated"] = pd.Timestamp.now(tz="UTC").isoformat()
         except Exception as exc:
             _BREADTH["data"] = {"error": str(exc)[:160]}
@@ -43,7 +98,10 @@ def bot_state(name: str, cfg: str) -> dict:
                 "divisor": s.n_positions or s.weight_divisor,
                 "max_gross": s.max_gross, "rule": s.ranking_rule,
                 "n_positions": s.n_positions, "venue": s.venue,
-                "dry_run": s.dry_run, "sha": s.config_sha256}
+                "dry_run": s.dry_run, "sha": s.config_sha256,
+                "momentum_bars": s.momentum_bars,
+                "full_deployment": s.full_deployment,
+                "regime_gate": s.regime_gate}
     except Exception:
         meta = {}
     bl = build_blotter(name)
@@ -72,7 +130,10 @@ def bot_state(name: str, cfg: str) -> dict:
         "first_cycle": str(f["ts"].iloc[0]), "last_cycle": str(f["ts"].iloc[-1]),
         "distinct_days": int(f["ts"].dt.date.nunique()),
         "wall_hours": round((f["ts"].iloc[-1] - f["ts"].iloc[0]).total_seconds() / 3600, 2),
-        "restarts": sum(1 for l in life if l.get("event") == "resumed"),
+        # Operator activity, NOT a health signal. See "health" below and
+        # DECISIONS.md#restart-telemetry.
+        "restarts": sum(1 for ev in life if ev.get("event") == "resumed"),
+        "health": health_report(name),
         "halts": int(f.get("halt", pd.Series(dtype=bool)).fillna(False).sum()),
         "errors": len(errors),
         "max_gap_s": round(float(gaps.max()), 1) if len(gaps) else None,
@@ -85,6 +146,9 @@ def bot_state(name: str, cfg: str) -> dict:
         "n_long": int(last.get("n_long", 0) or 0),
         "n_universe": int(last.get("n_universe", 0) or 0),
         "mirror_bps": last.get("mirror_worst_bps"),
+        # `last` is a DataFrame row, so a column absent from older cycle
+        # records comes back as NaN rather than missing. Only a dict is a gate.
+        "gate": last.get("gate") if isinstance(last.get("gate"), dict) else None,
         "positions": last.get("positions") or {},
         "performance": from_equity(daily) if len(daily) >= 3 else None,
         "blotter": bl["stats"],
@@ -94,35 +158,202 @@ def bot_state(name: str, cfg: str) -> dict:
     }
 
 
+def scanner_state() -> dict | None:
+    """The scanner's own panel. Age is reported so a dead scanner is visible."""
+    try:
+        p = json.loads(SCANNER.read_text())
+        ts = pd.to_datetime(p["ts_utc"])
+        age = (pd.Timestamp.now(tz="UTC") - ts).total_seconds()
+        coins = p.get("coins", {})
+        by = {}
+        for c in coins.values():
+            by[c["state"]] = by.get(c["state"], 0) + 1
+        top = sorted((c for c in coins.items()
+                      if c[1]["state"] in ("trend_up", "at_risk")),
+                     key=lambda kv: kv[1].get("cushion_pct") or 0.0, reverse=True)[:8]
+        risk = sorted((c for c in coins.items() if c[1]["state"] == "at_risk"),
+                      key=lambda kv: kv[1].get("cushion_pct") or 0.0)[:8]
+        pend = sorted((c for c in coins.items() if c[1]["state"] == "pending"),
+                      key=lambda kv: kv[1].get("to_entry_pct") or 99)[:8]
+        enr = p.get("enriched") or {}
+        crowd = []
+        for sym, v in enr.items():
+            c, b, t = v.get("crowding", {}), v.get("book", {}), v.get("trades", {})
+            crowd.append({"symbol": sym,
+                          "funding_z": c.get("funding_z"),
+                          "funding_ann_pct": c.get("funding_ann_pct"),
+                          "oi_z": c.get("oi_z"), "oi_chg_6b_pct": c.get("oi_chg_6b_pct"),
+                          "taker_buy_sell": c.get("taker_buy_sell"),
+                          "top_long_share": c.get("top_long_share"),
+                          "book_imbalance": b.get("imbalance"),
+                          "spread_bps": b.get("spread_bps"),
+                          "depth_10bps_usd": b.get("depth_10bps_usd"),
+                          "top5pct_notional_share": t.get("top5pct_notional_share"),
+                          "big_trade_aggressor": t.get("big_trade_aggressor")})
+        # most crowded first: OI building fastest against the top-account tilt
+        crowd.sort(key=lambda r: (r["oi_z"] if r["oi_z"] is not None else -99), reverse=True)
+        return {"ts_utc": p["ts_utc"], "age_s": round(age, 1), "live": age < 900,
+                "universe": p.get("universe", {}), "by_state": by,
+                "enriched_at": p.get("enriched_at"), "crowding": crowd,
+                "strongest": [{"symbol": k, **v} for k, v in top],
+                "at_risk": [{"symbol": k, **v} for k, v in risk],
+                "pending": [{"symbol": k, **v} for k, v in pend]}
+    except Exception:
+        return None
+
+
+def source_health(scanner: dict | None, bots: list[dict]) -> list[dict]:
+    """Prioritised data inventory with honest freshness and coverage.
+
+    The first six sources are already collected by the existing Binance feed
+    and scanner. Everything below them stays visibly planned until it has a
+    real ingestion path and timestamp; the dashboard never fabricates a value
+    from catalog metadata alone.
+    """
+    crowd = (scanner or {}).get("crowding") or []
+    bot_sample = any(b.get("cycles", 0) for b in bots)
+    live_market = any(b.get("live") for b in bots) or bool((scanner or {}).get("live"))
+
+    def present(*fields: str) -> int:
+        return sum(1 for row in crowd if any(row.get(field) is not None for field in fields))
+
+    coverage = {
+        "Binance OHLCV": max((b.get("n_universe", 0) for b in bots), default=0),
+        "Binance trades": present("top5pct_notional_share", "big_trade_aggressor"),
+        "Binance futures": present("taker_buy_sell", "top_long_share"),
+        "Funding": present("funding_z", "funding_ann_pct"),
+        "Open interest": present("oi_z", "oi_chg_6b_pct"),
+        "Order book": present("book_imbalance", "depth_10bps_usd", "spread_bps"),
+    }
+    wired = set(coverage)
+    rows = []
+    for rank, (name, cost, stars, method, purpose) in enumerate(SOURCE_CATALOG, 1):
+        n = coverage.get(name, 0)
+        if name == "Binance OHLCV":
+            has_sample = bot_sample or scanner is not None
+        else:
+            has_sample = n > 0
+        if name in wired and has_sample:
+            is_fresh = live_market if name == "Binance OHLCV" else bool((scanner or {}).get("live"))
+            status = "live" if is_fresh else "stale"
+        elif name in wired:
+            status = "wired"
+        else:
+            status = "planned"
+        rows.append({"rank": rank, "name": name, "cost": cost,
+                     "usefulness": stars, "method": method, "purpose": purpose,
+                     "status": status, "coverage": n,
+                     "updated": ((scanner or {}).get("enriched_at")
+                                 if name != "Binance OHLCV"
+                                 else ((scanner or {}).get("ts_utc")) )})
+    return rows
+
+
+def portfolio_leaderboard(bots: list[dict]) -> list[dict]:
+    """Return first, then the three risk-adjusted ratios requested by operator."""
+    ranked = sorted(bots, key=lambda b: (b.get("pnl_pct") is not None,
+                                         b.get("pnl_pct") or float("-inf")), reverse=True)
+    out = []
+    for rank, b in enumerate(ranked, 1):
+        p = b.get("performance") or {}
+        out.append({"rank": rank, "bot": b["bot"], "return_pct": b.get("pnl_pct"),
+                    "pnl": b.get("pnl"), "equity": b.get("equity"),
+                    "drawdown_pct": b.get("drawdown_pct"), "gross": b.get("gross"),
+                    "positions": b.get("n_long"), "sharpe": p.get("sharpe"),
+                    "sortino": p.get("sortino"), "calmar": p.get("calmar"),
+                    "observations": p.get("observations", 0),
+                    "days": b.get("distinct_days", 0), "live": b.get("live", False),
+                    "age_s": b.get("seconds_since_cycle"),
+                    "control_of": b.get("control_of")})
+    return out
+
+
+def strategy_logic(bots: list[dict]) -> list[dict]:
+    rows = []
+    for b in bots:
+        m = b.get("meta") or {}
+        if b["bot"] == "scalper_live":
+            rows.append({"bot": b["bot"],
+                         "signal": "30m divergence: return >=0.8% + OFI z>=2",
+                         "ranking": "PIT top-30 ADV universe",
+                         "sizing": "10% per trade; max 3 concurrent",
+                         "gate": "10bp round-trip cost floor",
+                         "control_of": None,
+                         "decision_data": "Binance 5m OHLCV/trades + Roostoo quotes",
+                         "research_data": "negative historical mean; paper observation only"})
+            continue
+        ranked = (f"{m.get('momentum_bars')}b momentum top {m.get('n_positions')}"
+                  if m.get("rule") == "momentum" else "no cross-sectional rank")
+        sizing = ("full NAV across active signals" if m.get("full_deployment")
+                  else f"1/{m.get('divisor', '—')} per active signal")
+        rows.append({"bot": b["bot"],
+                     "signal": f"{m.get('interval', '—')} Donchian {m.get('entry', '—')}/{m.get('exit', '—')}",
+                     "ranking": ranked, "sizing": sizing,
+                     "gate": m.get("regime_gate") or "always_on",
+                     "control_of": b.get("control_of"),
+                     "decision_data": "Binance OHLCV + Roostoo quotes",
+                     "research_data": "funding / OI / trades / L2 (observe only)"})
+    return rows
+
+
 def snapshot() -> dict:
     bots = []
     for n, c in BOTS.items():
         st = bot_state(n, c)
+        # Must precede derive(): the per-trade card is built from this.
+        if n == "scalper_live":
+            from bot.scalper_run import stats as scalper_stats
+            try:
+                st["scalper"] = scalper_stats(n)
+            except Exception as exc:
+                st["scalper"] = {"error": repr(exc)}
         st["insights"] = derive(st, EXPECTED_DRAG.get(n, 0.05))
+        st["control_of"] = CONTROL_OF.get(n)
+        try:
+            st["markout"] = markouts(ROOT / "live" / n)
+        except Exception as exc:
+            st["markout"] = {"error": repr(exc)}
         bots.append(st)
+    scan = scanner_state()
     return {"generated": pd.Timestamp.now(tz="UTC").isoformat(),
             "breadth": _BREADTH["data"], "breadth_updated": _BREADTH["updated"],
+            "scanner": scan, "controls": CONTROL_OF,
+            "leaderboard": portfolio_leaderboard(bots),
+            "strategy_logic": strategy_logic(bots),
+            "sources": source_health(scan, bots),
+            "objective": {"primary": "portfolio return",
+                          "secondary": ["Sharpe", "Sortino", "Calmar"],
+                          "window_days": 14},
             "bots": bots}
 
 
 HTML = (Path(__file__).parent / "dashboard.html")
+ANALYSIS_HTML = (Path(__file__).parent / "analysis.html")
 
 
 class Handler(BaseHTTPRequestHandler):
     def log_message(self, *a):
         return
 
+    def _json(self, obj):
+        body = json.dumps(obj, default=str).encode()
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Cache-Control", "no-store")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
     def do_GET(self):
         if self.path.startswith("/api/state"):
-            body = json.dumps(snapshot(), default=str).encode()
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self.send_header("Cache-Control", "no-store")
-            self.send_header("Content-Length", str(len(body)))
-            self.end_headers()
-            self.wfile.write(body)
+            self._json(snapshot())
             return
-        body = HTML.read_bytes()
+        if self.path.startswith("/api/analysis"):
+            snap = snapshot()
+            self._json(analysis_payload(snap["bots"], CONTROL_OF))
+            return
+        body = (ANALYSIS_HTML if self.path.startswith("/analysis")
+                else HTML).read_bytes()
         self.send_response(200)
         self.send_header("Content-Type", "text/html; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))

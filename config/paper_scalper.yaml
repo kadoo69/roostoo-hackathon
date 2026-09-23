@@ -1,0 +1,35 @@
+meta:
+  name: paper_scalper_v1
+  frozen: true
+  declared_utc: '2026-09-20'
+  mode: public_data_paper_only
+  mechanism: Select one liquid venue-listed breakout with hourly trend and volume confirmation; compound realized equity only after a fresh setup.
+  failure_mode: Short-horizon mean reversion, fees, gaps and adverse selection can overwhelm targets; prior fast-channel studies failed.
+base_config: config/donchian_4h.yaml
+initial_nav: 100000.0
+poll_seconds: 15
+warmup_bars: 240
+fee_bps: 10.0
+exit_slippage_bps: 5.0
+min_comparison_days: 28
+selection: experimental_no_automatic_promotion
+candidates:
+  - name: selective_scalper_15m
+    family: scalp
+    interval: 15min
+    context_interval: 1h
+    rules:
+      max_weight: 0.25
+      risk_fraction: 0.0025
+      atr_bars: 14
+      atr_multiple: 1.5
+      min_stop_fraction: 0.005
+      max_stop_fraction: 0.02
+      reward_risk: 1.5
+      cost_multiple: 3.0
+      cooldown_bars: 2
+      max_hold_minutes: 60
+      max_entries_per_day: 6
+      daily_loss_fraction: 0.02
+      max_drawdown: 0.10
+      entry_timeout_seconds: 120

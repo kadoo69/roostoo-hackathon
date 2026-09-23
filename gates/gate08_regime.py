@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 
 from core import artifacts
-from core.config import RESULTS, gate_config, prereg
+from core.config import RESULTS, gate_config
 from data import daily, flow, universe as ru
 from signals import donchian
 

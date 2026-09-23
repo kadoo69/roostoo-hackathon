@@ -1,0 +1,99 @@
+meta:
+  name: scalper_live
+  frozen: true
+  declared_utc: '2026-09-20'
+  mode: paper_only
+  evidence_ref: DECISIONS.md#scalper-v1-outcome
+  operator_override: 'config/scalper_v1.yaml said ''promotion: none. A pass earns a paper bot and
+    28 days of forward observation, nothing else.'' There was NO pass: 0 of 64 arms cleared the
+    kill criterion, every arm had a negative mean trade. This bot runs on explicit operator instruction
+    to observe it forward anyway. It is paper, it is never promoted, and its result is already predicted.'
+  backtest_expectation: '30m divergence, ret>=0.008, ofi_z>=2.0, 0.5 ATR target, 8-bar time stop:
+    holdout win rate 0.665, median +26.72 bps, MEAN -5.93 bps per trade over 559 trades. Gross edge
+    +4.07 bps against a 10 bps round trip.'
+  what_to_watch: 'MEAN net bps per trade, nothing else. Win rate and median will both look good
+    and are expected to: 64 of 64 backtest arms had a positive median and a negative mean. A high
+    win rate here is CONFIRMATION of the failure mode, not evidence against it.'
+  falsification: If after 200 live round trips the mean net return per trade is still negative,
+    the family is settled by forward evidence as well as by backtest and the bot should be stopped.
+    If the mean is positive and above 10 bps, the backtest was wrong and that is worth knowing.
+  universe_extrapolation: 'DECISIONS.md#scalper-v1-outcome was measured on the FIVE names with 5m
+    parquet history. The live bot reads the live Binance feed, which has no such limit, so it runs
+    the standard PIT top-30-by-ADV universe intersected with Roostoo listings. That is a deliberate
+    EXTRAPOLATION beyond the tested set and must be read as one. It is defensible because the universe
+    rule itself is the single most validated thing in this repo (CLAUDE.md finding 1: ranking the
+    full Binance universe and trading the listed intersection scores OOS Sharpe 1.56 against -0.15
+    for a rank inside Roostoo''s own listings), and because the 5 bps spread gate in universe.select
+    excludes the thin names where a 4 bps gross edge would die first. It is still an extrapolation:
+    the per-trade edge was never measured outside those five names.'
+  why_expanded: At 5 symbols the signal fires about 0.89 times a day, so the pre-registered 200-trade
+    falisification threshold would take roughly 7 to 8 months and could never resolve before the
+    competition. Widening the universe raises the rate without touching a single threshold, which
+    is the only lever that increases sample WITHOUT degrading the edge. Lowering ofi_thresh from
+    2.0 to 1.5 would also triple the count and the backtest says it makes the mean WORSE, -5.93
+    to -9.90 bps, so it was not touched.
+strategy:
+  interval: 1h
+  entry_bars: 20
+  exit_bars: 10
+  top_n_pool: 30
+  weight_divisor: 20
+  max_gross: 1.0
+  quote: USDT
+  universe_refresh_hours: 24
+  max_spread_bps: 5.0
+  min_history_bars: 30
+  ranking_rule: null
+  n_positions: null
+  momentum_bars: 40
+  regime_gate: always_on
+  min_cushion_pct: 0.0
+scalper:
+  bar_interval: 30m
+  source_interval: 5m
+  lookback: 96
+  symbols: PIT top-30 by ADV intersected with Roostoo listings, same rule as every other book
+  ret_thresh: 0.008
+  ofi_thresh: 2.0
+  target_atr: 0.5
+  stop_atr: 1.0
+  atr_bars: 14
+  time_stop_bars: 8
+  cost_gate_multiple: 2.0
+  round_trip_bps: 10.0
+  cooldown_bars: 2
+  max_trades_per_day_per_symbol: 6
+  weight_per_trade: 0.1
+  max_concurrent: 3
+  direction: long_only_spot
+  backtest_universe:
+  - BTCUSDT
+  - ETHUSDT
+  - SOLUSDT
+  - XRPUSDT
+  - DOGEUSDT
+execution:
+  order_type: LIMIT
+  limit_offset_bps: 1.0
+  limit_timeout_s: 900
+  poll_seconds: 60
+risk:
+  max_drawdown: 0.25
+  max_error_rate: 0.25
+  max_ticker_age_s: 120
+  mirror_max_deviation_bps: 50.0
+  derisk_start_utc: '2026-10-15T00:00:00+00:00'
+  derisk_end_utc: '2026-10-17T20:00:00+00:00'
+booking:
+  enabled: true
+  step_pct: 0.03
+  skim_fraction: 0.15
+  recycle: false
+  min_skim_notional: 10.0
+  added_utc: '2026-09-22'
+  added_by: operator instruction to book profits on every bot
+  interaction_warning: 'This book already exits on its own target, stop and time clock, so the
+    ladder is a SECOND profit-taking rule layered on the first and the two will sometimes fire
+    on the same move. bot/scalper_run.py returns target_from_channels false, so its own target
+    is still computed every cycle and its intrabar exits are unaffected. What booking changes
+    here is only that a winning position is trimmed on the way to its own target.'

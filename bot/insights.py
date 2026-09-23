@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import time
 
-import numpy as np
 import pandas as pd
 
 from bot import feed, universe as bu
@@ -115,10 +114,64 @@ def derive(state: dict, expected_drag: float) -> list[dict]:
                 "detail": "G10 needs 3 distinct days of live operation",
                 "tone": "good" if d >= SHADOW_DAYS_REQUIRED else "warn"})
 
-    r = state.get("restarts") or 0
-    out.append({"key": "Process integrity", "value": f"{r} restarts",
-                "detail": "non-zero means the supervisor respawned a dead worker",
-                "tone": "warn" if r > 0 else "good"})
+    # This card previously read every `resumed` lifecycle event as a respawn and
+    # told the reader a worker had died. It fired on operator stop/start and on
+    # `--once` diagnostics, with zero crashes. Only the supervisor's own
+    # "exited code=" line means a worker died. DECISIONS.md#restart-telemetry
+    h = state.get("health") or {}
+    crashes = h.get("crashes")
+    if crashes is None:
+        out.append({"key": "Process integrity", "value": "unknown",
+                    "detail": "supervisor log not readable; crash count unavailable",
+                    "tone": "warn"})
+    else:
+        parts = []
+        if h.get("resumes"):
+            parts.append(f"{h['resumes']} operator restart(s)")
+        if h.get("probes"):
+            parts.append(f"{h['probes']} diagnostic run(s)")
+        if h.get("legacy_resumes"):
+            parts.append(f"{h['legacy_resumes']} resume(s) from before run mode was recorded")
+        detail = ("no worker has died; " + ", ".join(parts) if parts
+                  else "no worker has died and no operator restarts")
+        if crashes:
+            detail = (f"last exit code {h.get('last_code')} - this IS a fault, "
+                      "read live/<bot>.out")
+        out.append({"key": "Process integrity",
+                    "value": f"{crashes} crash{'es' if crashes != 1 else ''}",
+                    "detail": detail,
+                    "tone": "bad" if crashes else "good"})
+
+    sc = state.get("scalper")
+    if sc and not sc.get("error"):
+        n = sc.get("n", 0)
+        mean = sc.get("mean_net_bps")
+        if not n:
+            out.append({"key": "Scalper per-trade", "value": "0 trades",
+                        "detail": ("backtest says mean -5.93 bps per trade. The MEAN "
+                                   "decides this bot; win rate and median will look good "
+                                   "and are expected to."),
+                        "tone": "neutral"})
+        else:
+            out.append({
+                "key": "Scalper per-trade MEAN",
+                "value": f"{mean:+.2f} bps",
+                "detail": (f"over {n} trades, vs backtest -5.93. Win rate "
+                           f"{sc.get('win_rate')} and median {sc.get('median_net_bps'):+.1f} bps "
+                           "are NOT the criterion: 64 of 64 backtest arms had a positive "
+                           "median and a negative mean. " + str(sc.get("verdict", ""))),
+                "tone": "good" if (mean or 0) > 10 else "bad" if (mean or 0) < 0 else "warn"})
+
+    dust = bl.get("dust_trades") or 0
+    if dust:
+        out.append({
+            "key": "Dust trades",
+            "value": f"{dust} of {bl.get('closed_trades')}",
+            "detail": (f"round trips under ${bl.get('dust_notional_floor'):.0f} notional, "
+                       f"{bl.get('dust_net_pnl'):+.2f} total. Win rate on material "
+                       f"trades only is {bl.get('win_rate')}, against "
+                       f"{bl.get('win_rate_all_trades')} counting dust"),
+            "tone": "warn"})
 
     if bl.get("closed_trades", 0) >= 1:
         n = bl["closed_trades"]

@@ -6,7 +6,7 @@ meta:
   mode: public_data_paper_only
   mechanism: Compare trend horizons; buyer-led volume may reject weak breakout entries without continuously turning the book over.
   failure_mode: Confirmation can arrive late, exclude profitable breakouts, or merely reduce beta; slower horizons can miss the competition window.
-base_config: config/bot_a_4h.yaml
+base_config: config/donchian_4h.yaml
 initial_nav: 100000.0
 poll_seconds: 60
 warmup_bars: 240

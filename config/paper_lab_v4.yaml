@@ -1,0 +1,119 @@
+meta:
+  name: paper_lab_v4
+  frozen: true
+  declared_utc: '2026-09-20'
+  mode: public_data_paper_only
+  mechanism: Prospectively compare risk-controlled allocations against the unmodified
+    channel and concentration controls.
+  supersedes: paper_lab_v3
+  why_a_new_root: bot/paper_lab.py gained the xs_reversal family and per-candidate
+    liquidity sleeves, which is inside the experiment hash, so v3 is sealed. v3 ran
+    ~30 minutes with 0 complete days, so nothing readable is lost; its record is kept
+    at live/paper_lab_v3.
+  evidence_ref: DECISIONS.md#meanrev-xs-outcome
+base_config: config/donchian_4h.yaml
+initial_nav: 100000.0
+poll_seconds: 60
+warmup_bars: 240
+fee_bps: 10.0
+fill_model: later_observed_quote_cross_at_limit
+min_comparison_days: 28
+selection: descriptive_only_no_automatic_promotion
+candidates:
+- name: channel_1h
+  interval: 1h
+  family: channel
+- name: channel_4h
+  interval: 4h
+  family: channel
+- name: channel_8h
+  interval: 8h
+  family: channel
+- name: channel_1d
+  interval: 1d
+  family: channel
+- name: flow_4h
+  interval: 4h
+  family: flow_entry
+- name: btc_hold
+  interval: 4h
+  family: benchmark
+- name: ranked5_4h
+  interval: 4h
+  family: ranked
+- name: ranked5_hourlyexit
+  interval: 4h
+  family: ranked
+  exit_interval: 1h
+  selection_basis: 'Forward comparison only, no promotion. NOTE added 2026-09-20:
+    DECISIONS.md#exit-clock-outcome has since measured this idea in backtest - 0 of
+    12 arms improved both windows and holdout max drawdown got WORSE (-33.0% to -36.3%
+    on the ranked book). It is kept as a forward arm precisely because it now has
+    a prior that says it should fail, which makes it a real test rather than a hopeful
+    one.'
+- name: balanced_12_equal
+  interval: 4h
+  family: channel
+  selection_basis: Selected among balanced candidates on earlier fit window only;
+    not superior to incumbent on every criterion.
+  allocation:
+    n_positions: 12
+    sizing: equal
+    momentum_bars: 40
+    risk_bars: 90
+    max_gross: 0.8
+    max_single: 0.2
+    min_weight: 0.02
+    target_vol: 0.25
+- name: balanced_5_equal
+  interval: 4h
+  family: channel
+  selection_basis: Assessment-informed diagnostic; not a validated winner.
+  allocation:
+    n_positions: 5
+    sizing: equal
+    momentum_bars: 40
+    risk_bars: 90
+    max_gross: 0.8
+    max_single: 0.2
+    min_weight: 0.02
+    target_vol: 0.25
+- name: xs_reversal_45d_illiquid
+  interval: 1d
+  family: xs_reversal
+  formation_bars: 45
+  rebalance_bars: 7
+  n_positions: 5
+  sleeve:
+    rank_min: 31
+    rank_max: 66
+  selection_basis: 'The single reversal configuration of 48 that was positive on both
+    windows at DECISIONS.md#meanrev-xs-outcome: illiquid sleeve, 45-day formation,
+    7-day hold, fit Screen 3 +1.460 and holdout +0.276. It is wired forward on operator
+    instruction despite a weak prior. Two things are expected to go wrong and are
+    the point of running it: its 30 and 60-day neighbours do NOT work, so the 45-day
+    match has no support and may be noise; and one tick already exceeds max_spread_bps
+    for 27% of illiquid names, so the executor should refuse part of the book. The
+    excluded-order count is the primary reading, not the return.'
+- name: xs_reversal_45d_liquid
+  interval: 1d
+  family: xs_reversal
+  formation_bars: 45
+  rebalance_bars: 7
+  n_positions: 5
+  selection_basis: CONTROL for xs_reversal_45d_illiquid. Identical rule on the liquid
+    pool, where the literature and the backtest both say reversal should FAIL. If
+    the illiquid arm leads this one, the liquidity mechanism is doing the work; if
+    they move together, it is not reversal that is being measured.
+- name: xs_momentum_45d_illiquid
+  interval: 1d
+  family: xs_reversal
+  formation_bars: 45
+  rebalance_bars: 7
+  n_positions: 5
+  direction: momentum
+  sleeve:
+    rank_min: 31
+    rank_max: 66
+  selection_basis: SIGN CONTROL. Same sleeve, same horizon, opposite side. Reversal
+    must beat this to mean anything; beating the channel books is not the test.

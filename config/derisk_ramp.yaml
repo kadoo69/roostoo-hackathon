@@ -1,0 +1,61 @@
+meta:
+  name: derisk_ramp
+  declared_before_any_backtest: true
+  declared_utc: '2026-09-20'
+  question: What does the end-of-window derisk ramp PROTECT against, measured on the same
+    footing as its already-measured cost?
+  why_now: HANDOVER.md section 4e records the ramp's cost at about 1 point of median 14-day
+    return and flags that the benefit was never measured, because the drawdown column in that
+    table came from the full daily series and therefore never saw the ramp at all. A rule whose
+    cost is measured and whose benefit is not will always look like a bad rule.
+  mechanism: risk.derisk_multiplier tapers gross exposure linearly from 1.0 to 0.0 over
+    2026-10-15T00:00Z to 2026-10-17T20:00Z, the final 68 hours of the 14-day competition window.
+    Exposure held near the deadline cannot be recovered if it moves against the book, so the ramp
+    converts the last three days from a return opportunity into a settlement period. If it has a
+    benefit it must appear as a thinner LEFT tail of the window return and a shallower
+    within-window drawdown, not as a higher median.
+  failure_mode: The ramp costs return and buys nothing measurable, because a 4h-bar long-only
+    breakout book rarely takes its worst drawdown in the final three days of a fortnight.
+  decision_rule: NONE. No argmax is taken and no parameter is selected. The deployed ramp is
+    fixed by config and this run measures its effect. The stylised 2-day and 3-day variants are
+    reported only to reconcile with the cost table already in HANDOVER.md section 4e, and neither
+    can be promoted by this run.
+  trials_added: 0
+  trials_justification: config/trials.yaml counts a trial as a configuration evaluated for
+    SELECTION. Nothing here is selectable, so the family-wise error budget is untouched. See
+    DECISIONS.md#trial-counting.
+measurement:
+  books:
+  - momentum_top3_full
+  - momentum_top3_4h
+  ramps:
+  - none
+  - exact
+  - two_day
+  - three_day
+  window_days: 14
+  fit: ['2023-01-01', '2025-01-01']
+  holdout: ['2025-01-01', '2026-09-19']
+  ramp_is_window_relative: true
+  ramp_alignment_note: The real competition has exactly one window and the ramp ends when it
+    ends, so the ramp is applied relative to each rolling window's final day. Anything else
+    would measure a ramp that fires at a random point inside the window.
+  liquidation_cost_charged: true
+  liquidation_cost_note: Selling the book down is turnover and is charged at the same 5 bps the
+    backtest charges everything else. Measuring a protective rule without charging for the
+    protection would repeat the passive-fill error in DECISIONS.md#passive-fill-adverse-selection.
+  protection_metrics:
+  - p05_return
+  - worst_return
+  - p_return_below_minus_10
+  - p_return_below_minus_20
+  - median_maxdd
+  - worst_maxdd
+  - p_maxdd_breaches_kill_switch_25pct
+  - conditional_gain_in_worst_decile
+  cost_metrics:
+  - median_return
+  - p_clears_5pct
+  - p_clears_10pct
+  - p_clears_20pct
+  - median_screen3

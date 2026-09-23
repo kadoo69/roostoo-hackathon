@@ -1,0 +1,565 @@
+{
+ "choices": [
+  3,
+  5,
+  7,
+  10,
+  15
+ ],
+ "block_days": 90,
+ "min_train_days": 365,
+ "books": {
+  "donchian_4h": {
+   "walkforward": {
+    "cagr": 0.56976,
+    "sharpe": 2.0103,
+    "sortino": 3.7329,
+    "calmar": 2.4177,
+    "max_drawdown": -0.23566,
+    "screen3": 2.8216,
+    "p_return_positive": 0.5525,
+    "p_clears_screen2": 0.1696
+   },
+   "picks": [
+    {
+     "from": "2018-08-17",
+     "pick": 3,
+     "train_days": 365,
+     "block_return_pct": 3.156
+    },
+    {
+     "from": "2018-11-15",
+     "pick": 3,
+     "train_days": 455,
+     "block_return_pct": -0.712
+    },
+    {
+     "from": "2019-02-13",
+     "pick": 5,
+     "train_days": 545,
+     "block_return_pct": 3.217
+    },
+    {
+     "from": "2019-05-14",
+     "pick": 5,
+     "train_days": 635,
+     "block_return_pct": 3.649
+    },
+    {
+     "from": "2019-08-12",
+     "pick": 3,
+     "train_days": 725,
+     "block_return_pct": -0.439
+    },
+    {
+     "from": "2019-11-10",
+     "pick": 3,
+     "train_days": 815,
+     "block_return_pct": 5.194
+    },
+    {
+     "from": "2020-02-08",
+     "pick": 3,
+     "train_days": 905,
+     "block_return_pct": 5.303
+    },
+    {
+     "from": "2020-05-08",
+     "pick": 5,
+     "train_days": 995,
+     "block_return_pct": 5.432
+    },
+    {
+     "from": "2020-08-06",
+     "pick": 5,
+     "train_days": 1085,
+     "block_return_pct": -0.107
+    },
+    {
+     "from": "2020-11-04",
+     "pick": 5,
+     "train_days": 1175,
+     "block_return_pct": 51.772
+    },
+    {
+     "from": "2021-02-02",
+     "pick": 5,
+     "train_days": 1265,
+     "block_return_pct": 59.226
+    },
+    {
+     "from": "2021-05-03",
+     "pick": 15,
+     "train_days": 1355,
+     "block_return_pct": 0.163
+    },
+    {
+     "from": "2021-08-01",
+     "pick": 15,
+     "train_days": 1445,
+     "block_return_pct": 21.01
+    },
+    {
+     "from": "2021-10-30",
+     "pick": 15,
+     "train_days": 1535,
+     "block_return_pct": -4.111
+    },
+    {
+     "from": "2022-01-28",
+     "pick": 15,
+     "train_days": 1625,
+     "block_return_pct": 4.821
+    },
+    {
+     "from": "2022-04-28",
+     "pick": 15,
+     "train_days": 1715,
+     "block_return_pct": 1.49
+    },
+    {
+     "from": "2022-07-27",
+     "pick": 15,
+     "train_days": 1805,
+     "block_return_pct": -2.643
+    },
+    {
+     "from": "2022-10-25",
+     "pick": 15,
+     "train_days": 1895,
+     "block_return_pct": 15.434
+    },
+    {
+     "from": "2023-01-23",
+     "pick": 15,
+     "train_days": 1985,
+     "block_return_pct": 10.484
+    },
+    {
+     "from": "2023-04-23",
+     "pick": 15,
+     "train_days": 2075,
+     "block_return_pct": 2.953
+    },
+    {
+     "from": "2023-07-22",
+     "pick": 15,
+     "train_days": 2165,
+     "block_return_pct": -7.121
+    },
+    {
+     "from": "2023-10-20",
+     "pick": 15,
+     "train_days": 2255,
+     "block_return_pct": 51.949
+    },
+    {
+     "from": "2024-01-18",
+     "pick": 15,
+     "train_days": 2345,
+     "block_return_pct": 35.655
+    },
+    {
+     "from": "2024-04-17",
+     "pick": 15,
+     "train_days": 2435,
+     "block_return_pct": 10.966
+    },
+    {
+     "from": "2024-07-16",
+     "pick": 15,
+     "train_days": 2525,
+     "block_return_pct": 9.593
+    },
+    {
+     "from": "2024-10-14",
+     "pick": 15,
+     "train_days": 2615,
+     "block_return_pct": 82.31
+    },
+    {
+     "from": "2025-01-12",
+     "pick": 15,
+     "train_days": 2705,
+     "block_return_pct": -10.369
+    },
+    {
+     "from": "2025-04-12",
+     "pick": 15,
+     "train_days": 2795,
+     "block_return_pct": 14.516
+    },
+    {
+     "from": "2025-07-11",
+     "pick": 10,
+     "train_days": 2885,
+     "block_return_pct": 7.925
+    },
+    {
+     "from": "2025-10-09",
+     "pick": 10,
+     "train_days": 2975,
+     "block_return_pct": 10.172
+    },
+    {
+     "from": "2026-01-07",
+     "pick": 10,
+     "train_days": 3065,
+     "block_return_pct": -3.878
+    },
+    {
+     "from": "2026-04-07",
+     "pick": 10,
+     "train_days": 3155,
+     "block_return_pct": 12.936
+    },
+    {
+     "from": "2026-07-06",
+     "pick": 10,
+     "train_days": 3245,
+     "block_return_pct": 41.005
+    }
+   ],
+   "n_blocks": 33,
+   "pick_counts": {
+    "3": 5,
+    "5": 6,
+    "7": 0,
+    "10": 5,
+    "15": 17
+   },
+   "span": [
+    "2018-08-17",
+    "2026-09-19"
+   ],
+   "fixed": {
+    "3": {
+     "cagr": 0.36464,
+     "sharpe": 1.8614,
+     "sortino": 4.0672,
+     "calmar": 2.7477,
+     "max_drawdown": -0.13271,
+     "screen3": 3.0096,
+     "p_return_positive": 0.5467,
+     "p_clears_screen2": 0.1067
+    },
+    "5": {
+     "cagr": 0.44195,
+     "sharpe": 1.9741,
+     "sortino": 4.1022,
+     "calmar": 3.1239,
+     "max_drawdown": -0.14147,
+     "screen3": 3.1703,
+     "p_return_positive": 0.5352,
+     "p_clears_screen2": 0.1342
+    },
+    "7": {
+     "cagr": 0.48134,
+     "sharpe": 1.9566,
+     "sortino": 3.9326,
+     "calmar": 2.895,
+     "max_drawdown": -0.16627,
+     "screen3": 3.0285,
+     "p_return_positive": 0.5138,
+     "p_clears_screen2": 0.1505
+    },
+    "10": {
+     "cagr": 0.60772,
+     "sharpe": 2.1717,
+     "sortino": 4.224,
+     "calmar": 3.4408,
+     "max_drawdown": -0.17662,
+     "screen3": 3.3734,
+     "p_return_positive": 0.5372,
+     "p_clears_screen2": 0.1736
+    },
+    "15": {
+     "cagr": 0.72341,
+     "sharpe": 2.2588,
+     "sortino": 4.1988,
+     "calmar": 3.0698,
+     "max_drawdown": -0.23566,
+     "screen3": 3.2781,
+     "p_return_positive": 0.5488,
+     "p_clears_screen2": 0.1967
+    }
+   }
+  },
+  "momentum_top5_4h": {
+   "walkforward": {
+    "cagr": 2.65734,
+    "sharpe": 2.3198,
+    "sortino": 4.5534,
+    "calmar": 6.8253,
+    "max_drawdown": -0.38934,
+    "screen3": 4.0173,
+    "p_return_positive": 0.5423,
+    "p_clears_screen2": 0.3503
+   },
+   "picks": [
+    {
+     "from": "2018-08-17",
+     "pick": 3,
+     "train_days": 365,
+     "block_return_pct": 12.779
+    },
+    {
+     "from": "2018-11-15",
+     "pick": 3,
+     "train_days": 455,
+     "block_return_pct": -2.976
+    },
+    {
+     "from": "2019-02-13",
+     "pick": 5,
+     "train_days": 545,
+     "block_return_pct": 12.451
+    },
+    {
+     "from": "2019-05-14",
+     "pick": 5,
+     "train_days": 635,
+     "block_return_pct": 13.763
+    },
+    {
+     "from": "2019-08-12",
+     "pick": 3,
+     "train_days": 725,
+     "block_return_pct": -1.95
+    },
+    {
+     "from": "2019-11-10",
+     "pick": 3,
+     "train_days": 815,
+     "block_return_pct": 17.934
+    },
+    {
+     "from": "2020-02-08",
+     "pick": 3,
+     "train_days": 905,
+     "block_return_pct": 21.209
+    },
+    {
+     "from": "2020-05-08",
+     "pick": 5,
+     "train_days": 995,
+     "block_return_pct": 22.446
+    },
+    {
+     "from": "2020-08-06",
+     "pick": 5,
+     "train_days": 1085,
+     "block_return_pct": -0.563
+    },
+    {
+     "from": "2020-11-04",
+     "pick": 5,
+     "train_days": 1175,
+     "block_return_pct": 354.001
+    },
+    {
+     "from": "2021-02-02",
+     "pick": 10,
+     "train_days": 1265,
+     "block_return_pct": 657.6
+    },
+    {
+     "from": "2021-05-03",
+     "pick": 15,
+     "train_days": 1355,
+     "block_return_pct": -2.349
+    },
+    {
+     "from": "2021-08-01",
+     "pick": 15,
+     "train_days": 1445,
+     "block_return_pct": 98.548
+    },
+    {
+     "from": "2021-10-30",
+     "pick": 15,
+     "train_days": 1535,
+     "block_return_pct": -23.414
+    },
+    {
+     "from": "2022-01-28",
+     "pick": 15,
+     "train_days": 1625,
+     "block_return_pct": -0.568
+    },
+    {
+     "from": "2022-04-28",
+     "pick": 5,
+     "train_days": 1715,
+     "block_return_pct": -8.109
+    },
+    {
+     "from": "2022-07-27",
+     "pick": 15,
+     "train_days": 1805,
+     "block_return_pct": -3.853
+    },
+    {
+     "from": "2022-10-25",
+     "pick": 15,
+     "train_days": 1895,
+     "block_return_pct": 58.587
+    },
+    {
+     "from": "2023-01-23",
+     "pick": 15,
+     "train_days": 1985,
+     "block_return_pct": 34.31
+    },
+    {
+     "from": "2023-04-23",
+     "pick": 15,
+     "train_days": 2075,
+     "block_return_pct": 8.437
+    },
+    {
+     "from": "2023-07-22",
+     "pick": 15,
+     "train_days": 2165,
+     "block_return_pct": -19.351
+    },
+    {
+     "from": "2023-10-20",
+     "pick": 15,
+     "train_days": 2255,
+     "block_return_pct": 216.126
+    },
+    {
+     "from": "2024-01-18",
+     "pick": 15,
+     "train_days": 2345,
+     "block_return_pct": 104.275
+    },
+    {
+     "from": "2024-04-17",
+     "pick": 15,
+     "train_days": 2435,
+     "block_return_pct": 4.815
+    },
+    {
+     "from": "2024-07-16",
+     "pick": 15,
+     "train_days": 2525,
+     "block_return_pct": 26.292
+    },
+    {
+     "from": "2024-10-14",
+     "pick": 15,
+     "train_days": 2615,
+     "block_return_pct": 259.944
+    },
+    {
+     "from": "2025-01-12",
+     "pick": 15,
+     "train_days": 2705,
+     "block_return_pct": -19.118
+    },
+    {
+     "from": "2025-04-12",
+     "pick": 15,
+     "train_days": 2795,
+     "block_return_pct": 16.687
+    },
+    {
+     "from": "2025-07-11",
+     "pick": 15,
+     "train_days": 2885,
+     "block_return_pct": 30.746
+    },
+    {
+     "from": "2025-10-09",
+     "pick": 15,
+     "train_days": 2975,
+     "block_return_pct": 33.85
+    },
+    {
+     "from": "2026-01-07",
+     "pick": 15,
+     "train_days": 3065,
+     "block_return_pct": -5.408
+    },
+    {
+     "from": "2026-04-07",
+     "pick": 15,
+     "train_days": 3155,
+     "block_return_pct": 73.643
+    },
+    {
+     "from": "2026-07-06",
+     "pick": 15,
+     "train_days": 3245,
+     "block_return_pct": 118.306
+    }
+   ],
+   "n_blocks": 33,
+   "pick_counts": {
+    "3": 5,
+    "5": 6,
+    "7": 0,
+    "10": 1,
+    "15": 21
+   },
+   "span": [
+    "2018-08-17",
+    "2026-09-19"
+   ],
+   "fixed": {
+    "3": {
+     "cagr": 1.61413,
+     "sharpe": 2.0222,
+     "sortino": 4.4303,
+     "calmar": 4.4542,
+     "max_drawdown": -0.36238,
+     "screen3": 3.715,
+     "p_return_positive": 0.542,
+     "p_clears_screen2": 0.2939
+    },
+    "5": {
+     "cagr": 1.94486,
+     "sharpe": 2.1394,
+     "sortino": 4.518,
+     "calmar": 5.0101,
+     "max_drawdown": -0.38819,
+     "screen3": 3.949,
+     "p_return_positive": 0.5124,
+     "p_clears_screen2": 0.3126
+    },
+    "7": {
+     "cagr": 2.09066,
+     "sharpe": 2.1338,
+     "sortino": 4.3808,
+     "calmar": 5.4074,
+     "max_drawdown": -0.38663,
+     "screen3": 3.8924,
+     "p_return_positive": 0.5087,
+     "p_clears_screen2": 0.3146
+    },
+    "10": {
+     "cagr": 2.74594,
+     "sharpe": 2.365,
+     "sortino": 4.7412,
+     "calmar": 6.6512,
+     "max_drawdown": -0.41285,
+     "screen3": 4.106,
+     "p_return_positive": 0.5297,
+     "p_clears_screen2": 0.35
+    },
+    "15": {
+     "cagr": 3.10457,
+     "sharpe": 2.4291,
+     "sortino": 4.7058,
+     "calmar": 7.9739,
+     "max_drawdown": -0.38934,
+     "screen3": 4.111,
+     "p_return_positive": 0.542,
+     "p_clears_screen2": 0.3789
+    }
+   }
+  }
+ }
+}
