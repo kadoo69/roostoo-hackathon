@@ -67,7 +67,7 @@ Concentration, the derisk ramp, the weight path, the deployment rule and the boo
 
 ## Defects found in this repo's own code
 
-The full list is `HANDOVER.md` section 8 and the anti-patterns in `CLAUDE.md`. The ones that generalise:
+The full list is `docs/archive/HANDOVER_2026-09-23.md` section 8 and `docs/ANTIPATTERNS.md`. The ones that generalise:
 
 - **Bars labelled by OPEN time** produced two look-ahead bugs, caught by a nonsense control and not by a delay test. `#lowtf-lookahead-control`
 - **A default argument is a silent declaration.** `rank_score` defaulted momentum to 20 bars while every deployed book ranks on 40, so five gates scored a book the bot does not trade. `#ranking-lookback-mismatch`
@@ -88,4 +88,4 @@ The full list is `HANDOVER.md` section 8 and the anti-patterns in `CLAUDE.md`. T
 
 ## Reading order for a fresh session
 
-`CLAUDE.md`, then `BOTS.md` for what is running, then `DATA_SOURCES.md` before touching any data, then this file, then `HANDOVER.md` for the current state, then `DECISIONS.md` for the evidence behind any single claim.
+`CLAUDE.md`, then `BOTS.md` for what is running, then `DATA_SOURCES.md` before touching any data, then this file, then `HANDOVER.md` for the current state (history in `docs/archive/`), then `DECISIONS.md` for the evidence behind any single claim.
