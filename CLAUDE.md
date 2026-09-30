@@ -8,8 +8,8 @@ Trading bots for the Roostoo crypto competition. **The main round started 2026-0
 **Screen 2** ranks raw 14-day return, top 20 per region advance. **Screen 3** ranks survivors on `0.4*Sortino + 0.3*Sharpe + 0.3*Calmar`. **Screen 1** is rule and trade-log compliance.
 Rules (FAQ): 30 API calls/min all endpoints, EC2 Sydney via Session Manager, public GitHub repo, every live change committed, **no manual stop, override or trade on the competition account**.
 
-**Live since 2026-09-30:** `competition` (the `momentum_top3_30m` rule, lock off, comp keys) and `competition_rehearsal` (same rule, test keys) place REAL Roostoo orders via `./run_bots.sh live`; keys live in `.env` as `ROOSTOO_{TEST,COMP}_*`, picked by each config's `meta.keyset`. Everything else is paper. Deploy: `deploy/ec2_bootstrap.sh`; read-only check: `python3 -m gates.preflight`. `DECISIONS.md#roostoo-keys-2026-09-30`, `#competition-book-2026-09-30`.
-Never run the `competition` book on two hosts at once (Mac and EC2 would both trade one account).
+**Live since 2026-09-30:** `competition` (the `momentum_top3_30m` rule, lock off, COMP keys; waiting for Roostoo to activate the account) and `competition_rehearsal` (same rule, TEST keys) place REAL Roostoo orders via `./run_bots.sh live`; keys in `.env` as `ROOSTOO_{TEST,COMP}_*`, picked by each config's `meta.keyset`. Paper: `wf_live` (the one dynamic bot: 29 styles + cash scored hourly on 3 days, constrained by the research-agent decision point `results/decision/latest.json`) and fixed baselines `momentum_top3_5m/15m/30m`. Deploy: `deploy/ec2_bootstrap.sh`; checks: `python3 -m gates.preflight`, `gates.progress`. **Read HANDOVER.md "CURRENT STATE" first.**
+Never run the `competition` book on two hosts at once (Mac and EC2 would both trade one account). Never buy a stale path entry after a restart (`bot/entry_guard.py`).
 
 ## The strategy
 

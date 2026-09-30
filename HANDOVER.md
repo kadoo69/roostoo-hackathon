@@ -2,21 +2,45 @@
 
 Current state only. The full history of sessions to 2026-09-23 is archived at `docs/archive/HANDOVER_2026-09-23.md`; older section references in code and configs point there.
 
-## Session 2026-09-30: LIVE on Roostoo (read first)
+## CURRENT STATE 2026-10-01 01:10 IST / 2026-09-30 19:40Z (read this first; everything below is history)
 
-- Official FAQ: round started 2026-09-30, first trade due 2026-10-01 12:00 UTC; 30 calls/min; EC2 Sydney via Session Manager; public repo; no manual stop/override/trade. Data Sources Pack = Binance Vision, CryptoDataDownload, CoinAPI (nothing new for research; added `data-api.binance.vision` failover).
-- Keys issued and in `.env`. Test account 50,000 USD. **Competition key answers "not yet a member of this competition"** as of 14:25Z; the `competition` book logs `wallet_unavailable` every poll and will start trading on the first successful wallet read. Ask the organisers if it is still inactive near the deadline.
-- `gates/roostoo_smoke.py` measured fees (0.10% taker, 0.05% maker) and found four live-API mismatches, all fixed with regression tests (`#roostoo-keys-2026-09-30`).
-- Operator chose `momentum_top3_30m`, lock OFF (`#competition-book-2026-09-30`). `competition` + `competition_rehearsal` started on the Mac at 14:22Z with `./run_bots.sh live`.
-- Evening 2026-09-30: paper fleet STOPPED except `momentum_top3_30m` (`#paper-fleet-stopped-2026-09-30`); desk `/` shows only the competition books. Two declared tests on the competition rule, both not adopted: slower exit NULL (`#competition-exit-outcome`), daily adaptive clock near-miss (`#adaptive-clock-outcome`, AD7 better median, worse tail). EC2 bootstrap passes end to end in an Amazon Linux 2023 container.
-- Paper `scalper_adaptive` (`#scalper-adaptive-declaration`) started 2026-09-30 16:10Z beside fixed twins `momentum_top3_5m/15m/30m`; hourly it re-scores 5m/15m/30m on 7 days and trades the leader (1-point switch margin); first pick 15m (+10.8% vs 30m +5.1%, 5m -5.1%). Stop rule after 7 live days vs the best twin. Desk shows it as `auto: <clock>`.
-- Paper `wf_live` (`#walkforward-live-declaration`) started 2026-09-30 16:30Z: live walk-forward over 16 rule variants + cash, 3-day window, hourly; first pick CASH (all 16 variants lost over the last 3 days). Scorecard `python3 -m gates.wf_report` and the desk's Walk-forward card (pick vs mean variant vs fixed competition rule, forward only). Stop rule after 7 live days if the pick does not beat the mean variant.
-- Paper `hedge_explorer` (`#hedge-explorer-declaration`) started 2026-09-30 16:50Z: holds the capital-weighted blend of all 16 variants + cash, Hedge update hourly (eta 0.5 per %, 1% floor); first entries 9 coins, gross 0.65 (PUMP, WLD, ENA, NEAR, TRX, SUI...). Learning log = `hedge` journal stream; desk Walk-forward card shows the top capital shares.
-- Hourly progress review LIVE (`./run_bots.sh progress`, `#progress-review-2026-09-30`): `results/progress/latest.json` + `history.jsonl`, desk column Sharpe · Sortino · R/DD. Burst rider added to `hedge_explorer` as arm 18 by operator override (`#burst-rider-override-2026-09-30`); burst study itself was null (`#burst-drivers-outcome`). After a restart also run `./run_bots.sh progress`.
-- 2026-10-01 00:13 IST: ONE dynamic bot = `wf_live` (18 styles 5m..4h + cash, hourly, 3-day window; `#dynamic-bot-4h-2026-10-01`), restarted 18:43Z; `scalper_adaptive` and `hedge_explorer` retired to `live/_archive/dynamic-consolidation-20260930T1842Z/`. Running: competition (waiting), competition_rehearsal, wf_live, fixed 5m/15m/30m baselines. AWS access expected 2026-10-01.
-- Public repo LIVE: https://github.com/kadoo69/roostoo-hackathon (default `main`, tag `round1-live-2026-09-30`); commit live changes to `main` and push. AWS login NOT working yet (portal says the college email is not verified: invite not received). Next: accept AWS invite, run `deploy/ec2_bootstrap.sh` in Session Manager, then `./run_bots.sh livestop` on the Mac (never both hosts); watch the first real fills on the rehearsal book.
+### Deadlines and blockers
+- **Competition main round started 2026-09-30; first trade due 2026-10-01 12:00 UTC** (official FAQ). No manual stop, override or trade on the competition account; every live change must be committed and pushed (public repo https://github.com/kadoo69/roostoo-hackathon, work on `main`).
+- **Competition account NOT ACTIVE**: `/v3/balance` with the COMP key answers "not yet a member of this competition" (last seen 19:34Z). The `competition` book polls every 30 s and starts by itself on the first good wallet read. If still inactive near the deadline, the operator messages the organisers.
+- **AWS access expected 2026-10-01** (portal https://d-906625dad1.awsapps.com/start said the operator's college email was not verified). Deploy with `deploy/ec2_bootstrap.sh` (tested end to end in an Amazon Linux 2023 container; paste command is in README.md), then `./run_bots.sh livestop` on the Mac. NEVER run the competition book on two hosts.
+- Until then the Mac hosts everything. It was ON BATTERY at 01:00 IST: keep it on mains; `sudo pmset -a disablesleep 1` keeps it awake with the lid closed. Claude Code cloud sessions are not a bot host (time limits, processes not persisted).
 
-## Session summary 2026-09-25..27 (read first)
+### What is running (`./run_bots.sh status`; desk http://127.0.0.1:8787/)
+| book | what | since |
+|---|---|---|
+| `competition` | REAL orders, COMP keys, `config/competition.yaml` = the `momentum_top3_30m` rule (30m breakout, 4h + 1.5x volume confirmations, top 3 by momentum, 0.5 cap, 3%/15% ladder), target lock OFF, derisk ramp moved past the window; waiting for account | 2026-09-30 14:22Z |
+| `competition_rehearsal` | same rule, REAL orders on the Roostoo TEST account (50k USD) | 14:22Z |
+| `wf_live` | THE dynamic bot (paper): every hour scores 29 styles + cash on the last 3 days (long breakouts 5m-4h with filters, shorts 15m/1h, momentum ride +2%->+5%, order-flow, open-interest, residual, one-coin-per-block) and trades the leader; reads the decision point | restarted 19:39Z |
+| `momentum_top3_5m/15m/30m` | fixed-clock paper baselines; 5m exit changed to the 36-bar (3 h) low | reset 17:34Z |
+Start/stop: `./run_bots.sh start|stop` (paper set), `live|livestop` (competition + rehearsal, ROOSTOO_DRY_RUN=0), `progress|progressstop` (30-minute review loop), `fleet` (old 18-book paper fleet, stopped). Dashboards are `python3 -m bot.dashboard` (8787) and `--port 8789`.
+
+### Tools
+`python3 -m gates.preflight` (read-only checks), `gates.progress` (per-book trades, fills, booked skims, Sharpe/Sortino/R-DD, uptime; also every 30 min to `results/progress/`), `gates.wf_report` (dynamic bot's forward scorecard), `gates.signal_scan` (breakouts and what blocks them, per clock), `gates.levels` (chart levels), `gates.market_structure` (PCA: factor share, effective bets, blocks, residual leaders), `gates.decision_point` (merge research-agent JSONs into `results/decision/latest.json`), `gates.roostoo_smoke` (order lifecycle on the TEST account; places small orders).
+
+### Decisions and findings of 2026-09-30 (all in DECISIONS.md)
+- Live API differs from the README; five fixes (`#roostoo-keys-2026-09-30`). Fees measured: 0.10% taker, 0.05% maker; fills instant.
+- Competition book choice (`#competition-book-2026-09-30`); declared tests all NOT adopted: slower exit (`#competition-exit-outcome`), adaptive clock (`#adaptive-clock-outcome`, near-miss), burst drivers and exits (`#burst-drivers-outcome`). Best-trades study: top 5% of entries = 71% of gains (`#best-trades-study-2026-09-30`).
+- Market: chop inside a 14-day rally; PC1 ~60% of variance, ~2.7 effective bets of 25 (`#market-structure-2026-10-01`).
+- Decision point from four Sonnet research agents (`#decision-point-outcome-2026-10-01`): chop; allowed `1h|htf0|vol0`, `30m|htf0|vol0`, `blocks|1h`, `resid|30m`, cash; gross 0.9; shorts, order-flow and open-interest styles off. EXPIRES 2026-10-01 07:29Z; after that `wf_live` uses its full menu until the agents are re-run and `python3 -m gates.decision_point` merged again.
+- Bug fixed at 19:40Z: a restart after a rule change bought stale path entries (`#restart-stale-entry-2026-10-01`).
+
+### Open operator decisions
+1. Target lock on the competition book: risk agent recommends ON; operator chose OFF ("all in").
+2. Re-run the research agents every ~12 h to refresh the decision point?
+3. Feed the decision point into the competition book (only after its paper effect is seen)?
+4. The 30-minute chat reports and one-shot checks were session-only cron jobs; they die with the session. The repo's own 30-minute review loop keeps writing `results/progress/`.
+
+### Next steps
+1. When AWS works: bootstrap, verify with `gates.preflight`, `./run_bots.sh livestop` on the Mac.
+2. Watch the competition account; the first trade happens on the first qualifying breakout after activation (the first bar after a start is suppressed by design).
+3. Checkpoint 2026-10-03: compare `competition` (once live), `wf_live` and the baselines on forward-only results (return and drawdown) before any change to the competition book; every change committed.
+
+## Session summary 2026-09-25..27 (history)
 
 **Fleet (19 books + testnet):** core 4h `donchian_4h`, `momentum_top3_full`, `momentum_top3_lock`; short-term `momentum_top3_30m/15m/5m`, `momentum_top3_30m_allcash`, `momentum_top3_1h_allcash`, `momentum_top3_1h_long` (other session), `accel_15m`; burst `burst_5m`, `burst_15m`; A/B arms `burst_strong_15m`, `momentum_top3_15m_eq`, `momentum_top3_15m_hold3h`, `momentum_top3_5m_hold2h`, `momentum_top3_15m_slowexit`; shorts `short_accel_15m`, `short_pullback_15m`. All short-term longs: shorts off, target lock off, ladder on. A/B stop rules fall due 2026-10-10/11.
 **Retired:** `accel_5m`, `momentum_top3_1h`, `momentum_top3_15m_allcash`, `momentum_top3_5m_allcash`, `momentum_top3_30m_wide`, `momentum_top3_15m_hold12h` (data under `live/_archive/`).
@@ -26,7 +50,7 @@ Current state only. The full history of sessions to 2026-09-23 is archived at `d
 **Tools:** desk dashboard at `/` (old at `/full`), `python3 -m gates.path_forensics`, `gates.signal_quality`, `gates.rally_capture`, `gates.live_audit`, `gates.live_validation`, `gates.fleet_review`; strategy docs `docs/strategies/` (zip on Desktop).
 **Next:** keep the Mac awake (plug in; `sudo pmset -a disablesleep 1`) or move to EC2 (`deploy/README.md`); after 3-5 days of clean uptime, fold A/B winners into the core books as one declared change; decide the competition book (`momentum_top3_30m` candidate; lock yes/no) by 2026-10-03; get Roostoo keys and measure real fills; build cockpit, watchdog alerts and pre-flight gate (ideas in this session). Nothing from this session is committed.
 
-## Fleet 2026-09-26 16:27Z (read first)
+## Fleet 2026-09-26 16:27Z (history)
 
 - 13 books in `run_bots.sh` plus `momentum_top3_1h_long` (other session) and `testnet_live`. All short-term books are long-only with no target lock (`#short-term-shorts-off-2026-09-26`, `#short-term-lock-off-2026-09-26`); the ladder is on everywhere.
 - New live A/B paper books: `burst_5m`, `burst_15m` (`#burst-books-declaration`), `burst_strong_15m` vs `burst_15m` (entry needs >2% prior hour) and `momentum_top3_15m_eq` vs `momentum_top3_15m` (equal weights) (`#burst-strong-and-equal-weight-declaration`). Stop rules fall due 2026-10-10.
@@ -39,7 +63,7 @@ Current state only. The full history of sessions to 2026-09-23 is archived at `d
 - Retired 2026-09-26: `momentum_top3_1h` (duplicate of 1h_long), `momentum_top3_15m_allcash`, `momentum_top3_5m_allcash`; data in `live/_archive/retired-2026-09-26/`.
 - Dashboard leaderboard shows realised and open P&L.
 
-## Fleet review 2026-09-26 ~09:40Z (read first)
+## Fleet review 2026-09-26 ~09:40Z (history)
 
 - UPTIME IS THE BINDING PROBLEM: the Mac slept 19.5 h (09-25 13:53Z to 09-26 09:21Z); online 6.5 h of the last 26.5 h. Battery was at 8% at 09:31Z. Replaying the rule over the missed bars: sleep cost the 30m and 15m books ~3 points each (`#fleet-review-2026-09-26`).
 - The 5m clock loses even when online (-3.7% to -6.1% in the replay, 5m_allcash -2.8% live); its day-14 falsification against 15m is due 2026-10-07.
