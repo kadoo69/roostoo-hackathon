@@ -173,3 +173,27 @@ def test_a_live_cycle_without_a_readable_wallet_does_nothing(monkeypatch):
     streams = [stream for stream, _ in written]
     assert "cycles" not in streams and streams.count("waiting") == 1
     assert b.equity_curve == [100_000.0]
+
+
+def test_first_decision_after_a_start_blocks_entries_the_path_took_earlier():
+    import pandas as pd
+
+    from bot.entry_guard import GuardedTarget
+
+    class B(GuardedTarget):
+        pass
+
+    b = B()
+    end = pd.Timestamp.now(tz="UTC").floor("5min") - pd.Timedelta(minutes=5)
+    idx = pd.date_range(end=end, periods=3, freq="5min")
+    b.matrix = pd.DataFrame(1.0, index=idx, columns=["OLD", "NEW"])
+    b.s = type("S", (), {"interval": "5m"})()
+    b.holdings, b.equity_curve, b.shorts = {}, [100000.0], {}
+    b.prev_processed = idx[-2]
+    b.journal = type("J", (), {"write": lambda self, st, rec: None})()
+    b.current_weights = lambda prices: {}
+    w = pd.DataFrame({"OLD": [0.5, 0.5, 0.5], "NEW": [0.0, 0.0, 0.5]}, index=idx)
+    first = b.guard({"OLD": 0.5, "NEW": 0.5}, w, {}, 0)
+    assert first == {"NEW": 0.5}
+    again = b.guard({"OLD": 0.5, "NEW": 0.5}, w, {}, 0)
+    assert again == {"OLD": 0.5, "NEW": 0.5}

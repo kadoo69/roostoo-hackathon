@@ -2,8 +2,10 @@
 
 The rule's sticky slots and minimum hold run on the simulated path; after downtime the book
 holds something else. Two guards act on the book's real positions instead.
-A: on a catch-up decision (a bar skipped, or the decision more than one bar after the close)
-no new position opens whose simulated entry is older than the latest bar.
+A: on a catch-up decision (a bar skipped, or the decision more than one bar after the close), and
+on the first decision after any process start, no new position opens whose simulated entry is
+older than the latest bar; a restart after a rule change otherwise bought names the new rule
+would have entered earlier (`#restart-stale-entry-2026-10-01`).
 B: the minimum hold counts from the bar the book really opened the position at, and keeps a
 young position at its current weight and side whatever the rule's target says.
 DECISIONS.md#catch-up-and-live-min-hold
@@ -95,7 +97,9 @@ class GuardedTarget:
         current = self.current_weights(prices)
         self.opened = update_opened(getattr(self, "opened", {}), current, getattr(self, "last_decision_bar", None))
         now = pd.Timestamp.now(tz="UTC")
-        if is_catch_up(getattr(self, "prev_processed", None), m.index, now, step) and len(w) > 1:
+        first = not getattr(self, "guard_seen_decision", False)
+        self.guard_seen_decision = True
+        if (first or is_catch_up(getattr(self, "prev_processed", None), m.index, now, step)) and len(w) > 1:
             prev_row = {s: float(v) for s, v in w.iloc[-2].items() if abs(v) > 1e-9}
             target, dropped = drop_stale_entries(target, current, prev_row)
             if dropped:
