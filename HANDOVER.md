@@ -8,7 +8,7 @@ Current state only. The full history of sessions to 2026-09-23 is archived at `d
 - Keys issued and in `.env`. Test account 50,000 USD. **Competition key answers "not yet a member of this competition"** as of 14:25Z; the `competition` book logs `wallet_unavailable` every poll and will start trading on the first successful wallet read. Ask the organisers if it is still inactive near the deadline.
 - `gates/roostoo_smoke.py` measured fees (0.10% taker, 0.05% maker) and found four live-API mismatches, all fixed with regression tests (`#roostoo-keys-2026-09-30`).
 - Operator chose `momentum_top3_30m`, lock OFF (`#competition-book-2026-09-30`). `competition` + `competition_rehearsal` started on the Mac at 14:22Z with `./run_bots.sh live`.
-- Next: `gh auth login`, create the public repo, push `main` + tag; accept AWS invite, run `deploy/ec2_bootstrap.sh` in Session Manager, then `./run_bots.sh livestop` on the Mac (never both hosts); watch the first real fills on the rehearsal book.
+- Public repo LIVE: https://github.com/kadoo69/roostoo-hackathon (default `main`, tag `round1-live-2026-09-30`); commit live changes to `main` and push. AWS login NOT working yet (portal says the college email is not verified: invite not received). Next: accept AWS invite, run `deploy/ec2_bootstrap.sh` in Session Manager, then `./run_bots.sh livestop` on the Mac (never both hosts); watch the first real fills on the rehearsal book.
 
 ## Session summary 2026-09-25..27 (read first)
 
