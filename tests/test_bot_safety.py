@@ -170,6 +170,15 @@ def test_a_pair_with_a_resting_order_is_not_ordered_again(tmp_path):
     assert rec["skipped"] == "order_already_pending"
 
 
+def test_a_resting_roostoo_order_is_matched_by_its_pair_not_its_symbol(tmp_path):
+    ex, _ = executor(tmp_path)
+    ex.settings = replace(settings(), dry_run=False)
+    ex.pending_pairs = {"ARBUSD"}
+    rec = ex.send({"pair": "ARB/USD", "symbol": "ARBUSDT", "side": "BUY",
+                   "quantity": 1000.0, "price": 0.249, "type": "LIMIT"})
+    assert rec["skipped"] == "order_already_pending"
+
+
 def test_a_dry_run_never_reports_pending_pairs(tmp_path):
     ex, _ = executor(tmp_path)
     ex.pending_pairs = {"BTCUSDT"}
@@ -209,9 +218,26 @@ def test_a_one_tick_quote_is_accepted_however_wide_in_bps(tmp_path):
     assert plan["price"] == 0.00000485
 
 
-def test_a_two_tick_quote_wider_than_the_limit_is_still_refused(tmp_path):
+def test_a_two_tick_quote_is_accepted_and_filled_at_the_far_side(tmp_path):
     ex, _ = _wide_tick_executor(tmp_path)
     q = {"PEPE/USD": {"MaxBid": 0.00000485, "MinAsk": 0.00000487, "LastPrice": 0.00000486}}
+    plan = ex.prepare({"symbol": "PEPEUSDT", "side": "BUY", "quantity": 5_000_000.0}, q)
+    assert not plan.get("skipped")
+    assert plan["wide_tick"] is True
+
+
+def test_arb_at_its_normal_two_tick_spread_is_tradeable(tmp_path):
+    spec = PairSpec("ARB/USD", 4, 1, 1.0, "crypto", True)
+    ex = Executor(RoostooClient(), {spec.pair: spec}, settings(), Journal("test", tmp_path))
+    q = {"ARB/USD": {"MaxBid": 0.2490, "MinAsk": 0.2492, "LastPrice": 0.2491}}
+    plan = ex.prepare({"symbol": "ARBUSDT", "side": "BUY", "quantity": 1000.0}, q)
+    assert not plan.get("skipped")
+    assert plan["wide_tick"] is True and 8.0 < plan["ref_spread_bps"] < 8.1
+
+
+def test_a_three_tick_quote_wider_than_the_limit_is_still_refused(tmp_path):
+    ex, _ = _wide_tick_executor(tmp_path)
+    q = {"PEPE/USD": {"MaxBid": 0.00000485, "MinAsk": 0.00000488, "LastPrice": 0.00000486}}
     plan = ex.prepare({"symbol": "PEPEUSDT", "side": "BUY", "quantity": 5_000_000.0}, q)
     assert plan["skipped"] == "spread_exceeds_limit"
 

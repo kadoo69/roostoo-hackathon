@@ -8,6 +8,8 @@ Every claim below links to the anchor that carries its evidence. Nothing here is
 
 ## The five things that are actually true
 
+**Correction 2026-09-23 (`#universe-completeness`):** until this date the research universe omitted every live Binance name Roostoo does not list. On the complete universe the ranked book's 2023-24 median falls from 4.43% to 2.30% and 2025-26 from 2.91% to 2.43%; the target lock's P(>2%) of 0.674 is unchanged. Relative verdicts below stand; absolute levels quoted before this date are too high.
+
 1. **The edge is in the universe rule, not the signal.** Ranking by liquidity inside Roostoo's own 66 listings scores OOS Sharpe -0.15. Ranking the full 264-name Binance universe and trading the intersection scores **1.56 with the identical signal**. `#roostoo-universe-pool-size`
 2. **The two screens are collinear at 14 days, not merely in tension.** Within a fortnight the Screen 3 composite is governed by the sign of the window's return, which is governed by BTC beta. Anything that cuts beta cuts P(positive), P(qualifying) and the composite together. `#beta-is-the-only-screen3-lever`, `#screen3-is-a-sign-indicator`
 3. **Nothing here passes Gate 4 at an honest trial count, and that is settled.** DSR 0.8445 against a pre-registered 0.95, after a counting rule written **before** the number was computed cut the ledger from 754 to 470. Passing needs 9.8 years of data or Sharpe 2.498 against 2.206. `#trial-counting-rule`, `#gate4-standing-verdict`
@@ -27,6 +29,7 @@ Concentration, the derisk ramp, the weight path, the deployment rule and the boo
 | sub-hourly mean reversion | 54 | dead, confirmed by outside literature | `#scalp-meanrev-outcome` |
 | order-flow scalping 5m/15m/30m | 72 | dead | `#flow-scalp-outcome` |
 | cross-sectional mean reversion | 48 | dead | `#meanrev-xs-outcome` |
+| global Ridge on price/flow ranks, 12h relative target | 2 | dead: IC +0.05 to +0.08 but no gain over 7d momentum after costs | `#ml-mvp-outcome` |
 | ratchet stops | 26 | dead | `#ratchet-outcome` |
 | correlation caps | 24 | dead | `#correlation-cap-outcome` |
 | strong-but-retraced entries | 24 | dead | `#strong-retraced-outcome` |
@@ -39,12 +42,27 @@ Concentration, the derisk ramp, the weight path, the deployment rule and the boo
 | market gates: crowding, implied vol, Coinbase premium, stablecoin supply, washout BTC sleeve | 5 | null; crowding gate is the nearest miss (better 2022 and holdout, worse fit) | `#positioning-edges-outcome` |
 | booking triggered by positioning | 2 | harmful (per-coin) or inert (market) | `#positioning-edges-outcome` |
 | literature: BTC overnight, Monday Asia open, ETF-flow momentum, multi-horizon trend rank, liquidation-flush reversal | 5 | all fail on the competition engine; the two published anomalies decayed after publication | `#literature-edges-outcome` |
+| intraday structure: first-hour momentum, 1h cointegrated pairs, quiet-market gate; alt hour-of-day and live 1m lead-lag diagnostics | 3 | all fail; pairs net -8 to -34 bps per trade and 48% exit on the stop; no hour moves the pool 10 bps; BTC-to-alt 1m lag is +3.3 bps | `#intraday-structure-outcome` |
+| execution timing: delay the order k minutes after the 4h close | 1 | null with the opposite sign; every delay costs 1 to 8 bps because breakouts continue; the backtest's at-close fill is optimistic by about 0.4pp a fortnight on the ranked book | `#execution-timing-outcome` |
+| drawdown brake: half gross after -8% in the window, alone and with the lock | 2 | null; lowers P(>2%) and median everywhere, helps only the worst window; a random-hour cut does better, because in-window drawdowns recover | `#drawdown-brake-outcome` |
+| decorrelated universe traded long/short or long-only; beta-hedged C0 | 3 | fail; low-correlation selection = a random third; the hedge halves the worst window but cuts median and P(>2%) in the up periods | `#decorrelated-directional-outcome` |
+| podcast edges: daily 20-day-high 5-day window, volume-growth rank, small-cap pump short, equal-weight stack | 4 | all fail on the complete universe; the small-cap short sleeve has a -39% worst fortnight and random shorts match it; the stack trades median for a shallower worst window | `#podcast-edges-outcome` |
 | short sleeve, intrabar entry, channel ensemble, half/half blend | 4 | fail; only the target lock passes | `#competition-wf-outcome` |
+| short sleeves on the complete universe: D1 breakdowns on donchian_4h, W1 bull-regime laggards in the ranked book's free slots | 2 | fail; D1 doubles the worst window and matches its random control; W1 loses 2023-24, the bull run; at 1h no signal drifts past a round trip | `#short-paper-books-outcome`, `#weak-short-bull-outcome`, `#book-diagnosis-2026-09-23` |
+| top-down long/short: breadth+BTC regime gates the side, breakout longs, breakdown shorts, inverse-vol, both-side ladder | 4 | fail; the regime layer removes the longs when C0 earns most, inverse-vol is worse than equal weight; only buys a shallower worst window | `#topdown-ls-outcome` |
+| breadth-switched shorts with own slots on 1h/30m/15m books | 6 | fail in every fit period and 5 of 6 holdouts; shorts double turnover, the shuffled switch does as well | `#lowtf-breadth-shorts-outcome` |
+| top-3 contenders across both sides, sized by strength, 1h/30m/15m | 3 | fail vs long-only everywhere; strength sizing beats random sizes by 6-16 points, the short side and the fast clock lose | `#lowtf-contenders-outcome` |
+| acceleration (return minus prior return, vol-scaled), long and short, 1h/30m/15m | 6 | fail; acceleration REVERSES at these clocks (15m rank IC -0.02, t -11 to -14) and betting on the reversal loses to cost too | `#accel-outcome` |
+| clock-agreement ensemble: mean of 15m, 30m and 1h long-only contenders targets | 1 | fail: beats its components' average (+0.76, shifted control -1.36) and cuts the worst fortnight to about -13%, but loses to 1h long-only and 30m on median in every period; the 15m leg is a -8% a fortnight drag | `#lowtf-clock-ensemble-outcome` |
+| long-only on the live 15m/30m contenders rules | 2 | fail: shorts are only ~2% of position-bars there, so nothing changes; long-only passes at 1h (already paper as momentum_top3_1h_long); the 15m live rule is about -8% a fortnight historically | `#lowtf-long-only-clocks-outcome` |
+| acceleration guard on the contenders rule (refuse blow-off entries, exit on sharp deceleration) | 3 | fail; about equal to the control, early exits cost 2-3 points a fortnight | `#accel-guard-outcome` |
 | rotation hysteresis | - | null, effects below the noise threshold | `#rotation-hysteresis-outcome` |
 
-**Ledger stands at 980 rows** (679 in the Sharpe family before the positioning run). Every configuration counts, including nulls and abandoned searches.
+**Ledger stands at 1,020 rows** (679 in the Sharpe family before the positioning run). Every configuration counts, including nulls and abandoned searches.
 
 ## Settled parameters: do not re-fit
+
+- Short-term contenders books hold a leader while its channel holds (sticky slots) and keep the 3%/15% ladder. `#let-winners-run-outcome`
 
 - `exit_bars = 10`, walk-forward over 33 blocks. `#exit-walkforward-outcome`
 - Pool 30. 20 is worse on every measure, 40 is indistinguishable. `#roostoo-universe-pool-size`

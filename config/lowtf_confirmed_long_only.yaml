@@ -1,0 +1,17 @@
+meta:
+  name: lowtf_confirmed_long_only_v1
+  declared_before_this_test: true
+  declared_utc: '2026-09-24'
+  research_only: true
+  prior_evidence: 'The current confirmed 1h B1+B2 book was selected on the 2023-26 history; prior short-frame tests found shorts costly. This test is exploratory on those same years.'
+  question: Does disabling shorts improve the existing confirmed 1h paper book on 14-day returns and daily Sharpe, Sortino and Calmar?
+comparison:
+  control: current 1h sticky contenders with 4h channel alignment, 1.5x volume confirmation, frozen stretch skips and both directions
+  arm: identical rule with short entries disabled
+  sample: ['2023-01-01', '2026-09-19']
+  costs: same 5 bps long fee, 10 bps short fee, symbol tick, 3 percent profit skim and 25 percent drift band
+  pass: improve median 14-day return, Sharpe, Sortino and Calmar in both 2023-24 and 2025-26, with worst 14-day return no more than 5 percentage points lower
+  next_step: forward paper comparison only; never direct live promotion from this historical test
+post_result_robustness:
+  added_utc: '2026-09-24'
+  note: Added after the first positive historical comparison; report doubled long-only fees and ticks as a sensitivity check, not as fresh discovery evidence.

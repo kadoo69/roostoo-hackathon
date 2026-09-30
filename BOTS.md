@@ -1,8 +1,18 @@
 # The bot fleet
 
+**2026-09-24 18:08Z: four `momentum_top3_*_allcash` books added** (new entries absorb idle cash, `DECISIONS.md#idle-cash-new-entry-declaration`), each compared on the dashboard with its plain twin. The accel books were briefly retired and restored at the operator's request with their state intact. `momentum_top3_1h_long` is run by another session.
+
+**2026-09-25 09:05Z: `accel_5m` retired** (operator; -3.3% live, fee-bound, `DECISIONS.md#accel-5m-retired-2026-09-25`). `accel_15m` continues.
+
+**2026-09-24 16:00Z: nine paper books.** Added `accel_15m` and `accel_5m` (`bot.accel_run`): the contenders rule plus an acceleration guard (refuse blow-off entries, exit on sharp deceleration), paper only, failed backtest (`DECISIONS.md#accel-guard-outcome`).
+
+**2026-09-23 18:20Z: seven Roostoo paper books.** The four short-term books (`momentum_top3_1h/30m/15m/5m`) now run the top-3 contenders rule on both sides (`bot.contenders_run`, `DECISIONS.md#lowtf-contenders-outcome`); the short-term Donchian books are retired. Earlier: **2026-09-23 17:00Z: eleven Roostoo paper books.** Competition candidates: `donchian_4h`, `momentum_top3_full`, `momentum_top3_lock`. Short-term paper books on operator instruction (all failed or untested by backtest, `DECISIONS.md#lowtf-paper-bots`, `DECISIONS.md#lowtf-5m-paper-bots`): `donchian_1h/30m/15m/5m`, `momentum_top3_1h/30m/15m/5m`. The 4h books are long-only; the eight short-term books also short (S1 sleeve on their own clock, laddered, `DECISIONS.md#lowtf-shorts`).
+
+**2026-09-23: cut to three Roostoo books plus `testnet_live`**: `donchian_4h`, `momentum_top3_full`, `momentum_top3_lock`; `topdown_ls` (top-down long/short) failed its backtest and is stopped, `DECISIONS.md#topdown-ls-outcome`. Retired books' live data is in `live/_archive/retired-2026-09-23/`. Market heatmap: `http://127.0.0.1:8787/heatmap`. The other books below are retired (configs kept, not started, not on the dashboard). Why: `DECISIONS.md#book-diagnosis-2026-09-23`.
+
 Sixteen books. Fifteen are paper on Roostoo in dry run; one places real orders on Binance testnet.
 
-**The whole fleet was reset to 100,000 and restarted together at 2026-09-22T20:48Z**, on the replayed channel state, the one-tick spread rule and cash-capped buys. Everything before that is archived under `live/_archive/`. No reading may span the reset.
+**The three books were reset to 100,000 again at 2026-09-23T16:08Z** (previous state in `live/_archive/reset3-20260923T1608Z/`). `python3 -m gates.universe_coverage` accounts for every Roostoo pair and why it is or is not traded. Before that, **the whole fleet was reset to 100,000 and restarted together at 2026-09-22T20:48Z**, on the replayed channel state, the one-tick spread rule and cash-capped buys. Everything before that is archived under `live/_archive/`. No reading may span the reset.
 
 **Read this first: a gated arm's number means nothing without its control, and as of 2026-09-22 every control is gone.** The operator enabled booking on every book including the four that were controls, so each pair now measures its own treatment ON TOP OF booking rather than against a no-booking baseline. No reading carries across that boundary. `DECISIONS.md#booking-on-every-bot`.
 

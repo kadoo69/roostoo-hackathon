@@ -13,7 +13,7 @@ Every source this repo reads, what it gives, how far back it goes, and the gotch
 | interval | rows x names | span | path |
 |---|---|---|---|
 | 15m | 55 names | 2017-08 onward | `data/cache/panel_15m.parquet` |
-| 1h | 79,737 x 264 | 2017-08-17 to now | `data/cache/flow_1h.parquet` |
+| 1h | 676 names (every live Binance USDT pair plus delisted, `#universe-completeness`) | 2017-08-17 to now | `data/cache/flow_1h.parquet` |
 | 4h | 19,906 x 264 | 2017-08-17 to now | `data/cache/flow_4h.parquet` |
 | 8h, 12h, 1d | 264 names | same | `data/cache/flow_*.parquet` |
 | 5m | **5 names only** | partial | `data/cache/5m/` |
@@ -142,8 +142,32 @@ Status as of 2026-09-23. "Null" means built, tested against the deployed book on
 | Binance futures OI / L/S / taker | 2021-12 via archive | null, `#positioning-edges-outcome` |
 | Funding | 2020 | null as veto and priority; do not veto negative-funding names |
 | Order book | live only | not backtestable; spread gate already uses it |
-| Hyperliquid | shorter than Binance | not tested, duplicates Binance |
+| Hyperliquid | hourly funding backfilled from 2025-01; OI/premium snapshots forward only | funding tested against Binance and the deployed book; no validated edge (`results/source_edges.md`) |
 | Deribit options | GEX none, DVOL 2021-03 | GEX forward-collected; DVOL null as a gate |
 | Dune / exchange flows / unlocks / DEX | paid or not PIT | not tested |
 | DefiLlama stablecoins | 2017 | null |
 | Google Trends / Reddit / social | not PIT | excluded, would leak |
+
+## Forward source hub (2026-09-23)
+
+`bot/source_hub.py` collects the public sources that were still only catalog entries. It runs separately from every executor and **never changes an order**. Run one sample with `/opt/anaconda3/bin/python3 -m bot.source_hub --once`. For a manual 15-minute loop use `./run_bots.sh sources`, inspect with `./run_bots.sh status`, and stop that manual supervisor with `./run_bots.sh sourcestop`. On this Mac it is installed as the `com.roostoo.source-hub` launchd service so it survives terminal closure and reboot; stop that service with `launchctl bootout gui/$(id -u)/com.roostoo.source-hub`.
+
+The current snapshot is written atomically to `live/source_hub/state.json`. Every poll is also appended to `live/source_hub/observations-YYYY-MM-DD.jsonl`, including failures. Each record has a fetch time, a source time where the feed provides one, a coverage count, a maximum age and an explicit error. The dashboard's Sources table and Cross-venue context panel read this file. A failed or old sample is never labelled live.
+
+| feed | published fields | interpretation |
+|---|---|---|
+| [Hyperliquid perp contexts](https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint/perpetuals) | mark, hourly funding, base/USD open interest, 24h volume and premium for ten exact-name coins | Independent venue snapshot; no synthetic Binance-to-Hyperliquid mapping |
+| [Deribit options](https://docs.deribit.com/) | BTC/ETH net GEX, gamma flip and regime from `data/options.py` | Forward-only; dealer sign is an assumption |
+| [DefiLlama stablecoin chart](https://github.com/DefiLlama/api-docs/blob/main/llms-pro.txt) | latest pegged-USD supply and seven-day change | Daily market context; `source_time` is the chart's date |
+
+The existing scanner continues to supply Binance trades, futures, funding, open interest and book depth. The existing research archive supplies point-in-time history for the validated price and positioning experiments. This hub adds an honest forward record for sources without a comparable local history. A signal from it should enter an executor only after a documented, time-aligned forward test against the active book.
+
+## Separate source feature research (2026-09-24)
+
+`ml_research/source_features.py` derives availability-stamped features into `results/source_features_forward.parquet` every 15 minutes (`com.roostoo.source-features`). The features include cross-venue funding and premium, 24-hour Hyperliquid OI change, Deribit GEX change and flip distance, large-trade aggressor pressure, order-book/flow interaction, and stablecoin supply change. They remain outside all execution bots.
+
+`ml_research/source_edges.py` backtests four declared combinations in `config/source_edges.yaml` using the same net-cost book simulator as the current momentum strategy. The results are in `results/source_edges.md` and `.json`. None passed validation, holdout and recent windows. In particular, adding a stablecoin expansion condition to the Binance–Hyperliquid funding spread hurt median 14-day returns by 0.91 percentage points in validation and 1.27 points recently. The strongest supported combination remains the existing price momentum and liquidity selection; there is no demonstrated incremental alpha from these source tilts.
+
+`ml_research/forward_validation.py` runs daily (`com.roostoo.source-forward-validation`). It retains public closed Binance hourly prices under `data/cache/source_forward_prices/`, samples one source/symbol/day, and writes only matured 24-hour and non-overlapping 72-hour outcomes to `results/source_forward_outcomes.parquet`. `results/source_forward_validation.json` reports coverage and marks features insufficient until 30 distinct days, then exploratory until 60; a passing paper comparison against the unchanged bot is still required for promotion. Deribit gamma, order-book and trade-size features currently have too little forward history for an alpha claim. Run it manually with `/opt/anaconda3/bin/python3 -m ml_research.forward_validation` or use `--offline` for cached prices.
+
+The same validator now writes `results/source_short_outcomes.parquet` and `results/source_short_validation.json`: the first snapshot per source/symbol/UTC hour is labelled at the next closed Binance hourly bar and at +1 hour; every fourth UTC hour can also receive a non-overlapping +4 hour outcome. The report counts distinct *days* as well as samples and records hour coverage and the longest collection gap. A large gap means the Mac slept or a source failed, not evidence that the feature had no signal.

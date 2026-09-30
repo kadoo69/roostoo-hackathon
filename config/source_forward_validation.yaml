@@ -1,0 +1,23 @@
+meta:
+  name: source_forward_validation_v1
+  status: observational_research_only
+  decision_rule: no feed enters an execution bot until a separately deployed paper arm beats its unchanged control after costs
+  outcome_source: Binance public closed 1h candles, first hourly close strictly after feature availability
+  horizons_hours: [24, 72]
+  sampling: one observation per source, symbol and UTC day; 72h outcomes use every third day
+  short_horizons_hours: [1, 4]
+  short_sampling: one observation per source, symbol and UTC hour; 4h outcomes use hours divisible by four to avoid overlapping outcomes
+  exploratory_min_distinct_days: 30
+  promotion_min_distinct_days: 60
+  missing_data: leave null, never forward-fill beyond the declared source age
+  caution: gamma dealer sign is assumed; historical DefiLlama supply can be revised
+features:
+  hyperliquid: [funding_hourly, oi_log_change_24h, premium, volume_24h_usd]
+  deribit_options: [gex_ratio, gex_ratio_change_24h, flip_distance_pct]
+  binance_scanner: [funding_z, oi_z, book_imbalance, large_trade_pressure, book_flow_interaction, spread_bps, depth_10bps_usd]
+  stablecoins: [stable_change_7d_pct]
+candidate_interactions:
+  funding_oi: negative Hyperliquid funding with rising open interest; possible short build-up behind a breakout
+  book_flow: positive aggressor flow and positive resting-book imbalance; possible continuation rather than one-off sweep
+  gamma_breakout: amplifying dealer-gamma assumption with a BTC/ETH breakout; market-regime only
+  liquidity_confirmation: stablecoin expansion with cross-venue short pressure; historical result is currently null

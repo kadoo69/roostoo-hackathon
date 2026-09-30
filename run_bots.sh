@@ -4,9 +4,13 @@ ROOT="$(cd "$(dirname "$0")" && pwd)"
 cd "$ROOT"
 PY=${PY:-python3}
 # Gated arms are listed next to the control they must be read against.
-CONFIGS=${CONFIGS:-"config/donchian_4h.yaml config/donchian_4h_cushion.yaml config/donchian_1h.yaml config/momentum_top5_4h.yaml config/momentum_top5_cushion.yaml config/momentum_top3_4h.yaml config/momentum_top3_full.yaml config/donchian_30m.yaml config/donchian_15m.yaml config/momentum_top3_1h.yaml config/momentum_top3_30m.yaml config/momentum_top3_15m.yaml config/momentum_top3_lock.yaml"}
+CONFIGS=${CONFIGS:-"config/donchian_4h.yaml config/momentum_top3_full.yaml config/momentum_top3_lock.yaml config/momentum_top3_30m.yaml config/momentum_top3_15m.yaml config/momentum_top3_5m.yaml config/momentum_top3_1h_allcash.yaml config/momentum_top3_30m_allcash.yaml config/accel_15m.yaml config/burst_5m.yaml config/burst_15m.yaml config/burst_strong_15m.yaml config/momentum_top3_15m_eq.yaml config/short_accel_15m.yaml config/momentum_top3_15m_hold3h.yaml config/momentum_top3_5m_hold2h.yaml config/short_pullback_15m.yaml config/momentum_top3_15m_slowexit.yaml"}
 # alpha_flow runs under bot.alpha_flow_run, not bot.run, so it is started separately.
 ALPHA_FLOW_CONFIG=${ALPHA_FLOW_CONFIG:-"config/alpha_flow.yaml"}
+# Books that place REAL Roostoo orders; each config's meta.keyset picks its keys.
+# competition = round-1 competition account, competition_rehearsal = TEST account.
+# DECISIONS.md#competition-book-2026-09-30
+LIVE_CONFIGS=${LIVE_CONFIGS:-"config/competition.yaml config/competition_rehearsal.yaml"}
 mkdir -p live run
 
 pidfile() { echo "run/$1.pid"; }
@@ -17,12 +21,16 @@ running() { local p; p=$(cat "$(pidfile "$1")" 2>/dev/null) || return 1; [ -n "$
 # "bot.run config/donchian_4h.yaml" matches the other repo's workers and kills them.
 # That is what happened at 2026-09-19T17:41:03Z: starting the jev stack SIGTERMed
 # all three bots here and they never came back. Match on $ROOT, never on "config/".
-workers() { pgrep -f "bot\.run $ROOT/config/$1\.yaml" 2>/dev/null; }
+module_for() { case "$1" in topdown_ls) echo bot.topdown_run ;; competition|competition_rehearsal|momentum_top3_1h|momentum_top3_1h_long|momentum_top3_30m|momentum_top3_15m|momentum_top3_5m) echo bot.contenders_run ;; accel_15m|accel_5m) echo bot.accel_run ;; momentum_top3_1h_allcash|momentum_top3_30m_allcash|momentum_top3_15m_allcash|momentum_top3_5m_allcash|burst_5m|burst_15m|burst_strong_15m|momentum_top3_15m_eq|short_accel_15m|momentum_top3_15m_hold12h|momentum_top3_15m_hold3h|momentum_top3_5m_hold2h|momentum_top3_30m_wide|short_pullback_15m|momentum_top3_15m_slowexit) echo bot.contenders_run ;; *) echo bot.run ;; esac; }
+workers() { pgrep -f "bot\.(run|topdown_run|contenders_run|accel_run) $ROOT/config/$1\.yaml" 2>/dev/null; }
 supervisors() { pgrep -f "cfg=$ROOT/config/$1\.yaml" 2>/dev/null; }
-all_workers() { pgrep -f "bot\.run $ROOT/config/" 2>/dev/null; }
+all_workers() { pgrep -f "bot\.(run|topdown_run|contenders_run|accel_run) $ROOT/config/" 2>/dev/null; }
 scanner_supervisors() { pgrep -f "scanroot=$ROOT" 2>/dev/null; }
 scanner_workers() { pgrep -f "bot\.scanner --root $ROOT" 2>/dev/null; }
 scanner_procs() { { scanner_supervisors; scanner_workers; } | sort -u; }
+source_supervisors() { pgrep -f "sourceroot=$ROOT" 2>/dev/null; }
+source_workers() { pgrep -f "bot\.source_hub --root $ROOT" 2>/dev/null; }
+source_procs() { { source_supervisors; source_workers; } | sort -u; }
 LAB=${LAB:-config/paper_lab_v9.yaml}
 lab_supervisors() { pgrep -f "labroot=$ROOT" 2>/dev/null; }
 lab_workers() { pgrep -f "bot\.paper_lab --config $ROOT/config/" 2>/dev/null; }
@@ -38,7 +46,7 @@ testnet_workers() { pgrep -f "bot\.run $ROOT/config/testnet_live" 2>/dev/null; }
 testnet_procs() { { testnet_supervisors; testnet_workers; } | sort -u; }
 
 start_one() {
-  local cfg=$1 name; name=$(basename "$cfg" .yaml)
+  local cfg=$1 dry=${2:-1} name; name=$(basename "$cfg" .yaml)
   if running "$name"; then echo "  $name already running (pid $(cat "$(pidfile "$name")"))"; return; fi
   local orphans; orphans=$(workers "$name")
   if [ -n "$orphans" ]; then
@@ -46,15 +54,15 @@ start_one() {
     echo "    two books on one state store corrupts both. run '$0 stop' first."
     return
   fi
-  nohup bash -c '
-    cfg="$1"; name="$2"; py="$3"
+  ROOSTOO_DRY_RUN=$dry nohup bash -c '
+    cfg="$1"; name="$2"; py="$3"; mod="$4"
     while true; do
-      "$py" -m bot.run "$cfg" >> "live/$name.out" 2>&1
+      "$py" -m "$mod" "$cfg" >> "live/$name.out" 2>&1
       code=$?
       printf "[%s] exited code=%s, respawning in 10s\n" "$(date -u +%FT%TZ)" "$code" >> "live/$name.out"
       sleep 10
     done
-  ' _ "$ROOT/config/$name.yaml" "$name" "$PY" >> "live/$name.supervisor.out" 2>&1 &
+  ' _ "$ROOT/config/$name.yaml" "$name" "$PY" "$(module_for "$name")" >> "live/$name.supervisor.out" 2>&1 &
   echo $! > "$(pidfile "$name")"
   disown 2>/dev/null || true
   echo "  $name started (supervisor pid $!)"
@@ -86,8 +94,14 @@ case "${1:-start}" in
     echo "stopping:"; for c in $CONFIGS; do stop_one "$(basename "$c" .yaml)"; done
     ;;
   restart) "$0" stop; sleep 2; "$0" start ;;
+  live)
+    echo "starting LIVE ORDER books:"; for c in $LIVE_CONFIGS; do start_one "$c" 0; done
+    ;;
+  livestop)
+    echo "stopping LIVE ORDER books:"; for c in $LIVE_CONFIGS; do stop_one "$(basename "$c" .yaml)"; done
+    ;;
   status)
-    for c in $CONFIGS; do
+    for c in $CONFIGS $LIVE_CONFIGS; do
       n=$(basename "$c" .yaml)
       w=$(workers "$n" | wc -l | tr -d ' ')
       if running "$n"; then echo "  $n RUNNING (supervisor $(cat "$(pidfile "$n")"), workers $w)"
@@ -96,7 +110,20 @@ case "${1:-start}" in
       [ "$w" -gt 1 ] && echo "    WARNING: $w workers on one state store"
     done
     echo "  worker processes (this repo): $(all_workers | wc -l | tr -d ' ')"
+    if [ -n "$(source_procs)" ]; then echo "  source hub RUNNING"; else echo "  source hub STOPPED"; fi
     ;;
+  sources)
+    if [ -n "$(source_procs)" ]; then echo "  source hub already running (pids $(source_procs | tr '\n' ' '))"; else
+      nohup bash -c 'sourceroot="$1"; cd "$sourceroot"; while true; do "$2" -m bot.source_hub --root "$sourceroot" >> live/source_hub.out 2>&1; sleep 10; done' "sourceroot=$ROOT" "$ROOT" "$PY" >> live/source_hub.supervisor.out 2>&1 &
+      echo $! > run/sources.pid; disown 2>/dev/null || true; echo "  source hub started (pid $!)"
+    fi ;;
+  sourcestop)
+    p=$(cat run/sources.pid 2>/dev/null) && { pkill -P "$p" 2>/dev/null; kill "$p" 2>/dev/null; }
+    sup=$(source_supervisors); [ -n "$sup" ] && kill $sup 2>/dev/null
+    sleep 0.3
+    w=$(source_workers); [ -n "$w" ] && kill $w 2>/dev/null
+    rm -f run/sources.pid
+    if [ -n "$(source_procs)" ]; then echo "  source hub STILL RUNNING"; else echo "  source hub stopped"; fi ;;
   scanner)
     # The old guard matched "$ROOT/.*bot\.scanner", but $ROOT reaches the supervisor
     # as a trailing bash -c argument and the worker carried no repo path at all, so
@@ -190,5 +217,5 @@ case "${1:-start}" in
   report) shift; exec "$PY" -m bot.status "$@" ;;
   trades) shift; exec "$PY" -m bot.blotter --csv "$@" ;;
   dashboard) shift; exec "$PY" -m bot.dashboard "$@" ;;
-  *) echo "usage: $0 {start|stop|restart|status|scanner|scanstop|paperlab|labstop|scalper|scalperstop|scalpreport|compare|report|trades|dashboard}"; exit 2 ;;
+  *) echo "usage: $0 {start|stop|restart|live|livestop|status|scanner|scanstop|sources|sourcestop|paperlab|labstop|scalper|scalperstop|scalpreport|compare|report|trades|dashboard}"; exit 2 ;;
 esac

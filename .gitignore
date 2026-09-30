@@ -6,3 +6,4 @@ live/
 .env
 run/
 live/snapshots/
+.firecrawl/

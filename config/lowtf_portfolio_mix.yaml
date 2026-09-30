@@ -1,0 +1,21 @@
+meta:
+  name: lowtf_portfolio_mix_v1
+  declared_before_combination_test: true
+  declared_utc: '2026-09-24'
+  research_only: true
+  prior_selection: 'The B1+B2 1h breakout rule was selected and reported in results/breakout_quality_b12.json before this portfolio-mix study. Historical periods are not independent discovery evidence.'
+  question: Does an 80/20 allocation to the 4h momentum book and the 1h confirmed breakout book improve portfolio return and risk ratios after all costs?
+books:
+  slow: existing 4h momentum top-3 book with hourly accounting, fee, tick, skims and drift band
+  fast: existing 1h sticky contenders book with 4h channel alignment and 1.5 times prior median quote-volume entry confirmation
+  mix_fast_weight: 0.20
+  subbook_rebalance_cost_per_side: 0.0005
+controls:
+  unchanged_slow_book: true
+  fast_without_confirmations: true
+  double_fast_execution_costs: true
+sample:
+  start: '2022-10-01'
+  fit: ['2023-01-01', '2025-01-01']
+  holdout: ['2025-01-01', '2026-09-19']
+decision: Nominate only for fresh forward paper validation if both periods improve return, Sharpe, Sortino and Calmar; holdout must beat the unconfirmed fast-book mix and survive double fast execution costs.

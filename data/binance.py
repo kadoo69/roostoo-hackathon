@@ -14,6 +14,8 @@ from core.config import CACHE
 BUCKET = "https://s3-ap-northeast-1.amazonaws.com/data.binance.vision"
 VISION = "https://data.binance.vision"
 REST = "https://api.binance.com/api/v3"
+REST_MIRROR = "https://data-api.binance.vision/api/v3"
+FAILOVER_STATUS = (403, 451, 502, 503, 504)
 NS = "{http://s3.amazonaws.com/doc/2006-03-01/}"
 ARCHIVE_WORKERS = 16
 
@@ -27,6 +29,24 @@ NUMERIC = ["open", "high", "low", "close", "volume", "quote_volume", "trades",
 
 class BinanceDataError(RuntimeError):
     pass
+
+
+def rest_get(path: str, session=None, **kw) -> requests.Response:
+    """GET a public market-data path, failing over to Binance's market-data mirror.
+
+    `data-api.binance.vision` serves the same public endpoints and is the Data Sources
+    Pack's recommended source; the bot must keep its bars if the main host blocks the
+    EC2 region or goes down. Rate-limit answers (418/429) are returned, not retried
+    elsewhere. DECISIONS.md#roostoo-keys-2026-09-30
+    """
+    get = (session or requests).get
+    try:
+        r = get(f"{REST}{path}", **kw)
+        if r.status_code not in FAILOVER_STATUS:
+            return r
+    except requests.RequestException:
+        pass
+    return get(f"{REST_MIRROR}{path}", **kw)
 
 
 def _session() -> requests.Session:

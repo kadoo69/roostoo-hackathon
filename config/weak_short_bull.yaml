@@ -1,0 +1,35 @@
+meta:
+  name: weak_short_bull
+  declared_before_any_backtest: true
+  declared_utc: '2026-09-23'
+  requested_by: operator
+  operator_request: 'Keep the most successful strategies, diagnose them, and find how to benefit
+    from both long and short sides, on lower timeframes if possible.'
+  declaration_ref: DECISIONS.md#book-diagnosis-2026-09-23
+  selection_caveat: 'Chosen AFTER reading the forward-drift diagnostic of gates/book_diagnosis.py
+    on all three periods, so no period is out of sample for the choice. A pass is a paper-forward
+    candidate only, never a promotion.'
+  evaluation: 'The competition_wf engine and windows, unchanged (config/competition_wf.yaml).'
+  decision_rule: 'Identical to config/competition_wf.yaml: against C0 (momentum_top3_full) the arm
+    must raise P(>2%) AND median in all three periods, its worst window no more than 5 points worse,
+    and its nonsense control must not reproduce more than half its 2025-26 P(>2%) gain.'
+arms:
+  W1:
+    rule: 'momentum_top3_full, plus: while BTC''s 4h close is ABOVE its 180-bar mean, the pool names
+      with the most negative 40-bar momentum that are not in a live long channel are shorted into
+      the slots the longs leave free (3 minus longs), at 4h closes, same sizing, fees and plumbing as
+      S1. A short that leaves the selection is closed.'
+    mechanism: 'In a rising market capital rotates into leaders and laggards trail the pool. The
+      diagnostic measured bottom-3 momentum names at -35, -18 and -18 bps against the pool over 24h
+      in 2022, 2023-24 and 2025-26 bull hours. The ranked book leaves ~35% of capital idle, and a
+      laggard short in those idle slots collects the relative drift without cutting the long side.'
+    failure_mode: 'The drift is relative, not absolute: laggards ROSE +20 bps per 24h in 2023-24 bull
+      hours, so a naked short loses while the pool rises, and 20 bps plus tick per round trip eats
+      the rest.'
+    nonsense_control: 'Same sleeve, same bull hours, same slot count, with shorts drawn uniformly at
+      random from the same eligible names instead of the most negative momentum, 20 seeds.'
+not_tested:
+  lower_timeframes: 'No arm below 4h is declared. The diagnostic shows every signal family drifts
+    only -8 to +18 bps in its first hour against a 10 to 20 bps round trip, and #lowtf-paper-bots
+    already measured the deployed rules at 1h/30m/15m losing by cost. Adding trials would only spend
+    the multiple-testing budget.'

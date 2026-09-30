@@ -52,7 +52,7 @@ def load():
 
 
 def book_hourly(close1, idx4, long4=None, short4=None, long1=None, trigger1=None, mom1=None,
-                n=3, divisor=None, ladder=True, band=BAND, tick=None, return_gross=False):
+                n=3, divisor=None, ladder=True, band=BAND, tick=None, return_gross=False, return_detail=False):
     """Hourly weight state. `long4`/`short4` are 4h boolean frames of SELECTED names (applied at 4h
     closes); `long1` (hourly live set) plus `trigger1` (hours allowed to add entries) and `mom1` (hourly
     rank score) switch on intrabar entries into free slots between 4h closes."""
@@ -70,6 +70,8 @@ def book_hourly(close1, idx4, long4=None, short4=None, long1=None, trigger1=None
     ref = np.full(nn, np.nan)
     net = np.zeros(len(px))
     gross_path = np.zeros(len(px))
+    hold = np.zeros(px.shape, dtype=np.float32) if return_detail else None
+    costs = np.zeros(px.shape, dtype=np.float32) if return_detail else None
     for t in range(1, len(px)):
         prev, cur = px[t - 1], px[t]
         ok = np.isfinite(prev) & np.isfinite(cur) & (prev > 0)
@@ -125,10 +127,17 @@ def book_hourly(close1, idx4, long4=None, short4=None, long1=None, trigger1=None
         dw = np.abs(tgt - w)
         tb = np.where(np.isfinite(cur) & (cur > 0), tk / np.where(cur > 0, cur, 1.0), 0.0)
         short_leg = (tgt < -1e-12) | (w < -1e-12)
-        cost = float((dw * (np.where(short_leg, SHORT_FEE, FEE) + tb)).sum())
+        cost_n = dw * (np.where(short_leg, SHORT_FEE, FEE) + tb)
+        cost = float(cost_n.sum())
         net[t] = (mult - 1.0) - cost
         w = tgt
         gross_path[t] = float(np.abs(w).sum())
+        if return_detail:
+            hold[t] = w
+            costs[t] = cost_n
+    if return_detail:
+        return (pd.Series(net, index=idx1), pd.DataFrame(hold, index=idx1, columns=cols),
+                pd.DataFrame(costs, index=idx1, columns=cols))
     if return_gross:
         return pd.Series(net, index=idx1), pd.Series(gross_path, index=idx1)
     return pd.Series(net, index=idx1)
@@ -206,20 +215,8 @@ def main() -> int:
     nets["C0"] = book_hourly(close1, idx4, long4=c0, tick=tick)
     nets["C1"] = book_hourly(close1, idx4, long4=live4, divisor=20, tick=tick)
 
-    btc = close4["BTCUSDT"]
-    bear = btc < btc.rolling(180).mean()
-    lower = close4.rolling(20).min().shift(1)
-    upper10 = close4.rolling(10).max().shift(1)
-    state = np.zeros(len(close4.columns), bool)
-    C, LO, UP = close4.to_numpy(), lower.to_numpy(), upper10.to_numpy()
-    arr = np.zeros(C.shape, bool)
-    for i in range(len(C)):
-        valid = np.isfinite(C[i]) & np.isfinite(LO[i]) & np.isfinite(UP[i])
-        state = np.where(state & valid & (C[i] > UP[i]), False, state)
-        state = state | (valid & (C[i] < LO[i]))
-        state &= np.isfinite(C[i])
-        arr[i] = state
-    brk = pd.DataFrame(arr, index=idx4, columns=close4.columns) & sel4
+    bear = donchian.bear_regime(close4["BTCUSDT"], 180)
+    brk = donchian.breakdown_position(close4, 20, 10) & sel4
 
     def short_sleeve(regime):
         longs = c0

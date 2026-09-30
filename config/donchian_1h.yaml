@@ -36,6 +36,7 @@ booking:
   skim_fraction: 0.15
   recycle: false
   min_skim_notional: 10.0
+  shorts: true
   added_utc: '2026-09-22'
   added_by: operator request to book profits across the fleet
   parameters_ref: DECISIONS.md#alpha-flow-declaration
@@ -49,3 +50,23 @@ booking:
     reduction rather than timing. Deployed on operator instruction as forward evidence.'
   confound_warning: 'donchian_1h is a comparison book, not a candidate, and is nobody''s control, so booking
   here confounds nothing.'
+short:
+  enabled: true
+  regime: breadth_below
+  breadth_max: 0.40
+  momentum_bars: 40
+  own_slots: true
+  slots: 20
+  require_negative_momentum: true
+  regime_bars: 180
+  entry_bars: 20
+  exit_bars: 10
+  execution: MARKET both legs, open at MaxBid, close at MinAsk, 0.1% per side
+  topped_up: false
+  laddered: true
+  added_utc: '2026-09-23'
+  added_by: 'operator instruction: add shorting to the short-term books'
+  rule: 'While fewer than 40% of the pool have positive 40-bar momentum, names in a 20-bar breakdown
+    with negative momentum and no live long channel are shorted, weakest first, in their own slots;
+    closed when the close exceeds the prior 10-bar high.'
+  evidence_ref: DECISIONS.md#lowtf-breadth-shorts-declaration

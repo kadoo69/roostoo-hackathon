@@ -1,0 +1,380 @@
+{
+ "momentum_top3_5m": {
+  "uptime": {
+   "span_h": 83.9,
+   "online_share": 0.334,
+   "gaps_over_3_polls": 60,
+   "decisions": 398,
+   "decision_lag_s_median": 33.5,
+   "decision_lag_s_p90": 121.4,
+   "decisions_on_a_stale_bar": 21,
+   "last_cycle_age_s": 18.7,
+   "last_bar_is_latest_closed": true
+  },
+  "signal_parity": {
+   "checked": 40,
+   "since": "2026-09-26 13:36:59.094257+00:00",
+   "mismatches": 0,
+   "examples": []
+  },
+  "fills": {
+   "paper_fills": 342,
+   "fills_at_own_passive_price": 304,
+   "spread_credited_usd": 2504.12,
+   "median_spread_bps": 2.12
+  },
+  "equity": 109593.95,
+  "equity_if_every_fill_crossed_the_spread": 107089.83
+ },
+ "momentum_top3_15m": {
+  "uptime": {
+   "span_h": 83.9,
+   "online_share": 0.333,
+   "gaps_over_3_polls": 64,
+   "decisions": 166,
+   "decision_lag_s_median": 44.1,
+   "decision_lag_s_p90": 826.2,
+   "decisions_on_a_stale_bar": 15,
+   "last_cycle_age_s": 29.2,
+   "last_bar_is_latest_closed": true
+  },
+  "signal_parity": {
+   "checked": 40,
+   "since": "2026-09-26 13:36:59.120005+00:00",
+   "mismatches": 0,
+   "examples": []
+  },
+  "fills": {
+   "paper_fills": 133,
+   "fills_at_own_passive_price": 121,
+   "spread_credited_usd": 704.56,
+   "median_spread_bps": 1.93
+  },
+  "equity": 105870.93,
+  "equity_if_every_fill_crossed_the_spread": 105166.37
+ },
+ "momentum_top3_30m": {
+  "uptime": {
+   "span_h": 83.9,
+   "online_share": 0.333,
+   "gaps_over_3_polls": 65,
+   "decisions": 101,
+   "decision_lag_s_median": 58.3,
+   "decision_lag_s_p90": 1579.7,
+   "decisions_on_a_stale_bar": 8,
+   "last_cycle_age_s": 3.8,
+   "last_bar_is_latest_closed": true
+  },
+  "signal_parity": {
+   "checked": 29,
+   "since": "2026-09-26 13:36:59.057581+00:00",
+   "mismatches": 0,
+   "examples": []
+  },
+  "fills": {
+   "paper_fills": 64,
+   "fills_at_own_passive_price": 56,
+   "spread_credited_usd": 255.72,
+   "median_spread_bps": 2.05
+  },
+  "equity": 111599.07,
+  "equity_if_every_fill_crossed_the_spread": 111343.35
+ },
+ "momentum_top3_1h_long": {
+  "uptime": {
+   "span_h": 59.0,
+   "online_share": 0.341,
+   "gaps_over_3_polls": 45,
+   "decisions": 41,
+   "decision_lag_s_median": 64.2,
+   "decision_lag_s_p90": 2622.1,
+   "decisions_on_a_stale_bar": 3,
+   "last_cycle_age_s": 28.0,
+   "last_bar_is_latest_closed": true
+  },
+  "signal_parity": {
+   "checked": 40,
+   "since": "2026-09-24 17:55:07.767950+00:00",
+   "mismatches": 0,
+   "examples": []
+  },
+  "fills": {
+   "paper_fills": 32,
+   "fills_at_own_passive_price": 32,
+   "spread_credited_usd": 175.9,
+   "median_spread_bps": 1.98
+  },
+  "equity": 98789.1,
+  "equity_if_every_fill_crossed_the_spread": 98613.2
+ },
+ "momentum_top3_30m_allcash": {
+  "uptime": {
+   "span_h": 58.8,
+   "online_share": 0.339,
+   "gaps_over_3_polls": 51,
+   "decisions": 71,
+   "decision_lag_s_median": 57.7,
+   "decision_lag_s_p90": 1752.7,
+   "decisions_on_a_stale_bar": 7,
+   "last_cycle_age_s": 16.0,
+   "last_bar_is_latest_closed": true
+  },
+  "signal_parity": {
+   "checked": 29,
+   "since": "2026-09-26 13:36:59.257101+00:00",
+   "mismatches": 0,
+   "examples": []
+  },
+  "fills": {
+   "paper_fills": 51,
+   "fills_at_own_passive_price": 51,
+   "spread_credited_usd": 153.81,
+   "median_spread_bps": 1.97
+  },
+  "equity": 109570.69,
+  "equity_if_every_fill_crossed_the_spread": 109416.88
+ },
+ "momentum_top3_1h_allcash": {
+  "uptime": {
+   "span_h": 58.8,
+   "online_share": 0.34,
+   "gaps_over_3_polls": 48,
+   "decisions": 39,
+   "decision_lag_s_median": 62.7,
+   "decision_lag_s_p90": 3770.2,
+   "decisions_on_a_stale_bar": 5,
+   "last_cycle_age_s": 21.2,
+   "last_bar_is_latest_closed": true
+  },
+  "signal_parity": {
+   "checked": 15,
+   "since": "2026-09-26 13:36:59.197883+00:00",
+   "mismatches": 0,
+   "examples": []
+  },
+  "fills": {
+   "paper_fills": 34,
+   "fills_at_own_passive_price": 34,
+   "spread_credited_usd": 191.2,
+   "median_spread_bps": 1.98
+  },
+  "equity": 98868.13,
+  "equity_if_every_fill_crossed_the_spread": 98676.93
+ },
+ "burst_5m": {
+  "uptime": {
+   "span_h": 15.3,
+   "online_share": 0.394,
+   "gaps_over_3_polls": 28,
+   "decisions": 101,
+   "decision_lag_s_median": 42.4,
+   "decision_lag_s_p90": 204.8,
+   "decisions_on_a_stale_bar": 5,
+   "last_cycle_age_s": 21.4,
+   "last_bar_is_latest_closed": true
+  },
+  "signal_parity": {
+   "checked": 40,
+   "since": "2026-09-26 13:36:59.300046+00:00",
+   "mismatches": 0,
+   "examples": []
+  },
+  "fills": {
+   "paper_fills": 46,
+   "fills_at_own_passive_price": 46,
+   "spread_credited_usd": 265.14,
+   "median_spread_bps": 1.96
+  },
+  "equity": 101511.54,
+  "equity_if_every_fill_crossed_the_spread": 101246.4
+ },
+ "burst_15m": {
+  "uptime": {
+   "span_h": 15.3,
+   "online_share": 0.393,
+   "gaps_over_3_polls": 28,
+   "decisions": 49,
+   "decision_lag_s_median": 58.3,
+   "decision_lag_s_p90": 921.7,
+   "decisions_on_a_stale_bar": 5,
+   "last_cycle_age_s": 30.0,
+   "last_bar_is_latest_closed": true
+  },
+  "signal_parity": {
+   "checked": 40,
+   "since": "2026-09-26 13:36:59.345363+00:00",
+   "mismatches": 0,
+   "examples": []
+  },
+  "fills": {
+   "paper_fills": 20,
+   "fills_at_own_passive_price": 20,
+   "spread_credited_usd": 84.42,
+   "median_spread_bps": 1.42
+  },
+  "equity": 99223.91,
+  "equity_if_every_fill_crossed_the_spread": 99139.49
+ },
+ "burst_strong_15m": {
+  "uptime": {
+   "span_h": 12.5,
+   "online_share": 0.257,
+   "gaps_over_3_polls": 28,
+   "decisions": 39,
+   "decision_lag_s_median": 353.5,
+   "decision_lag_s_p90": 1560.2,
+   "decisions_on_a_stale_bar": 7,
+   "last_cycle_age_s": 3.7,
+   "last_bar_is_latest_closed": true
+  },
+  "signal_parity": {
+   "checked": 39,
+   "since": "2026-09-26 16:26:57.291160+00:00",
+   "mismatches": 0,
+   "examples": []
+  },
+  "fills": {
+   "paper_fills": 10,
+   "fills_at_own_passive_price": 10,
+   "spread_credited_usd": 57.78,
+   "median_spread_bps": 1.03
+  },
+  "equity": 98017.13,
+  "equity_if_every_fill_crossed_the_spread": 97959.35
+ },
+ "momentum_top3_15m_eq": {
+  "uptime": {
+   "span_h": 12.5,
+   "online_share": 0.256,
+   "gaps_over_3_polls": 29,
+   "decisions": 42,
+   "decision_lag_s_median": 345.0,
+   "decision_lag_s_p90": 1513.3,
+   "decisions_on_a_stale_bar": 7,
+   "last_cycle_age_s": 8.2,
+   "last_bar_is_latest_closed": true
+  },
+  "signal_parity": {
+   "checked": 40,
+   "since": "2026-09-26 16:26:57.278068+00:00",
+   "mismatches": 0,
+   "examples": []
+  },
+  "fills": {
+   "paper_fills": 20,
+   "fills_at_own_passive_price": 20,
+   "spread_credited_usd": 48.55,
+   "median_spread_bps": 0.7
+  },
+  "equity": 100590.22,
+  "equity_if_every_fill_crossed_the_spread": 100541.67
+ },
+ "short_accel_15m": {
+  "uptime": {
+   "span_h": 11.9,
+   "online_share": 0.218,
+   "gaps_over_3_polls": 28,
+   "decisions": 36,
+   "decision_lag_s_median": 463.9,
+   "decision_lag_s_p90": 1679.1,
+   "decisions_on_a_stale_bar": 8,
+   "last_cycle_age_s": 12.5,
+   "last_bar_is_latest_closed": true
+  },
+  "signal_parity": {
+   "checked": 36,
+   "since": "2026-09-26 17:03:04.716907+00:00",
+   "mismatches": 0,
+   "examples": []
+  },
+  "fills": {
+   "paper_fills": 0,
+   "fills_at_own_passive_price": 0,
+   "spread_credited_usd": 0.0,
+   "median_spread_bps": null
+  },
+  "equity": 100000.0,
+  "equity_if_every_fill_crossed_the_spread": 100000.0
+ },
+ "momentum_top3_15m_hold3h": {
+  "uptime": {
+   "span_h": 11.7,
+   "online_share": 0.203,
+   "gaps_over_3_polls": 28,
+   "decisions": 37,
+   "decision_lag_s_median": 352.8,
+   "decision_lag_s_p90": 962.8,
+   "decisions_on_a_stale_bar": 4,
+   "last_cycle_age_s": 19.5,
+   "last_bar_is_latest_closed": true
+  },
+  "signal_parity": {
+   "checked": 37,
+   "since": "2026-09-26 17:16:37.777255+00:00",
+   "mismatches": 0,
+   "examples": []
+  },
+  "fills": {
+   "paper_fills": 21,
+   "fills_at_own_passive_price": 21,
+   "spread_credited_usd": 49.42,
+   "median_spread_bps": 0.92
+  },
+  "equity": 98942.14,
+  "equity_if_every_fill_crossed_the_spread": 98892.72
+ },
+ "momentum_top3_5m_hold2h": {
+  "uptime": {
+   "span_h": 11.7,
+   "online_share": 0.203,
+   "gaps_over_3_polls": 28,
+   "decisions": 58,
+   "decision_lag_s_median": 54.4,
+   "decision_lag_s_p90": 429.0,
+   "decisions_on_a_stale_bar": 8,
+   "last_cycle_age_s": 19.4,
+   "last_bar_is_latest_closed": true
+  },
+  "signal_parity": {
+   "checked": 40,
+   "since": "2026-09-26 17:16:37.868305+00:00",
+   "mismatches": 0,
+   "examples": []
+  },
+  "fills": {
+   "paper_fills": 41,
+   "fills_at_own_passive_price": 41,
+   "spread_credited_usd": 106.31,
+   "median_spread_bps": 1.39
+  },
+  "equity": 99147.4,
+  "equity_if_every_fill_crossed_the_spread": 99041.09
+ },
+ "short_pullback_15m": {
+  "uptime": {
+   "span_h": 9.6,
+   "online_share": 0.032,
+   "gaps_over_3_polls": 28,
+   "decisions": 27,
+   "decision_lag_s_median": 608.0,
+   "decision_lag_s_p90": 1587.1,
+   "decisions_on_a_stale_bar": 5,
+   "last_cycle_age_s": 28.7,
+   "last_bar_is_latest_closed": true
+  },
+  "signal_parity": {
+   "checked": 27,
+   "since": "2026-09-26 19:21:34.515873+00:00",
+   "mismatches": 0,
+   "examples": []
+  },
+  "fills": {
+   "paper_fills": 4,
+   "fills_at_own_passive_price": 0,
+   "spread_credited_usd": 0.0,
+   "median_spread_bps": 3.35
+  },
+  "equity": 100793.67,
+  "equity_if_every_fill_crossed_the_spread": 100793.67
+ }
+}

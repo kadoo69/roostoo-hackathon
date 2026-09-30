@@ -1,0 +1,95 @@
+meta:
+  name: topdown_ls
+  frozen: true
+  declared_before_any_backtest: true
+  declared_utc: '2026-09-23'
+  requested_by: operator
+  operator_request: 'At any moment many Roostoo coins are up and many are down. Simplify: short the
+    down momentum, long the up momentum, with optimal position sizing and take profits. Simple
+    instructions with awareness and rules, a market heatmap of the Roostoo universe, and a top-down
+    approach to long and short decisions.'
+  declaration_ref: DECISIONS.md#topdown-ls-declaration
+  prior_evidence: 'Shorts have failed three times on this engine (S1, D1, W1) and take-profit
+    targets are a dead family; the ladder below is the deployed 3%/15% skim, not a target. The
+    breakdown signal showed no short edge in #book-diagnosis-2026-09-23. Declared anyway on operator
+    instruction; the ablation arms say which layer earns its place.'
+  mechanism: 'Top down: the market layer decides WHICH SIDE may carry risk, so the book is long in
+    broad uptrends, short in broad downtrends and small and balanced in between; the coin layer
+    picks the strongest breakouts and the weakest breakdowns; inverse-volatility sizing gives each
+    name a similar risk share; the ladder books part of every 3% move on either side.'
+  failure_mode: 'Regime flips lag the turn, so the book is short into the rebound that follows a
+    washout (the squeeze S1 met) and long into the first leg down; the neutral book pays fees on
+    both sides for a spread the diagnosis measured at under 20 bps a day.'
+  nonsense_control: 'T1 with its regime series block-shuffled (same share of bull, neutral and
+    bear time, random timing), 20 seeds.'
+  evaluation: 'The competition_wf engine and windows (config/competition_wf.yaml): hourly
+    simulator, 4h decisions, 25% drift band, held names never topped up, 5 bps fee plus tick on
+    spot, 10 bps plus tick on shorts, every 14-day window in 2022, 2023-24 and 2025-26.'
+  decision_rule: 'T1 is a candidate only if, against C0 (momentum_top3_full), it raises P(>2%) AND
+    median in all three periods, its worst window is no more than 5 points worse, and the nonsense
+    control reproduces less than half its 2025-26 P(>2%) gain. Ablations (T1_long, T1_equal,
+    T1_noTP) are reported against T1 and decide nothing on their own.'
+  arms: [T1, T1_long, T1_equal, T1_noTP]
+  paper_status: 'Runs as a dry-run paper book on operator instruction whatever the verdict; it is
+    not a competition candidate unless it passes.'
+topdown:
+  momentum_bars: 40
+  vol_bars: 42
+  regime_bars: 180
+  breadth_bull: 0.60
+  breadth_bear: 0.40
+  budgets:
+    bull: {long: 1.0, short: 0.0}
+    neutral: {long: 0.6, short: 0.3}
+    bear: {long: 0.0, short: 0.6}
+  n_long: 3
+  n_short: 3
+  max_weight: 0.40
+  sizing: inverse_vol
+strategy:
+  interval: 4h
+  entry_bars: 20
+  exit_bars: 10
+  top_n_pool: 30
+  ranking_rule: momentum
+  n_positions: 3
+  momentum_bars: 40
+  weight_divisor: 20
+  max_gross: 1.0
+  quote: USDT
+  universe_refresh_hours: 24
+  max_spread_bps: 5.0
+  min_history_bars: 30
+  regime_gate: always_on
+  full_deployment: true
+execution:
+  order_type: LIMIT
+  limit_offset_bps: 1.0
+  limit_timeout_s: 900
+  poll_seconds: 60
+risk:
+  max_drawdown: 0.25
+  max_error_rate: 0.25
+  max_ticker_age_s: 120
+  mirror_max_deviation_bps: 50.0
+  derisk_start_utc: '2026-10-15T00:00:00+00:00'
+  derisk_end_utc: '2026-10-17T20:00:00+00:00'
+booking:
+  enabled: true
+  step_pct: 0.03
+  skim_fraction: 0.15
+  recycle: false
+  min_skim_notional: 10.0
+  shorts: true
+  parameters_ref: DECISIONS.md#alpha-flow-declaration
+short:
+  enabled: true
+  regime: btc_below_mean
+  regime_bars: 180
+  entry_bars: 20
+  exit_bars: 10
+  execution: MARKET both legs, open at MaxBid, close at MinAsk, 0.1% per side
+  topped_up: false
+  laddered: true
+  declaration: config/topdown_ls.yaml
+  evidence_ref: DECISIONS.md#topdown-ls-declaration

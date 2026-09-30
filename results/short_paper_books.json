@@ -1,0 +1,181 @@
+{
+ "declaration": "config/short_paper_books.yaml",
+ "arms": {
+  "C0": {
+   "2022": {
+    "n": 352,
+    "median_pct": -1.18,
+    "worst_pct": -31.1,
+    "median_screen3": -1.65,
+    "p_gt0": 0.435,
+    "p_gt2": 0.347,
+    "p_gt5": 0.253,
+    "p_gt10": 0.134,
+    "p_gt15": 0.088,
+    "p_gt20": 0.045
+   },
+   "2023-24": {
+    "n": 732,
+    "median_pct": 2.3,
+    "worst_pct": -36.2,
+    "median_screen3": 2.89,
+    "p_gt0": 0.587,
+    "p_gt2": 0.516,
+    "p_gt5": 0.414,
+    "p_gt10": 0.305,
+    "p_gt15": 0.21,
+    "p_gt20": 0.139
+   },
+   "2025-26": {
+    "n": 617,
+    "median_pct": 2.24,
+    "worst_pct": -28.3,
+    "median_screen3": 2.83,
+    "p_gt0": 0.588,
+    "p_gt2": 0.512,
+    "p_gt5": 0.4,
+    "p_gt10": 0.285,
+    "p_gt15": 0.203,
+    "p_gt20": 0.126
+   }
+  },
+  "C1": {
+   "2022": {
+    "n": 352,
+    "median_pct": -0.59,
+    "worst_pct": -3.5,
+    "median_screen3": -3.55,
+    "p_gt0": 0.344,
+    "p_gt2": 0.119,
+    "p_gt5": 0.023,
+    "p_gt10": 0.0,
+    "p_gt15": 0.0,
+    "p_gt20": 0.0
+   },
+   "2023-24": {
+    "n": 732,
+    "median_pct": 0.93,
+    "worst_pct": -7.5,
+    "median_screen3": 3.2,
+    "p_gt0": 0.62,
+    "p_gt2": 0.37,
+    "p_gt5": 0.171,
+    "p_gt10": 0.041,
+    "p_gt15": 0.014,
+    "p_gt20": 0.004
+   },
+   "2025-26": {
+    "n": 617,
+    "median_pct": 0.02,
+    "worst_pct": -8.1,
+    "median_screen3": 0.25,
+    "p_gt0": 0.502,
+    "p_gt2": 0.311,
+    "p_gt5": 0.151,
+    "p_gt10": 0.044,
+    "p_gt15": 0.018,
+    "p_gt20": 0.0
+   }
+  },
+  "S1": {
+   "2022": {
+    "n": 352,
+    "median_pct": -2.44,
+    "worst_pct": -28.9,
+    "median_screen3": -2.08,
+    "p_gt0": 0.403,
+    "p_gt2": 0.366,
+    "p_gt5": 0.278,
+    "p_gt10": 0.188,
+    "p_gt15": 0.111,
+    "p_gt20": 0.062
+   },
+   "2023-24": {
+    "n": 732,
+    "median_pct": 1.54,
+    "worst_pct": -38.4,
+    "median_screen3": 2.52,
+    "p_gt0": 0.545,
+    "p_gt2": 0.485,
+    "p_gt5": 0.399,
+    "p_gt10": 0.309,
+    "p_gt15": 0.204,
+    "p_gt20": 0.142
+   },
+   "2025-26": {
+    "n": 617,
+    "median_pct": 0.63,
+    "worst_pct": -28.6,
+    "median_screen3": 1.01,
+    "p_gt0": 0.525,
+    "p_gt2": 0.446,
+    "p_gt5": 0.35,
+    "p_gt10": 0.25,
+    "p_gt15": 0.167,
+    "p_gt20": 0.091
+   }
+  },
+  "D1": {
+   "2022": {
+    "n": 352,
+    "median_pct": -0.26,
+    "worst_pct": -7.6,
+    "median_screen3": -1.93,
+    "p_gt0": 0.452,
+    "p_gt2": 0.202,
+    "p_gt5": 0.026,
+    "p_gt10": 0.0,
+    "p_gt15": 0.0,
+    "p_gt20": 0.0
+   },
+   "2023-24": {
+    "n": 732,
+    "median_pct": 0.96,
+    "worst_pct": -16.5,
+    "median_screen3": 2.99,
+    "p_gt0": 0.616,
+    "p_gt2": 0.402,
+    "p_gt5": 0.194,
+    "p_gt10": 0.041,
+    "p_gt15": 0.014,
+    "p_gt20": 0.004
+   },
+   "2025-26": {
+    "n": 617,
+    "median_pct": -0.28,
+    "worst_pct": -12.3,
+    "median_screen3": -0.73,
+    "p_gt0": 0.467,
+    "p_gt2": 0.323,
+    "p_gt5": 0.175,
+    "p_gt10": 0.055,
+    "p_gt15": 0.018,
+    "p_gt20": 0.0
+   }
+  }
+ },
+ "refactor_breakdown_cell_mismatches": 0,
+ "pool_note": "C0 and S1 are re-scored on the complete pool of #universe-completeness; the recorded #competition-wf-outcome rows predate it",
+ "D1_nonsense": {
+  "2022": {
+   "median_pct_mean": -0.31,
+   "p_gt2_mean": 0.197
+  },
+  "2023-24": {
+   "median_pct_mean": 0.76,
+   "p_gt2_mean": 0.358
+  },
+  "2025-26": {
+   "median_pct_mean": 0.17,
+   "p_gt2_mean": 0.332
+  }
+ },
+ "verdict": {
+  "D1": {
+   "all_three_periods": false,
+   "worst_ok": false,
+   "nonsense_ok": false,
+   "candidate": false
+  }
+ }
+}

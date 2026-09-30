@@ -69,7 +69,7 @@ def breadth(settings: Settings) -> dict:
         return {"error": str(exc)[:160]}
 
 
-def derive(state: dict, expected_drag: float) -> list[dict]:
+def derive(state: dict, expected_drag: float | None) -> list[dict]:
     out = []
     g = state.get("gross") or 0.0
     ratio = g / HIST_MEAN_GROSS if HIST_MEAN_GROSS else 0
@@ -87,13 +87,18 @@ def derive(state: dict, expected_drag: float) -> list[dict]:
     hours = state.get("wall_hours") or 0
     if fees and eq and hours > 0.5:
         ann = fees / eq * (8760.0 / hours)
-        out.append({
-            "key": "Realised fee drag",
-            "value": f"{ann*100:.1f}%/yr",
-            "detail": f"backtest expects {expected_drag*100:.1f}%/yr; "
-                      f"{'above' if ann > expected_drag*1.5 else 'in line'}",
-            "tone": "bad" if ann > expected_drag * 2 else
-                    ("warn" if ann > expected_drag * 1.5 else "good")})
+        if expected_drag is None:
+            out.append({"key": "Realised fee drag", "value": f"{ann*100:.1f}%/yr",
+                        "detail": "paper trial; no measured fee-drag benchmark yet",
+                        "tone": "neutral"})
+        else:
+            out.append({
+                "key": "Realised fee drag",
+                "value": f"{ann*100:.1f}%/yr",
+                "detail": f"backtest expects {expected_drag*100:.1f}%/yr; "
+                          f"{'above' if ann > expected_drag*1.5 else 'in line'}",
+                "tone": "bad" if ann > expected_drag * 2 else
+                        ("warn" if ann > expected_drag * 1.5 else "good")})
 
     dd = state.get("drawdown_pct")
     if dd is not None:

@@ -1,94 +1,53 @@
 {
-  "written_utc": "2026-09-22T20:37:49.044363+00:00",
+  "written_utc": "2026-09-27T04:56:26.319955+00:00",
   "status": "PASS",
   "orders_submitted": 0,
-  "server_offset_ms": 144,
+  "server_offset_ms": 156,
   "venue_pairs": 88,
   "market": {
-    "ticker_age_s": 0.169,
+    "ticker_age_s": 0.103,
     "ticker_fresh": true,
-    "mirror_checked": 23,
-    "mirror_symbols": 23,
+    "mirror_checked": 26,
+    "mirror_symbols": 26,
     "mirror_abs_median_bps": 0.0,
     "mirror_material_count": 1,
-    "mirror_material_max_bps": 1.261,
+    "mirror_material_max_bps": 3.941,
     "risk_gate_clear": true
   },
   "books": [
     {
-      "book": "donchian_30m",
-      "interval": "30m",
-      "bar": "2026-09-22T20:00:00+00:00",
-      "config_sha": "aa4e963827216177",
-      "universe": 23,
-      "fired": 11,
-      "targets": {
-        "BTCUSDT": 0.05,
-        "ETHUSDT": 0.05,
-        "SOLUSDT": 0.05,
-        "XRPUSDT": 0.05,
-        "BNBUSDT": 0.05,
-        "UNIUSDT": 0.05,
-        "ADAUSDT": 0.05,
-        "TRUMPUSDT": 0.05,
-        "WLDUSDT": 0.05,
-        "LTCUSDT": 0.05,
-        "AAVEUSDT": 0.05
-      },
-      "target_gross": 0.55,
-      "orders_planned": 11,
-      "skipped": [],
-      "signal_parity": {
-        "checked": 2967,
-        "mismatches": 0,
-        "match_rate": 1.0
-      },
-      "rank_parity": {
-        "applies": false
-      },
-      "checks": {
-        "all_selected_symbols_have_bars": true,
-        "bar_is_closed": true,
-        "signal_parity_exact": true,
-        "rank_matches_backtest": true,
-        "gross_within_cap": true,
-        "no_marketable_limits": true,
-        "spread_gate_holds": true,
-        "quantities_on_venue_step": true,
-        "notional_within_equity": true
-      },
-      "pass": true
-    },
-    {
-      "book": "donchian_15m",
-      "interval": "15m",
-      "bar": "2026-09-22T20:15:00+00:00",
-      "config_sha": "d32154945013542b",
-      "universe": 23,
+      "book": "donchian_4h",
+      "interval": "4h",
+      "bar": "2026-09-27T00:00:00+00:00",
+      "config_sha": "20e3de5ae8aba087",
+      "universe": 26,
       "fired": 12,
       "targets": {
-        "ETHUSDT": 0.05,
+        "ZECUSDT": 0.05,
         "SOLUSDT": 0.05,
-        "XRPUSDT": 0.05,
-        "DOGEUSDT": 0.05,
-        "UNIUSDT": 0.05,
+        "NEARUSDT": 0.05,
+        "SUIUSDT": 0.05,
         "ENAUSDT": 0.05,
-        "ADAUSDT": 0.05,
-        "ARBUSDT": 0.05,
-        "TRUMPUSDT": 0.05,
+        "LINKUSDT": 0.05,
+        "PUMPUSDT": 0.05,
+        "TAOUSDT": 0.05,
         "WLDUSDT": 0.05,
         "LTCUSDT": 0.05,
-        "AAVEUSDT": 0.05
+        "AAVEUSDT": 0.05,
+        "FILUSDT": 0.05
       },
       "target_gross": 0.6,
       "orders_planned": 12,
       "skipped": [],
       "signal_parity": {
-        "checked": 2967,
+        "checked": 3354,
         "mismatches": 0,
         "match_rate": 1.0
       },
       "rank_parity": {
+        "applies": false
+      },
+      "short_parity": {
         "applies": false
       },
       "checks": {
@@ -96,137 +55,33 @@
         "bar_is_closed": true,
         "signal_parity_exact": true,
         "rank_matches_backtest": true,
+        "short_pick_matches_backtest": true,
         "gross_within_cap": true,
         "no_marketable_limits": true,
         "spread_gate_holds": true,
         "quantities_on_venue_step": true,
-        "notional_within_equity": true
+        "notional_within_equity": true,
+        "no_target_refused_by_venue_rule": true
       },
       "pass": true
     },
     {
-      "book": "momentum_top3_1h",
-      "interval": "1h",
-      "bar": "2026-09-22T19:00:00+00:00",
-      "config_sha": "a0e89574b76f84d1",
-      "universe": 23,
-      "fired": 6,
-      "targets": {
-        "XRPUSDT": 0.3333,
-        "ADAUSDT": 0.3333,
-        "LTCUSDT": 0.3333
-      },
-      "target_gross": 1.0,
-      "orders_planned": 3,
-      "skipped": [],
-      "signal_parity": {
-        "checked": 2967,
-        "mismatches": 0,
-        "match_rate": 1.0
-      },
-      "rank_parity": {
-        "applies": true,
-        "fired": 6,
-        "backtest_top": [
-          "XRPUSDT",
-          "ADAUSDT",
-          "LTCUSDT"
-        ],
-        "live_top": [
-          "XRPUSDT",
-          "ADAUSDT",
-          "LTCUSDT"
-        ],
-        "match": true,
-        "scores": {
-          "XRPUSDT": 0.11582,
-          "ADAUSDT": 0.08969,
-          "LTCUSDT": 0.06423
-        }
-      },
-      "checks": {
-        "all_selected_symbols_have_bars": true,
-        "bar_is_closed": true,
-        "signal_parity_exact": true,
-        "rank_matches_backtest": true,
-        "gross_within_cap": true,
-        "no_marketable_limits": true,
-        "spread_gate_holds": true,
-        "quantities_on_venue_step": true,
-        "notional_within_equity": true
-      },
-      "pass": true
-    },
-    {
-      "book": "momentum_top3_30m",
-      "interval": "30m",
-      "bar": "2026-09-22T20:00:00+00:00",
-      "config_sha": "e0f098a1e16e8d0f",
-      "universe": 23,
-      "fired": 11,
-      "targets": {
-        "XRPUSDT": 0.3333,
-        "ADAUSDT": 0.3333,
-        "UNIUSDT": 0.3333
-      },
-      "target_gross": 1.0,
-      "orders_planned": 3,
-      "skipped": [],
-      "signal_parity": {
-        "checked": 2967,
-        "mismatches": 0,
-        "match_rate": 1.0
-      },
-      "rank_parity": {
-        "applies": true,
-        "fired": 11,
-        "backtest_top": [
-          "XRPUSDT",
-          "ADAUSDT",
-          "UNIUSDT"
-        ],
-        "live_top": [
-          "XRPUSDT",
-          "ADAUSDT",
-          "UNIUSDT"
-        ],
-        "match": true,
-        "scores": {
-          "XRPUSDT": 0.03119,
-          "ADAUSDT": 0.02718,
-          "UNIUSDT": 0.01461
-        }
-      },
-      "checks": {
-        "all_selected_symbols_have_bars": true,
-        "bar_is_closed": true,
-        "signal_parity_exact": true,
-        "rank_matches_backtest": true,
-        "gross_within_cap": true,
-        "no_marketable_limits": true,
-        "spread_gate_holds": true,
-        "quantities_on_venue_step": true,
-        "notional_within_equity": true
-      },
-      "pass": true
-    },
-    {
-      "book": "momentum_top3_15m",
-      "interval": "15m",
-      "bar": "2026-09-22T20:15:00+00:00",
-      "config_sha": "a1fc03482ad30260",
-      "universe": 23,
+      "book": "momentum_top3_full",
+      "interval": "4h",
+      "bar": "2026-09-27T00:00:00+00:00",
+      "config_sha": "903ee31674a77f14",
+      "universe": 26,
       "fired": 12,
       "targets": {
-        "UNIUSDT": 0.3333,
-        "WLDUSDT": 0.3333,
-        "LTCUSDT": 0.3333
+        "SUIUSDT": 0.3333,
+        "NEARUSDT": 0.3333,
+        "ENAUSDT": 0.3333
       },
       "target_gross": 1.0,
       "orders_planned": 3,
       "skipped": [],
       "signal_parity": {
-        "checked": 2967,
+        "checked": 3354,
         "mismatches": 0,
         "match_rate": 1.0
       },
@@ -234,20 +89,683 @@
         "applies": true,
         "fired": 12,
         "backtest_top": [
+          "SUIUSDT",
+          "NEARUSDT",
+          "ENAUSDT"
+        ],
+        "live_top": [
+          "SUIUSDT",
+          "NEARUSDT",
+          "ENAUSDT"
+        ],
+        "match": true,
+        "scores": {
+          "SUIUSDT": 0.42275,
+          "NEARUSDT": 0.39259,
+          "ENAUSDT": 0.28668
+        }
+      },
+      "short_parity": {
+        "applies": false
+      },
+      "checks": {
+        "all_selected_symbols_have_bars": true,
+        "bar_is_closed": true,
+        "signal_parity_exact": true,
+        "rank_matches_backtest": true,
+        "short_pick_matches_backtest": true,
+        "gross_within_cap": true,
+        "no_marketable_limits": true,
+        "spread_gate_holds": true,
+        "quantities_on_venue_step": true,
+        "notional_within_equity": true,
+        "no_target_refused_by_venue_rule": true
+      },
+      "pass": true
+    },
+    {
+      "book": "momentum_top3_lock",
+      "interval": "4h",
+      "bar": "2026-09-27T00:00:00+00:00",
+      "config_sha": "680c44de54a8a49c",
+      "universe": 26,
+      "fired": 12,
+      "targets": {
+        "SUIUSDT": 0.3333,
+        "NEARUSDT": 0.3333,
+        "ENAUSDT": 0.3333
+      },
+      "target_gross": 1.0,
+      "orders_planned": 3,
+      "skipped": [],
+      "signal_parity": {
+        "checked": 3354,
+        "mismatches": 0,
+        "match_rate": 1.0
+      },
+      "rank_parity": {
+        "applies": true,
+        "fired": 12,
+        "backtest_top": [
+          "SUIUSDT",
+          "NEARUSDT",
+          "ENAUSDT"
+        ],
+        "live_top": [
+          "SUIUSDT",
+          "NEARUSDT",
+          "ENAUSDT"
+        ],
+        "match": true,
+        "scores": {
+          "SUIUSDT": 0.42275,
+          "NEARUSDT": 0.39259,
+          "ENAUSDT": 0.28668
+        }
+      },
+      "short_parity": {
+        "applies": false
+      },
+      "checks": {
+        "all_selected_symbols_have_bars": true,
+        "bar_is_closed": true,
+        "signal_parity_exact": true,
+        "rank_matches_backtest": true,
+        "short_pick_matches_backtest": true,
+        "gross_within_cap": true,
+        "no_marketable_limits": true,
+        "spread_gate_holds": true,
+        "quantities_on_venue_step": true,
+        "notional_within_equity": true,
+        "no_target_refused_by_venue_rule": true
+      },
+      "pass": true
+    },
+    {
+      "book": "testnet_live",
+      "interval": "1h",
+      "bar": "2026-09-27T03:00:00+00:00",
+      "config_sha": "2cf4031a08e2cec1",
+      "universe": 12,
+      "fired": 5,
+      "targets": {
+        "BTCUSDT": 0.05,
+        "ETHUSDT": 0.05,
+        "ZECUSDT": 0.05,
+        "NEARUSDT": 0.05,
+        "UNIUSDT": 0.05
+      },
+      "target_gross": 0.25,
+      "orders_planned": 5,
+      "skipped": [],
+      "signal_parity": {
+        "checked": 1548,
+        "mismatches": 0,
+        "match_rate": 1.0
+      },
+      "rank_parity": {
+        "applies": false
+      },
+      "short_parity": {
+        "applies": false
+      },
+      "checks": {
+        "all_selected_symbols_have_bars": true,
+        "bar_is_closed": true,
+        "signal_parity_exact": true,
+        "rank_matches_backtest": true,
+        "short_pick_matches_backtest": true,
+        "gross_within_cap": true,
+        "no_marketable_limits": true,
+        "spread_gate_holds": true,
+        "quantities_on_venue_step": true,
+        "notional_within_equity": true,
+        "no_target_refused_by_venue_rule": true
+      },
+      "pass": true
+    },
+    {
+      "book": "momentum_top3_30m",
+      "interval": "30m",
+      "bar": "2026-09-27T04:00:00+00:00",
+      "config_sha": "db9509f452a90dd0",
+      "universe": 26,
+      "fired": 4,
+      "targets": {
+        "NEARUSDT": 0.3333,
+        "UNIUSDT": 0.3333,
+        "BTCUSDT": 0.3333
+      },
+      "target_gross": 1.0,
+      "orders_planned": 3,
+      "skipped": [],
+      "signal_parity": {
+        "checked": 3354,
+        "mismatches": 0,
+        "match_rate": 1.0
+      },
+      "rank_parity": {
+        "applies": true,
+        "fired": 4,
+        "backtest_top": [
+          "NEARUSDT",
           "UNIUSDT",
-          "WLDUSDT",
+          "BTCUSDT"
+        ],
+        "live_top": [
+          "NEARUSDT",
+          "UNIUSDT",
+          "BTCUSDT"
+        ],
+        "match": true,
+        "scores": {
+          "NEARUSDT": 0.03187,
+          "UNIUSDT": 0.01007,
+          "BTCUSDT": 0.00387
+        }
+      },
+      "short_parity": {
+        "applies": false
+      },
+      "checks": {
+        "all_selected_symbols_have_bars": true,
+        "bar_is_closed": true,
+        "signal_parity_exact": true,
+        "rank_matches_backtest": true,
+        "short_pick_matches_backtest": true,
+        "gross_within_cap": true,
+        "no_marketable_limits": true,
+        "spread_gate_holds": true,
+        "quantities_on_venue_step": true,
+        "notional_within_equity": true,
+        "no_target_refused_by_venue_rule": true
+      },
+      "pass": true
+    },
+    {
+      "book": "momentum_top3_15m",
+      "interval": "15m",
+      "bar": "2026-09-27T04:30:00+00:00",
+      "config_sha": "2e95a2c469976a78",
+      "universe": 26,
+      "fired": 0,
+      "targets": {},
+      "target_gross": 0,
+      "orders_planned": 0,
+      "skipped": [],
+      "signal_parity": {
+        "checked": 3354,
+        "mismatches": 0,
+        "match_rate": 1.0
+      },
+      "rank_parity": {
+        "applies": true,
+        "fired": 0,
+        "backtest_top": [],
+        "live_top": [],
+        "match": true,
+        "scores": {}
+      },
+      "short_parity": {
+        "applies": false
+      },
+      "checks": {
+        "all_selected_symbols_have_bars": true,
+        "bar_is_closed": true,
+        "signal_parity_exact": true,
+        "rank_matches_backtest": true,
+        "short_pick_matches_backtest": true,
+        "gross_within_cap": true,
+        "no_marketable_limits": true,
+        "spread_gate_holds": true,
+        "quantities_on_venue_step": true,
+        "notional_within_equity": true,
+        "no_target_refused_by_venue_rule": true
+      },
+      "pass": true
+    },
+    {
+      "book": "momentum_top3_5m",
+      "interval": "5m",
+      "bar": "2026-09-27T04:50:00+00:00",
+      "config_sha": "cdf52b8c52081678",
+      "universe": 26,
+      "fired": 1,
+      "targets": {
+        "LTCUSDT": 1.0
+      },
+      "target_gross": 1.0,
+      "orders_planned": 1,
+      "skipped": [],
+      "signal_parity": {
+        "checked": 3354,
+        "mismatches": 0,
+        "match_rate": 1.0
+      },
+      "rank_parity": {
+        "applies": true,
+        "fired": 1,
+        "backtest_top": [
           "LTCUSDT"
         ],
         "live_top": [
-          "UNIUSDT",
-          "WLDUSDT",
           "LTCUSDT"
         ],
         "match": true,
         "scores": {
-          "UNIUSDT": 0.07191,
-          "WLDUSDT": 0.05629,
-          "LTCUSDT": 0.04733
+          "LTCUSDT": -0.00555
+        }
+      },
+      "short_parity": {
+        "applies": false
+      },
+      "checks": {
+        "all_selected_symbols_have_bars": true,
+        "bar_is_closed": true,
+        "signal_parity_exact": true,
+        "rank_matches_backtest": true,
+        "short_pick_matches_backtest": true,
+        "gross_within_cap": true,
+        "no_marketable_limits": true,
+        "spread_gate_holds": true,
+        "quantities_on_venue_step": true,
+        "notional_within_equity": true,
+        "no_target_refused_by_venue_rule": true
+      },
+      "pass": true
+    },
+    {
+      "book": "momentum_top3_1h_allcash",
+      "interval": "1h",
+      "bar": "2026-09-27T03:00:00+00:00",
+      "config_sha": "cd3b34304954fc05",
+      "universe": 26,
+      "fired": 8,
+      "targets": {
+        "WLDUSDT": 0.3333,
+        "FILUSDT": 0.3333,
+        "AAVEUSDT": 0.3333
+      },
+      "target_gross": 1.0,
+      "orders_planned": 3,
+      "skipped": [],
+      "signal_parity": {
+        "checked": 3354,
+        "mismatches": 0,
+        "match_rate": 1.0
+      },
+      "rank_parity": {
+        "applies": true,
+        "fired": 8,
+        "backtest_top": [
+          "WLDUSDT",
+          "FILUSDT",
+          "AAVEUSDT"
+        ],
+        "live_top": [
+          "WLDUSDT",
+          "FILUSDT",
+          "AAVEUSDT"
+        ],
+        "match": true,
+        "scores": {
+          "WLDUSDT": 0.15135,
+          "FILUSDT": 0.10592,
+          "AAVEUSDT": 0.04521
+        }
+      },
+      "short_parity": {
+        "applies": false
+      },
+      "checks": {
+        "all_selected_symbols_have_bars": true,
+        "bar_is_closed": true,
+        "signal_parity_exact": true,
+        "rank_matches_backtest": true,
+        "short_pick_matches_backtest": true,
+        "gross_within_cap": true,
+        "no_marketable_limits": true,
+        "spread_gate_holds": true,
+        "quantities_on_venue_step": true,
+        "notional_within_equity": true,
+        "no_target_refused_by_venue_rule": true
+      },
+      "pass": true
+    },
+    {
+      "book": "momentum_top3_30m_allcash",
+      "interval": "30m",
+      "bar": "2026-09-27T04:00:00+00:00",
+      "config_sha": "2b4ef22cdf15fc50",
+      "universe": 26,
+      "fired": 4,
+      "targets": {
+        "NEARUSDT": 0.3333,
+        "UNIUSDT": 0.3333,
+        "BTCUSDT": 0.3333
+      },
+      "target_gross": 1.0,
+      "orders_planned": 3,
+      "skipped": [],
+      "signal_parity": {
+        "checked": 3354,
+        "mismatches": 0,
+        "match_rate": 1.0
+      },
+      "rank_parity": {
+        "applies": true,
+        "fired": 4,
+        "backtest_top": [
+          "NEARUSDT",
+          "UNIUSDT",
+          "BTCUSDT"
+        ],
+        "live_top": [
+          "NEARUSDT",
+          "UNIUSDT",
+          "BTCUSDT"
+        ],
+        "match": true,
+        "scores": {
+          "NEARUSDT": 0.03187,
+          "UNIUSDT": 0.01007,
+          "BTCUSDT": 0.00387
+        }
+      },
+      "short_parity": {
+        "applies": false
+      },
+      "checks": {
+        "all_selected_symbols_have_bars": true,
+        "bar_is_closed": true,
+        "signal_parity_exact": true,
+        "rank_matches_backtest": true,
+        "short_pick_matches_backtest": true,
+        "gross_within_cap": true,
+        "no_marketable_limits": true,
+        "spread_gate_holds": true,
+        "quantities_on_venue_step": true,
+        "notional_within_equity": true,
+        "no_target_refused_by_venue_rule": true
+      },
+      "pass": true
+    },
+    {
+      "book": "accel_15m",
+      "interval": "15m",
+      "bar": "2026-09-27T04:30:00+00:00",
+      "config_sha": "855bdf5046d0de15",
+      "universe": 26,
+      "fired": 0,
+      "targets": {},
+      "target_gross": 0,
+      "orders_planned": 0,
+      "skipped": [],
+      "signal_parity": {
+        "checked": 3354,
+        "mismatches": 0,
+        "match_rate": 1.0
+      },
+      "rank_parity": {
+        "applies": true,
+        "fired": 0,
+        "backtest_top": [],
+        "live_top": [],
+        "match": true,
+        "scores": {}
+      },
+      "short_parity": {
+        "applies": false
+      },
+      "checks": {
+        "all_selected_symbols_have_bars": true,
+        "bar_is_closed": true,
+        "signal_parity_exact": true,
+        "rank_matches_backtest": true,
+        "short_pick_matches_backtest": true,
+        "gross_within_cap": true,
+        "no_marketable_limits": true,
+        "spread_gate_holds": true,
+        "quantities_on_venue_step": true,
+        "notional_within_equity": true,
+        "no_target_refused_by_venue_rule": true
+      },
+      "pass": true
+    },
+    {
+      "book": "burst_5m",
+      "interval": "5m",
+      "bar": "2026-09-27T04:50:00+00:00",
+      "config_sha": "1158065d314862d0",
+      "universe": 26,
+      "fired": 1,
+      "targets": {
+        "LTCUSDT": 1.0
+      },
+      "target_gross": 1.0,
+      "orders_planned": 1,
+      "skipped": [],
+      "signal_parity": {
+        "checked": 3354,
+        "mismatches": 0,
+        "match_rate": 1.0
+      },
+      "rank_parity": {
+        "applies": true,
+        "fired": 1,
+        "backtest_top": [
+          "LTCUSDT"
+        ],
+        "live_top": [
+          "LTCUSDT"
+        ],
+        "match": true,
+        "scores": {
+          "LTCUSDT": -0.00555
+        }
+      },
+      "short_parity": {
+        "applies": false
+      },
+      "checks": {
+        "all_selected_symbols_have_bars": true,
+        "bar_is_closed": true,
+        "signal_parity_exact": true,
+        "rank_matches_backtest": true,
+        "short_pick_matches_backtest": true,
+        "gross_within_cap": true,
+        "no_marketable_limits": true,
+        "spread_gate_holds": true,
+        "quantities_on_venue_step": true,
+        "notional_within_equity": true,
+        "no_target_refused_by_venue_rule": true
+      },
+      "pass": true
+    },
+    {
+      "book": "burst_15m",
+      "interval": "15m",
+      "bar": "2026-09-27T04:30:00+00:00",
+      "config_sha": "1521a45805787818",
+      "universe": 26,
+      "fired": 0,
+      "targets": {},
+      "target_gross": 0,
+      "orders_planned": 0,
+      "skipped": [],
+      "signal_parity": {
+        "checked": 3354,
+        "mismatches": 0,
+        "match_rate": 1.0
+      },
+      "rank_parity": {
+        "applies": true,
+        "fired": 0,
+        "backtest_top": [],
+        "live_top": [],
+        "match": true,
+        "scores": {}
+      },
+      "short_parity": {
+        "applies": false
+      },
+      "checks": {
+        "all_selected_symbols_have_bars": true,
+        "bar_is_closed": true,
+        "signal_parity_exact": true,
+        "rank_matches_backtest": true,
+        "short_pick_matches_backtest": true,
+        "gross_within_cap": true,
+        "no_marketable_limits": true,
+        "spread_gate_holds": true,
+        "quantities_on_venue_step": true,
+        "notional_within_equity": true,
+        "no_target_refused_by_venue_rule": true
+      },
+      "pass": true
+    },
+    {
+      "book": "burst_strong_15m",
+      "interval": "15m",
+      "bar": "2026-09-27T04:30:00+00:00",
+      "config_sha": "a4b825d251a17ba3",
+      "universe": 26,
+      "fired": 0,
+      "targets": {},
+      "target_gross": 0,
+      "orders_planned": 0,
+      "skipped": [],
+      "signal_parity": {
+        "checked": 3354,
+        "mismatches": 0,
+        "match_rate": 1.0
+      },
+      "rank_parity": {
+        "applies": true,
+        "fired": 0,
+        "backtest_top": [],
+        "live_top": [],
+        "match": true,
+        "scores": {}
+      },
+      "short_parity": {
+        "applies": false
+      },
+      "checks": {
+        "all_selected_symbols_have_bars": true,
+        "bar_is_closed": true,
+        "signal_parity_exact": true,
+        "rank_matches_backtest": true,
+        "short_pick_matches_backtest": true,
+        "gross_within_cap": true,
+        "no_marketable_limits": true,
+        "spread_gate_holds": true,
+        "quantities_on_venue_step": true,
+        "notional_within_equity": true,
+        "no_target_refused_by_venue_rule": true
+      },
+      "pass": true
+    },
+    {
+      "book": "momentum_top3_15m_eq",
+      "interval": "15m",
+      "bar": "2026-09-27T04:30:00+00:00",
+      "config_sha": "91589cf4f8cb5760",
+      "universe": 26,
+      "fired": 0,
+      "targets": {},
+      "target_gross": 0,
+      "orders_planned": 0,
+      "skipped": [],
+      "signal_parity": {
+        "checked": 3354,
+        "mismatches": 0,
+        "match_rate": 1.0
+      },
+      "rank_parity": {
+        "applies": true,
+        "fired": 0,
+        "backtest_top": [],
+        "live_top": [],
+        "match": true,
+        "scores": {}
+      },
+      "short_parity": {
+        "applies": false
+      },
+      "checks": {
+        "all_selected_symbols_have_bars": true,
+        "bar_is_closed": true,
+        "signal_parity_exact": true,
+        "rank_matches_backtest": true,
+        "short_pick_matches_backtest": true,
+        "gross_within_cap": true,
+        "no_marketable_limits": true,
+        "spread_gate_holds": true,
+        "quantities_on_venue_step": true,
+        "notional_within_equity": true,
+        "no_target_refused_by_venue_rule": true
+      },
+      "pass": true
+    },
+    {
+      "book": "short_accel_15m",
+      "interval": "15m",
+      "bar": "2026-09-27T04:30:00+00:00",
+      "config_sha": "8fa68b6e4cc65c69",
+      "universe": 26,
+      "fired": 0,
+      "targets": {
+        "WLDUSDT": -0.3333,
+        "FILUSDT": -0.3333,
+        "PUMPUSDT": -0.3333
+      },
+      "target_gross": -1.0,
+      "orders_planned": 3,
+      "skipped": [],
+      "signal_parity": {
+        "checked": 4186,
+        "mismatches": 0,
+        "match_rate": 1.0
+      },
+      "rank_parity": {
+        "applies": true,
+        "fired": 0,
+        "backtest_top": [],
+        "live_top": [],
+        "match": true,
+        "scores": {}
+      },
+      "short_parity": {
+        "applies": true,
+        "regime": {
+          "on": true,
+          "breadth": 0.231,
+          "breadth_max": 0.4,
+          "names": 26
+        },
+        "backtest_pick": [
+          "FILUSDT",
+          "PUMPUSDT",
+          "WLDUSDT"
+        ],
+        "live_pick": [
+          "FILUSDT",
+          "PUMPUSDT",
+          "WLDUSDT"
+        ],
+        "match": true,
+        "info": {
+          "regime_on": true,
+          "free_slots": 3,
+          "broken": 20,
+          "candidates": 17,
+          "kept": 3,
+          "scores": {
+            "WLDUSDT": 0.03069,
+            "FILUSDT": 0.02657,
+            "PUMPUSDT": 0.02365
+          }
         }
       },
       "checks": {
@@ -255,11 +773,180 @@
         "bar_is_closed": true,
         "signal_parity_exact": true,
         "rank_matches_backtest": true,
+        "short_pick_matches_backtest": true,
         "gross_within_cap": true,
         "no_marketable_limits": true,
         "spread_gate_holds": true,
         "quantities_on_venue_step": true,
-        "notional_within_equity": true
+        "notional_within_equity": true,
+        "no_target_refused_by_venue_rule": true
+      },
+      "pass": true
+    },
+    {
+      "book": "momentum_top3_15m_hold3h",
+      "interval": "15m",
+      "bar": "2026-09-27T04:30:00+00:00",
+      "config_sha": "56c55b943a36560c",
+      "universe": 26,
+      "fired": 0,
+      "targets": {},
+      "target_gross": 0,
+      "orders_planned": 0,
+      "skipped": [],
+      "signal_parity": {
+        "checked": 3354,
+        "mismatches": 0,
+        "match_rate": 1.0
+      },
+      "rank_parity": {
+        "applies": true,
+        "fired": 0,
+        "backtest_top": [],
+        "live_top": [],
+        "match": true,
+        "scores": {}
+      },
+      "short_parity": {
+        "applies": false
+      },
+      "checks": {
+        "all_selected_symbols_have_bars": true,
+        "bar_is_closed": true,
+        "signal_parity_exact": true,
+        "rank_matches_backtest": true,
+        "short_pick_matches_backtest": true,
+        "gross_within_cap": true,
+        "no_marketable_limits": true,
+        "spread_gate_holds": true,
+        "quantities_on_venue_step": true,
+        "notional_within_equity": true,
+        "no_target_refused_by_venue_rule": true
+      },
+      "pass": true
+    },
+    {
+      "book": "momentum_top3_5m_hold2h",
+      "interval": "5m",
+      "bar": "2026-09-27T04:50:00+00:00",
+      "config_sha": "2ba4535dc0a6a51a",
+      "universe": 26,
+      "fired": 1,
+      "targets": {
+        "LTCUSDT": 1.0
+      },
+      "target_gross": 1.0,
+      "orders_planned": 1,
+      "skipped": [],
+      "signal_parity": {
+        "checked": 3354,
+        "mismatches": 0,
+        "match_rate": 1.0
+      },
+      "rank_parity": {
+        "applies": true,
+        "fired": 1,
+        "backtest_top": [
+          "LTCUSDT"
+        ],
+        "live_top": [
+          "LTCUSDT"
+        ],
+        "match": true,
+        "scores": {
+          "LTCUSDT": -0.00555
+        }
+      },
+      "short_parity": {
+        "applies": false
+      },
+      "checks": {
+        "all_selected_symbols_have_bars": true,
+        "bar_is_closed": true,
+        "signal_parity_exact": true,
+        "rank_matches_backtest": true,
+        "short_pick_matches_backtest": true,
+        "gross_within_cap": true,
+        "no_marketable_limits": true,
+        "spread_gate_holds": true,
+        "quantities_on_venue_step": true,
+        "notional_within_equity": true,
+        "no_target_refused_by_venue_rule": true
+      },
+      "pass": true
+    },
+    {
+      "book": "short_pullback_15m",
+      "interval": "15m",
+      "bar": "2026-09-27T04:30:00+00:00",
+      "config_sha": "8d7a722424b4a950",
+      "universe": 26,
+      "fired": 0,
+      "targets": {
+        "WLDUSDT": -0.3333,
+        "FILUSDT": -0.3333,
+        "PUMPUSDT": -0.3333
+      },
+      "target_gross": -1.0,
+      "orders_planned": 3,
+      "skipped": [],
+      "signal_parity": {
+        "checked": 4186,
+        "mismatches": 0,
+        "match_rate": 1.0
+      },
+      "rank_parity": {
+        "applies": true,
+        "fired": 0,
+        "backtest_top": [],
+        "live_top": [],
+        "match": true,
+        "scores": {}
+      },
+      "short_parity": {
+        "applies": true,
+        "regime": {
+          "on": true,
+          "breadth": 0.231,
+          "breadth_max": 0.4,
+          "names": 26
+        },
+        "backtest_pick": [
+          "FILUSDT",
+          "PUMPUSDT",
+          "WLDUSDT"
+        ],
+        "live_pick": [
+          "FILUSDT",
+          "PUMPUSDT",
+          "WLDUSDT"
+        ],
+        "match": true,
+        "info": {
+          "regime_on": true,
+          "free_slots": 3,
+          "broken": 20,
+          "candidates": 17,
+          "kept": 3,
+          "scores": {
+            "WLDUSDT": 0.03069,
+            "FILUSDT": 0.02657,
+            "PUMPUSDT": 0.02365
+          }
+        }
+      },
+      "checks": {
+        "all_selected_symbols_have_bars": true,
+        "bar_is_closed": true,
+        "signal_parity_exact": true,
+        "rank_matches_backtest": true,
+        "short_pick_matches_backtest": true,
+        "gross_within_cap": true,
+        "no_marketable_limits": true,
+        "spread_gate_holds": true,
+        "quantities_on_venue_step": true,
+        "notional_within_equity": true,
+        "no_target_refused_by_venue_rule": true
       },
       "pass": true
     }

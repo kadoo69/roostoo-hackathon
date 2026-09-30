@@ -29,7 +29,7 @@ import json
 from pathlib import Path
 
 HORIZONS_S = (60, 300, 900, 3600)
-SIGN = {"BUY": 1.0, "SELL": -1.0}
+SIGN = {"BUY": 1.0, "SELL": -1.0, "SHORT_CLOSE": 1.0, "SHORT_OPEN": -1.0}
 
 
 def _ts(rec: dict) -> dt.datetime | None:

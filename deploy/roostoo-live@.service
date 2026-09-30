@@ -1,0 +1,19 @@
+[Unit]
+Description=Roostoo live book %i (real orders)
+After=network-online.target time-sync.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=roostoo
+WorkingDirectory=/opt/roostoo-hackathon
+Environment=ROOSTOO_DRY_RUN=0
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/opt/roostoo-hackathon/.venv/bin/python -m bot.contenders_run /opt/roostoo-hackathon/config/%i.yaml
+Restart=always
+RestartSec=10
+StandardOutput=append:/opt/roostoo-hackathon/live/%i.out
+StandardError=append:/opt/roostoo-hackathon/live/%i.out
+
+[Install]
+WantedBy=multi-user.target

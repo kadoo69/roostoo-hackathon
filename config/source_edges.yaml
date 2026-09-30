@@ -1,0 +1,39 @@
+meta:
+  name: source_edges_v1
+  declared_utc: '2026-09-24'
+  status: research_only_no_bot_integration
+  objective: improve net 14-day return against momentum_top3_full
+  base_book: momentum top 3, Donchian 20/10, 3% x 15% skim ladder, 25% drift band
+  hypothesis: lower Hyperliquid funding, especially relative to Binance, marks shorts paying to fade an active breakout
+  prior_knowledge: Binance low-funding breakout priority was observed post-hoc in positioning_edges; this is a cross-venue replication, not an untouched theory
+  costs: identical deployed-book simulator and fees in gates.positioning_edges
+  decision_time: 4h Binance bar close; Hyperliquid funding uses exact settlement milliseconds
+  no_data: neutral; never exclude a coin solely because Hyperliquid does not list it
+  windows:
+    fit: ['2025-01-05', '2025-07-01']
+    validation: ['2025-07-01', '2026-01-01']
+    holdout: ['2026-01-01', '2026-07-01']
+    recent: ['2026-07-01', '2026-09-20']
+  selection_rule: choose on fit and validation only; recent is the final read, not used to pick weights or thresholds
+  promotion_rule: gain in net 14-day median and P(>5%) in validation, holdout and recent; paired holdout p below 0.10; inverse-signal control must not reproduce gain; 2x trading cost must preserve gain
+features:
+  hl_funding_3d: realised hourly Hyperliquid funding summed over 72h / 9, comparable to Binance per-8h funding
+  bn_funding_3d: realised Binance settlements summed over 72h / 9
+  funding_diff_3d: hl_funding_3d minus bn_funding_3d; negative suggests heavier short pressure on Hyperliquid
+  hl_premium_24h: mean Hyperliquid premium over 24h
+  premium_diff_24h: Hyperliquid premium minus Binance premium over 24h
+  stable_impulse_7d: log change in daily DefiLlama total pegged-USD supply, date-stamped at the next UTC midnight; historical revisions are possible
+  dvol_btc: Deribit historical BTC implied-volatility index; option gamma has no backtestable history
+arms:
+  hyper_funding_tilt:
+    score: momentum percentile + 0.5 * (0.5 - hyper funding percentile)
+  cross_venue_tilt:
+    score: momentum percentile + 0.5 * (0.5 - funding spread percentile)
+  consensus_tilt:
+    score: momentum percentile + 0.5 * indicator(Hyper funding < 0 and Binance funding < 0)
+  cross_venue_plus_stable:
+    score: cross_venue_tilt when 7-day stable supply impulse > 0, otherwise plain momentum
+nonsense_controls:
+  inverse_hyper: reverse the funding tilt sign
+  inverse_spread: reverse the spread tilt sign
+  inverse_consensus: favour both-positive funding instead

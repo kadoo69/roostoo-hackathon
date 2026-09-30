@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import time
+from collections import deque
 from decimal import ROUND_DOWN, Decimal
 from dataclasses import dataclass
 from typing import Any
@@ -75,10 +76,44 @@ def parse_exchange_info(payload: dict) -> dict[str, PairSpec]:
     }
 
 
+RATE_LIMIT_CALLS = 28
+RATE_LIMIT_WINDOW_S = 60.0
+
+
+class CallBudget:
+    """At most `calls` requests in any rolling `window_s`, blocking until one is free.
+
+    The organiser's limit is 30 calls a minute across every endpoint, and a call over it
+    fails. 28 leaves room for clock jitter between this process and the venue.
+    DECISIONS.md#short-paper-books
+    """
+
+    def __init__(self, calls: int = RATE_LIMIT_CALLS, window_s: float = RATE_LIMIT_WINDOW_S,
+                 clock=time.monotonic, sleep=time.sleep):
+        self.calls = calls
+        self.window_s = window_s
+        self.clock = clock
+        self.sleep = sleep
+        self.stamps: deque[float] = deque()
+
+    def acquire(self) -> float:
+        waited = 0.0
+        while True:
+            now = self.clock()
+            while self.stamps and now - self.stamps[0] >= self.window_s:
+                self.stamps.popleft()
+            if len(self.stamps) < self.calls:
+                self.stamps.append(now)
+                return waited
+            pause = self.window_s - (now - self.stamps[0]) + 1e-3
+            self.sleep(pause)
+            waited += pause
+
+
 class RoostooClient:
     def __init__(self, api_key: str | None = None, secret: str | None = None,
                  base_url: str = BASE_URL, timeout: float = 10.0,
-                 max_retries: int = 3):
+                 max_retries: int = 3, budget: CallBudget | None = None):
         self.api_key = api_key
         self.secret = secret
         self.base_url = base_url.rstrip("/")
@@ -87,6 +122,7 @@ class RoostooClient:
         self.session = requests.Session()
         self.time_offset_ms = 0
         self.last_ticker_server_time_ms: int | None = None
+        self.budget = budget or CallBudget()
 
     def _sign(self, params: dict[str, Any]) -> str:
         if not self.secret:
@@ -110,6 +146,7 @@ class RoostooClient:
             if signed or "timestamp" in params:
                 params["timestamp"] = self._timestamp()
             headers = self._headers(params) if signed else {}
+            self.budget.acquire()
             try:
                 if method == "GET":
                     r = self.session.get(url, params=params, headers=headers,
@@ -153,7 +190,14 @@ class RoostooClient:
         return payload["Data"]
 
     def balance(self) -> dict:
-        return self._request("GET", "/v3/balance", signed=True)["Wallet"]
+        """The spot wallet; the live venue names it `SpotWallet`, the README `Wallet`.
+
+        DECISIONS.md#roostoo-keys-2026-09-30
+        """
+        payload = self._request("GET", "/v3/balance", signed=True)
+        if "SpotWallet" in payload:
+            return payload["SpotWallet"]
+        return payload["Wallet"]
 
     def place_order(self, pair: str, side: str, quantity: float,
                     price: float | None = None,
@@ -177,34 +221,52 @@ class RoostooClient:
 
     def query_order(self, order_id: int | None = None, pair: str | None = None,
                     pending_only: bool | None = None) -> dict:
+        """Matched orders under `OrderDetails`; an empty match is an empty list.
+
+        The live venue lists orders under `OrderMatched`, reads `pending_only` only as
+        the string TRUE, and answers `Success: false, no order matched` when nothing
+        matches. Unnormalised, the bot never saw its own resting orders and counted an
+        error on every sweep of an idle book. DECISIONS.md#roostoo-keys-2026-09-30
+        """
+        flag = None if pending_only is None else ("TRUE" if pending_only else "FALSE")
         params = {k: v for k, v in
-                  (("order_id", order_id), ("pair", pair), ("pending_only", pending_only))
+                  (("order_id", order_id), ("pair", pair), ("pending_only", flag))
                   if v is not None}
-        return self._request("POST", "/v3/query_order", params, signed=True)
+        try:
+            payload = self._request("POST", "/v3/query_order", params, signed=True)
+        except RoostooError as exc:
+            if str(exc).endswith("no order matched"):
+                return {"Success": True, "OrderDetails": []}
+            raise
+        rows = payload.get("OrderMatched")
+        if rows is None:
+            rows = payload.get("OrderDetails") or []
+        return {**payload, "OrderDetails": list(rows)}
 
     def cancel_order(self, order_id: int | None = None, pair: str | None = None) -> dict:
         params = {k: v for k, v in (("order_id", order_id), ("pair", pair))
                   if v is not None}
         return self._request("POST", "/v3/cancel_order", params, signed=True)
 
-    def short_open(self, pair: str, collateral: float, price: float | None = None) -> dict:
-        params: dict[str, Any] = {
-            "pair": pair, "collateral": collateral,
-            "type": "MARKET" if price is None else "LIMIT",
-        }
-        if price is not None:
-            params["price"] = price
+    def short_open(self, pair: str, collateral: float) -> dict:
+        """MARKET short sized by USD collateral; fills at MaxBid.
+
+        Only the documented parameters are sent: the venue signs pair, collateral,
+        timestamp, order_type and price only, and rejects a request whose signature
+        covers anything else. The first version sent `type`, which is not one of
+        them. A LIMIT short is not offered because its fee is charged on acceptance.
+        DECISIONS.md#short-paper-books
+        """
+        params: dict[str, Any] = {"pair": pair, "collateral": f"{collateral:.2f}"}
         return self._request("POST", "/v6/short_open", params, signed=True)
 
-    def short_close(self, pair: str, quantity: float | None = None,
-                    price: float | None = None) -> dict:
-        params: dict[str, Any] = {
-            "pair": pair, "type": "MARKET" if price is None else "LIMIT"}
+    def short_close(self, pair: str, quantity: float | None = None) -> dict:
+        """Reduce-only close at MinAsk; no quantity closes the whole position."""
+        params: dict[str, Any] = {"pair": pair}
         if quantity is not None:
-            params["quantity"] = quantity
-        if price is not None:
-            params["price"] = price
+            spec = self._spec_cache.get(pair) if hasattr(self, "_spec_cache") else None
+            params["close_qty"] = spec.format_qty(quantity) if spec else quantity
         return self._request("POST", "/v6/short_close", params, signed=True)
 
-    def short_positions(self) -> dict:
-        return self._request("GET", "/v6/short_positions", signed=True)
+    def short_positions(self) -> list[dict]:
+        return list(self._request("GET", "/v6/short_positions", signed=True).get("Positions") or [])

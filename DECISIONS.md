@@ -3330,3 +3330,839 @@ Declaration `config/literature_edges.yaml`, harness `gates/literature_edges.py`,
 **Diagnostic, BTC-to-alt lead-lag:** after a BTC move, alts underperform BTC slightly over the next 1 to 4 hours in 2022 and 2023-24 (corr -0.02 to -0.05, t about -2 to -2.7) and not at all in 2025-26 (t 0.2 to 0.3). No catch-up to trade, and what little there was has gone.
 
 The pattern across the five is the same one this repo keeps finding: effects that were real in their authors' samples either decay after publication (N1, N3) or were never a property of price at this universe's liquidity (N2, N6), and the ones that change what the book holds cost it the concentration that produces its right tail (N4). The target lock (`#competition-wf-outcome`) remains the only change of any kind to pass on every period, and it is a change to the objective's shape, not a new signal.
+
+## intraday-structure-outcome
+
+Declaration `config/intraday_structure.yaml`, harnesses `gates/intraday_structure.py` (history) and `gates/live_structure.py` (live feed), artifacts `results/intraday_structure.json`, `results/intraday_structure_pairs.csv`, `results/live_structure.json`. Ledger 1007 -> 1010. Operator request: find hidden alphas on smaller time frames from the live feed and the literature, with correlation pairs and momentum named.
+The 1h cache was topped up to 2026-09-23T04:00Z before the run (68 live names; the other 196 are delisted and stop where they stopped).
+
+**All three arms fail. No new edge.**
+
+| arm | source | result | why it fails |
+|---|---|---|---|
+| S1 intraday time-series momentum (00:00 UTC bar predicts the 23:00 bar, BTC, idle cash) | Shen, Urquhart and Wang 2022; Wen et al. 2022 | net per hold **-8.7, -6.3, -7.0 bps** (t -1.7, -2.7, -3.4); GROSS already negative at -3.7, -1.3, -2.0 bps | there is no first-hour momentum in the 24-hour market at hourly resolution; hour 0 ranks 16th, 15th and 3rd of 23 predictor hours |
+| S2 cointegrated pairs, 1h, 12 most liquid names, Engle-Granger filter, entry \|z\| > 2.5 | Fil and Kristoufek 2020; Tadi and Witzany 2025 | 180 / 1,147 / 1,038 trades, gross **+9.0, -16.9, -0.8 bps**, net **-8.3, -34.1, -19.4 bps** (t -0.3, -3.9, -2.8) | spreads that pass a 30-day cointegration test do not revert: 48% of trades exit on the \|z\| > 5 stop and only 20% on reversion. The shifted-partner control is worse in 2022 and 2023-24 and slightly better in 2025-26, so there is no structure to harvest even before 30 bps of round-trip cost |
+| S3 quiet-market gate on C0 (flat when 24h dispersion AND BTC 7-day vol are both below their 90-day 33rd percentile) | `#competition-oos-outcome` dispersion terciles | P(14d > 2%) 0.364 / 0.574 / **0.507** vs C0 0.361 / 0.571 / 0.525; median +0.23 / 4.35 / **2.50** vs -0.73 / 4.43 / 2.91 | helps 2022, costs 2025-26. The gate is flat 16% of the time in episodes of about 4 bars; the declared failure mode fired: compression precedes the breakouts the book earns on |
+
+The S3 random-gate control (same flat fraction and episode length, 20 seeds) scores P(>2%) 0.354 / 0.544 / 0.483, so the real gate is better than random but not better than no gate.
+
+**Diagnostic D1, alt hour-of-day.** No UTC hour moves the equal-weight pool, or the pool net of BTC, by 10 bps in any period, let alone all three. The most stable effect is **03:00 to 05:00 UTC, where the pool beats BTC by 1 to 4 bps an hour in every period** (t up to 2.8), the same Asian-morning window the BTC literature reports as weak for BTC. It is a real regularity and a quarter of one round trip. Recorded, not traded.
+
+**Diagnostic D2, live 1m feed, 72 hours to 2026-09-23T05:10Z, 23 names.**
+- BTC's 1-minute return against each alt's next minute: median correlation **-0.017**, a slight reversal, not a lead.
+- After a BTC minute beyond 2 standard deviations, the median alt moves **+3.3 bps** in BTC's direction over the next 5 minutes, against a 10 bps round trip.
+- Minute-of-hour absolute returns are highest in minutes 0 to 3, and quarter-hour minutes run 1.08x the others: the quarter-hour effect of arXiv:2607.09426 is visible on the live feed, and is a volatility effect worth about 0.5 bp of direction on its authors' own numbers.
+- The first principal component explains 47.6% of 1-minute variance.
+
+**Diagnostic D3, live correlation structure at the same time.** Average pairwise 30-day hourly correlation across the pool is **0.508, at the 4th percentile of the past year**: coins are unusually decorrelated, which is the high-dispersion condition `#competition-oos-outcome` finds the trend books do best (and worst) in. One large cluster (BTC, ETH, SOL, XRP, BNB, DOGE, ADA, SUI, LINK, AAVE, PEPE) and twelve singletons, including all three names the ranked book wants. TRX is the only low-beta name (0.17); every other alt runs a BTC beta of 0.8 to 1.9.
+
+### A live execution leak found while monitoring
+
+`momentum_top3_full` targeted ARB at a third of the book from the 2026-09-23T00:00 bar and holds none of it: the execution layer refused it 22 times across 12 books since the reset, every time for `spread_exceeds_limit` at 8.1 to 8.6 bps against `max_spread_bps` 5.0. ARB's quote is two ticks wide (tick 0.0001 at 0.249), so its half-spread is one tick, which is exactly what every backtest already charges. ARB rose 6.4% after the first refusal, about 2% of `momentum_top3_full`'s equity, and the book sat at 38% cash.
+`#live-validation-2026-09-23` kept the two-tick refusal on the premise that a spread wider than one tick is an abnormal widening. Twenty-two refusals over six hours is ARB's normal spread, not an abnormal one. Whether to accept a spread up to two ticks, or to measure "abnormal" against each name's own trailing spread, is an execution-rule decision left to the operator, and no running book was changed.
+
+### What this settles for smaller time frames
+
+Five independent lines now agree: this repo's scalp, flow and RSI sweeps; arXiv:2608.21888; arXiv:2607.09426; and D1 and D2 here. Every regularity found below the 4h bar in liquid crypto (reversal, quarter-hour flow, hour-of-day drift, BTC-to-alt lag) is real and is 0.5 to 11 bps, against a 10 bps round trip. The only lever that has ever moved these books is which names they hold and how concentrated they are, at 4h.
+
+## execution-gaps-2026-09-23
+
+Operator request: fill the gaps `#intraday-structure-outcome` found, with the competition in mind. Operator decisions on 2026-09-23: accept quotes up to two ticks wide, and restart the whole fleet together on the fixes before the 08:00Z bar close so the lock rehearsal and its control both start on them. Seven defects, each reproduced from the live journals and captured by a failing test before it was fixed.
+
+**1. A normal two-tick spread was refused.** ARB quotes two ticks wide (8.1 to 8.6 bps against `max_spread_bps` 5.0) and was refused 22 times across 12 books, while every backtest held it. The backtest charges one tick per side, which is exactly the half-spread of a two-tick quote, so a two-tick quote is inside the modelled cost. `bot/execution.NORMAL_SPREAD_TICKS = 2`: a quote up to two ticks is accepted whatever it is in bps and marked `wide_tick` when above the bps limit, so its paper fill pays the far side; three ticks or wider above 5 bps is still refused as abnormal. Tests: `test_a_two_tick_quote_is_accepted_and_filled_at_the_far_side`, `test_arb_at_its_normal_two_tick_spread_is_tradeable`, `test_a_three_tick_quote_wider_than_the_limit_is_still_refused` (which replaces the two-tick refusal test of `#live-validation-2026-09-23`).
+The paper lab and the scalper keep their own stricter filters; neither is a candidate.
+
+**2. A missed entry was not retried until the next bar close.** Between closes a booking book carried only its HELD weights forward, so any name the close wanted and did not get (refused, unfilled, cancelled after 15 minutes) stayed out for the whole bar: four hours on the 4h books. `bot/run.carry_target` now adds each such name back on every cycle, `bot/run.next_pending` keeps the list (replaced at each close, cleared on a halt, never containing a cold-start-suppressed entry), retries only while at least 1% of equity is cash, and the list persists across a restart inside the same bar. The pre-existing carry path is unchanged when nothing is pending. Tests: `tests/test_entry_retry.py`.
+
+**3. A lot-step residue blocked re-entry.** An exit sells the holding rounded down to the lot step and leaves a residue (0.001 AAVE, about $0.15). When AAVE's channel re-entered at 03:00Z the booking ladder's never-top-up rule, `min(want, held)`, capped the new target at the residue's weight of 1.5e-06, so `donchian_15m` held nothing of a name its rule held. The same residue sat under BNB, ZEC and ENA in `donchian_15m` and UNI in `momentum_top3_15m`. `bot/portfolio.current_weights` now treats a holding below `DUST_NOTIONAL` = $10 (the fleet's `min_skim_notional`, the smallest trade it already considers worth making) as flat. Tests: `test_a_lot_step_residue_is_not_a_held_position`, `test_a_re_entry_over_a_dust_residue_gets_its_full_weight`.
+
+**4. The resting-order guard could never match on Roostoo.** `Executor.send` refuses to re-send while an order rests, by looking the order's SYMBOL (`ARBUSDT`) up in the venue's pending PAIRS with the slash removed. Binance testnet's pair is `ARBUSDT` and matches; Roostoo's is `ARB/USD`, which becomes `ARBUSD` and never matches, so on Roostoo every cycle would have re-sent a resting order, and the retry of item 2 would have made that every minute. It now matches on the pair as well. Test: `test_a_resting_roostoo_order_is_matched_by_its_pair_not_its_symbol`. Live-only and invisible in dry run, like the defects of `#testnet-live`.
+
+**Monitoring.** `gates/live_validation.py` now FAILS a book whose target the venue rule refuses (`no_target_refused_by_venue_rule`); before, ARB was listed under `skipped` and the book passed. `gates/execution_gaps.py` reads each book's journals and reports what its last close wanted against what it holds, the pending retries, and every skipped order by reason; `--watch N` streams one line per new gap. At 05:34Z before the fix it found 6 of 15 books with a gap: `momentum_top3_4h` and `momentum_top3_full` 33 points of gross short (ARB), `momentum_top5_cushion` 20 points, `donchian_4h_cushion` 5.5, `donchian_15m` (the AAVE residue), and `momentum_top3_lock`, which is empty only because it cold-started and waits for its first close.
+
+**5. Target gross could exceed the 1.0 cap by rounding.** `portfolio.target_weights` rounded each weight to eight decimals, so 21 names at 1/21 summed to 1.00000005 and `live_validation` failed `gross_within_cap` on `donchian_4h`, `donchian_4h_cushion` and `donchian_30m` the first time more than 20 names fired together. Weights now round DOWN. Test: `test_gross_never_exceeds_the_cap_when_rounding_many_names`.
+
+**6. A live book decided on a stale wallet (found by the gap monitor 20 minutes after the restart).** In live mode the wallet was read only at the END of a cycle. `testnet_live`'s retry placed a passive BTC buy at 06:00:29Z that filled 25 seconds later; the 06:01:03Z cycle saw no open order and still the pre-fill holdings, and bought the same $800 again. Both filled on Binance testnet (orders 5427053 and 5427263). Before the retry, intermediate cycles only ever placed booking SELLS, so the race had no buy to duplicate. A live cycle now reads the wallet first, before it marks or decides. Test: `test_a_live_cycle_reads_the_wallet_before_it_marks_or_decides`. Dry-run books never read a wallet and are unaffected.
+
+**7. A live book's cash was read from the wrong stablecoin.** `bot/state.wallet_positions` counted any of the venue quote, USD or USDT as cash and kept whichever it saw last. The Binance testnet wallet holds 112,776 USDT, which the bot spends, and a seeded 10,000 USD, which it never touches; cash read 10,000.0 on every cycle, so each buy added its value to equity without taking it from cash. `testnet_live`'s equity rose by exactly the order size on every buy (06:01 and 06:02Z, the duplicate BTC buys of item 6) and fell on every sale, which is its -84% "return" and -12% "drawdown" in `gates.log_review`: an accounting artifact, not trading. Cash is now read in the venue's own quote only, taken from its pair names (`bot/run.venue_quote`: USDT on testnet, USD on Roostoo, both verified live), and other stablecoins are reported, not adopted. Tests: `test_cash_is_read_in_the_venue_quote_only`, `test_the_venue_quote_comes_from_the_venue_pairs`. The Roostoo competition account starts as pure USD, so it was exposed only if it ever held a second stablecoin.
+
+None of the seven changes the signal, the ranking or the sizing rule. Each makes the live book hold what the backtest already holds.
+
+## execution-timing-outcome
+
+Declaration `config/execution_timing.yaml`, harness `gates/execution_timing.py`, artifacts `results/execution_timing.json` and `results/execution_timing_legs.parquet`, minute paths cached at `data/cache/exec_timing_1m.parquet`. Ledger 1010 -> 1011. The question: can the sub-4h structure of `#intraday-structure-outcome`, too small to trade as a signal, be harvested as execution by delaying the order a few minutes after the 4h close?
+
+**Null, and the opposite sign.** 12,919 legs (C0 and `donchian_4h` entries and exits, 2023-01 to 2026-09, plus 4,004 random-sign control legs), each with the 60 one-minute closes after its 4h close. Mean benefit of delaying k minutes, bps (t):
+
+| book, period | k=1 | k=3 | k=5 | k=15 | k=60 |
+|---|---|---|---|---|---|
+| momentum_top3_full 2023-24 | -1.1 (-2.7) | -1.0 | -1.0 | -1.1 | -4.4 |
+| momentum_top3_full 2025-26 | -2.2 (-4.2) | -2.2 | -1.8 | -2.8 | -7.7 |
+| donchian_4h 2023-24 | -3.4 (-8.6) | -4.3 | -3.7 | -4.7 | -8.0 |
+| donchian_4h 2025-26 | -4.8 (-10.8) | -4.4 | -3.5 | -4.0 | -7.8 |
+| random control 2025-26 | -0.1 | -0.5 | +0.1 | +0.7 | -1.4 |
+
+Price keeps moving in the direction of the trade after a 4h close, most strongly after breakout ENTRIES (`donchian_4h` -4.8 to -6.5 bps at one minute, t -8 to -9), and most of it lands in the first minute. The declared failure mode fired: this is the book's own momentum, and every delay pays it. No delay is adopted.
+
+**What it shows instead: the backtest's fill is optimistic by the close-to-order latency.** Every backtest fills at the 4h close, and no live bot can act before that close is known. At one minute that is 1.65 bps a leg on C0 and 4.1 bps on `donchian_4h`. At 53.6 legs a fortnight and a mean held weight of 0.458, C0 gives up about **0.4pp per fortnight** that its backtest never charged, against a 2.91% holdout median; `donchian_4h` about 0.13pp. Every relative comparison in this repo is unaffected because every arm fills the same way; the absolute levels are that much high. The only lever left is acting sooner, and the limit is the close itself.
+
+**The latency the fleet actually ran at was far worse than one minute, and the cause was the machine, not the code.** Bar-close to signal, from the journals of 2026-09-22/23: median 486 s on `donchian_4h`, 491 s on C0, 550 s on `donchian_1h`, maximum about 50 minutes. The Mac was on battery and slept from 2026-09-22T21:04Z to 2026-09-23T04:04Z; the books cycled only in maintenance wakes every 15 to 30 minutes, with one 1.9-hour hole. `caffeinate` asserts `PreventUserIdleSystemSleep`, which does not hold a machine on battery. At the curve above, a five-minute delay costs 2 to 4 bps a leg before counting missed closes. **For the competition, uptime is worth more than any timing rule: run the competition book on EC2 (`deploy/README.md`) or on mains power with the lid open.**
+
+## drawdown-brake-outcome
+
+Operator: "we are facing drawdowns, what is the issue, what insights, how can we tune it to withstand those." Declaration `config/drawdown_brake.yaml`, harness `gates/drawdown_brake.py`, artifacts `results/drawdown_brake.json` and `results/drawdown_readout.json`. Ledger 1011 -> 1013.
+
+### What the live drawdowns are
+
+Since the reset (2026-09-22T20:48Z to 06:00Z) every book is up, +0.2% to +5.4%, with maximum drawdowns of 1.0% to 2.8%. The deepest are the concentrated momentum books, and they are happening now: from 03:30Z the pool fell 0.5% (BTC -0.2%) and the three-name books, at BTC betas of 1.5 to 1.9 (`#intraday-structure-outcome` D3), turned that into 1.5 to 2.8%. UNI (-2.8%) and NEAR carry most of it in `momentum_top3_full`, DOGE and UNI in `momentum_top3_1h`. The channel books, 16 to 22 names each, lose 1.1 to 1.4% spread thinly across all of them. **This is the book's beta and concentration doing what they are sized to do, not a defect.**
+The larger live shortfall is against the market, not a drawdown: every 4h book trails an equal-weight basket by 2 to 6 points over the same hours, because ARB, the best name in the pool (+14.2%), was refused (`#execution-gaps-2026-09-23`), and the fleet was asleep for seven of the nine hours. The 15m and 30m books lead on these nine hours; their backtests lose to costs (`#lowtf-paper-bots`) and nine hours says nothing against that.
+The pre-reset drawdowns (up to -7.0% on `momentum_top3_full`) are explained at `#log-review-2026-09-23`: 55% downtime and three defects since fixed.
+
+### How deep a normal fortnight goes
+
+`results/drawdown_readout.json`, the competition engine, existing arms, no new trial. 2025-26:
+
+| book | median 14d | P(>2%) | P(>15%) | median in-window maxDD | P(maxDD < -15%) | worst window |
+|---|---|---|---|---|---|---|
+| momentum_top3_full | +2.91 | 0.525 | 0.224 | -12.1 | 0.303 | -28.5 |
+| + target lock | +5.01 | 0.677 | 0.055 | -7.2 | 0.104 | -28.5 |
+| momentum_top5 fixed + lock | +4.16 | 0.656 | 0.003 | -5.4 | 0.039 | -20.0 |
+| donchian_4h | +0.35 | 0.340 | 0.029 | -3.5 | 0.000 | -8.7 |
+
+A 1.5 to 2.8% drawdown is a small fraction of the ranked book's median fortnight. Three in ten fortnights see worse than -15% at some point.
+
+### The drawdown brake: null
+
+B1: once a window is 8% below its start, hold at most 0.5 gross for the rest of it. B2: the same on top of the lock. Both reconcile exactly with `windows_hourly` when off (max gap 0.0, after the reconciliation caught a cost-ordering defect in the harness's first version).
+
+| 2025-26 | median | P(>2%) | P(>15%) | worst | P(maxDD < -15%) | fires |
+|---|---|---|---|---|---|---|
+| top3_full | +2.91 | 0.525 | 0.224 | -28.5 | 0.303 | |
+| B1 | +1.19 | 0.475 | 0.201 | -24.7 | 0.243 | 36.5% of windows |
+| top3 + lock | +5.01 | 0.677 | 0.055 | -28.5 | 0.104 | |
+| B2 | +4.45 | 0.622 | 0.055 | -19.0 | 0.057 | 27.2% |
+
+Both lower P(>2%) and the median in every period, so both fail. What they buy is real and is only the tail: the worst window improves 4 to 10 points. The random-hour control (the same cut, at a random hour in the same windows) keeps MORE of P(>2%) than the brake does (0.498 against 0.475 for B1; 0.645 against 0.622 for B2): **cutting right after an 8% loss is worse than cutting at random, because this book's in-window drawdowns tend to recover.** A third of all fortnights touch -8%, and most come back. The declared failure mode fired, and it is the same finding as `#derisk-ramp-protection-outcome` and the ratchet and take-profit nulls from the other side.
+
+### What withstands drawdowns, on this evidence
+
+- Not a stop on the book: every exposure cut tested after a loss (brake, ramp, ratchet) sells the recovery.
+- The lock is the only rule that passed, and it halves the median drawdown (-12.1 to -7.2) by banking gains, not by cutting losses; it gives up P(>15%).
+- Breadth is the only thing that cuts the worst window without a timing rule: top5 -20.0, `donchian_4h` -8.7, against -28.5, paid for in median return.
+- The competition-level choice is therefore between the three rows of the readout, and it is the operator's: win (top3, no lock), qualify (top3 + lock), or survive (top5 + lock).
+
+## decorrelated-directional-outcome
+
+Operator: "find uncorrelated coins so we can define entry and exit based on directions, as we are currently losing to market beta." Declaration `config/decorrelated_directional.yaml`, harness `gates/decorrelated_directional.py`, artifact `results/decorrelated_directional.json`, live map `results/live_structure.json`. Ledger 1013 -> 1016.
+
+**All three fail. Choosing coins for low correlation adds nothing that a random choice does not, and hedging beta out costs the return the competition ranks on.**
+
+| 2025-26 | median 14d | P(>2%) | P(>15%) | worst | median maxDD | Screen 3 |
+|---|---|---|---|---|---|---|
+| C0 | +2.91 | 0.525 | 0.224 | -28.5 | -12.1 | 2.99 |
+| U1 decorrelated third, 20/10 channel long AND short | -0.08 | 0.298 | 0.011 | -13.5 | -4.6 | -0.28 |
+| U2 the same, long only | +0.55 | 0.339 | 0.015 | -10.3 | -3.3 | 2.75 |
+| U3 C0 with a BTC short at its trailing beta | +1.75 | 0.485 | 0.102 | -13.8 | -6.5 | 3.04 |
+
+- **U1 and U2 are indistinguishable from a random third of the pool** (random: P(>2%) 0.300 and 0.246 in 2025-26, median +0.11 and 0.00), so the low-correlation filter carries no information about which trends pay. What looks like safety, a shallower worst window, comes from holding 1/10 per name and, in U1, longs and shorts cancelling. The short leg does not add return in any period (U1 below U2 in two of three).
+- **The decorrelated set is not uncorrelated.** Its mean 30-day correlation to BTC is 0.44 to 0.64 against the pool's 0.63 to 0.72, the ranking persists only moderately (Spearman 0.57 month to month), and the names most often in it in 2025-26 are TRX (67% of bars), ZEC, FORM, TUT, CRV and TON: a low-beta stablecoin-like chain plus thin mid-caps whose trends are small.
+- **U3 is the interesting one and still fails.** Hedging C0's trailing beta (mean 0.53 to 0.79) halves the worst window (-28.5 to -13.8) and the median drawdown, keeps Screen 3 level (3.04 vs 2.99), and wins in 2022, the down year. But it lowers the median and P(>2%) in 2023-24 and 2025-26 and cuts P(>15%) from 0.22 to 0.10. That is `#beta-is-the-only-screen3-lever` measured directly: the return the book earns in up markets IS the beta.
+
+**Live, 2026-09-23T07:13Z.** Only TRX is actually decorrelated (beta 0.17, 1-minute correlation 0.18) and it has no trend (40-bar momentum +2.6%). NEAR, ARB, PEPE, ZEC, AVAX and UNI show low minute-level correlation this week (0.21 to 0.37) while running 30-day BTC betas of 1.2 to 1.8: short-horizon independence is not fortnight-level independence.
+
+**What "losing to market beta" is, on the live evidence.** Since the reset the market rose and the books under-held it (ARB refused, seven hours asleep), then a 0.5% dip hit three high-beta names; `#drawdown-brake-outcome`. Beta is what the book is paid for. The only tested way to shed its downside that keeps the median is the target lock. U3 plus the lock was not declared here and is not claimed.
+
+## podcast-edges-outcome
+
+Operator-supplied transcript of a crypto fund manager (mid-frequency, Hyperliquid) describing his edges, with the request to turn it into a high-Sharpe strategy with the best hyperparameters. Declaration `config/podcast_edges.yaml`, harness `gates/podcast_edges.py`, artifact `results/podcast_edges.json`. Ledger 1016 -> 1020. His own parameters were used and none were searched.
+
+**None passes. The equal-weight stack is the closest, and it is the drawdown trade again.**
+
+| 2025-26 | median 14d | P(>2%) | P(>15%) | worst | median maxDD | Screen 3 |
+|---|---|---|---|---|---|---|
+| C0 | +2.91 | 0.525 | 0.224 | -28.5 | -12.1 | 2.99 |
+| P1 hold within 5 days of a 20-day high (daily) | +2.21 | 0.507 | 0.188 | -25.3 | -8.0 | 3.13 |
+| P3 top third by market-adjusted volume growth | +1.31 | 0.460 | 0.094 | -21.0 | -8.3 | 2.40 |
+| P2 thirds of C0, P1, P3 | +2.18 | 0.507 | 0.154 | **-17.0** | -8.7 | 3.11 |
+
+- **P1** is a real trend rule: a 10-day-stale copy of it loses most of its edge (P(>2%) 0.449, median +0.73), and it beats C0 in 2022. It holds 4.2 names on average and trails C0's median in 2023-24 and 2025-26. It is the same family as the deployed channel on a slower clock, less concentrated, and pays for its shallower drawdown with the tail.
+- **P3** carries information in 2023-24 and 2025-26 (the permuted control scores P(>2%) 0.473 and 0.415, the real rank 0.541 and 0.460) but less than momentum; it fails every period against C0.
+- **P2** improves the worst window by 11.5 points and Screen 3 slightly, and loses median and P(>2%) in two of three periods. The claimed diversification does not arrive: hourly correlations between C0, P1 and P3 are 0.60 to 0.64, because all three are long-only large-cap books whose returns are mostly the same beta. The source's Sharpe 2 comes from combining signals that are long AND short, including carry, on a perp venue.
+- **P4, shorting small-cap 20-day highs, was not tested on the first run.** Its set came out empty because the history held only Roostoo-listed and delisted names; that exposed the data gap recorded at `#universe-completeness`, and the re-run below tests it.
+
+**Re-run on the complete universe (`#universe-completeness`), which is the authoritative result.** Same code, same parameters, 676 names. 2025-26 (2023-24 in brackets):
+
+| | median 14d | P(>2%) | P(>15%) | worst |
+|---|---|---|---|---|
+| C0 | +2.43 (+2.30) | 0.514 (0.516) | 0.201 | -30.2 (-36.2) |
+| P1 | +2.12 (**-0.07**) | 0.506 (0.437) | 0.147 | -25.3 |
+| P3 | +0.77 (+2.34) | 0.433 (0.512) | 0.104 | -21.0 |
+| P4 C0 plus small-cap pump shorts | +2.01 (+2.04) | 0.502 (0.503) | 0.188 | -34.0 (-38.1) |
+| P2 thirds | +1.72 (+1.72) | 0.486 (0.492) | 0.118 | **-17.1** |
+
+All four fail. P1 collapses in 2023-24 once the real top 30 is ranked. P4 now has a population (Roostoo names ranked 31 to 80), and the sleeve on its own is a loser: P(14d > 2%) of 0.04 to 0.07 and a worst fortnight of -39% in 2023-24, the squeeze the speaker himself warns about; random shorts on the same names do as well (P(>2%) 0.505 against 0.502). The stack still buys a shallower worst window with median, and its books still correlate 0.59 to 0.65.
+
+What the transcript confirms rather than adds: big beat small (the pool rule), trend works on the top decile and inverts below it, equal weight is hard to beat, fancy construction is fragile, and signals that wiggle too much need better execution than a daily or 4h book has. The edges it describes that this book cannot use are carry (no funding on Roostoo spot or Roostoo shorts), small-cap and new-listing shorts (Roostoo lists 43 names ranked 31 to 200 by Binance volume today, but none has point-in-time history here yet), and venue-specific inefficiencies.
+
+## universe-completeness
+
+**The research universe was not the universe the live bot ranks, and the deployed book's recorded returns were overstated because of it.**
+
+`data/universe.working_set` held Roostoo's tradable names plus every DELISTED Binance USDT name, and nothing else. The live bot (`bot/universe.select`) ranks the whole live Binance USDT market by 30-day median dollar volume, takes the top 30 and trades the Roostoo intersection. So every live name Roostoo does not list, 431 of Binance's 496 USDT pairs on 2026-09-23, including BCH (#9 by volume), DASH (#27), INJ, TIA, ETC and OP, was absent from history, and in every backtest the Roostoo names ranked higher than they would have against the real market. Found while the small-cap sleeve of `#podcast-edges-outcome` came out empty.
+
+Fixed 2026-09-23: 412 of the 417 missing non-leveraged, non-stable live names downloaded at 1h from the archive (5 had no archive: AGPUB, AMCB, CYPHB, EWYB, XVS), the 1h panel, the daily panel and every `flow_*` panel rebuilt at 676 names, and `working_set` now returns tradable, delisted and live names (test `test_the_research_universe_includes_live_names_that_roostoo_does_not_list`). The previous derived caches are kept at `data/cache/_pre_universe_fix/` so every earlier number remains reproducible. Artifact `results/universe_completeness.json`.
+
+The same books on the complete universe (median 14d, P(>2%), worst window):
+
+| book | 2022 | 2023-24 | 2025-26 |
+|---|---|---|---|
+| momentum_top3_full, before | -0.73 / 0.361 / -31.1 | +4.43 / 0.571 / -27.8 | +2.91 / 0.525 / -28.5 |
+| momentum_top3_full, complete | -1.18 / 0.347 / -31.1 | **+2.30** / 0.516 / **-36.2** | **+2.43** / 0.514 / -30.2 |
+| + target lock, complete | +2.82 / 0.548 / -31.1 | +4.45 / 0.650 / -36.2 | +4.75 / **0.674** / -23.4 |
+| donchian_4h, complete | -0.59 / 0.119 / -3.5 | +0.93 / 0.370 / -7.5 | -0.04 / 0.305 / -8.0 |
+
+- The ranked book's edge survives and is smaller: its 2023-24 median halves and its worst window deepens by 8 points.
+- The target lock's advantage survives almost unchanged (P(>2%) 0.674 against 0.677 before), so on corrected data it is the largest single lever this repo has, not one among several.
+- The pool held 6.2, 13.6 and 15.6 tradable names a bar in 2022, 2023-24 and 2025-26: in 2022 most of the real top 30 was not on Roostoo.
+- **Every relative verdict recorded before this date was measured like for like on the same (incomplete) data and stands as a comparison. No absolute return level recorded before this date should be quoted without this correction.** The two that matter most are `#competition-wf-outcome` (the lock) and `#competition-book-selection`, whose ordering is unchanged here.
+
+## short-paper-books
+
+The venue-short plumbing and the two long/short paper books declared in `config/short_paper_books.yaml` on 2026-09-23, at the operator's request after `#competition-wf-outcome` showed the S1 short sleeve failing all three periods.
+Shorts go through `/v6/short_open`, `/v6/short_close` and `/v6/short_positions` (`venue/roostoo.py`), cost 0.1% of position value per side with no maker discount (`#plan-correction-shorting`), and are never topped up or laddered (`bot/booking.py`).
+`bot/portfolio.py` fills only the slots the longs leave free with shorts ranked by most negative 40-bar momentum, under the BTC-below-180-bar-mean regime; `signals/donchian.py` and `gates/short_paper_books.py` share one breakdown implementation so the book and its backtest cannot drift apart.
+Status on 2026-09-23: the backtest in `gates/short_paper_books.py` has not been run and `momentum_top3_ls` and `donchian_4h_ls` never started; the operator stopped the whole fleet the same day (`#ml-mvp-declaration`).
+Whether short collateral also appears under the USD lock balance is unverified until Roostoo keys arrive; `gates/short_smoke.py` checks it before any live short.
+
+## ml-mvp-declaration
+
+Declared 2026-09-23, before any number was computed, from `ML_RESEARCH_PLAN.md`; the frozen parameters are `config/ml_mvp.yaml`.
+The operator stopped the whole fleet the same day so the bots can be modified after this research.
+The model is one global Ridge regression on nine features (4h, 1d and 7d return, 7d volatility, dollar-volume change, 1d taker imbalance, BTC and ETH 1d return, breadth), each cross-sectionally ranked at the decision time, predicting the next-12h return minus the universe mean, divided by the decision-time volatility.
+The universe is the daily point-in-time top 30 Binance USDT coins by prior 30-day median dollar volume with 90 days of history, stablecoins and leveraged tokens excluded, drawn from all 676 names (`#universe-completeness`).
+Decisions are taken at 4h closes every 12h and filled at the close of the next 1h bar, so every simulated fill is one hour after the information it uses.
+The simulator is new (`ml_research/mvp.py`), drift-aware, and charges the fee, half the tick spread and 2 bps slippage on every traded notional; it does not reuse `portfolio/backtest.py`.
+Five expanding folds score 2024 H2 to 2026 Q3, each with the prior six months choosing the Ridge penalty; all five are development evidence because this repo has studied those dates.
+The decision rule, the random-score nonsense control and the failure mode are written in the config and are not moved after the run.
+
+## ml-mvp-outcome
+
+**Null. Both ML arms fail the rule declared at `#ml-mvp-declaration`, so LightGBM is not run.**
+Artifacts: `results/ml_mvp/report.md`, `results/ml_mvp/report.json`, `results/ml_mvp/experiments.jsonl`; 2 trials added to `config/trials.yaml`.
+
+| arm | pooled net Sharpe | momentum control | Sharpe wins | fold log excess vs momentum | return at 2x costs by fold |
+|---|---|---|---|---|---|
+| ridge_long | -0.38 | -0.30 | 3/5 | -0.014, +0.010, +0.037, -0.070, +0.014 | -2.6%, -17.9%, -10.9%, -27.7%, +9.1% |
+| ridge_long_short | -0.77 | -0.30 | 2/5 | -0.021, -0.066, +0.029, -0.092, +0.003 | -9.7%, -28.3%, -17.9%, -33.4%, +6.8% |
+
+- **The model ranks, and the book does not monetise the rank.** Rank IC against the next-12h relative return is +0.051, +0.008, +0.076, +0.070, +0.076 (t 3.2 to 4.3 in four of five folds), but the quintile spread lives in the BOTTOM quintile (2026 Q3: -45 bps against +8 bps for the top), so a five-name long book collects little of it and two shorts cannot carry 20 bps round trips.
+- **It relearns momentum.** Every fold's largest coefficients are +7d return and -7d volatility, with a small negative 4h-return (last-bar reversal) term; the long book overlaps the 7-day momentum control and adds 30 to 70% more turnover.
+- **The long/short arm is worse than long-only in four of five folds**, the same failure S1 met at `#competition-wf-outcome`.
+- **Negative control behaves.** Random scores through the same construction score median net Sharpe -1.09, -2.82, -3.46, -4.76, -0.02; both arms beat it in every fold, so the simulator is not handing out returns.
+- **Reconciliation.** `btc_hold` in the new simulator returns +50.04% in 2024 H2 against +49.74% from raw BTC closes over the same span; the gap is the one-hour fill lag and one entry cost. `tests/test_ml_mvp.py` checks hold, drift, short, turnover and look-ahead arithmetic on synthetic data.
+- **Universe defect found and fixed before the verdict above.** The repo's stablecoin list misses `UUSDT` (0.5% annual vol), `KGSTUSDT`, gold (`XAUTUSDT`), `WBTCUSDT`, `USDSBUSDT` and every Binance tokenized equity (a `B` suffix, listed from 2026-06-11, `#tokenized-stocks`). The first run admitted them; `UUSDT` drew a 20% inverse-vol weight. The fix changed only 2026 H1 and Q3; the table is the corrected run and both runs fail. The same day `data/universe.STABLES` gained the five non-equity names; none is listed on Roostoo, but each took a slot in the Binance-wide top-30 ranking the bots trade the intersection of. Tokenized equities in that ranking are still unhandled on the bot side.
+- **Sizing context.** The declared 15% volatility target holds about 0.2 to 0.3 gross in crypto, which is why every book's absolute return is small; BTC hold beats every sized book in rising folds. This is a research sizing, not a competition sizing.
+
+## book-diagnosis-2026-09-23
+
+Operator request, 2026-09-23: keep only the most successful books, diagnose where they win and lose, and find how to use both long and short sides on lower timeframes.
+Harness `gates/book_diagnosis.py` on the `#competition-wf-outcome` engine, artifact `results/book_diagnosis.json`; diagnosis only, no trial.
+Contributions below are summed hourly weight times return in percentage points, not compounded.
+
+**Kept:** `momentum_top3_full` (the return engine), `momentum_top3_lock` (the only arm that passed every period) and `donchian_4h` (the shallow-drawdown book); `testnet_live` stays as execution evidence.
+**Retired from the fleet:** both cushions, `donchian_1h`, `momentum_top5_4h`, `momentum_top3_4h`, the five lower-timeframe books (`#lowtf-paper-bots`, all fail by cost) and the two long/short books (`#short-paper-books-outcome`).
+
+Where `momentum_top3_full` wins and loses (2022 / 2023-24 / 2025-26):
+- **It is a BTC-beta book.** Fortnights when BTC falls more than 10%: median -8.0 / -8.4 / -1.6%; when BTC rises more than 10%: +10.6 / +15.8 / +14.6%. Window beta to BTC's 14-day return 0.56 / 1.12 / 0.44.
+- **All the money is in trades held 3 to 7 days**: +97 / +367 / +319 pp. **Trades closed inside a day lose** -112 / -234 / -214 pp, and they are 53 / 65 / 67% of all trades. They are failed breakouts and rank churn; which breakout fails is not known at entry.
+- **Exits:** channel exits win 25 / 26 / 22% of the time, rotations 69 / 56 / 54%. Win rate is 42 to 44% with an average win of +4.5 to +5.3% against an average loss of -2.5 to -3.0%: a trend book that lives on its payoff ratio.
+- **Cost:** 17.8 / 61.8 / 59.1 pp of fee and tick, about a fifth of gross in the up periods.
+- **Concentration:** in 2025-26 five names made 86% of net, ZEC alone 82.6 pp; wide-tick names made 35% (`#live-validation-2026-09-23`). The 2025-26 edge rests on very few coins, and coin-level edge does not persist (`#coin-selection-does-not-persist`).
+- **Idle capital:** mean gross 0.50 / 0.66 / 0.66.
+- **Hour of day:** no hour moves the book beyond about ±9 bps, which is noise (`#intraday-structure-outcome`).
+
+`donchian_4h` is the same trend engine at 1/20 per name: beta 0.09 to 0.27, worst window -3.5 to -8.1%, median fortnight -0.6 / +0.9 / 0.0%. It never loses much and never wins the competition.
+
+**Forward drift from the 4h close, flagged names against the pool (bps, bull / bear BTC regime):**
+- Ranked holdings: +28 / +33 / +22 at 24h in bull hours; this is the long edge.
+- Fresh breakdowns, the short-side mirror of the entry: -5 / +7 / +5 at 24h in bull, -5 / 0 / -7 in bear. **No short edge at the rule's own signal.**
+- Bottom-3 momentum in bull hours: -35 / -18 / -18 at 24h against the pool, the only short-side pattern consistent across all three periods, but it is relative: in absolute terms it rose +20 bps in 2023-24.
+- **At a 1h horizon every family drifts -8 to +18 bps**, against a round trip of 10 bps plus tick on spot and 20 bps plus tick on shorts. The signals pay out over one to three days, which is why every faster clock has lost by cost.
+
+## short-paper-books-outcome
+
+`gates/short_paper_books.py`, artifact `results/short_paper_books.json`, run 2026-09-23 on the complete universe. The shared breakdown function reproduced the inline loop with 0 cell mismatches.
+**D1 (donchian_4h plus the bear-regime breakdown short sleeve) fails**: median -0.26 / +0.96 / -0.28 against C1's -0.59 / +0.93 / +0.02, worst window -7.6 / -16.5 / -12.3 against -3.5 / -7.5 / -8.1, and its random-regime control matches it (P(>2%) 0.197 / 0.358 / 0.332 against 0.20 / 0.40 / 0.32).
+S1 re-scored on the complete universe also fails again: median -2.44 / +1.54 / +0.63 against C0's -1.18 / +2.30 / +2.24.
+Both `_ls` books are retired without ever having started.
+
+## weak-short-bull-outcome
+
+Declaration `config/weak_short_bull.yaml`, chosen AFTER the forward-drift read in `#book-diagnosis-2026-09-23`, so no period is out of sample for the choice. Harness `gates/weak_short_bull.py`, artifact `results/weak_short_bull.json`. One trial.
+W1 shorts the pool's weakest 40-bar momentum names into the ranked book's free slots while BTC is above its 180-bar mean; shorts are held on 14% of bars.
+
+| | median 2022 / 23-24 / 25-26 | P(>2%) | P(>15%) | worst |
+|---|---|---|---|---|
+| C0 momentum_top3_full | -1.18 / +2.30 / +2.24 | 0.35 / 0.52 / 0.51 | 0.09 / 0.21 / 0.20 | -31.1 / -36.2 / -28.3 |
+| W1 | +1.40 / +1.44 / +3.05 | 0.47 / 0.48 / 0.53 | 0.09 / 0.17 / 0.20 | -19.3 / -27.5 / -32.5 |
+| W1 random shorts, 20 seeds | +0.16 / +0.45 / +1.81 | 0.41 / 0.45 / 0.50 | | |
+
+**Fails**: it loses median and P(>2%) in 2023-24, the strongest bull run, exactly the declared failure mode (laggards rise in absolute terms when everything rises).
+It helps 2022 and 2025-26 and cuts the worst window in two periods, but random shorts in the same slots recover about half the 2022 gain, so much of that is simply less net long exposure, the same thing the lock does more cheaply.
+No lower-timeframe arm was declared: the 1h drift above cannot pay a round trip.
+
+## topdown-ls-declaration
+
+Declared 2026-09-23 before any number was computed; frozen parameters `config/topdown_ls.yaml`, shared rule `signals/topdown.py`.
+Operator request: long the up momentum, short the down momentum, top down, with position sizing, take profits and a heatmap of the Roostoo universe.
+Layer 1, market: breadth is the share of the top-30 pool with positive 40-bar momentum; bull when breadth is at least 60% and BTC is above its 180-bar mean, bear when breadth is at most 40% and BTC is below it, neutral otherwise.
+Layer 2, side budgets: bull 1.0 long and no shorts; neutral 0.6 long and 0.3 short; bear no longs and 0.6 short, less than the long budget because shorts cost twice the fee and squeeze.
+Layer 3, coins: up to 3 longs from live 20/10 Donchian breakouts with positive momentum, strongest first; up to 3 shorts from live 20/10 breakdowns with negative momentum, weakest first.
+Layer 4, sizing: inverse 42-bar volatility within each side, at most 0.40 per name, 1.0 gross.
+Layer 5, exits and take profit: a name leaves when its channel exits, it drops out of its side's top 3, or its side's budget goes to zero; the deployed 3% x 15% skim ladder runs on both sides (a short covers 15% each time price falls 3% from its reference).
+Ablations T1_long (no shorts), T1_equal (equal weight) and T1_noTP (no ladder) isolate each layer; the nonsense control block-shuffles the regime.
+Prior evidence against it is written in the config: every short sleeve here has failed and take-profit targets are a dead family.
+
+## topdown-ls-outcome
+
+Harness `gates/topdown_ls.py`, artifact `results/topdown_ls.json`, declaration `#topdown-ls-declaration`.
+The signed-weight engine reproduced `gates.competition_wf.book_hourly` on C0 to 0.0 per hour before any arm was read.
+
+| arm | median 2022 / 23-24 / 25-26 | P(>2%) | P(>15%) | worst | mean gross |
+|---|---|---|---|---|---|
+| C0 momentum_top3_full | -1.18 / +2.30 / +2.24 | 0.35 / 0.52 / 0.51 | 0.09 / 0.21 / 0.20 | -31.1 / -36.2 / -28.3 | 0.50 / 0.66 / 0.66 |
+| T1 top-down long/short | -0.31 / +0.56 / -1.94 | 0.36 / 0.42 / 0.31 | 0.04 / 0.12 / 0.04 | -12.6 / -22.1 / -24.0 | 0.43 / 0.57 / 0.56 |
+| T1_long, no shorts | -0.55 / +0.92 / -0.93 | 0.24 / 0.44 / 0.29 | 0.04 / 0.13 / 0.04 | -10.9 / -21.8 / -22.2 | 0.24 / 0.40 / 0.33 |
+| T1_equal, equal weight | -0.42 / +0.70 / -1.50 | 0.35 / 0.46 / 0.33 | 0.05 / 0.13 / 0.07 | -13.3 / -24.3 / -25.5 | |
+| T1_noTP, no ladder | -0.36 / +0.88 / -2.43 | 0.39 / 0.46 / 0.34 | 0.10 / 0.16 / 0.09 | -13.5 / -26.1 / -27.0 | |
+| T1 with shuffled regime, 20 seeds | -0.04 / -0.63 / -0.69 | 0.36 / 0.36 / 0.35 | | | |
+
+**Fails.** It loses median and P(>2%) to C0 in 2023-24 and 2025-26, and in 2025-26 the shuffled regime does better than the real one.
+What each layer did:
+- **The regime layer is the main cost.** It spends 34% of the time in bear and 36% in neutral, where it cuts or removes the longs; `#book-diagnosis-2026-09-23` found C0 made most of its 2025-26 money while BTC was below its mean. Without shorts the gated book holds 0.24 to 0.40 gross and trails C0 everywhere.
+- **Shorts** raise P(>2%) over the long-only gated book in 2022 (0.36 against 0.24) and slightly in 2025-26, and cost median in 2023-24 and 2025-26. They are on in 50 to 63% of bars.
+- **Inverse-volatility sizing** is worse than equal weight in every period: it tilts to the calm names, and the momentum edge sits in the volatile ones.
+- **The ladder** (take profit) trims the right tail (P(>15%) 0.04 to 0.12 against 0.10 to 0.16 without it) and helps median only in 2025-26.
+- **What it does buy is a shallower worst fortnight**: -12.6 / -22.1 / -24.0 against -31.1 / -36.2 / -28.3.
+
+It runs as the dry-run paper book `topdown_ls` (`bot/topdown_run.py`) on operator instruction; it is not a competition candidate.
+The heatmap at `/heatmap` on the dashboard (`bot/heatmap.py`) shows every Roostoo crypto listing with the same regime, budgets and picks the book uses.
+
+## lowtf-5m-paper-bots
+
+Operator instruction, 2026-09-23: keep 5m, 15m, 30m and 1h books running to confirm a short-term bot for trading volume and short-frame returns.
+The six books of `#lowtf-paper-bots` are restarted from 100,000 beside the three 4h books, and two 5m books are added: `donchian_5m` and `momentum_top3_5m`, the same rules with identical parameters in bars.
+The 5m books are **not backtested**: the 5m cache holds five symbols, not a cross-section. Every slower clock of both rules failed by cost, and turnover roughly doubles each time the clock halves, so the prior is a loss.
+All eight are paper forward evidence, never candidates. Each 5m config states its falsification: below its 15m sibling over the same 14 live days means the faster clock only added cost.
+The 4h books' first entries, held back by the restart safety rule (`#cold-start-chases-the-bar`), were queued once as pending entries on the operator's instruction so they fill at the next cycle through the existing retry path (`#execution-gaps-2026-09-23`), at a mid-bar price.
+
+## lowtf-shorts
+
+Operator instruction, 2026-09-23 ~17:15Z: add shorting to the eight short-term paper books (`#lowtf-5m-paper-bots`).
+Each config gains the S1 short block, unchanged except that it runs on the book's own clock: while BTC is below its 180-bar mean, 20-bar breakdowns whose long channel is not live fill the slots the longs leave free, weakest 40-bar momentum first, and close above the prior 10-bar high.
+Shorts are laddered (`booking.shorts: true`, cover 15% every 3% fall) and never topped up; 0.1% per side on Roostoo.
+Evidence against it, recorded rather than hidden: the same sleeve failed on the 4h books (`#competition-wf-outcome`, `#short-paper-books-outcome`), breakdowns showed no forward edge at any horizon (`#book-diagnosis-2026-09-23`), and at 1h and faster the drift is below the 20 bps short round trip. On the 1h/30m/15m/5m clocks the 180-bar regime spans 7.5 days, 3.75 days, 45 hours and 15 hours.
+The books keep their state across the change, so the journal records `config_changed_mid_run`; readings before about 17:15Z on 2026-09-23 are long-only.
+Paper forward evidence only.
+
+## lowtf-breadth-shorts-declaration
+
+Operator choice, 2026-09-23 ~17:35Z, after TRUMP (-9%) and LINK (-5%) were not shorted by every short-term book: replace the S1 sleeve on the eight short-term books with a breadth switch and dedicated short slots. Declared before any number was computed.
+**Switch:** shorts are allowed while fewer than 40% of the tradable pool have positive 40-bar momentum on the book's own clock (replacing BTC below its 180-bar mean, which on 1h bars needs a 7.5-day turn).
+**Slots:** shorts get their own slots, 3 on the momentum books and 20 on the Donchian books, instead of the slots the longs leave free; the gross cap of 1.0 scales both sides together.
+**Candidates:** names in a live 20-bar breakdown, not in a live long channel, with negative 40-bar momentum, weakest first. Exit, 0.1% fee, never topped up and the 3%/15% ladder are unchanged.
+Mechanism: in a broad sell-off most coins trend down together for hours, and a short book collects that drift while the long book is empty. Failure mode: the same as every earlier short sleeve here, fast rebounds and a 20 bps round trip against drift that `#book-diagnosis-2026-09-23` measured at under 18 bps in the first hour.
+Scored on the `#lowtf-paper-bots` harness (`gates/lowtf_breadth_shorts.py`) against the long-only rule on the same clock, 2023-24 fit and 2025-26 holdout, no ladder in either arm; nonsense control: the breadth switch block-shuffled. Paper forward evidence whatever the result, on operator instruction.
+
+## lowtf-breadth-shorts-outcome
+
+Harness `gates/lowtf_breadth_shorts.py`, artifact `results/lowtf_breadth_shorts.json`; declaration `#lowtf-breadth-shorts-declaration`. Median 14-day return, long-only -> with breadth shorts (worst window in brackets):
+
+| book | fit 2023-24 | holdout 2025-26 | shuffled switch, holdout | cost drag per 14d with shorts |
+|---|---|---|---|---|
+| donchian 1h | +0.17 -> -2.09 | +0.09 (-13.7) -> +0.36 (-27.8) | +0.01 | 2.4% |
+| donchian 30m | -0.81 -> -4.93 | -0.68 -> -3.37 | -2.63 | 4.8% |
+| donchian 15m | -2.36 -> -8.90 | -2.49 -> -8.79 | -6.43 | 9.6% |
+| momentum 1h | -0.90 -> -8.35 | -4.99 -> -8.05 | -8.02 | 11.0% |
+| momentum 30m | -7.24 -> -20.69 | -10.88 -> -17.59 | -15.88 | 21.8% |
+| momentum 15m | -20.41 -> -37.56 | -23.05 -> -36.20 | -32.76 | 44.7% |
+
+**Fails on every book in the fit period and on five of six in the holdout.** The one holdout gain (donchian 1h, +0.27pp) doubles the worst window and reverses in the fit.
+The switch is on 44% of the time, so shorts roughly double turnover, and the drag column is what they cost. The shuffled switch loses less than the real one on four books, so the breadth timing adds nothing either.
+The long-only arm reproduced the recorded `#lowtf-paper-bots` holdout medians to within 0.07-0.23pp on the Donchian books and 0.06-1.73pp on the momentum books (the 15m momentum book drifts most; the caches were rebuilt at `#universe-completeness` after that record), so the comparison is like for like within each row.
+The 5m books were not scorable (no 5m cross-section). All eight books keep running on paper on operator instruction.
+
+## lowtf-contenders-declaration
+
+Operator choice, 2026-09-23 ~18:20Z, after the short-term books held 6 names at 16.7% (momentum 5m) and 12 to 18 names at 5% (Donchian): hold only the strongest contenders, sized by strength. Declared before any number was computed.
+**Rule (`signals/contenders.py`, shared by backtest and live):** candidates are live 20/10 breakouts with positive 40-bar momentum (long) and, while fewer than 40% of the pool have positive momentum (`#lowtf-breadth-shorts-declaration`), live 20-bar breakdowns with negative momentum and no live long channel (short). All candidates are ranked together by the size of their 40-bar momentum; the 3 largest are held, each weighted in proportion to that size, at most 50% per coin, excess spread over the others, gross at most 1.0.
+Exits, the 3%/15% ladder on both sides, never topping up and costs are unchanged.
+It replaces the rule on `momentum_top3_1h/30m/15m/5m`; the four short-term Donchian books are retired because under this rule they would be the same book.
+Mechanism: the strongest trends carry the momentum edge (`#book-diagnosis-2026-09-23`: top-5 names made 86% of net), so concentrating on them and sizing by strength should keep the edge while cutting the weak marginal names that mostly pay costs. Failure mode: concentration trades median against tail on this repo (`#max-return-levers-outcome`: top 2 cut the median, top 1 turned negative), strength-weighting leans into the most extended moves, and on fast clocks the ranking reshuffles every bar.
+Scored with `gates/lowtf_contenders.py` on the `#lowtf-paper-bots` harness against the long-only momentum rule and the breadth-short rule on the same clock; nonsense control: the same selection with sizes drawn at random. Paper forward evidence whatever the result.
+
+## lowtf-contenders-outcome
+
+`gates/lowtf_contenders.py`, `results/lowtf_contenders.json`; declaration `#lowtf-contenders-declaration`. Median 14-day return (fit 2023-24 / holdout 2025-26):
+
+| clock | long-only momentum | breadth shorts, own slots | top-3 contenders by strength | random sizes, same names | contenders cost drag per 14d |
+|---|---|---|---|---|---|
+| 1h | -0.90 / -4.99 | -8.35 / -8.05 | -9.81 / -9.69 | holdout -15.93 | 11.3% |
+| 30m | -7.24 / -10.88 | -20.69 / -17.59 | -22.52 / -18.18 | holdout -29.29 | 22.7% |
+| 15m | -20.41 / -23.05 | -37.56 / -36.20 | -38.99 / -37.60 | holdout -53.71 | 46.8% |
+
+**Fails against the long-only rule on every clock and period**, and is marginally worse than the breadth-short rule it replaced. It holds 2.7 names at 0.92 gross on average.
+**Sizing by strength does carry information**: random sizes over the same names lose 6 to 16 points more, so the strongest trends are the better bets. The loss comes from the short side and the fast clock, not from the concentration.
+Live note: a held position is never topped up, so a name already held at a small weight keeps it even when its strength now calls for more (momentum_top3_5m held ZEC at -0.168 against a -0.372 target at 18:20Z). Declared unchanged, as on every book.
+The four momentum short-term books run the rule on paper from 2026-09-23 ~18:20Z; the four short-term Donchian books are retired (`live/_archive/retired-lowtf-donchian-20260923/`).
+
+## lowtf-exhaustion-declaration
+
+Operator observation, 2026-09-23 ~18:30Z: the short-term books short coins that already look stretched and may reverse; confirm shorts by the probability they fall further. Declared before any number was computed.
+**Measure:** stretch z = (close - 20-bar mean) / 20-bar standard deviation of the close, on the book's own clock, at the bar the position would open.
+**Diagnostic:** for short candidates (live breakdown, negative 40-bar momentum, no live long channel, tradable pool) and for long candidates (live breakout, positive momentum), bucket z at (-inf,-3], (-3,-2.5], (-2.5,-2], (-2,-1.5], (-1.5,-1], (-1,1), [1,1.5), [1.5,2), [2,2.5), [2.5,3), [3,inf); report per bucket the count, P(the price is lower / higher after 1, 4 and 12 bars) and the mean forward P&L in bps for the side, before costs. On 1h, 30m and 15m; 2023-24 fit, 2025-26 holdout.
+**Filter rule, chosen on the fit period only:** an entry is skipped if its z bucket's fit-period mean P&L at 4 bars is below zero for that side and clock. The skip set is frozen and then scored on 2025-26.
+**Arm:** the top-3 contenders rule (`#lowtf-contenders-declaration`) with the filter applied to both sides, against the unfiltered rule on the same harness. Decision: adopt on the live short-term books only if the filtered arm beats the unfiltered one in the holdout median and P(>5%) on at least two of the three clocks.
+Mechanism: short-horizon crypto moves overshoot and mean-revert after capitulation-sized drops, so the most stretched breakdowns should have the worst odds of continuing. Failure mode: in trend legs the most stretched names are the strongest trends, and the filter removes the best shorts; `#book-diagnosis-2026-09-23` found the ranked book's money in exactly the extended runners.
+
+## lowtf-exhaustion-outcome
+
+`gates/lowtf_exhaustion.py`, `results/lowtf_exhaustion.json`; declaration `#lowtf-exhaustion-declaration`.
+**Breakdown shorts have less than even odds of continuing at every stretch level, and the odds fall as the stretch grows.** 1h, 2023-24, price lower after 4 bars: 38% below -3 sd (-29 bps), 41% at -2.5 to -2 (-19 bps), 46% at -1.5 to -1 (-8 bps), 49% within ±1 sd (+1 bps). 30m and 15m show the same shape; in 2025-26 every bucket sits near 50%. The operator's observation is right, and the continuation edge on the short side at these clocks is nil even where the move is not stretched.
+Longs are the mirror: breakouts that are MORE stretched do better at 12 bars (1h fit +36 to +77 bps at z above 1.5), which is momentum, so only a few thin long buckets were skipped.
+Frozen skip sets (fit mean P&L at 4 bars below zero): 1h shorts below z -1 and longs in [-1.5, -1); 30m shorts below z 1.5, i.e. all shorts; 15m shorts below z 1, i.e. effectively all shorts, and longs in [-2, -1.5) and at z 3 or more.
+Contenders holdout median, unfiltered -> filtered: 1h -9.69 -> -6.37 (P>5% 0.23 -> 0.28), 30m -18.18 -> -7.97 (0.10 -> 0.22), 15m -37.60 -> -18.60 (0.04 -> 0.13). **Passes the declared rule on 3 of 3 clocks and is adopted** on the live short-term books from 2026-09-23 ~18:45Z; the 5m book uses the 15m set (no 5m history).
+Read plainly: the filter improves the books mostly by blocking the shorts, and the filtered books still lose (long-only momentum holdout: 1h -4.99, 30m -10.88, 15m -23.05). On lag: live decisions fire a median 16 to 23 seconds after each bar close; the slow part is the exit rule (a short closes only above the prior 10-bar high), not the bot.
+
+## live-audit-2026-09-24
+
+Operator request: make sure there are no false signals or false returns and the bots work in real time. Read-only audit `gates/live_audit.py`, artifact `results/live_audit.json`, over the first 21.5 hours of the three short-term contender books.
+**False signals, found and fixed.** Recomputing every recent bar-close decision from Binance on the exact window the bot saw, 9 of 40 (5m), 3 of 26 (15m) and 2 of 21 (30m) disagreed. Two per book predate the stretch filter (expected). The rest are real: `bot.feed.bar_frame` fetched each symbol once with no retry and silently dropped any symbol whose request failed, so the bot ranked a partial universe. Dropping NEAR reproduces the live 15m decision at 12:15Z exactly, and dropping TRX the 30m decision at 05:00Z. Most failures follow a wake from sleep, but the 12:15Z one happened while online. The same defect applies to every book, the 4h books included.
+Fix: `bar_frame` retries a failed symbol twice with backoff; `feed.data_gaps` reports symbols with no bars or a last bar older than the newest; `Bot.cycle` defers a bar close while any universe symbol is missing or stale (journalled as `data_incomplete` in the errors stream) and retries on the next poll, for at most three cycles per bar so a genuinely dead symbol cannot freeze a book. Tests `tests/test_data_gaps.py`.
+Correction the same day: each symbol was cut at its own fetch time, so a bar closing mid-download reached some symbols and not others and the gap check flagged most of the universe as stale at bar closes (deferring one poll and filling the errors stream). `bar_frame` now cuts every symbol at one instant; no false `data_incomplete` since 15:46Z.
+**Returns, slightly optimistic, now quantified.** A normal-spread paper fill is booked at the bot's own passive limit price at once (113 of 141 fills on the 5m book). Charged at the far side instead, equity is lower by 1,341 (5m), 255 (15m) and 78 (30m) USD: about 1.2%, 0.2% and 0.1% of equity. Wide-spread names were already charged the far side. Marks use Roostoo's LastPrice.
+**Real time.** When awake, decisions fire a median 23 s (5m), 35 s (15m) after the bar close; the 30m median of 370 s and every p90 above a minute come from waking after sleep. The books were online 20% of the 21.5 hours, because the Mac slept on battery. That, not the code, is the largest distortion in every live number so far.
+
+## accel-declaration
+
+Operator request, 2026-09-24: add shorter-horizon momentum, research acceleration rather than momentum, and build an agile smaller-timeframe book that takes longs and shorts on clear logic. Declared before any number was computed.
+**Literature.** Chen, Yu & Wang (2017, J. Financial Markets, SSRN 3009059): the curvature of a quadratic fit to the formation-period price path predicts returns; accelerating winners outperform and accelerating losers underperform, momentum profit +51% (US stocks, monthly). Ardila, Forrò & Sornette (2021, Physica A, SSRN 2645882): acceleration as the first difference of successive returns (the Gamma factor) beats momentum in two thirds of parameterisations, and is procyclical and transient. Against: "Momentum, Acceleration, and Reversal" (JOIM) finds accelerated rises unsustainable and followed by reversal; Wen, Bouri, Xu & Zhao (2022, Econ. Modelling) find crypto intraday momentum AND reversal, reversal after jumps; this repo's own stretch table (`#lowtf-exhaustion-outcome`) and the NSE short-horizon study found stretched moves revert. The sign is therefore the question, and the control tests it.
+**Signals, per coin on the book's own clock (all on closed bars):** short momentum m_s = log return over 12 bars; mid momentum m_m = log return over 48 bars; acceleration A = (return over the last 12 bars) - (return over the 12 bars before those), divided by the 48-bar standard deviation of bar returns times sqrt(12).
+**Rule (`signals/acceleration.py`, shared by backtest and live):** long candidate if m_m > 0, m_s > 0 and A > 0 (an uptrend that is speeding up); short candidate if m_m < 0, m_s < 0 and A < 0, and fewer than 40% of the pool have positive m_m (the breadth switch of `#lowtf-breadth-shorts-declaration`). All candidates ranked together by |A|; enter the top 3; a held name stays while it is still a candidate on its own side and ranks in the top 5; weights proportional to |A|, at most 50% per coin, gross at most 1. It exits as soon as its trend or its acceleration flips, which is what makes it faster than the 10-bar channel exit.
+**Arms:** A1 the rule; A2 the rule plus the frozen stretch filter of `#lowtf-exhaustion-outcome` for that clock. Both on 1h, 30m and 15m, 2023-24 fit, 2025-26 holdout, `#lowtf-paper-bots` harness and costs, no ladder. Six trials.
+**Controls:** C the live contenders rule with its stretch filter (the current short-term books); N the sign-flipped rule (long decelerating uptrends, short decelerating downtrends), which wins if acceleration reverses.
+**Pre-registered diagnostic:** cross-sectional rank IC of A against the next 4- and 12-bar return, within trend-aligned names, per clock and period.
+**Decision rule:** an arm is a candidate for the short-term books if its holdout median AND P(>5%) beat C on at least two of three clocks, its fit median beats C on those same clocks, and it beats N on those clocks. Whatever the result it runs on paper on operator instruction; a failed arm is never a competition candidate.
+
+## accel-outcome
+
+`gates/accel.py`, `results/accel.json`; declaration `#accel-declaration`. Six trials, all fail.
+**Acceleration reverses at these clocks.** Rank IC of acceleration against the next return, within trend-aligned names (fit / holdout): 1h 4-bar -0.008 (t -2.6) / -0.016 (t -4.8); 30m 4-bar -0.019 (t -8.3) / -0.008 (t -3.4); 15m 4-bar -0.021 (t -13.0) / -0.018 (t -11.2), 12-bar -0.016 / -0.023 (t -14.3). Crypto at 15m to 1h sits with "Momentum, Acceleration, and Reversal" and this repo's NSE study, not with the monthly-equity findings of Chen, Yu & Wang or Ardila, Forrò & Sornette.
+Median 14-day return (fit / holdout):
+
+| clock | live contenders (control) | A1 acceleration | A2 + stretch filter | N sign-flipped |
+|---|---|---|---|---|
+| 1h | -8.13 / -6.37 | -10.64 / -13.89 | -9.66 / -14.40 | -16.50 / -14.82 |
+| 30m | -7.22 / -7.97 | -28.50 / -27.87 | -14.95 / -14.63 | -28.80 / -30.82 |
+| 15m | -18.91 / -18.60 | -47.37 / -49.17 | -27.99 / -29.27 | -49.85 / -53.10 |
+
+No arm beats the control on any clock. The sign-flipped control, which bets on the reversal the IC shows, also loses: an IC of -0.02 is far below the cost of trading on it, because exiting whenever acceleration flips re-trades far more often than the channel rule.
+
+## accel-guard-declaration
+
+Operator instruction, 2026-09-24: launch acceleration books on paper anyway, with strong logic that overlaps the successful systems, and robust, agile longs and shorts. Declared before any number was computed; replaces A1/A2 for the paper books.
+**Rule (`signals/acceleration.guard_targets`):** the live contenders rule (`#lowtf-contenders-declaration`: 20/10 Donchian breakout or breakdown, 40-bar momentum sign, breadth switch below 40% for shorts, top 3 across both sides by |momentum|, weight proportional to |momentum|, cap 50%, gross 1) with its frozen stretch filter (`#lowtf-exhaustion-outcome`), plus an acceleration guard used in the direction `#accel-outcome` measured: with A the 12-bar acceleration in volatility units (`#accel-declaration`) signed to the position's side, a **new** entry is refused when A > 2.0 (a blow-off, which reverses), and a **held** position is closed early when A < -1.5 (a sharp deceleration against it) instead of waiting for the channel exit. Both thresholds are fixed a priori, not fitted.
+Clarification before any result was read (caught by `tests/test_accel_guard.py`): a name closed early for deceleration re-qualified as a new entry on the same bar, which made the early exit a no-op; a new entry is therefore also refused while A <= -1.5.
+Mechanism: the channel and the momentum rank are the parts of this repo that carry an edge; acceleration carries a small reverse signal, so it is used only to avoid the tail it says reverses and to leave earlier when a move stalls. Failure mode: the early exit re-trades often at 15m and 5m and costs more than it saves, as every faster exit tested here has.
+Scored as G on the `#lowtf-paper-bots` harness against the live contenders rule on 1h, 30m and 15m; decision rule as `#accel-declaration`. Runs on paper as `accel_15m` and `accel_5m` whatever the result. Three trials.
+
+## accel-guard-outcome
+
+`gates/accel.py` (arm G), `results/accel.json`; declaration `#accel-guard-declaration`. Fails on every clock. Median 14-day return (fit / holdout), control = live contenders with its stretch filter:
+
+| clock | control | G guard | G cost drag per 14d |
+|---|---|---|---|
+| 1h | -8.13 / -6.37 | -9.93 / -6.30 | 11.9% |
+| 30m | -7.22 / -7.97 | -8.98 / -9.51 | 12.2% |
+| 15m | -18.91 / -18.60 | -20.85 / -21.51 | 25.7% |
+
+The guard is close to the control and slightly worse: the early exit on deceleration adds about 2 to 3 points of cost per fortnight and saves less than that. It cuts the 30m holdout worst window (-34.2 against -129.2) but not the others. As with every faster exit here, leaving early costs more than it saves.
+Runs on paper as `accel_15m` and `accel_5m` (`bot/accel_run.py`) from 2026-09-24 on operator instruction; never a candidate.
+
+## let-winners-run-declaration
+
+Operator request, 2026-09-24, after `#book-diagnosis`-style log review of the short-term books: about 40% of exits kept running more than 1% within the next hour (ONDO +13.5% after a 15m exit) and the books averaged only 21-25% weight in the day's top mover. Declared before any number was computed.
+Base C: the live contenders rule with its frozen stretch filter (`#lowtf-contenders-declaration`, `#lowtf-exhaustion-outcome`), simulated bar by bar with the live mechanics: 25% no-trade band, a held position never topped up, the 3%/15% skim ladder on both sides, 5 bps plus tick on spot and 10 bps plus tick on shorts (`gates/let_winners_run.py`).
+**Arms:** W1 sticky: a held name keeps its slot for as long as it is still a candidate on its side (live channel, momentum sign, and the breadth switch for shorts); new names fill only free slots, so nothing is rotated out for a stronger name. W2 no ladder: C without skims. W3: W1 and W2 together.
+Mechanism: the log losses came from rotation churn among the same leaders and from skimming straight runs; a runner that stays in its channel should be allowed to keep running. Failure mode: stickiness keeps a fading name and blocks a fresh leader, the ladder is the only thing that banks gains before a reversal, and `#rotation-hysteresis-outcome` found stickiness inert at 4h.
+On 1h, 30m and 15m, 2023-24 fit, 2025-26 holdout. Decision: an arm is adopted on the short-term books if it beats C in holdout median AND P(>5%) on at least two clocks and its fit median beats C on those same clocks. Three trials.
+
+## let-winners-run-outcome
+
+`gates/let_winners_run.py`, `results/let_winners_run.json`; declaration `#let-winners-run-declaration`. Median 14-day return, P(>5%) and turnover per fortnight (fit / holdout), bar-by-bar with the live mechanics:
+
+| clock | C live | W1 sticky | W2 no ladder | W3 sticky, no ladder |
+|---|---|---|---|---|
+| 1h | -5.86 / -5.08, P5 0.20 / 0.26, turn 93 | **-2.67 / -3.34, P5 0.25 / 0.32, turn 62** | -6.71 / -5.53 | -4.65 / -3.29 |
+| 30m | -5.08 / -5.56, P5 0.23 / 0.25, turn 123 | **-3.65 / -3.39, P5 0.24 / 0.28, turn 86** | -6.16 / -6.54 | -3.78 / -4.64 |
+| 15m | -14.68 / -14.78, P5 0.10 / 0.10, turn 258 | **-10.29 / -10.09, P5 0.13 / 0.17, turn 175** | -17.39 / -16.77 | -12.86 / -12.20 |
+
+**W1 (sticky slots) passes on all three clocks and is adopted** on `momentum_top3_1h/30m/15m/5m` (5m by extension, no 5m history) from 2026-09-24. It improves the median by 1.4 to 4.7 points, raises P(>5%) in every period, cuts turnover about 30% and shallows the worst window on 1h and 15m. W3 also passes but is weaker than W1 on median in five of six cells; **removing the ladder (W2) hurts everywhere**, so the skims stay: they bank gains that the channel exit would give back.
+Read plainly: rotating out of a held leader for a marginally stronger name was a real cost at fast clocks (the 4h null at `#rotation-hysteresis-outcome` does not carry down), but the books still lose at the median after costs on every clock. No nonsense control was declared for this test.
+
+## breakout-quality-declaration
+
+Operator request, 2026-09-24: a stronger sense of breakouts, support/resistance and reversals, for better entries and exits. Three changes to the live short-term rule, declared before any number was computed. Base L: the live contenders rule with its stretch filter and sticky slots (`#let-winners-run-outcome`), on the `gates/let_winners_run.py` bar-by-bar simulator with the ladder.
+**B1 higher-timeframe alignment:** a new long may open only while the coin's 4h 20/10 Donchian long channel is live (last closed 4h bar, carried to the fast clock at 4h close); a new short only while its 4h 20/10 breakdown state is live. Held names are unaffected. Mechanism: the 4h channel is the only signal here with an edge after cost; fast breakouts against it are the ones that fail inside a day. Control: the same filter using another coin's 4h state (a fixed random permutation of coins), which keeps the share and timing of "on" but breaks the link to the coin.
+**B2 volume confirmation:** a new entry needs the entry bar's quote volume at least 1.5 times its 20-bar median. B2t (1h only, where taker data exists): additionally taker-buy share above 0.5 for a long, below 0.5 for a short. Mechanism: a real break of a level brings volume and aggressor flow; a thin poke does not. Control: a random mask with the same pass rate per clock.
+**B3 failed-breakout exit:** a held position is closed if, within 4 bars of entry, the close returns through the level it broke (long: back below the prior 20-bar high at entry; short: back above the prior 20-bar low), and the name may not re-enter until its channel has reset. Mechanism: a close back inside the range is a trap and usually precedes the reversal; today's exit waits for the 10-bar extreme. Control: a plain 4-bar time stop (exit if below entry price after 4 bars), which tests whether the level matters rather than just exiting losers early.
+Fixed parameters, not fitted. Clocks 1h, 30m, 15m; 2023-24 fit, 2025-26 holdout. Decision per arm: adopt if it beats L in holdout median AND P(>5%) on at least two clocks, its fit median beats L on those clocks, and it beats its control's holdout median on those clocks. Four configurations recorded as trials: B1, B2, B2t, B3.
+
+## breakout-quality-outcome
+
+`gates/breakout_quality.py`, `results/breakout_quality.json`; declaration `#breakout-quality-declaration`. Median 14-day return (fit / holdout), P(>5%) holdout, against L = live sticky contenders:
+
+| clock | L live | B1 4h alignment | B1 control | B2 volume | B2 control | B3 failed-breakout exit | B3 control |
+|---|---|---|---|---|---|---|---|
+| 1h | -2.67 / -3.34, 0.32 | **-1.57 / +0.46, 0.38** | -1.72 / -2.07 | **-1.32 / -0.42, 0.33** | -2.93 / -3.49 | -6.13 / -6.87 | -4.24 / -4.85 |
+| 30m | -3.65 / -3.39, 0.28 | **-1.86 / +1.19, 0.34** | -2.51 / -1.16 | -3.45 / -2.56, 0.28 | -3.56 / -1.77 | -6.16 / -6.59 | -4.02 / -4.17 |
+| 15m | -10.29 / -10.09, 0.17 | -5.67 / -4.63, 0.19 | -5.60 / -4.48 | **-8.39 / -8.28, 0.21** | -9.14 / -9.09 | -15.63 / -14.78 | -11.70 / -11.98 |
+
+**B1 passes (1h, 30m) and gives the first positive holdout medians on these clocks** (+0.46, +1.19). At 15m it is no better than its permuted control, so there its gain is fewer trades, not the 4h link. **B2 passes (1h, 15m)**, smaller; at 30m it loses to its random-mask control. B2t (volume plus taker direction, 1h only) -0.51 holdout, no better than B2. **B3 fails everywhere**: exiting on a close back through the broken level re-trades more (turnover +70 to +90%) and does worse than a plain time stop; failed-looking breakouts often resume.
+Confirmation run before deployment, declared here before it ran: B1 and B2 together (one trial), required to beat L on the same terms on at least two clocks before both go live together; otherwise only B1 goes live.
+Confirmation result (`results/breakout_quality_b12.json`): B1 and B2 together beat L on all three clocks: 1h +0.94 / +2.32 (P(>5%) 0.40), 30m -0.71 / +1.09, 15m -4.27 / -4.02, with turnover cut by half to two thirds. **The 1h book is positive in both fit and holdout for the first time on a short-term clock.** Both confirmations went live on `momentum_top3_1h/30m/15m/5m` at 2026-09-24 ~17:19Z (`signals.contenders.entry_confirmation`, config `htf_confirm`, `volume_confirm: 1.5`); B3 is not deployed.
+
+## short-htf-declaration
+
+Operator request, 2026-09-24: breakout confirmation on shorter timeframes than 4h. Declared before any number was computed.
+Arm S: the live rule (sticky contenders + B2 volume + B1 alignment) with the alignment channel taken on a clock four times the book's own instead of 4h: 15m book -> 1h channel, 30m book -> 2h channel (1h book unchanged at 4h). Same 20/10 channel, same carry at the higher bar's close. Scored on 15m and 30m against the live B1+B2 rule on the `gates/let_winners_run.py` simulator.
+Decision (non-inferiority, because the gain sought is faster reaction, not return): adopt on a clock if its holdout median is no more than 0.5 points below the live rule's and its holdout P(>5%) no more than 0.02 below. One trial.
+Result (`results/short_htf.json`): **not adopted.** 15m with a 1h channel: holdout -5.14, P(>5%) 0.20 against the live -4.02, 0.25; 30m with a 2h channel: -0.25, 0.29 against +1.09, 0.34. Both fail non-inferiority; the 4h channel carries the confirmation, and it needs no 4h of uptime because the bot reads 4h history from Binance at each decision.
+
+## idle-cash-declaration
+
+Operator request, 2026-09-24: realised profit (skims, rotations) idles in cash because a held name is never topped up, and with entry confirmation the short-term books sat 29% invested. Declared before any number was computed.
+Base: the live short-term rule (sticky contenders + stretch filter + 4h alignment + volume confirmation, ladder), `gates/let_winners_run.py` simulator.
+**I1:** at a bar close where the book's gross is below 0.5, a held name whose 4h channel still agrees with its side (the B1 alignment condition) may be topped up to its target weight; otherwise the no-top-up rule stands. Skim references are unchanged. **I1c control:** the same top-up whenever gross is below 0.5, without the alignment condition.
+Mechanism: in a confirmed 4h trend the held leader is the best use of idle cash, and topping up only when the book is mostly cash limits the fee churn that made recycling a loss at `#alpha-flow-declaration`. Failure mode: buying back what the ladder just sold, at a higher price, right before the reversal the ladder was protecting against.
+1h, 30m, 15m; decision: adopt if I1 beats the base in holdout median AND P(>5%) on at least two clocks, its fit median beats the base there, and its holdout median beats I1c there. One trial.
+Result (`results/idle_cash.json`): **fails, not adopted.** Topping held leaders back up while the book is under half invested lowers the median on every clock (1h holdout +2.32 -> +0.95, fit +0.94 -> +0.19; 30m +1.09 -> +0.63; 15m flat), deepens the worst window and adds 7 to 10% turnover. I1 and I1c are nearly identical because held names almost always still agree with their 4h channel, so the alignment condition adds nothing. The idle cash is doing work: it is what the ladder banked before the pullback, and buying it back pays the fees and the pullback. Consistent with `#alpha-flow-declaration`.
+
+## idle-cash-new-entry-declaration
+
+Operator request, 2026-09-24, after `#idle-cash-declaration` failed: make booked profit compound by using it. Declared before any number was computed.
+**I2:** when a NEW position opens (it has passed the 4h alignment and volume confirmation), the cash left idle after held positions and the new entries' normal targets is added to the new entries in proportion to their targets, each capped at 50% of equity, gross at most 1. Held positions are still never topped up, so nothing the ladder sold is bought back. Control I2c: the same idle cash added to new entries only when the book is at least half invested (so it tests whether sizing up is the effect, not timing).
+Mechanism: a freshly confirmed breakout is the rule's best current opportunity, so profit banked from the last runner is put straight into the next one. Failure mode: larger entries into breakouts that fail inside a day (the losing half of trades) and concentration into single names at the 50% cap.
+1h, 30m, 15m against the live rule; decision as `#idle-cash-declaration` with I2c in place of I1c. One trial.
+Result (`results/idle_cash_new_entry.json`): **fails, not adopted, but close to neutral.** Median change (fit / holdout): 1h +0.94 / +2.32 -> +0.67 / +2.02; 30m -0.71 / +1.09 -> -0.82 / +1.11; 15m -4.27 / -4.02 -> -4.66 / -4.30. It adds 8 to 10% turnover and leaves P(>5%) and P(>10%) unchanged; I2c is indistinguishable, so there is no timing effect either. Larger new entries earn about what they cost: the rule's edge is in which names it picks, not in how much cash it deploys.
+
+## min-hold-5m
+
+Operator instruction, 2026-09-24: a minimum hold on the 5m books. Across all live books, trades held under 15 minutes made +71 USD gross and -1,295 net on 49 trades (average 4.8 bps gross against 12.2 bps fees), while 15-60 minute holds made +2,696 net (gap review at 18:32Z).
+**Rule (`min_hold_bars: 3` on `momentum_top3_5m`, `momentum_top3_5m_allcash`, `accel_5m`):** a new position is kept for at least 3 bars (15 minutes) whatever the rotation, channel, momentum-sign or acceleration exit says; it keeps its side and last strength-based weight. Skims and kill switches still act. The length is set from the live log, not fitted; there is no 5m cross-section to backtest, so it is judged on live data: it should cut the 5m books' sub-15-minute trades to zero and their fee share, without lowering return against the 15m books over the next 14 live days.
+
+## allcash-5m-no-htf
+
+Operator instruction, 2026-09-24 ~18:50Z: `momentum_top3_5m_allcash` had placed no trade since launch because no 5m breakout had a live 4h channel (0 of 1-4 candidates per bar over the prior hour). Its 4h alignment check (`htf_confirm`) is switched off; the volume confirmation, stretch filter, sticky slots, minimum hold and idle-cash absorption stay. It is now a two-way live experiment against `momentum_top3_5m` (same rule with the 4h check): no 5m history exists to backtest it, and at 15m the 4h check's gain was mostly fewer trades (`#breakout-quality-outcome`). Judged on 14 live days: return and fee share against its twin.
+
+## stop-and-reverse-declaration
+
+Operator request, 2026-09-24 ~19:10Z: when a trend reverses, flip the position to benefit on the other side. Declared before any number was computed.
+**R (`signals.contenders.reverse_on_exit`, shared by backtest and live):** when a position held at the previous bar is gone at this bar AND the close broke its channel (long: close below the prior 10-bar low; short: close above the prior 10-bar high), a position of the opposite side opens on the same coin at the size it had (at most 50%), and is held until its own channel exit (short: close above the prior 10-bar high; long: below the prior 10-bar low) or 24 bars, whichever comes first, or until the base rule wants the coin again. Rotation exits do not reverse. Gross is capped at 1 by scaling.
+Mechanism: a leader that loses its channel after a run is where the measured reversal (`#accel-outcome`) and the failed-continuation odds (`#lowtf-exhaustion-outcome`) concentrate. Failure mode: channel breaks in a leader are often pullbacks inside a larger trend (the 4h books' edge), so the reversal short is squeezed; shorts pay double fees.
+Base: the live rule on 1h, 30m and 15m (sticky, stretch filter, 4h alignment, volume), `gates/let_winners_run.py` simulator. Decision: adopt on the short-term books if R beats the base in holdout median AND P(>5%) on at least two clocks and its fit median beats the base there. Reported also: the reversal leg's own P&L. One trial.
+Result (`results/stop_and_reverse.json`): **fails badly on every clock; not deployed.** Median 14-day return (fit / holdout): 1h +0.94 / +2.32 -> -3.64 / -1.39; 30m -0.71 / +1.09 -> -5.42 / -2.57; 15m -4.27 / -4.02 -> -10.22 / -10.26. The reversal leg on its own compounds to -73% to -98% over each period. A leader losing its short-term channel is mostly a pullback inside a continuing trend (the 4h edge), so the flipped short is squeezed; the reversal the operator sees live is real on the day it happens but does not pay on average.
+
+## lowtf-lock-declaration
+
+Operator request, 2026-09-24: test the target lock on the short-term books. Declared before any number was computed.
+Base: the live short-term rule (sticky, stretch filter, 4h alignment, volume confirmation, ladder) on 1h, 30m and 15m from the `gates/let_winners_run.py` simulator, compounded to hourly returns. Arm K: the `#competition-wf-outcome` S4 lock applied by `gates.competition_wf.windows_hourly` exactly as for the 4h books: in every 14-day window from 00:00 UTC, once the window is up 5%, the rest of it runs at 0.3 of its exposure, charging the de-risk cost. Decision, as S4: K passes on a clock if it raises P(>2%) AND the median in both the fit (2023-24) and holdout (2025-26) periods and its worst window is no more than 5 points worse; adopt on the short-term books if it passes on at least two clocks. The lock trades the winning tail for qualification; P(>15%) is reported. One trial.
+Result (`results/lowtf_lock.json`): **passes on all three clocks; adopted.** Median 14-day return and P(>2%) (fit / holdout): 1h +1.15 / +2.31, 0.47 / 0.52 -> **+4.21 / +4.67, 0.61 / 0.65**; 30m -0.69 / +1.16, 0.37 / 0.46 -> **+2.66 / +3.95, 0.54 / 0.64**; 15m -4.12 / -4.05, 0.23 / 0.34 -> **-1.88 / +1.34, 0.36 / 0.46**. Worst windows unchanged; Screen 3 medians rise on every clock. The price, as at 4h: P(>15%) falls to 0.02-0.04. Live on the eight short-term books from 2026-09-24 ~19:30Z, 14-day window anchored at the equity on activation (the 4h lock's mechanics, `bot/lock.py`).
+
+## no-htf-15m-5m
+
+Operator instruction, 2026-09-24 ~19:30Z: drop the 4h alignment check on the 15m and 5m books (`momentum_top3_15m`, `momentum_top3_15m_allcash`, `momentum_top3_5m`; `momentum_top3_5m_allcash` already at `#allcash-5m-no-htf`); they had been flat since ~18:15Z because no 5m/15m breakout had a live 4h channel. Supported at 15m by `#breakout-quality-outcome`: B1's 15m gain was no better than its permuted control, while B2 (volume only) passed at 15m. The 1h and 30m books keep the 4h check, where it beat its control. Volume confirmation, stretch filter, sticky slots, minimum hold (5m), ladder and target lock stay.
+
+## path-forensics-2026-09-25
+
+`python3 -m gates.path_forensics [--parity BOOK ...]` (read-only; writes `live/forensics/trades.csv`, `decisions.csv`, `parity.csv`).
+Live data 2026-09-23 16:08Z to 2026-09-25 05:40Z, 13 books, 370 closed rows = 281 positions, books online about 25% of the time.
+Sample is about 1.5 trading days and two symbols (ONDO, LTC) carry the profit, so nothing here is a validated edge; these are defects and hypotheses.
+
+Findings, defects first:
+1. **Hold age and sticky slots come from the simulated path, not the book's real entries.** `signals.contenders.targets` re-simulates the last 181 bars each close; after downtime the book buys names the simulation "entered" several bars earlier, so the 3-bar minimum hold has already run out and sticky protection does not apply. Seen 2026-09-25 05:25Z on both 5m books: PUMP and TAO bought on the wake-up decision (bar 05:15, simulated entry 05:05) and sold 47 s later on the 05:20 bar, PUMP flipped long to short.
+2. **Catch-up entries lose.** Positions opened on a decision more than one bar after the close: 65, net -6,115, win 40%; on time: 216, net +8,220, win 44%. Downtime turns the rule into a late-entry rule the backtest never scored.
+3. Rolling-window re-seed is NOT a defect: `--parity` on 5m/15m/30m/1h, 120 consecutive windows each, 0 rows rewritten.
+4. Exits: channel-break exits -16,109 on 67 positions (median giveback 2.2% from the best point, 45% of them higher 4h later, so not premature, just late); displacement +13,378 on 199; ladder skims well timed (price 0.5% lower 4h after the skim).
+5. Positions that were ever +1% in favour: 110, net +42,428; positions that never were: 170, net -40,380, median hold 32 min. Adverse excursion does not separate them early (median MAE -0.8% vs -0.6%), and every early-exit family already failed (`#breakout-quality-outcome` B3, `#take-profit-outcome`, `#reversal-reentry-outcome`), so no exit change is proposed.
+6. Shorts: 42 rows, net -5,195, win 45%, consistent with "no short edge at any clock".
+7. Time of day: 12-16Z entries +21,714 (34 positions, 76% win, the ONDO/LTC trend); 16-20Z -18,732 (127 positions, 33% win, BTC chopping +/-0.5% an hour). One day each; a session filter would need a pre-registered test, not this sample.
+8. Lone-candidate entries (one name takes the 0.5 cap) made +13,242 on 15 positions; the near-zero-momentum PUMP case is real but not a loss source so far.
+9. First cut of this analysis showed "re-entry after a quick win" at +32k and 79% win; that was ladder skims counted as new trades. At position level it disappears (51 positions, -1,951). Analyses of `bot.blotter` rows must collapse skims first.
+
+Candidate fixes, for the operator (execution-path changes, not made by the agent):
+- A. On a catch-up decision (more than one bar late), open no new position whose simulated entry is older than the latest bar; held names and exits act as usual. Addresses 1 and 2.
+- B. Count the minimum hold from the book's real fill time, stored in state, not from the simulated path. Addresses 1.
+- C. Uptime (EC2 or mains power with sleep disabled) removes most of 1 and 2 at the source.
+
+## catch-up-and-live-min-hold
+
+Operator instruction 2026-09-25: implement fixes A and B from `#path-forensics-2026-09-25`. These are execution guards on the live books, not a signal change; the backtests are unchanged because a backtest never misses a bar.
+Scope: every `bot.contenders_run` book (`momentum_top3_1h/30m/15m/5m` and their `_allcash` twins) and both `bot.accel_run` books, through `bot.entry_guard.GuardedTarget`.
+**A (catch-up entry guard):** a decision is a catch-up when the book skipped at least one bar since its previous processed bar, or when it runs more than one bar after the close. On a catch-up, a name the book does not hold (at least 1% weight on the same side) is not opened if the rule's simulated path already held it on the previous row; a name that is new on the latest row still opens, held names and exits act as usual, and the freed weight stays in cash. Journal: `stale_entry_blocked` in signals.
+**B (live minimum hold):** the book stamps each real position with the decision bar its order went out on (`opened` in state, persisted). While a position is younger than `min_hold_bars` bars by that stamp (the 5m books and `accel_5m`, 3 bars), it is kept at its current weight and side even when the target drops or flips it; the rest of the target is scaled so gross stays at most 1. The ladder, lock and kill switches still act after it. Positions open before the change carry no stamp and are not held by B. Journal: `live_min_hold` in signals.
+Case both guards stop: 2026-09-25 05:25Z, 5m books woke and bought PUMP and TAO from bar 05:15 (simulated entry 05:05, so A blocks them); had they been bought, B keeps them through bar 05:25 instead of selling at 05:20 and flipping PUMP short.
+Judged on live data: `stale_entry_blocked` and `live_min_hold` events, and catch-up P&L in `python3 -m gates.path_forensics`, over the next 14 live days.
+
+## live-audit-parity-fix-2026-09-25
+
+`gates/live_audit.py` recomputed `signals.contenders.targets` without the entry confirmation (volume, 4h channel) that went live 2026-09-24 ~17:19Z, and over decisions made under older configs, so it reported 23-39 mismatches in 40 bars. It now applies `entry_confirmation` with the 4h bars closed at the decision time and scores only decisions made under the book's current config sha, on all eight contenders books. Result 2026-09-25 ~06:50Z: 162 decisions, 0 mismatches; the live books do what the rule says.
+Losses since the current rules (2026-09-24 19:30Z to 06:40Z): 68 positions, net -10,073, win 40%; 43 never reached +1% in favour; channel-break exits -11,949 on 21. The market moved a median 0.5% per 6h after the 12-18Z trend; the 15m and 5m clocks had negative holdout medians before they went live (`#breakout-quality-outcome`), so this is the rule in chop, not a defect.
+Separate defect found while checking fills: on battery the Mac takes short DarkWake naps, a cycle can start inside one and finish up to an hour later on the prices it fetched before sleeping. Example: `momentum_top3_5m` cycle stamped 01:06:28Z decided on bar 00:05 and sold ENA at 0.2299 while Binance traded 0.2353-0.2365. 50 of 737 paper fills sit more than 20 bps outside Binance's 2-minute range (27 over 50 bps, up to 2.3%); adverse 6,026 USD against favourable 5,268, so the net P&L distortion is small but individual trades are wrong. Fix is uptime; a guard that refuses to send orders when the cycle's data is older than a poll or two is proposed, not implemented.
+
+## stale-cycle-guard
+
+Operator instruction 2026-09-25, after `#live-audit-parity-fix-2026-09-25`: add the stale-data guard if it improves the books and suits them.
+Evidence it targets the defect and nothing else: of 737 paper fills, all 50 that sit more than 20 bps outside Binance's 2-minute range (and all 6,026 USD of adverse deviation) came from cycles that followed a gap of more than 120 s; the 437 fills in normal cycles average 0.2 bps from Binance with zero adverse cost.
+Rule (`bot.run.stale_cycle`, every book, since it lives in `Bot.cycle`): before each order the cycle compares the wall clock with the monotonic clock since it fetched its bars and quotes. The monotonic clock stops while the Mac sleeps (checked on this machine: 1,026 h monotonic against 2,702 h of uptime), so their difference is time asleep. If the cycle slept more than 5 s, or has run more than 300 s in all, it sends no further order, journals `stale_cycle_aborted` in orders, and rolls the bar back so the next poll re-decides it on fresh data. When nothing was sent it also restores the ladder references, the lock state and the entry-guard stamps it had changed.
+Why not a plain elapsed-time limit: a normal cycle that refreshes its universe took 63 s to reach its orders in the end-to-end test, so a 90 s wall-clock limit would abort healthy cycles on a slow network. On an always-on host the guard never fires.
+
+## accel-5m-retired-2026-09-25
+
+Operator instruction 2026-09-25 ~09:05Z: stop `accel_5m`. It failed its backtest (`#accel-guard-outcome`) and ran only as operator-kept paper. Live over 16.9 h (45% online): -3.3% (final equity 96698.98), 87 closed rows at 34% win, fees 1,680 against a losing gross, and only 45% of each winner's best excursion kept, the worst of the fleet (`#path-forensics-2026-09-25`). `accel_15m` (+4.0%) keeps running.
+Removed from `run_bots.sh` CONFIGS, `bot/dashboard.py` BOTS, `gates/live_validation.py` BOOKS and `gates/path_forensics.py`; live data moved to `live/_archive/retired-accel5m-20260925/`; `config/accel_5m.yaml` kept for the record.
+
+## fleet-review-2026-09-26
+
+Live 2026-09-23 16:08Z to 2026-09-26 09:31Z (65 h). Online since 2026-09-25 07:00Z: 6.5 h of 26.5 h; the Mac slept 2026-09-25 13:53Z to 2026-09-26 09:21Z (19.5 h, `stale_cycle_aborted` slept_s 70,105) with every position frozen.
+Returns: 15m +9.2%, 30m +9.0%, 5m +8.7%, accel_15m +8.7%, 30m_allcash +6.4%, full +2.7%, lock +2.5%, 1h_allcash +2.3%, donchian_4h +1.4%, 15m_allcash +0.1%, 1h -2.3%, 5m_allcash -2.8%.
+Right: longs +46.7k on 461 rows; ladder skims +33.7k on 197 exits (price 0.1% higher 4h later, so banking not premature); winners that reached +1% kept all but a median 1.13%; entries after a >4% hour in the trade's direction +24.7k at 89% win (45 rows, mostly ONDO); on-time entries +41.1k against catch-up entries -0.4k.
+Wrong: shorts -6.1k on 44 (no edge, as before); NEAR -10.4k on 60 rows across books; the 5m clock.
+Sleep-window counterfactual (rule replayed on the bars the frozen books missed, starting from the frozen positions, no ladder, fees 0.10% / 0.05% per side): 30m +3.7 / +4.0% against +0.7% frozen; 15m -0.1 / +0.9% against -3.0% frozen; 1h -0.15% against -1.3%; 5m -6.1 / -3.7% against -3.1% frozen. Sleep cost the 30m and 15m books about 3 points each and the 1h book about 1; the 5m rule loses money even when awake in this window (176 rebalancing bars in 19.5 h).
+Guards: `stale_cycle_aborted` 4 (all real sleeps, nothing sent), `stale_entry_blocked` 23 names (6 with a 4h outcome: +1.7% after 1h, +0.1% after 4h; too few to judge), `live_min_hold` 0.
+Open questions for a pre-registered test, not changes: the frozen stretch filter skips long entries at z >= 3 while the live >4%-hour entries were the best bucket.
+
+## lowtf-long-only-clocks-declaration
+
+Operator request 2026-09-26: find the best-working strategies, diagnose them, make them better. Declared before any number was computed; `config/lowtf_long_only_clocks.yaml` holds the rule, arms, control and pass rule.
+Diagnosis on live data (`#fleet-review-2026-09-26`, positions collapsed from skims): the best books (15m +9.2%, 30m +9.0%, accel_15m +8.5%, 30m_allcash +6.4%) are long trend-capture engines. ONDO and LTC (ENA for accel_15m) are 89-130% of each book's net and the rest nets about zero; holds over 4 h made +7.1k to +11.2k per book while 1-4 h holds lost (failed breakouts). Shorts lost wherever they traded: 15m -751, 5m -1,180, 1h -4,425 (its longs made +2,163); accel_15m trades no shorts.
+Candidates considered and not tested, with reasons: removing the z >= 3 long stretch skip (settled parameter, frozen on fit, `#lowtf-exhaustion-outcome`; live >4%-hour entries are 45 rows mostly ONDO); a minimum hold on 15m/30m (the losing bucket is 1-4 h, which a sub-hour hold does not touch); take-profit, exit-clock, ratchet and failed-breakout exits (dead families); topping up idle cash (`#idle-cash-declaration`, `#idle-cash-new-entry-declaration`).
+Tested: long-only on the 15m and 30m live rules, with the 1h run as a reconciliation against `results/lowtf_confirmed_long_only.json`.
+
+## lowtf-long-only-clocks-outcome
+
+`gates/lowtf_long_only_clocks.py`, `results/lowtf_long_only_clocks.json`; declaration `#lowtf-long-only-clocks-declaration`. Reconciled: the 1h arms reproduce `results/lowtf_confirmed_long_only.json` exactly (gap 0.0).
+Median 14-day return 2022 / 2023-24 / 2025-26 (Sharpe 2025-26, turnover per 14 days):
+
+| clock | L_live | LO long-only | NC shifted switch | verdict |
+|---|---|---|---|---|
+| 1h | -1.07 / +1.10 / +2.25 (1.56, 36) | -0.44 / +1.23 / +2.83 (2.05, 24) | -3.21 / +0.28 / +1.51 | **passes every period, nonsense control loses** |
+| 30m | -1.91 / -0.75 / +1.09 (1.04, 44) | -2.81 / -0.76 / +1.10 (1.12, 43) | -2.25 / -0.70 / +1.06 | fails, no change |
+| 15m | -8.64 / -8.41 / -8.32 (-2.00, 143) | -8.53 / -7.72 / -7.85 (-1.84, 138) | -8.76 / -8.23 / -8.17 | fails |
+
+Why: shorts are 24% of position-bars at 1h but only about 2% at 30m and 15m, where the frozen short stretch skips and the entry confirmation already block almost every short, so removing them changes nothing there.
+Diagnosis of the live leaders: the 15m live rule (4h check off) has a median of about -8% per fortnight in every period, 143 turnover per fortnight and a -97% max drawdown in 2025-26; its +9.2% live is one ONDO/LTC trend. With the 4h check on, the same rule scored -4.27 / -4.02 (`#breakout-quality-outcome`), about 4 points a fortnight better, from lower turnover rather than the 4h link itself. The 30m rule is the only short-term clock with a positive recent history (+1.09 median 2025-26, Sharpe 1.04).
+Adopted for forward paper: 1h long-only, which already runs as `momentum_top3_1h_long` (another session's book). No running book was changed.
+
+## lowtf-clock-ensemble-declaration
+
+Operator request 2026-09-26: make the short-term signals more robust and scale into what is working. Declared before any number was computed; `config/lowtf_clock_ensemble.yaml` holds mechanism, failure mode, arms, nonsense control and pass rule.
+Why this and not more capital: scaling the current 15m rule scales a historical -8% per fortnight (`#lowtf-long-only-clocks-outcome`); an 80/20 slow/fast capital mix already cut drawdown but not the median (`results/lowtf_portfolio_mix.json`). The live diagnosis says the profit is runners every clock holds and the loss is lone fast breakouts plus churn, which is what a clock-agreement average addresses. Not a re-test of `#competition-wf-outcome`'s channel ensemble, which varied channel lookbacks on one clock.
+
+## lowtf-clock-ensemble-outcome
+
+`gates/lowtf_clock_ensemble.py`, `results/lowtf_clock_ensemble.json`; declaration `#lowtf-clock-ensemble-declaration`. **Fails, not adopted.**
+Median 14-day return 2022 / 2023-24 / 2025-26 (worst window 2025-26, turnover per 14 days): C15 -8.64 / -8.41 / -8.32 (-39.5, 143); C30 -1.91 / -0.75 / +1.09 (-22.2, 44); C1h long-only -0.46 / +1.21 / +2.81 (-22.8, 24); **E_mean -2.43 / -1.14 / -1.94 (-13.6, 49)**; NC shifted -3.69 / -3.63 / -4.56 (-18.6, 58).
+The mechanism is real but not enough: E beats the average of its components by 0.76 points a fortnight and the shifted control loses 1.36, so clock agreement carries information, and it cuts the worst fortnight to about -13% in every period (against -16% to -40% for the components). It loses to C1h long-only and C30 on median and P(>2%) in every period because the 15m component is a -8% a fortnight drag that averaging dilutes but does not remove.
+Conclusion for scaling the short-term signal: the best short-term signal on history is the 1h rule long-only (Sharpe 1.72 / 2.05 in 2023-24 / 2025-26), already running as `momentum_top3_1h_long`. A 1h + 30m ensemble without the 15m leg would be a new, post-hoc trial chosen after seeing these numbers and must be declared as such before it is run.
+
+## short-term-shorts-off-2026-09-26
+
+Operator instruction 2026-09-26: turn shorts off on the short-term books and keep the profit ladder on.
+Evidence: live, 46 short trades across the short-term books netted -6,164 (1h -4,425 at 33% win, 5m -1,214, 15m -751, 5m_allcash -291, 30m +517); on history the short side has no edge at any clock (`#lowtf-breadth-shorts-outcome`, `#lowtf-contenders-outcome`), and long-only passes at 1h (`#lowtf-long-only-clocks-outcome`).
+Change: `short.enabled: false` on `momentum_top3_1h/30m/15m/5m`, their four `_allcash` twins and `accel_15m`; the 3%/15% ladder, target lock and every other parameter unchanged. `momentum_top3_1h_long` (another session's) was already long-only; the 4h books never shorted.
+Two code fixes came with it. `bot.execution.Executor.prepare` refused every short order when shorts were off, which would have stranded the open AVAX shorts on the 15m books forever; it now refuses only `SHORT_OPEN`, so a held short closes at the next bar close. `signals.acceleration.guard_targets` ignored the book's short switch; it now takes `cfg["shorts"]`, and `bot.accel_run` passes the book's setting.
+
+## signal-quality-2026-09-26
+
+`python3 -m gates.signal_quality`, `results/signal_quality.json`. Diagnostic, selects nothing. Every NEW long entry of the live rules (shorts off) on history, forward return from the entry bar's close; `edge` is net of the eligible universe's equal-weight mean on the same bar; costs 2 x 5 bps plus 2 ticks.
+- **Accuracy is below a coin flip at every clock**: hit rates 0.46-0.52 against a universe base rate of 0.48-0.50; after costs 0.31-0.51. The books earn on payoff asymmetry (live payoff 1.3-8.3x), not on being right more often.
+- **Signal-to-noise per signal is small and grows with horizon and clock**: best 4h (edge +30 to +85 bps at 12 h-3 d, SNR 0.06-0.09, t 2.3-3.2) and 1h (edge +19 to +75 bps at 4-24 h, SNR 0.04-0.09, t 1.5-3.6); 30m +3 to +41 bps (t 0.9-2.4); 15m +0.7 to +19 bps (t 1-2.9), and only at 24 h. At the fast clocks' own horizons (1-4 bars) the edge is 0-7 bps against about 12 bps of cost, so net per-signal returns are negative until the position has been held about a day.
+- **The filters carry most of the signal**: the live rule against the raw 20-bar breakout at the same clock, 12-16 bar horizon: 1h +33.4 vs +13.0 bps (2023-24), +30.7 vs +1.7 (2025-26); 30m +10.6 vs 0.0, +9.5 vs +3.0; 15m +3.1 vs +0.2, +4.7 vs +1.6. Whipsaw (positions of 3 bars or fewer) falls from about 33% to 18-27%.
+- **Cross-sectional IC of 40-bar momentum among breakout candidates is negative at every clock and horizon (-0.03 to -0.10)**: among coins already breaking out, the strongest momentum does slightly worse next. This conflicts with `#lowtf-contenders-outcome` (strength sizing beat random sizes by 6-16 points in the portfolio) and is a hypothesis for a declared test (equal or inverse-strength sizing), not a change.
+- 4h: 25% of top-3 selections last one bar and 48% three bars or fewer.
+Live counterpart (positions, 2026-09-23 to 09-26): win rates 40-73%, payoff 1.3-8.3, profit factor 0.73-6.5; no book has t above 2 except `donchian_4h` (2.39 on 9 positions).
+
+## short-term-lock-off-2026-09-26
+
+Operator instruction 2026-09-26: the best books should be able to reach +20k, so the target lock is off on `momentum_top3_1h/30m/15m/5m` and their four `_allcash` twins. The lock fires 5% above the equity at the window start (2026-09-24 00:00Z) and then holds 0.30 gross, which capped `momentum_top3_30m` near +12.9k and had already locked `momentum_top3_30m_allcash` at 30% gross since 2026-09-25 08:56Z. `momentum_top3_lock` keeps its lock as the test of the lock itself. The ladder, shorts-off and every other rule are unchanged; the stored lock state stays in the state files and is ignored while the lock is disabled.
+
+## burst-books-declaration
+
+Operator instruction 2026-09-26: a shorter-timeframe, higher-risk strategy judged on the live market, not on backtests. Declared before the books ran. Two paper books, `burst_5m` and `burst_15m`, on the existing `bot.contenders_run` engine, configs `config/burst_5m.yaml` and `config/burst_15m.yaml`.
+Rule: long-only; 20/10 Donchian breakout with positive 40-bar momentum; new entries need 1.5x volume (no 4h check); **top 2** by momentum at up to 50% each (full deployment in two names); **no stretch cap on longs** (the frozen z >= 3 skip removed, so the book chases strength); idle cash from skims and exits goes into each new entry (`absorb_idle`); sticky slots; minimum hold 6 bars on 5m and 4 bars on 15m (30 min and 1 h), counted from the real entry (guard B); the 3%/15% ladder; no target lock; catch-up and stale-cycle guards and the 25% drawdown kill switch as on every book.
+Basis, all live: runners entered while already moving hard carried the fleet (entries after a >4% hour +24.7k at 89% win); shorts lost -6.2k; sub-hour holds on fast clocks lost to fees (5m holds under 1 h -2.1k on 81 positions); the volume filter carries most of the entry signal.
+Known risk, stated once: the closest backtested relative (15m contenders, 4h check off) is about -8% a fortnight, and concentration beyond top 3 raised the far tail but lowered the median on history (`#max-return-levers-outcome`). The operator has chosen live evidence over that record.
+Judged on live results only: stop a burst book if after 14 live days (2026-10-10) it is below `momentum_top3_15m` over the same days, or if it trips the 25% drawdown kill switch.
+
+## rally-capture-15m-2026-09-26
+
+`python3 -m gates.rally_capture`, `results/rally_capture_15m.json`. Diagnostic on 15m highs and lows, every new long entry of the live 15m rule (9,397 in 2023-24, 8,401 in 2025-26), entry at the bar close, costs 2 x 5 bps plus 2 ticks, a bar reaching both target and stop counted as the stop.
+- Typical entry, both periods alike: median best move +0.45% within 1 h, +0.9% within 4 h, +1.6% within 12 h, +2.3% within 24 h; the median worst move over the same spans is about the same size (-0.5%, -0.95%, -1.7%, -2.4%). P(reach +1% within 4 h) 0.47-0.48, +2% 0.26, +3% 0.15-0.16.
+- No fixed target/stop is reliably positive for the typical entry: 2025-26 every one of 35 combinations is negative after costs (best -5.9 bps); 2023-24 only wide targets with no stop are positive (+8%: +9.1 bps, t 1.97). High hit rates are a trap: +0.5% is reached 86% of the time within 24 h and still loses 13-16 bps a trade. Every stop level lowers the expected value.
+- Entries after a >2% hour (about 12-14% of entries) are the capturable ones: median best move +2.2% within 4 h and +4.7% within 24 h; P(+2% within 4 h) 0.52-0.54, P(+3% within 24 h) 0.65-0.66, P(+5%) 0.48, P(+8%) 0.31-0.32. Every target of 1.5% or more is positive in both periods without a stop; +3% (hit 65-66%, median 8-8.5 h): +16.0 / +8.4 bps; +8%: +32.6 / +20.4 bps (t 1.88 / 0.92, so not yet significant, but the same sign in both periods and in live, `#fleet-review-2026-09-26`).
+Consistent with `#take-profit-outcome` (fixed targets cost the right tail) and the ratchet-stop null: the edge is in letting the strong entries run, not in a tighter exit.
+
+## burst-strong-and-equal-weight-declaration
+
+Operator instruction 2026-09-26: implement insights 1 and 3 as separate strategies and bots, keep every existing book running, and remove the useless books from the dashboard. Judged on live paper results; declared before either book ran.
+**`burst_strong_15m` (insight 1, control `burst_15m`):** `burst_15m` plus one entry condition, `contenders.entry_confirmation` with `prior_return_bars: 4`, `prior_return_min: 0.02`: a new long needs the close more than 2% above the close one hour earlier. Held names are never forced out by it. Basis: `#rally-capture-15m-2026-09-26` (median 24 h rally +2.3% -> +4.7% for such entries, positive after costs in both periods for targets of 1.5% or more) and the live >4%-hour entries (+24.7k, 89% win).
+**`momentum_top3_15m_eq` (insight 3, control `momentum_top3_15m`):** `momentum_top3_15m` exactly as it runs live (long-only, no lock, ladder) with `equal_weight: true`: the chosen names split the book equally (at most 50% each) instead of in proportion to 40-bar momentum. Same names chosen, only the sizing differs. Basis: `#signal-quality-2026-09-26` (negative momentum IC among candidates at every clock) against `#lowtf-contenders-outcome` (strength sizing beat random sizes), hence an A/B, not a switch. Insight 3 was not applied to the burst books because with two names and a 50% cap they are already equal-weight.
+Each differs from its control by exactly those keys (`tests/test_burst_strong_and_eq.py`). Stop rule for both: below its control over the same days after 14 live days (2026-10-10).
+**Removed from the dashboard and stopped (live data in `live/_archive/retired-2026-09-26/`):** `momentum_top3_1h`, an exact rule duplicate of `momentum_top3_1h_long` since shorts went off (final equity 97,936, its loss was the shorts); `momentum_top3_15m_allcash` (99,263) and `momentum_top3_5m_allcash` (100,630), idle-cash arms that trailed their twins by about 9 and 12 points and had negative realised P&L. The winning arms `momentum_top3_30m_allcash` and `momentum_top3_1h_allcash` stay; `momentum_top3_1h_allcash` is now shown against `momentum_top3_1h_long`, the same rule without idle-cash absorption.
+
+## short-accel-declaration
+
+Operator instruction 2026-09-26: a short-only bot based on the data insights, negative momentum and acceleration as trend confirmation. Live paper, judged on live results; declared before it ran.
+Stated once: on history the short side has no edge at any clock (`#lowtf-breadth-shorts-outcome`, `#lowtf-contenders-outcome`, `#topdown-ls-outcome`) and live the short-term books' shorts lost -6,164 on 46 trades before shorts were switched off (`#short-term-shorts-off-2026-09-26`); acceleration as a stand-alone signal reverses at 15m-1h (`#accel-outcome`). The operator has chosen to test it live.
+**`short_accel_15m`** on the contenders engine (`sides: short`, switch always on): a candidate is a coin in a 20-bar breakdown (close below the prior 20-bar low) with negative 40-bar momentum and no live long channel. A NEW short also needs, on the entry bar: the coin's 4h 20/10 breakdown live (4h downtrend); 1.5x volume; the close more than 2% below the close 1 hour (4 bars) earlier (the move already under way, the short mirror of `#burst-strong-and-equal-weight-declaration`); and side-signed acceleration (`signals.acceleration.features`, 12/48 bars) in (0, 2]: the fall is speeding up but is not a capitulation spike, which `#accel-outcome` shows reverses. Top 2 by |momentum| at up to 50% each with idle cash absorbed into new entries; sticky slots; minimum hold 4 bars (1 h) from the real entry; no stretch skips. Exit when the close is above the prior 10-bar high; the ladder covers 15% each time the price falls 3% below its reference; shorts are never topped up; MARKET orders at 0.1% per side; no target lock; 25% drawdown kill switch.
+Stop rule: stop it after 14 live days (2026-10-10) if its return is negative, or at once on the kill switch. It runs beside the long-only fleet, so a falling market that hurts the longs is where it should earn.
+
+## live-hold-time-2026-09-26
+
+Operator instruction 2026-09-26: from live data only, find the best closing time and take profit, add a 12 h hold bot, and optimise the shorter-holding bots. Live positions 2026-09-23 to 09-26 (315 positions after collapsing ladder skims), each replayed on Binance 5m bars from its real entry; costs 0.1% round trip; "drift" is the equal-weight return of every universe coin bought at the same moments over the same span.
+- **Take profit:** no fixed target beats the actual exits on average. All books: actual +0.77% a position; a +1% target +0.16, +2% +0.22, +3% +0.45, +5% +0.72, +8% +0.81. The best case, about +5% on the 15m and 30m/1h books, adds about 0.1 point a position: noise. Small targets cap the runners.
+- **Peak and giveback (medians):** 5m books peak +0.6% after 0.2 h and give back 0.9%; 15m +1.0% after 0.5 h, 1.4%; 30m/1h +4.2% after 2.2 h, 2.4%; 4h +6.5% after 9.9 h, 4.9%.
+- **Long closing times:** closing every position T hours after entry, all books: 2 h +0.70%, 4 h +0.73%, 8 h +1.21%, 12 h +2.08%, 24 h +4.79%, against drift +0.38, +0.45, +0.90, +1.69, +4.07. Most of the long-hold gain was a rising market; the selection edge over drift grows from +0.3 points at 2 h to +0.7 at 24 h.
+- **Short closing times (fast books):** edge over drift for 5m books -0.02 (0.5 h), +0.03 (1 h), +0.38 (2 h), +0.38 (3 h), +0.28 (4 h), +0.23 (6 h); best return per hour held at 2 h (+0.39%/h). 15m books -0.03, +0.09, +0.35, **+0.50 (3 h)**, +0.33, -0.16. The books close at a median 0.5 h (5m) and 1 h (15m), before their edge appears.
+Caveats: three days, a rising market, horizons chosen after seeing the data.
+Books added (live paper, each differs from its control only in `min_hold_bars`, enforced by `tests/test_hold_time_books.py`; guard B counts the hold from the real entry, and a held position stays through rotation and channel exits, while the ladder and kill switches still act): `momentum_top3_15m_hold12h` (48 bars) and `momentum_top3_15m_hold3h` (12 bars), control `momentum_top3_15m`; `momentum_top3_5m_hold2h` (24 bars), control `momentum_top3_5m`. Stop rule: below its control over the same days after 14 live days (2026-10-10).
+
+## desk-dashboard-2026-09-26
+
+Operator request 2026-09-26: the dashboard was cluttered and needed too much scrolling; build a clean, insightful one. `/` now serves `bot/desk.html` on a compact `/api/desk` payload (`bot/desk.py`, about 81 KB against the full view's 680 KB); the previous page moved to `/full`, and `/heatmap` and `/analysis` are unchanged.
+One screen at 1512x900 with no page scroll (checked with a headless Chrome render, all 18 books visible): header with live count; five numbers (fleet net split into realised and open, books up/down, leader, market breadth, health); books grouped by role (core 4h, short-term momentum, burst, A/B tests, short) with sparkline, return, net, realised, open, split bar, invested, holdings coloured by open P&L, and for A/B arms the lead or lag in points against the control measured from the arm's own start; a side column with fleet coin exposure, recent activity in the viewer's local time, and health alerts that count only real faults (network blips and deferred data gaps are retried by the cycle and shown only when frequent). Clicking a book opens a drawer with its equity curve over its whole life, open positions with P&L per coin, key stats and recent closed trades. Below 1100 px the layout stacks; below 700 px secondary columns hide (no horizontal page scroll at 420 px).
+Backend additions to `bot.dashboard.bot_state`: `equity_curve` (30-minute closes over the book's life), `marks`, `meta.description`, `faults_last_hour`.
+
+## full-roostoo-pool-live-replay-2026-09-26
+
+Operator question 2026-09-26: would the bots make more trading all of Roostoo's coins instead of the top-30 pool? Live-window replay 2026-09-23 16:00Z to 2026-09-26 ~18:00Z: the live long-only rules of `momentum_top3_30m`, `15m` and `5m` run on Binance bars with the `gates.let_winners_run` simulator (ladder, drift band, 5 bps fee plus each coin's tick, no spread beyond the tick), once on the 25-coin pool and once on all 64 tradable Roostoo crypto with bars (stocks, PAXG, halted OMNI/TON excluded). Same rule, same window, only the pool differs.
+| book | pool 25: return / max DD / coins traded | all 64: return / max DD / coins traded |
+|---|---|---|
+| 30m | +12.79% / -3.2% / 10 | +12.35% / -3.9% / 15 |
+| 15m | +11.16% / -5.0% / 20 | +7.89% / -10.6% / 36 |
+| 5m | +0.22% / -7.5% / 25 | -5.65% / -12.4% / 54 |
+Adding the 39 thinner names lowers return and roughly doubles the drawdown at every clock, worst on the fast ones, before the wider real spreads on those names are even charged. Consistent with `#roostoo-universe-pool-size` on history (the venue list ranked on its own admits its thinnest names: Sharpe -0.15 against 1.56). Not adopted; the pool stays the top 30 by Binance volume intersected with Roostoo.
+
+## wide-pool-book-declaration
+
+Operator instruction 2026-09-26: keep the highest-profit short-term momentum rule and let it also run on the whole Roostoo pool to catch edge cases. `momentum_top3_30m` (+12.06% live, the best short-term book) is unchanged; `momentum_top3_30m_wide` is its exact copy with `strategy.universe_mode: venue_all` (`bot.universe.select`): every tradable Roostoo crypto pair still printing Binance bars (64 on 2026-09-26) instead of the top 30 of Binance by volume intersected with Roostoo (25). Every other setting is identical (`tests/test_wide_pool.py`). Paper, live-judged, shown on the desk as an A/B arm against `momentum_top3_30m`.
+Known risk, stated once: the live-window replay put the whole pool at +12.35% against +12.79% for the 25-coin pool at 30m with a deeper drawdown (`#full-roostoo-pool-live-replay-2026-09-26`), and on history ranking inside the venue list admits its thinnest names (`#roostoo-universe-pool-size`). Wide-spread names are charged the far side by the paper fill rule (`max_spread_bps: 5`).
+Stop rule: below `momentum_top3_30m` over the same days after 14 live days (2026-10-10), or the 25% drawdown kill switch.
+
+## parallel-fetch-2026-09-26
+
+Operator approval 2026-09-26 after a feed check: Roostoo quotes were fresh (0.1-0.3 s old) and tracked Binance at a median 0-2 bps, but the books acted a median 27-48 s after a bar close (worst about 60 s) and cycled every ~36 s against a 30 s poll, because `bot.feed.bar_frame` downloaded each symbol's bars one after another. It now fetches `FETCH_WORKERS = 8` symbols at a time on a pooled session; the single cut instant, the retry of failed symbols and the `data_gaps` reporting are unchanged (`tests/test_parallel_fetch.py`). Measured on 182 15m bars: 25 symbols 6.82 s -> 1.11 s, 64 symbols 18.16 s -> 1.94 s. Total request count is unchanged; Binance weight in use was 976 of 6,000 a minute before the change.
+
+## bar-close-alignment-2026-09-27
+
+Operator approval 2026-09-27, the second half of `#parallel-fetch-2026-09-26`. After the parallel download the books still acted 7-35 s after a bar close because a close was only noticed at the next 30 s poll. `Bot.loop` now sleeps `bot.run.next_sleep`: the regular poll, or until 2 s after the book's next bar close if that is sooner, so every close is decided about 3-5 s after it happens. Poll cadence between closes is unchanged; a close with incomplete data is still deferred and retried at the next poll (`incomplete_hold`). Tests: `tests/test_bar_close_alignment.py`.
+
+## unrealised-giveback-2026-09-27
+
+Operator question 2026-09-27: where did the unrealised gains vanish? 340 closed live positions to 2026-09-26 ~19:00Z (ladder skims collapsed), peak open gain = best excursion x notional on 5m Binance bars, giveback = peak minus banked net. Summed peaks 197,960, banked 48,084, given back 149,876 (a per-position measure; peaks are not simultaneous and cannot all be captured).
+- **Host sleep: 57% of the giveback** (85,053) came from 134 positions whose hold spanned a gap of more than 10 minutes in the book's cycles, e.g. `momentum_top3_15m` NEAR peaked +5.3% and closed -565 after the 19.5 h sleep, `momentum_top3_30m_allcash` NEAR peaked +12.3% and banked +1,523.
+- By exit: displaced by a stronger name 50%, channel break 44%; the 10-bar exit is late by design.
+- By book: `momentum_top3_5m` 31% (46,904 given back of 56,707 peak), `momentum_top3_15m` 17%, `accel_15m` 16%; the 30m book kept 48% of its peaks.
+- By coin: NEAR 22% (peak 25,454, banked -7,053), ENA 16%, LTC 13%.
+- **Runners keep their gains; the non-runners bleed.** The 88 positions that were ever +3% banked 97,126 of 139,485 peak (70%); the other 252 peaked 58,475 in total and banked -49,042.
+Consistent with `#live-hold-time-2026-09-26` (no take-profit helps) and `#fleet-review-2026-09-26` (sleep cost 30m/15m about 3 points): the levers are uptime and fewer weak entries (`burst_strong_15m`, the hold-time twins), not tighter exits.
+
+## short-pullback-declaration
+
+Operator instruction 2026-09-27, after the 17:25-19:20Z altcoin pullback (median coin -0.46% over 2 h, 21 of 25 pool coins falling, BTC flat) in which `short_accel_15m` did not fire: of 25 coins, 17 were below their 15m 20-bar low, 8 of those with negative 40-bar momentum, 1 (TRX) with a 4h breakdown and 0 falling more than 2% in an hour. `short_pullback_15m` is `short_accel_15m` without the 4h breakdown and the falling-hour filters: it shorts 15m breakdowns with negative momentum, 1.5x volume and accelerating non-blow-off downside, also inside 4h uptrends. Everything else identical (`tests/test_short_accel.py`); control `short_accel_15m`.
+Stated once: shorting pullbacks inside uptrends is where the fleet's shorts lost -6,164 live and every historical short test failed; a perfectly timed short of the held coins over that pullback would have netted about +0.3% after the 0.2% round trip. Live paper test on operator decision. Stop rule: negative return after 14 live days (2026-10-11) or the 25% drawdown kill switch.
+
+## cycle-watchdog-2026-09-27
+
+Found 2026-09-27 04:42Z: `short_accel_15m` and `momentum_top3_5m_hold2h` were alive but had not written a cycle for 33 and 17 minutes, each holding ESTABLISHED Binance (CloudFront) sockets; every HTTP call in the cycle carries a timeout, so the block is below that (likely a stalled TLS read after the host slept on battery). The supervisor only respawns a worker that exits, so a frozen one stays frozen. `Bot.start_watchdog` (continuous mode only) now exits the process with code 3 when one cycle has run more than 240 s on the monotonic clock (machine sleep does not count), journalling `watchdog_exit` in lifecycle; the supervisor respawns it within 10 s from saved state. `tests/test_cycle_watchdog.py`.
+
+## retired-2026-09-27
+
+Operator instruction 2026-09-27: retire the two clear losers. `momentum_top3_30m_wide` (whole-pool universe, `#wide-pool-book-declaration`) lost 3.09 points against `momentum_top3_30m` in about 11 h, as the live-window replay predicted (`#full-roostoo-pool-live-replay-2026-09-26`); `momentum_top3_15m_hold12h` (`#live-hold-time-2026-09-26`) lost 3,253 since the fleet peak, its 12 h hold keeping positions through the altcoin pullback. Stopped, removed from `run_bots.sh`, the dashboard, the desk and the gates; live data in `live/_archive/retired-2026-09-27/`; configs and the `universe_mode` option kept for the record. The hold3h and hold2h twins keep running.
+
+## rally-capture-score-2026-09-27
+
+Operator question 2026-09-27: do the bots pick up momentum and capture the rally? Live only: every rally of at least 4% from a 15m low to a later high within 24 h in the 25-coin pool, 2026-09-23 16:00Z to 2026-09-27 ~05:30Z: 58 rallies on 22 coins, median 8.8%. Per book, detection = held the coin during the rally, capture = banked net over (first position notional x rally size); long positions only.
+| book | rallies detected | median capture | entries inside a rally |
+|---|---|---|---|
+| donchian_4h | 26% | 64% | 54% |
+| momentum_top3_1h_allcash / 1h_long | 23% | 54% / 42% | 70% |
+| momentum_top3_30m_allcash / 30m | 26% / 28% | 37% / 25% | 75% / 81% |
+| momentum_top3_full / lock | 16% | 27-29% | 33% |
+| momentum_top3_15m | 41% | 6% | 78% |
+| accel_15m | 56% | 0% | 65% |
+| momentum_top3_5m | 64% | -1% | 64% |
+Fast clocks see most rallies and keep almost none of them (a 10-bar exit of 50 min to 2.5 h is shaken out by the first pullback); slow clocks keep 25-64% of the rallies they catch but catch only 16-28%. No book detects more than two thirds.
+Added `momentum_top3_15m_slowexit`: `momentum_top3_15m` exactly as live with `strategy.exit_bars` 10 -> 40 (exit below the prior 40-bar = 10 h low, about the 1h book's exit): fast entry, slow exit. One knob (`tests/test_hold_time_books.py`); control `momentum_top3_15m`; stop rule below its control after 14 live days (2026-10-11). Distinct from `#exit-clock-outcome` (which made the 4h book's exit faster) and from the fixed minimum holds (this exit still follows price).
+
+## binance-rate-guard-2026-09-27
+
+2026-09-27 05:04-05:05Z Binance answered 429 then 418 (IP ban, Retry-After 70 s, used weight 4,650 of 6,000 a minute): heavy one-off analysis scripts (path forensics, the rally scan) ran on top of the 19 books' synchronised bar-close fetches. Binance escalates repeat 418 bans from minutes to days, which during the competition would stop the book. `bot.feed.binance_get` now carries every live Binance call: on 429/418 it records Retry-After and fails further calls immediately without touching the network until it passes; at 4,800 used weight a minute it pauses to the next minute. The cycle's existing retry and data-gap deferral handle the failures. Operating rule: heavy analysis scripts are not run while the fleet is fetching at a bar close, and are run one at a time. `tests/test_binance_guard.py`.
+
+## desk-closed-trades-2026-09-27
+
+Operator request 2026-09-27: show recent closed trades and their P&L on the desk so they can be tracked in one place.
+The Books card has a second tab, Closed trades: every book's closed trades newest first, with the book, coin, entry and exit price, size, hold, net P&L and net %, filtered by window (1h, 6h, 24h, all), book group and book, and a summary of count, net, wins and losses, win rate, fees, best and worst.
+The snapshot now carries every trade closed in the last 48 h per book (at least 60), not the last 60, because a 5m book closes about 60 a day.
+A book whose list is still truncated sets where the feed stops being complete, and the page says so instead of silently mixing a busy book's partial history with a quiet book's full one.
+Display only; no trading path reads it.
+
+## closed-trade-kinds-2026-09-27
+
+Operator request 2026-09-27: review the last hour and improve.
+The Closed trades tab counted every FIFO slice as a trade, so a rebalance that sold part of ENA to fund a FIL entry read as an ENA loss although most of the position was still held.
+Each closed slice now carries `exit_kind`: `exit` when the fill leaves the position flat (below the 1 USD residue), `skim` when a booking-ladder skim for the same coin was journalled within 30 s of the fill, otherwise `trim`.
+The desk tags each row and breaks the window's P&L down by kind.
+Fleet to 2026-09-27 16:58Z: skims 260 slices +51,783 net (fees 962), trims 252 +4,656 (fees 3,469), full exits 607 -9,000 (fees 16,342).
+FIFO attribution explains part of this: a skim books the gain on the oldest shares, and the exit books the remainder from the same entry price after any giveback, while every loser that never reached +3% ends as an exit.
+It is still the plainest live evidence so far that the realised profit is harvested by the ladder and that the exit leg, with most of the fees, is where it leaks.
+Display and reporting only; no trading path reads the label.
+
+## roostoo-keys-2026-09-30
+
+Roostoo issued two key pairs on 2026-09-30: a TEST pair on the general portfolio and a COMPETITION pair for round 1.
+Both live in the gitignored `.env` as `ROOSTOO_TEST_*` and `ROOSTOO_COMP_*`; a config's `meta.keyset` picks one, so only the book whose config names `comp` can reach the competition account (`bot.settings.credentials`).
+The official FAQ (read 2026-09-30) says the main round started 2026-09-30 and the first trade is due 2026-10-01 20:00 GMT+8 (12:00 UTC); limits are 30 calls a minute across every endpoint, EC2 in Sydney via Session Manager, an open-source GitHub repo, every change committed, and no manual stop, override or discretionary trade.
+The competition key answered `/v3/balance` with `not yet a member of this competition` at 14:05Z; the test account holds 50,000 USD (`InitialWallet` 50,000, so the 100k on the event page is not this venue's number).
+
+`gates/roostoo_smoke.py` ran the full order lifecycle on the TEST account (`results/roostoo_smoke_test.json`):
+- MARKET orders are TAKER at `CommissionPercent` 0.001 (0.10%), fee in USD; a resting LIMIT is MAKER at 0.0005 (0.05%). This answers organiser questions 1 and 2.
+- A MARKET BTC buy and sell filled at exactly the quoted ask and bid, zero slippage.
+- A sub-1 USD order is rejected as `quantity error`.
+- A LIMIT buy at the bid filled within 30 seconds.
+- A short opens at MaxBid with a 0.10% open fee and a 0.10% close fee; collateral sits in the USD `Lock` and `ShortCollateral` fields of the spot wallet.
+
+Four live-API mismatches were found and fixed; each would have broken the live book while every paper book looked fine:
+1. `/v3/balance` returns `SpotWallet` and `MarginWallet`, not the README's `Wallet`; `balance()` raised a KeyError, so the bot could never read its cash.
+2. `/v3/query_order` lists orders under `OrderMatched`, not `OrderDetails`, and reads `pending_only` only as the string `TRUE`; the bot never saw its own resting orders, so it re-sent sells and never cancelled stale limits.
+3. The same endpoint answers `Success: false, no order matched` when nothing matches; the adapter raised, so every sweep of an idle book counted an error toward the error-rate kill switch.
+4. `bot.intents._heuristic` never looked inside `OrderDetails`, so after a crash an order that did reach the venue was recorded as never sent.
+
+A fifth defect sat in the live cycle: while the wallet cannot be read the book marked equity from its 100,000 default, and the first real read (50,000) looked like a 50% drawdown, which trips the 25% kill switch.
+Now a live cycle with no readable wallet journals `wallet_unavailable`, writes no equity and places nothing (`bot.run.Bot.cycle`).
+Regression tests replay the exact live payloads: `tests/test_roostoo_live_shapes.py`, `tests/test_entry_retry.py`.
+
+The Data Sources Pack (read 2026-09-30) lists Binance Vision, CryptoDataDownload and CoinAPI.
+The research already uses Binance klines and the Vision archives; CDD's breadth, funding and on-chain series belong to families `FINDINGS.md` records as dead, so nothing new is tested.
+It did add one resilience fix: every public Binance call now fails over to `data-api.binance.vision` (same endpoints) on a connection error or 403/451/5xx, so the bars survive a regional block or outage on EC2 (`data.binance.rest_get`); 418/429 are never retried elsewhere.
+
+## competition-book-2026-09-30
+
+Operator decision 2026-09-30: the competition book is `momentum_top3_30m`, target lock OFF ("go all in").
+Evidence at decision time (`gates.fleet_review`, 166 h live paper, online only 31%): +9.17%, max drawdown -9.2%, 83 trades, 72% of trades winners, 1.6k fees; the best return per unit of drawdown in the fleet.
+Its 2026-09-23 backtest verdict (`#lowtf-paper-bots`) was a FAIL before the later confirmation rules (`#breakout-quality-outcome`, `#let-winners-run-outcome`); this is a forward-evidence choice, not a backtest pass, and is recorded as such.
+
+`config/competition.yaml` copies every rule parameter from `config/momentum_top3_30m.yaml` unchanged and differs in three places only: it is not paper, `meta.keyset: comp`, and the derisk ramp is moved past the window because the round end date is unconfirmed (FAQ 2026-09-30 versus the event page's 2026-10-17) and the venue auto-liquidates at the end.
+`config/competition_rehearsal.yaml` is the identical rule on the TEST account, so real fills are measured beside the competition book; `momentum_top3_30m` stays as the paper control of both (`bot/dashboard.py` CONTROL_OF).
+Both start with `./run_bots.sh live`, which sets `ROOSTOO_DRY_RUN=0` for those two configs only.

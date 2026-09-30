@@ -15,6 +15,10 @@ The mirror check re-reads the Roostoo ticker immediately before comparing it
 with Binance. Its first version reused the quotes taken before nine books were
 validated, minutes earlier, and reported an 18 bps median deviation that did
 not exist; the live figure at the same moment was 0.0 bps.
+
+A target the venue rule refuses is a failure, not a note: the backtest holds it
+and the book idles its slot. ARB passed this gate while 12 books refused it.
+DECISIONS.md#execution-gaps-2026-09-23.
 """
 from __future__ import annotations
 
@@ -27,13 +31,17 @@ import numpy as np
 from bot import feed, portfolio, risk, universe, verify
 from bot.execution import Executor
 from bot.settings import ROOT, load
-from bot.strategy import REPLAY_BARS, replay_book
+from bot.strategy import (REGIME_SYMBOL, REPLAY_BARS, replay_book, replay_short_book,
+                          short_bars_needed, short_regime)
 from gates.concentration import rank_score
 from venue.roostoo import RoostooClient
 
-BOOKS = ("donchian_4h", "donchian_4h_cushion", "donchian_1h", "momentum_top5_4h",
-         "momentum_top5_cushion", "momentum_top3_4h", "momentum_top3_full", "alpha_flow",
-         "testnet_live", "donchian_30m", "donchian_15m", "momentum_top3_1h", "momentum_top3_30m", "momentum_top3_15m", "momentum_top3_lock")
+BOOKS = ("donchian_4h", "momentum_top3_full", "momentum_top3_lock", "testnet_live",
+         "competition", "competition_rehearsal",
+         "momentum_top3_30m", "momentum_top3_15m", "momentum_top3_5m",
+         "momentum_top3_1h_allcash", "momentum_top3_30m_allcash",
+         "accel_15m", "burst_5m", "burst_15m", "burst_strong_15m", "momentum_top3_15m_eq", "short_accel_15m",
+         "momentum_top3_15m_hold3h", "momentum_top3_5m_hold2h", "short_pullback_15m", "momentum_top3_15m_slowexit")
 EQUITY = 100_000.0
 
 
@@ -51,6 +59,34 @@ def rank_parity(matrix, settings, channels) -> dict:
             "scores": info.get("scores", {})}
 
 
+def short_parity(matrix, settings, channels, selected, btc) -> dict:
+    """The live short pick against gates.short_paper_books.sleeve on the identical bars."""
+    if not settings.shorts_enabled:
+        return {"applies": False, "pick": []}
+    from gates.short_paper_books import sleeve
+    from signals import donchian
+    regime = short_regime(btc, settings, matrix)
+    pick, info = portfolio.select_shorts(replay_short_book(matrix, settings), channels,
+                                         len(selected), matrix, settings, regime["on"])
+    cfg = settings.short
+    brk = donchian.breakdown_position(matrix, int(cfg["entry_bars"]), int(cfg["exit_bars"]))
+    live = (donchian.position(matrix, settings.entry_bars, "lowchannel", settings.exit_bars) > 0.5)
+    longs = live.copy() * False
+    longs.loc[longs.index[-1], list(selected)] = True
+    mom = matrix / matrix.shift(settings.momentum_bars) - 1.0
+    if cfg.get("regime") == "breadth_below":
+        flag = donchian.breadth_short_regime(matrix, int(cfg.get("momentum_bars", settings.momentum_bars)),
+                                             float(cfg["breadth_max"]))
+    else:
+        flag = donchian.bear_regime(btc.reindex(matrix.index), int(cfg["regime_bars"]))
+    slots = int(cfg.get("slots") or settings.n_positions or settings.weight_divisor)
+    ref = sleeve(flag, brk, live, longs.astype(bool), mom, slots, bool(cfg.get("own_slots")),
+                 bool(cfg.get("require_negative_momentum"))).iloc[-1]
+    want = sorted(ref[ref].index)
+    return {"applies": True, "regime": regime, "backtest_pick": want, "live_pick": sorted(pick),
+            "match": want == sorted(pick), "info": info, "pick": pick}
+
+
 def validate(name: str, client, specs, quotes, selection_cache: dict) -> dict:
     s = load(ROOT / "config" / f"{name}.yaml")
     key = s.top_n_pool
@@ -58,13 +94,16 @@ def validate(name: str, client, specs, quotes, selection_cache: dict) -> dict:
         selection_cache[key] = universe.select(s, specs)["selected"]
     symbols = selection_cache[key]
     need = max(s.entry_bars, s.exit_bars) + 5
-    frames = feed.bar_frame(symbols, s.interval, max(need + 20, REPLAY_BARS))
+    frames = feed.bar_frame(symbols, s.interval, max(need + 20, REPLAY_BARS, short_bars_needed(s)))
     matrix = feed.close_matrix(frames)
     parity = verify.signal_parity(matrix, s)
     channels = replay_book(matrix, s)
     rp = rank_parity(matrix, s, channels)
     selected, _ = portfolio.rank_and_select(channels, matrix, s)
-    targets = portfolio.target_weights(selected, s)
+    btc = (matrix[REGIME_SYMBOL] if REGIME_SYMBOL in matrix.columns else feed.close_matrix(
+        feed.bar_frame([REGIME_SYMBOL], s.interval, short_bars_needed(s))).get(REGIME_SYMBOL))
+    sp = short_parity(matrix, s, channels, selected, btc) if s.shorts_enabled else {"applies": False, "pick": []}
+    targets = portfolio.target_weights(selected, s, shorts=sp["pick"])
     by_symbol = {spec.binance_symbol: spec for spec in specs.values()}
     prices = {sym: float(quotes[by_symbol[sym].pair]["LastPrice"]) for sym in targets
               if sym in by_symbol and by_symbol[sym].pair in quotes}
@@ -78,7 +117,8 @@ def validate(name: str, client, specs, quotes, selection_cache: dict) -> dict:
         if not row.get("skipped"):
             q = quotes[row["pair"]]
             bid, ask = float(q["MaxBid"]), float(q["MinAsk"])
-            row["marketable"] = row["price"] >= ask if row["side"] == "BUY" else row["price"] <= bid
+            row["marketable"] = (False if row["type"] == "MARKET" else
+                                 row["price"] >= ask if row["side"] == "BUY" else row["price"] <= bid)
             row["spread_bps"] = round((ask / bid - 1.0) * 1e4, 3)
             spec = by_symbol[row["symbol"]]
             row["qty_on_step"] = spec.round_qty(row["quantity"]) == row["quantity"]
@@ -90,17 +130,22 @@ def validate(name: str, client, specs, quotes, selection_cache: dict) -> dict:
             matrix.index[-1] + (matrix.index[-1] - matrix.index[-2]) <= dt.datetime.now(dt.timezone.utc)),
         "signal_parity_exact": parity.get("mismatches") == 0,
         "rank_matches_backtest": (not rp["applies"]) or rp["match"],
-        "gross_within_cap": sum(targets.values()) <= s.max_gross + 1e-9,
+        "short_pick_matches_backtest": (not sp["applies"]) or sp["match"],
+        "gross_within_cap": sum(abs(w) for w in targets.values()) <= s.max_gross + 1e-9,
         "no_marketable_limits": all(not r["marketable"] for r in live),
         "spread_gate_holds": all(r["spread_bps"] <= s.max_spread_bps or r["wide_tick"] for r in live),
         "quantities_on_venue_step": all(r["qty_on_step"] for r in live),
-        "notional_within_equity": sum(r["notional"] for r in live) <= EQUITY,
+        "notional_within_equity": sum(abs(r["notional"]) for r in live) <= EQUITY,
+        "no_target_refused_by_venue_rule": not any(
+            r.get("skipped") in ("spread_exceeds_limit", "pair_not_tradable") for r in plans),
     }
     return {"book": name, "interval": s.interval, "bar": matrix.index[-1].isoformat() if len(matrix) else None,
             "config_sha": s.config_sha256, "universe": len(symbols), "fired": sum(c.held for c in channels.values()),
             "targets": {k: round(v, 4) for k, v in targets.items()}, "target_gross": round(sum(targets.values()), 4),
             "orders_planned": len(live), "skipped": [f"{r['symbol']}:{r['skipped']}" for r in plans if r.get("skipped")],
-            "signal_parity": parity, "rank_parity": rp, "checks": checks, "pass": all(checks.values())}
+            "signal_parity": parity, "rank_parity": rp,
+            "short_parity": {k: v for k, v in sp.items() if k != "pick"},
+            "checks": checks, "pass": all(checks.values())}
 
 
 def main() -> int:

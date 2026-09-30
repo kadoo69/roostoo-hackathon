@@ -108,7 +108,8 @@ def reconcile(log: IntentLog, client, journal=None) -> dict:
 
 
 def _heuristic(resp: dict, row: dict) -> dict | None:
-    orders = resp.get("OrderDetail") or resp.get("orders") or resp
+    orders = (resp.get("OrderDetails") or resp.get("OrderMatched") or resp.get("OrderDetail")
+              or resp.get("orders") or resp)
     if isinstance(orders, dict):
         orders = [orders]
     if not isinstance(orders, list):

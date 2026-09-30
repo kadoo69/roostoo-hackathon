@@ -1,0 +1,24 @@
+meta:
+  name: lowtf_calendar_sleeve_v1
+  declared_before_this_combination_test: true
+  declared_utc: '2026-09-24'
+  research_only: true
+  prior_selection: 'The 1h 20-calendar-day midpoint channel was visible in results/donchian_lowtf.json before this combination test. All historical periods are exploratory for this arm; a fresh forward period is required.'
+  baseline: '4h momentum top 3 with existing simulator, current point-in-time top-30 universe and costs'
+  question: Can a slower signal observed every hour use idle cash with lower turnover and improve total return and daily Sharpe, Sortino and Calmar?
+arms:
+  hourly_calendar:
+    entry: close above previous 480 hourly closes (20 calendar days)
+    exit: close below midpoint of previous 480-hour high and low
+    weight: 5 percent per eligible coin, capped by idle capital
+  four_hour_calendar_control:
+    entry: close above previous 120 four-hour closes (20 calendar days)
+    exit: close below midpoint of previous 120-bar high and low
+    weight: 5 percent per eligible coin, capped by idle capital
+  stale_seven_day_control: delay hourly-calendar signal by 168 hourly bars
+  bitcoin_idle_control: half of idle capital in BTC continuously
+costs:
+  fee_per_side: 0.0005
+  plus_tick_per_side: true
+  double_cost_stress: true
+decision: historical result may nominate a forward paper arm only; it cannot establish a new edge because the rule was selected from the previous grid

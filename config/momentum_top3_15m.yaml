@@ -15,6 +15,22 @@ meta:
     control.
   falsification: If after 14 live days its median-equivalent return is not above the backtest's holdout
     median, the backtest was right and the bot should be stopped.
+contenders:
+  n: 3
+  momentum_bars: 40
+  breadth_max: 0.40
+  max_weight: 0.50
+  sizing: proportional to absolute 40-bar momentum
+  declared_ref: DECISIONS.md#lowtf-contenders-declaration
+  sticky: true
+  sticky_ref: DECISIONS.md#let-winners-run-outcome
+  htf_confirm: false
+  htf_ref: DECISIONS.md#no-htf-15m-5m
+  volume_confirm: 1.5
+  confirm_ref: DECISIONS.md#breakout-quality-outcome
+  skip_short_z: [[null, -3], [-3, -2.5], [-2.5, -2], [-2, -1.5], [-1.5, -1], [-1, 1]]
+  skip_long_z: [[-2, -1.5], [3, null]]
+  skip_source: 'frozen from the 15m fit period, DECISIONS.md#lowtf-exhaustion-outcome'
 strategy:
   interval: 15m
   entry_bars: 20
@@ -49,6 +65,7 @@ booking:
   skim_fraction: 0.15
   recycle: false
   min_skim_notional: 10.0
+  shorts: true
   added_utc: '2026-09-22'
   added_by: operator instruction to book profits on every bot, controls included
   parameters_ref: DECISIONS.md#alpha-flow-declaration
@@ -59,3 +76,36 @@ booking:
   honest_status: Not a validated improvement. The holdout return gain is p=0.14 and the drawdown gain
     is reproduced by a random-timing nonsense control, so it is exposure reduction rather than timing.
   confound_warning: paper-only comparison book, nobody's control.
+short:
+  enabled: false
+  disabled_utc: '2026-09-26'
+  disabled_by: 'operator: turn off shorts on the short-term books, keep the profit ladder'
+  disabled_ref: DECISIONS.md#short-term-shorts-off-2026-09-26
+  regime: breadth_below
+  breadth_max: 0.40
+  momentum_bars: 40
+  own_slots: true
+  slots: 3
+  require_negative_momentum: true
+  regime_bars: 180
+  entry_bars: 20
+  exit_bars: 10
+  execution: MARKET both legs, open at MaxBid, close at MinAsk, 0.1% per side
+  topped_up: false
+  laddered: true
+  added_utc: '2026-09-23'
+  added_by: 'operator instruction: add shorting to the short-term books'
+  rule: 'While fewer than 40% of the pool have positive 40-bar momentum, names in a 20-bar breakdown
+    with negative momentum and no live long channel are shorted, weakest first, in their own slots;
+    closed when the close exceeds the prior 10-bar high.'
+  evidence_ref: DECISIONS.md#lowtf-breadth-shorts-declaration
+target_lock:
+  enabled: false
+  disabled_utc: '2026-09-26'
+  disabled_by: 'operator: the best books should be able to reach +20k; the lock caps them at +5% on the window anchor'
+  disabled_ref: DECISIONS.md#short-term-lock-off-2026-09-26
+  window_start_utc: '2026-09-24T00:00:00+00:00'
+  window_end_utc: '2026-10-08T00:00:00+00:00'
+  lock_return: 0.05
+  keep_gross: 0.3
+  declared_ref: DECISIONS.md#lowtf-lock-declaration

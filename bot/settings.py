@@ -49,10 +49,17 @@ class Settings:
     full_deployment: bool = False
     booking: dict = field(default_factory=dict)
     target_lock: dict = field(default_factory=dict)
+    short: dict = field(default_factory=dict)
+    universe_mode: str = "binance_top"
+    keyset: str | None = None
+
+    @property
+    def shorts_enabled(self) -> bool:
+        return bool(self.short.get("enabled"))
 
     @property
     def bars_per_day(self) -> int:
-        return {"15m": 96, "30m": 48, "1h": 24, "4h": 6, "8h": 3, "12h": 2, "1d": 1}[self.interval]
+        return {"5m": 288, "15m": 96, "30m": 48, "1h": 24, "4h": 6, "8h": 3, "12h": 2, "1d": 1}[self.interval]
 
 
 def load(path: str | Path) -> Settings:
@@ -88,31 +95,47 @@ def load(path: str | Path) -> Settings:
         mirror_max_deviation_bps=float(r["mirror_max_deviation_bps"]),
         mirror_reference=r.get("mirror_reference", "binance_spot"),
         config_sha256=hashlib.sha256(raw).hexdigest()[:16],
-        dry_run=os.environ.get("ROOSTOO_DRY_RUN", "1") != "0",
+        dry_run=bool(cfg["meta"].get("paper_only")) or os.environ.get("ROOSTOO_DRY_RUN", "1") != "0",
         venue=os.environ.get("BOT_VENUE", cfg["meta"].get("venue", "roostoo")),
+        keyset=cfg["meta"].get("keyset"),
         ranking_rule=s.get("ranking_rule"),
         n_positions=(int(s["n_positions"]) if s.get("n_positions") else None),
         regime_gate=s.get("regime_gate", "always_on"),
+        universe_mode=s.get("universe_mode", "binance_top"),
         min_cushion_pct=float(s.get("min_cushion_pct", 1.0)),
         full_deployment=bool(s.get("full_deployment", False)),
         booking=dict(cfg.get("booking") or {}),
         target_lock=dict(cfg.get("target_lock") or {}),
+        short=dict(cfg.get("short") or {}),
         momentum_bars=int(s.get("momentum_bars", 20)),
     )
 
 
-def credentials() -> tuple[str | None, str | None]:
+def credentials(keyset: str | None = None) -> tuple[str | None, str | None]:
+    """Roostoo key pair for this process.
+
+    `keyset` (a config's `meta.keyset`, else `ROOSTOO_KEYSET`) of `test` or `comp` selects
+    `ROOSTOO_TEST_*` or `ROOSTOO_COMP_*`, so the competition keys reach only the book whose
+    config names them; otherwise the plain `ROOSTOO_API_KEY` pair.
+    DECISIONS.md#roostoo-keys-2026-09-30
+    """
     env = ROOT / ".env"
     if env.exists():
         for line in env.read_text().splitlines():
             if "=" in line and not line.strip().startswith("#"):
                 k, v = line.split("=", 1)
                 os.environ.setdefault(k.strip(), v.strip())
+    keyset = (keyset or os.environ.get("ROOSTOO_KEYSET", "")).strip().upper()
+    if keyset:
+        if keyset not in ("TEST", "COMP"):
+            raise ValueError(f"ROOSTOO_KEYSET must be test or comp, got {keyset!r}")
+        return (os.environ.get(f"ROOSTOO_{keyset}_API_KEY"),
+                os.environ.get(f"ROOSTOO_{keyset}_SECRET_KEY"))
     return os.environ.get("ROOSTOO_API_KEY"), os.environ.get("ROOSTOO_SECRET_KEY")
 
 
 def make_client(settings: "Settings"):
-    key, secret = credentials()
+    key, secret = credentials(settings.keyset)
     if settings.venue == "binance_testnet":
         from venue.binance_testnet import BinanceTestnetClient
         return BinanceTestnetClient(os.environ.get("BINANCE_TESTNET_KEY"),

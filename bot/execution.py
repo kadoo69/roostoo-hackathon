@@ -8,6 +8,12 @@ from bot.settings import Settings
 from venue.roostoo import AmbiguousOrderError, PairSpec, RoostooClient, RoostooError
 
 
+NORMAL_SPREAD_TICKS = 2
+SPOT_SIDES = {"BUY", "SELL"}
+SHORT_SIDES = {"SHORT_OPEN", "SHORT_CLOSE"}
+SHORT_FEE = 0.001
+
+
 class Executor:
     def __init__(self, client: RoostooClient, specs: dict[str, PairSpec],
                  settings: Settings, journal: Journal):
@@ -43,8 +49,13 @@ class Executor:
             return None
         if not spec.can_trade or spec.asset_type == "stock":
             return {"skipped": "pair_not_tradable", "symbol": order["symbol"], "pair": spec.pair}
-        if order.get("side") not in {"BUY", "SELL"}:
+        if order.get("side") not in SPOT_SIDES | SHORT_SIDES:
             return {"skipped": "invalid_side", "symbol": order["symbol"], "pair": spec.pair}
+        short = order["side"] in SHORT_SIDES
+        if order["side"] == "SHORT_OPEN" and not self.settings.shorts_enabled:
+            return {"skipped": "shorts_not_enabled", "symbol": order["symbol"], "pair": spec.pair}
+        if short and not hasattr(self.client, "short_open"):
+            return {"skipped": "venue_has_no_shorts", "symbol": order["symbol"], "pair": spec.pair}
         q = quotes[spec.pair]
         try:
             bid, ask, last = (float(q[k]) for k in ("MaxBid", "MinAsk", "LastPrice"))
@@ -54,18 +65,19 @@ class Executor:
         if not all(math.isfinite(v) and v > 0 for v in (bid, ask, last, quantity)) or bid > ask:
             return {"skipped": "invalid_quote_or_quantity", "symbol": order["symbol"], "pair": spec.pair}
         spread_bps = (ask / bid - 1.0) * 1e4
-        one_tick = (ask - bid) <= spec.tick * (1.0 + 1e-6)
-        # A one-tick quote is the venue's floor, so it can never be an abnormal
-        # spread, whatever it is in bps. Refusing it made PEPE (tick 20.6 bps)
-        # untradeable while the rank kept selecting it, and the idle slot cut
-        # the ranked book's holdout median from 3.12% to 1.20%. Anything wider
-        # than one tick is still refused above max_spread_bps.
-        # DECISIONS.md#live-validation-2026-09-23
-        if spread_bps > self.settings.max_spread_bps and not one_tick:
+        normal = (ask - bid) <= NORMAL_SPREAD_TICKS * spec.tick * (1.0 + 1e-6)
+        # Up to two ticks is a normal quote, whatever it is in bps: its
+        # half-spread is the one tick per side every backtest already charges.
+        # Refusing it idled a ranked slot (PEPE at one tick, ARB at two) while
+        # the backtest held the name. Wider than that is still refused above
+        # max_spread_bps. DECISIONS.md#execution-gaps-2026-09-23
+        if spread_bps > self.settings.max_spread_bps and not normal:
             return {"skipped": "spread_exceeds_limit", "symbol": order["symbol"],
                     "pair": spec.pair, "spread_bps": round(spread_bps, 4),
                     "max_spread_bps": self.settings.max_spread_bps}
         wide_tick = spread_bps > self.settings.max_spread_bps
+        if short:
+            return self._prepare_short(order, spec, bid, ask, quantity, spread_bps, wide_tick)
         qty = spec.round_qty(quantity)
         if qty <= 0:
             return None
@@ -88,6 +100,31 @@ class Executor:
                 "ref_bid": bid, "ref_ask": ask, "ref_mid": round((bid + ask) / 2.0, 10),
                 "ref_spread_bps": round(spread_bps, 4),
                 "wide_tick": wide_tick}
+
+    def _prepare_short(self, order: dict, spec: PairSpec, bid: float, ask: float,
+                       quantity: float, spread_bps: float, wide_tick: bool) -> dict | None:
+        """A venue short leg. Both legs are MARKET: an open fills at the bid, a close at the ask.
+
+        A LIMIT short open pays its 0.1% fee on acceptance, filled or not, and a close is
+        always market at the venue, so a passive short saves nothing and risks paying twice.
+        DECISIONS.md#plan-correction-shorting, DECISIONS.md#short-paper-books
+        """
+        side = order["side"]
+        px = bid if side == "SHORT_OPEN" else ask
+        qty = spec.round_qty(quantity)
+        if qty <= 0:
+            return None
+        notional = qty * px
+        if notional < max(1.0, spec.min_order) and not order.get("close_all"):
+            return {"skipped": "below_min_order", "symbol": order["symbol"], "pair": spec.pair,
+                    "quantity": qty, "price": px, "min_order": spec.min_order}
+        return {"symbol": order["symbol"], "pair": spec.pair, "side": side,
+                "quantity": qty, "price": px, "type": "MARKET",
+                "notional": round(notional, 4),
+                "collateral": round(notional, 2) if side == "SHORT_OPEN" else None,
+                "close_all": bool(order.get("close_all")),
+                "ref_bid": bid, "ref_ask": ask, "ref_mid": round((bid + ask) / 2.0, 10),
+                "ref_spread_bps": round(spread_bps, 4), "wide_tick": wide_tick}
 
     def refresh_pending(self) -> set[str]:
         """Pairs that already have a resting order at the venue.
@@ -113,7 +150,8 @@ class Executor:
     def send(self, plan: dict) -> dict:
         if plan.get("skipped"):
             return self.journal.write("orders", {"event": "skipped", **plan})
-        if plan.get("symbol") in self.pending_pairs:
+        if (plan.get("symbol") in self.pending_pairs
+                or str(plan.get("pair") or "").replace("/", "") in self.pending_pairs):
             return self.journal.write("orders", {"event": "skipped",
                                                  "skipped": "order_already_pending", **plan})
         if self.submission_blocked:
@@ -126,10 +164,16 @@ class Executor:
         # request was ever made. bot/intents.py
         intent_id = self.intents.open_intent(plan) if self.intents else None
         try:
-            price = plan["price"] if plan["type"] == "LIMIT" else None
-            resp = self.client.place_order(plan["pair"], plan["side"],
-                                           plan["quantity"], price,
-                                           client_order_id=intent_id)
+            if plan["side"] == "SHORT_OPEN":
+                resp = self.client.short_open(plan["pair"], plan["collateral"])
+            elif plan["side"] == "SHORT_CLOSE":
+                resp = self.client.short_close(plan["pair"],
+                                               None if plan.get("close_all") else plan["quantity"])
+            else:
+                price = plan["price"] if plan["type"] == "LIMIT" else None
+                resp = self.client.place_order(plan["pair"], plan["side"],
+                                               plan["quantity"], price,
+                                               client_order_id=intent_id)
         except AmbiguousOrderError as exc:
             self.errors += 1
             self.submission_blocked = True
@@ -142,6 +186,8 @@ class Executor:
                 self.intents.resolve(intent_id, "rejected", {"error": str(exc)})
             return self.journal.write("orders", {"event": "error", "error": str(exc),
                                                  "intent_id": intent_id, **plan})
+        if plan["side"] in SHORT_SIDES:
+            return self._record_short(plan, resp, intent_id)
         detail = resp.get("OrderDetail", resp)
         if self.intents and intent_id:
             self.intents.resolve(intent_id, "placed", {"order_id": detail.get("OrderID"),
@@ -155,6 +201,23 @@ class Executor:
             "filled_quantity": detail.get("FilledQuantity"),
             "filled_average_price": detail.get("FilledAverPrice"),
         })
+
+    def _record_short(self, plan: dict, resp: dict, intent_id: str | None) -> dict:
+        """Journal a venue short in the spot order's shape; a missing field reads as zero."""
+        opened = plan["side"] == "SHORT_OPEN"
+        qty = float(resp.get("ShortQty" if opened else "ClosedQty") or 0.0)
+        px = float(resp.get("EntryPrice" if opened else "ClosePrice") or 0.0)
+        if self.intents and intent_id:
+            self.intents.resolve(intent_id, "placed", {"order_id": resp.get("ID"),
+                                                       "status": resp.get("Status")})
+        return self.journal.write("orders", {
+            "event": "placed", "intent_id": intent_id, **plan,
+            "order_id": resp.get("ID"), "status": resp.get("Status") or (
+                "FILLED" if not opened else None),
+            "commission_percent": SHORT_FEE,
+            "filled_quantity": qty, "filled_average_price": px,
+            "realized_pnl": resp.get("RealizedPNL"), "return_amount": resp.get("ReturnAmount"),
+            "fully_closed": resp.get("FullyClosed")})
 
     def sweep_unfilled(self) -> list[dict]:
         if self.settings.dry_run:

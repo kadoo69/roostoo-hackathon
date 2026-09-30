@@ -1,0 +1,286 @@
+{
+  "generated_at": "2026-09-28T17:47:03.633689+00:00",
+  "declaration": "config/source_forward_validation.yaml",
+  "price_errors": {},
+  "sources": {
+    "Binance scanner": {
+      "observations": 668,
+      "days": 5,
+      "observed_hours": 56,
+      "hour_coverage_fraction": 0.566,
+      "max_observation_gap_hours": 20.0,
+      "matured_1h": 608,
+      "matured_4h": 146
+    },
+    "Deribit options": {
+      "observations": 128,
+      "days": 6,
+      "observed_hours": 64,
+      "hour_coverage_fraction": 0.533,
+      "max_observation_gap_hours": 20.0,
+      "matured_1h": 124,
+      "matured_4h": 28
+    },
+    "Hyperliquid": {
+      "observations": 650,
+      "days": 6,
+      "observed_hours": 65,
+      "hour_coverage_fraction": 0.542,
+      "max_observation_gap_hours": 20.0,
+      "matured_1h": 630,
+      "matured_4h": 140
+    },
+    "Stablecoin data": {
+      "observations": 65,
+      "days": 6,
+      "observed_hours": 65,
+      "hour_coverage_fraction": 0.542,
+      "max_observation_gap_hours": 20.0,
+      "matured_1h": 63,
+      "matured_4h": 14
+    }
+  },
+  "feature_checks": [
+    {
+      "source": "Hyperliquid",
+      "feature": "funding_hourly",
+      "horizon_hours": 1,
+      "matured_observations": 630,
+      "distinct_days": 6,
+      "status": "insufficient"
+    },
+    {
+      "source": "Hyperliquid",
+      "feature": "funding_hourly",
+      "horizon_hours": 4,
+      "matured_observations": 140,
+      "distinct_days": 5,
+      "status": "insufficient"
+    },
+    {
+      "source": "Hyperliquid",
+      "feature": "oi_log_change_24h",
+      "horizon_hours": 1,
+      "matured_observations": 320,
+      "distinct_days": 5,
+      "status": "insufficient"
+    },
+    {
+      "source": "Hyperliquid",
+      "feature": "oi_log_change_24h",
+      "horizon_hours": 4,
+      "matured_observations": 80,
+      "distinct_days": 5,
+      "status": "insufficient"
+    },
+    {
+      "source": "Hyperliquid",
+      "feature": "premium",
+      "horizon_hours": 1,
+      "matured_observations": 630,
+      "distinct_days": 6,
+      "status": "insufficient"
+    },
+    {
+      "source": "Hyperliquid",
+      "feature": "premium",
+      "horizon_hours": 4,
+      "matured_observations": 140,
+      "distinct_days": 5,
+      "status": "insufficient"
+    },
+    {
+      "source": "Hyperliquid",
+      "feature": "volume_24h_usd",
+      "horizon_hours": 1,
+      "matured_observations": 630,
+      "distinct_days": 6,
+      "status": "insufficient"
+    },
+    {
+      "source": "Hyperliquid",
+      "feature": "volume_24h_usd",
+      "horizon_hours": 4,
+      "matured_observations": 140,
+      "distinct_days": 5,
+      "status": "insufficient"
+    },
+    {
+      "source": "Deribit options",
+      "feature": "gex_ratio",
+      "horizon_hours": 1,
+      "matured_observations": 124,
+      "distinct_days": 6,
+      "status": "insufficient"
+    },
+    {
+      "source": "Deribit options",
+      "feature": "gex_ratio",
+      "horizon_hours": 4,
+      "matured_observations": 28,
+      "distinct_days": 5,
+      "status": "insufficient"
+    },
+    {
+      "source": "Deribit options",
+      "feature": "gex_ratio_change_24h",
+      "horizon_hours": 1,
+      "matured_observations": 60,
+      "distinct_days": 5,
+      "status": "insufficient"
+    },
+    {
+      "source": "Deribit options",
+      "feature": "gex_ratio_change_24h",
+      "horizon_hours": 4,
+      "matured_observations": 16,
+      "distinct_days": 5,
+      "status": "insufficient"
+    },
+    {
+      "source": "Deribit options",
+      "feature": "flip_distance_pct",
+      "horizon_hours": 1,
+      "matured_observations": 124,
+      "distinct_days": 6,
+      "status": "insufficient"
+    },
+    {
+      "source": "Deribit options",
+      "feature": "flip_distance_pct",
+      "horizon_hours": 4,
+      "matured_observations": 28,
+      "distinct_days": 5,
+      "status": "insufficient"
+    },
+    {
+      "source": "Binance scanner",
+      "feature": "funding_z",
+      "horizon_hours": 1,
+      "matured_observations": 608,
+      "distinct_days": 5,
+      "status": "insufficient"
+    },
+    {
+      "source": "Binance scanner",
+      "feature": "funding_z",
+      "horizon_hours": 4,
+      "matured_observations": 146,
+      "distinct_days": 5,
+      "status": "insufficient"
+    },
+    {
+      "source": "Binance scanner",
+      "feature": "oi_z",
+      "horizon_hours": 1,
+      "matured_observations": 608,
+      "distinct_days": 5,
+      "status": "insufficient"
+    },
+    {
+      "source": "Binance scanner",
+      "feature": "oi_z",
+      "horizon_hours": 4,
+      "matured_observations": 146,
+      "distinct_days": 5,
+      "status": "insufficient"
+    },
+    {
+      "source": "Binance scanner",
+      "feature": "book_imbalance",
+      "horizon_hours": 1,
+      "matured_observations": 572,
+      "distinct_days": 5,
+      "status": "insufficient"
+    },
+    {
+      "source": "Binance scanner",
+      "feature": "book_imbalance",
+      "horizon_hours": 4,
+      "matured_observations": 138,
+      "distinct_days": 5,
+      "status": "insufficient"
+    },
+    {
+      "source": "Binance scanner",
+      "feature": "large_trade_pressure",
+      "horizon_hours": 1,
+      "matured_observations": 608,
+      "distinct_days": 5,
+      "status": "insufficient"
+    },
+    {
+      "source": "Binance scanner",
+      "feature": "large_trade_pressure",
+      "horizon_hours": 4,
+      "matured_observations": 146,
+      "distinct_days": 5,
+      "status": "insufficient"
+    },
+    {
+      "source": "Binance scanner",
+      "feature": "book_flow_interaction",
+      "horizon_hours": 1,
+      "matured_observations": 572,
+      "distinct_days": 5,
+      "status": "insufficient"
+    },
+    {
+      "source": "Binance scanner",
+      "feature": "book_flow_interaction",
+      "horizon_hours": 4,
+      "matured_observations": 138,
+      "distinct_days": 5,
+      "status": "insufficient"
+    },
+    {
+      "source": "Binance scanner",
+      "feature": "spread_bps",
+      "horizon_hours": 1,
+      "matured_observations": 572,
+      "distinct_days": 5,
+      "status": "insufficient"
+    },
+    {
+      "source": "Binance scanner",
+      "feature": "spread_bps",
+      "horizon_hours": 4,
+      "matured_observations": 138,
+      "distinct_days": 5,
+      "status": "insufficient"
+    },
+    {
+      "source": "Binance scanner",
+      "feature": "depth_10bps_usd",
+      "horizon_hours": 1,
+      "matured_observations": 572,
+      "distinct_days": 5,
+      "status": "insufficient"
+    },
+    {
+      "source": "Binance scanner",
+      "feature": "depth_10bps_usd",
+      "horizon_hours": 4,
+      "matured_observations": 138,
+      "distinct_days": 5,
+      "status": "insufficient"
+    },
+    {
+      "source": "Stablecoin data",
+      "feature": "stable_change_7d_pct",
+      "horizon_hours": 1,
+      "matured_observations": 63,
+      "distinct_days": 6,
+      "status": "insufficient"
+    },
+    {
+      "source": "Stablecoin data",
+      "feature": "stable_change_7d_pct",
+      "horizon_hours": 4,
+      "matured_observations": 14,
+      "distinct_days": 5,
+      "status": "insufficient"
+    }
+  ],
+  "promotable": false
+}

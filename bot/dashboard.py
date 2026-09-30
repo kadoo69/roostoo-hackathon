@@ -4,10 +4,11 @@ import argparse
 import json
 import threading
 import time
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 import pandas as pd
+import yaml
 
 from bot.blotter import build as build_blotter
 from bot.journal import Journal
@@ -24,28 +25,42 @@ from bot.settings import ROOT, load
 # under its own module still has to be added here or it trades invisibly, which
 # is the stale-hardcoded-list defect already in HANDOVER.md section 8.
 BOTS = {"donchian_4h": "config/donchian_4h.yaml",
-        "donchian_4h_cushion": "config/donchian_4h_cushion.yaml",
-        "donchian_1h": "config/donchian_1h.yaml",
-        "momentum_top5_4h": "config/momentum_top5_4h.yaml",
-        "momentum_top5_cushion": "config/momentum_top5_cushion.yaml",
-        "momentum_top3_4h": "config/momentum_top3_4h.yaml",
         "momentum_top3_full": "config/momentum_top3_full.yaml",
-        "alpha_flow": "config/alpha_flow.yaml",
-        "scalper_live": "config/scalper_live.yaml",
-        "donchian_30m": "config/donchian_30m.yaml",
-        "donchian_15m": "config/donchian_15m.yaml",
-        "momentum_top3_1h": "config/momentum_top3_1h.yaml",
+        "momentum_top3_lock": "config/momentum_top3_lock.yaml",
+        "momentum_top3_1h_long": "config/momentum_top3_1h_long.yaml",
         "momentum_top3_30m": "config/momentum_top3_30m.yaml",
+        "competition": "config/competition.yaml",
+        "competition_rehearsal": "config/competition_rehearsal.yaml",
         "momentum_top3_15m": "config/momentum_top3_15m.yaml",
-        "momentum_top3_lock": "config/momentum_top3_lock.yaml"}
-CONTROL_OF = {"donchian_4h_cushion": "donchian_4h", "momentum_top5_cushion": "momentum_top5_4h",
-              "momentum_top3_full": "momentum_top3_4h",
-              "alpha_flow": "momentum_top3_full",
-              "momentum_top3_lock": "momentum_top3_full"}
+        "momentum_top3_5m": "config/momentum_top3_5m.yaml",
+        "momentum_top3_1h_allcash": "config/momentum_top3_1h_allcash.yaml",
+        "momentum_top3_30m_allcash": "config/momentum_top3_30m_allcash.yaml",
+        "accel_15m": "config/accel_15m.yaml",
+        "burst_5m": "config/burst_5m.yaml",
+        "burst_15m": "config/burst_15m.yaml",
+        "burst_strong_15m": "config/burst_strong_15m.yaml",
+        "momentum_top3_15m_eq": "config/momentum_top3_15m_eq.yaml",
+        "short_accel_15m": "config/short_accel_15m.yaml",
+        "momentum_top3_15m_hold3h": "config/momentum_top3_15m_hold3h.yaml",
+        "momentum_top3_5m_hold2h": "config/momentum_top3_5m_hold2h.yaml",
+        "short_pullback_15m": "config/short_pullback_15m.yaml",
+        "momentum_top3_15m_slowexit": "config/momentum_top3_15m_slowexit.yaml"}
+CONTROL_OF = {"momentum_top3_lock": "momentum_top3_full",
+              "competition": "momentum_top3_30m",
+              "competition_rehearsal": "momentum_top3_30m",
+              "momentum_top3_1h_allcash": "momentum_top3_1h_long",
+              "momentum_top3_30m_allcash": "momentum_top3_30m",
+              "burst_strong_15m": "burst_15m",
+              "momentum_top3_15m_eq": "momentum_top3_15m",
+              "momentum_top3_15m_hold3h": "momentum_top3_15m",
+              "momentum_top3_5m_hold2h": "momentum_top3_5m",
+              "short_pullback_15m": "short_accel_15m",
+              "momentum_top3_15m_slowexit": "momentum_top3_15m"}
 SCANNER = ROOT / "live" / "scanner" / "state.json"
-EXPECTED_DRAG = {"donchian_4h": 0.051, "donchian_1h": 0.193, "momentum_top5_4h": 0.075,
+EXPECTED_DRAG = {"donchian_5m": 1.3, "momentum_top3_5m": 7.4, "burst_5m": 7.4, "donchian_4h": 0.051, "donchian_1h": 0.193, "momentum_top5_4h": 0.075,
                  "donchian_4h_cushion": 0.051, "momentum_top5_cushion": 0.075,
                  "momentum_top3_4h": 0.075, "momentum_top3_full": 0.085,
+                 "competition": 2.452, "competition_rehearsal": 2.452,
                  "alpha_flow": 0.072,
                  "scalper_live": 0.50,
                  "donchian_30m": 0.339,
@@ -53,7 +68,9 @@ EXPECTED_DRAG = {"donchian_4h": 0.051, "donchian_1h": 0.193, "momentum_top5_4h":
                  "momentum_top3_1h": 1.219,
                  "momentum_top3_30m": 2.452,
                  "momentum_top3_15m": 5.007,
-                 "momentum_top3_lock": 0.085}
+                 "momentum_top3_lock": 0.085,
+                 "momentum_top3_ls": 0.085,
+                 "donchian_4h_ls": 0.051}
 _BREADTH = {"data": None, "updated": None}
 
 # Product backlog and integration state are deliberately separate. A source can
@@ -90,8 +107,11 @@ NETWORK_ERROR = ("ConnectionError", "ReadTimeout", "RemoteDisconnected", "HTTPSC
 
 
 def transient(e: dict) -> bool:
-    return e.get("event") in ("cycle_error", "config_changed_mid_run") and (
-        e.get("event") == "config_changed_mid_run" or any(k in str(e.get("error", "")) for k in NETWORK_ERROR))
+    """Recovered network blips, config changes and deferred data gaps are not faults; a data gap
+    is waited out and retried by the cycle itself. DECISIONS.md#live-audit-2026-09-24"""
+    if e.get("event") in ("config_changed_mid_run", "data_incomplete"):
+        return True
+    return e.get("event") == "cycle_error" and any(k in str(e.get("error", "")) for k in NETWORK_ERROR)
 
 def _breadth_loop():
     while True:
@@ -117,7 +137,8 @@ def bot_state(name: str, cfg: str) -> dict:
                 "dry_run": s.dry_run, "sha": s.config_sha256,
                 "momentum_bars": s.momentum_bars,
                 "full_deployment": s.full_deployment,
-                "regime_gate": s.regime_gate}
+                "regime_gate": s.regime_gate,
+                "description": ((yaml.safe_load((ROOT / cfg).read_text()) or {}).get("meta") or {}).get("description")}
     except Exception:
         meta = {}
     bl = build_blotter(name)
@@ -136,6 +157,8 @@ def bot_state(name: str, cfg: str) -> dict:
     gaps = f["ts"].diff().dt.total_seconds().dropna()
     series = [{"t": t.isoformat(), "e": round(float(v), 2)}
               for t, v in eq.tail(400).items()]
+    curve = [{"t": t.isoformat(), "e": round(float(v), 2)}
+             for t, v in eq.resample("30min").last().dropna().items()]
 
     start = float(eq.iloc[0])
     cur = float(eq.iloc[-1])
@@ -155,14 +178,19 @@ def bot_state(name: str, cfg: str) -> dict:
         "errors_network": sum(1 for e in errors if transient(e)),
         "errors_last_hour": sum(1 for e in errors if e.get("ts_utc", "") >= (
             pd.Timestamp.now(tz="UTC") - pd.Timedelta(hours=1)).isoformat()),
+        "faults_last_hour": sum(1 for e in errors if not transient(e) and e.get("ts_utc", "") >= (
+            pd.Timestamp.now(tz="UTC") - pd.Timedelta(hours=1)).isoformat()),
         "max_gap_s": round(float(gaps.max()), 1) if len(gaps) else None,
         "equity": round(cur, 2), "equity_start": round(start, 2),
         "pnl": round(cur - start, 2),
+        "realised_pnl": round(sum(float(t.get("net_pnl") or 0.0) for t in bl["closed"]), 2),
+        "open_pnl": round(cur - start - sum(float(t.get("net_pnl") or 0.0) for t in bl["closed"]), 2),
         "pnl_pct": round((cur / start - 1) * 100, 4) if start else 0.0,
         "drawdown_pct": round((cur / peak - 1) * 100, 4) if peak else 0.0,
         "cash": round(float(last.get("cash", 0)), 2),
         "gross": float(last.get("gross_exposure", 0) or 0),
         "n_long": int(last.get("n_long", 0) or 0),
+        "n_short": int(last.get("n_short", 0) or 0) if pd.notna(last.get("n_short")) else 0,
         "n_universe": int(last.get("n_universe", 0) or 0),
         "mirror_bps": last.get("mirror_worst_bps"),
         # `last` is a DataFrame row, so a column absent from older cycle
@@ -171,10 +199,21 @@ def bot_state(name: str, cfg: str) -> dict:
         "positions": last.get("positions") or {},
         "performance": from_equity(daily) if len(daily) >= 3 else None,
         "blotter": bl["stats"],
-        "closed": sorted(bl["closed"], key=lambda t: t["exit_ts"], reverse=True)[:60],
+        "closed": recent_closed(bl["closed"]),
+        "closed_total": len(bl["closed"]),
         "open": bl["open"],
         "equity_series": series,
+        "equity_curve": curve,
+        "marks": last.get("marks") if isinstance(last.get("marks"), dict) else {},
     }
+
+
+def recent_closed(closed: list[dict], hours: float = 48.0, floor: int = 60) -> list[dict]:
+    """Newest first: every trade closed in the last `hours`, and at least `floor` trades.
+    DECISIONS.md#desk-closed-trades-2026-09-27"""
+    srt = sorted(closed, key=lambda t: t["exit_ts"], reverse=True)
+    cut = (pd.Timestamp.now(tz="UTC") - pd.Timedelta(hours=hours)).isoformat()
+    return srt[:max(floor, sum(1 for t in srt if str(t["exit_ts"]) >= cut))]
 
 
 def scanner_state() -> dict | None:
@@ -221,13 +260,20 @@ def scanner_state() -> dict | None:
         return None
 
 
-def source_health(scanner: dict | None, bots: list[dict]) -> list[dict]:
+def source_hub_state() -> dict | None:
+    try:
+        data = json.loads((ROOT / "live" / "source_hub" / "state.json").read_text())
+        return data if data.get("schema") == 1 and isinstance(data.get("sources"), dict) else None
+    except (OSError, ValueError, TypeError, AttributeError):
+        return None
+
+
+def source_health(scanner: dict | None, bots: list[dict], hub: dict | None = None) -> list[dict]:
     """Prioritised data inventory with honest freshness and coverage.
 
     The first six sources are already collected by the existing Binance feed
-    and scanner. Everything below them stays visibly planned until it has a
-    real ingestion path and timestamp; the dashboard never fabricates a value
-    from catalog metadata alone.
+    and scanner. Additional sources are live only after a fresh successful
+    source-hub read. A failed refresh cannot inherit an old green badge.
     """
     crowd = (scanner or {}).get("crowding") or []
     bot_sample = any(b.get("cycles", 0) for b in bots)
@@ -246,13 +292,27 @@ def source_health(scanner: dict | None, bots: list[dict]) -> list[dict]:
     }
     wired = set(coverage)
     rows = []
+    hub_sources = (hub or {}).get("sources") or {}
+    now = pd.Timestamp.now(tz="UTC")
     for rank, (name, cost, stars, method, purpose) in enumerate(SOURCE_CATALOG, 1):
         n = coverage.get(name, 0)
+        hub_row = hub_sources.get(name)
+        age_s = None
+        if isinstance(hub_row, dict):
+            try:
+                age_s = max(0.0, (now - pd.Timestamp(hub_row["fetched_at"])).total_seconds())
+            except (KeyError, ValueError, TypeError):
+                pass
+            n = int(hub_row.get("coverage") or 0)
         if name == "Binance OHLCV":
             has_sample = bot_sample or scanner is not None
         else:
             has_sample = n > 0
-        if name in wired and has_sample:
+        if hub_row is not None:
+            status = ("live" if hub_row.get("status") == "ok" and age_s is not None
+                      and age_s <= hub_row.get("max_age_s", 0) else
+                      "stale" if hub_row.get("status") == "ok" else "error")
+        elif name in wired and has_sample:
             is_fresh = live_market if name == "Binance OHLCV" else bool((scanner or {}).get("live"))
             status = "live" if is_fresh else "stale"
         elif name in wired:
@@ -261,8 +321,9 @@ def source_health(scanner: dict | None, bots: list[dict]) -> list[dict]:
             status = "planned"
         rows.append({"rank": rank, "name": name, "cost": cost,
                      "usefulness": stars, "method": method, "purpose": purpose,
-                     "status": status, "coverage": n,
-                     "updated": ((scanner or {}).get("enriched_at")
+                     "status": status, "coverage": n, "age_s": age_s,
+                     "updated": (hub_row.get("fetched_at") if hub_row else
+                                 (scanner or {}).get("enriched_at")
                                  if name != "Binance OHLCV"
                                  else ((scanner or {}).get("ts_utc")) )})
     return rows
@@ -276,7 +337,8 @@ def portfolio_leaderboard(bots: list[dict]) -> list[dict]:
     for rank, b in enumerate(ranked, 1):
         p = b.get("performance") or {}
         out.append({"rank": rank, "bot": b["bot"], "return_pct": b.get("pnl_pct"),
-                    "pnl": b.get("pnl"), "equity": b.get("equity"),
+                    "pnl": b.get("pnl"), "realised_pnl": b.get("realised_pnl"),
+                    "open_pnl": b.get("open_pnl"), "equity": b.get("equity"),
                     "drawdown_pct": b.get("drawdown_pct"), "gross": b.get("gross"),
                     "positions": b.get("n_long"), "sharpe": p.get("sharpe"),
                     "sortino": p.get("sortino"), "calmar": p.get("calmar"),
@@ -326,7 +388,8 @@ def snapshot() -> dict:
                 st["scalper"] = scalper_stats(n)
             except Exception as exc:
                 st["scalper"] = {"error": repr(exc)}
-        st["insights"] = derive(st, EXPECTED_DRAG.get(n, 0.05))
+        drag = None if n == "momentum_top3_1h_long" else EXPECTED_DRAG.get(n, 0.05)
+        st["insights"] = derive(st, drag)
         st["control_of"] = CONTROL_OF.get(n)
         try:
             st["markout"] = markouts(ROOT / "live" / n)
@@ -334,12 +397,14 @@ def snapshot() -> dict:
             st["markout"] = {"error": repr(exc)}
         bots.append(st)
     scan = scanner_state()
+    hub = source_hub_state()
     return {"generated": pd.Timestamp.now(tz="UTC").isoformat(),
             "breadth": _BREADTH["data"], "breadth_updated": _BREADTH["updated"],
             "scanner": scan, "controls": CONTROL_OF,
             "leaderboard": portfolio_leaderboard(bots),
             "strategy_logic": strategy_logic(bots),
-            "sources": source_health(scan, bots),
+            "sources": source_health(scan, bots, hub),
+            "source_hub": hub,
             "objective": {"primary": "portfolio return",
                           "secondary": ["Sharpe", "Sortino", "Calmar"],
                           "window_days": 14},
@@ -348,6 +413,8 @@ def snapshot() -> dict:
 
 HTML = (Path(__file__).parent / "dashboard.html")
 ANALYSIS_HTML = (Path(__file__).parent / "analysis.html")
+HEATMAP_HTML = (Path(__file__).parent / "heatmap.html")
+DESK_HTML = (Path(__file__).parent / "desk.html")
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -367,12 +434,22 @@ class Handler(BaseHTTPRequestHandler):
         if self.path.startswith("/api/state"):
             self._json(snapshot())
             return
+        if self.path.startswith("/api/desk"):
+            from bot.desk import payload as desk_payload
+            self._json(desk_payload(snapshot()))
+            return
         if self.path.startswith("/api/analysis"):
             snap = snapshot()
             self._json(analysis_payload(snap["bots"], CONTROL_OF))
             return
+        if self.path.startswith("/api/heatmap"):
+            from bot.heatmap import payload as heatmap_payload
+            self._json(heatmap_payload())
+            return
         body = (ANALYSIS_HTML if self.path.startswith("/analysis")
-                else HTML).read_bytes()
+                else HEATMAP_HTML if self.path.startswith("/heatmap")
+                else HTML if self.path.startswith("/full")
+                else DESK_HTML).read_bytes()
         self.send_response(200)
         self.send_header("Content-Type", "text/html; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
@@ -386,7 +463,9 @@ def main() -> int:
     ap.add_argument("--host", default="127.0.0.1")
     a = ap.parse_args()
     threading.Thread(target=_breadth_loop, daemon=True).start()
-    srv = HTTPServer((a.host, a.port), Handler)
+    from bot.heatmap import refresh_loop
+    threading.Thread(target=refresh_loop, daemon=True).start()
+    srv = ThreadingHTTPServer((a.host, a.port), Handler)
     print(f"dashboard: http://{a.host}:{a.port}")
     srv.serve_forever()
     return 0

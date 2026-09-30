@@ -1,0 +1,36 @@
+meta:
+  name: execution_timing
+  declared_before_any_backtest: true
+  declared_utc: '2026-09-23'
+  requested_by: operator
+  operator_request: 'Fill the gaps the intraday study found, in our own way, with the competition in mind.'
+  premise: 'Every sub-4h regularity (#intraday-structure-outcome) is 0.5 to 11 bps and cannot pay a
+    round trip as a signal. It can still pay as EXECUTION: the book trades at every 4h close anyway,
+    so the only question is whether the few minutes after the close move price for or against the
+    order it is about to place. Cost per trade is the binding constraint on the ranked books
+    (about 0.20 Sharpe per 5 bps, RESEARCH_SHORT_HORIZON.md).'
+  engine: 'Trade legs of C0 (momentum_top3_full) and donchian_4h from the vectorised selection at 4h
+    closes (entries, exits and rank rotations; intrabar ladder skims excluded). For each leg, Binance
+    1m klines from the 4h close to 60 minutes after. Benefit of delaying a leg by k minutes, in bps:
+    -(P(close+k)/P(close) - 1) for a buy, +(P(close+k)/P(close) - 1) for a sell. P(close) is the
+    4h bar close, which is the backtest fill.'
+  periods: 2023-24 and 2025-26.
+  decision_rule: 'Adopt a delay only if the mean benefit is above 2 bps with t above 2 at EVERY k in
+    3, 5, 10 and 15 minutes, in BOTH periods and for BOTH books, and the nonsense control is below
+    half of it. Then the delay is the smallest k in that plateau. Otherwise the book keeps executing
+    at the first cycle after the close, and the result is recorded as null.'
+  control: execute at the first cycle after the close (k = 1), which is what the live bot does.
+arms:
+  T1_delay_after_close:
+    grid_minutes: [1, 2, 3, 5, 10, 15, 30, 60]
+    mechanism: 'Algorithmic flow keyed to the 4h candle concentrates in the first minutes after it
+      closes (arXiv:2607.09426; the live 1m feed puts minutes 0 to 3 highest, D2 of
+      #intraday-structure-outcome), and quarter-hour opening returns partly reverse. A breakout
+      entry placed at the close buys into that burst.'
+    failure_mode: 'Breakouts continue: the same momentum the book trades makes every delay cost, and
+      a sell after an exit signal keeps falling.'
+    nonsense_control: 'Legs of random sign at random 4h closes of the same names, same count; the
+      benefit must be indistinguishable from zero and below half of T1.'
+  T2_by_leg_type:
+    note: 'The same grid split by entries, exits and rotations. Reported, not selected on: a rule
+      that delays only one leg type is a new declaration.'

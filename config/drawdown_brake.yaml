@@ -1,0 +1,35 @@
+meta:
+  name: drawdown_brake
+  declared_before_any_backtest: true
+  declared_utc: '2026-09-23'
+  requested_by: operator
+  operator_request: 'We are facing drawdowns; what is the issue, what insights, how can we tune it to withstand them.'
+  premise: 'results/drawdown_readout.json: the target lock halves the median in-window drawdown of
+    momentum_top3_full but leaves the worst window untouched (-28.5% either way), because a window
+    that falls from the start never reaches +5%. The brake is the lock''s mirror on the downside.
+    Prior evidence against: the end-of-window derisk ramp is negative on both screens
+    (#derisk-ramp-protection-outcome), and timing overlays in this operator''s work reverse out of
+    sample. The circuit breaker level of 12% is fixed, never fitted (#circuit-breaker); this brake
+    is a separate, declared rule.'
+  engine: gates.competition_wf.windows_hourly with the brake applied inside each 14-day window on
+    that window's own starting equity, as the lock is; the de-risk trade is charged 5 bps plus the
+    median tick on the half sold.
+  decision_rule: 'Same as config/competition_wf.yaml: raise P(14-day > 2%) AND the median against its
+    control in every period, worst window no more than 5 points worse, nonsense control below half
+    the P(>2%) gain in 2025-26. Worst window and 10th-percentile drawdown are reported beside it,
+    but a brake that only improves them while failing the rule is recorded as a null.'
+arms:
+  B1_brake_on_top3_full:
+    rule: Once the window's equity is 8% below its starting equity, hold at most 0.5 gross for the
+      rest of the window.
+    control: momentum_top3_full.
+  B2_brake_on_top3_lock:
+    rule: B1 applied to momentum_top3_full plus the 5%/0.3 target lock; whichever fires first
+      binds, and a later lock can still cut to 0.3.
+    control: momentum_top3_full plus the lock.
+mechanism: Calmar and Sortino over 14 days are set by the worst stretch; halving exposure after an
+  8% loss caps how deep a crashing window can go.
+failure_mode: Momentum drawdowns in crypto often V-reverse; a brake sells the bottom and forfeits the
+  recovery, which costs P(positive) exactly in the windows that would have recovered.
+nonsense_control: The same half-gross cut at a uniformly random hour inside each window where B1
+  fires, 20 seeds.

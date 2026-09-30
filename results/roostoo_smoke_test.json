@@ -1,0 +1,314 @@
+{
+  "pair": "BTC/USD",
+  "steps": [
+    {
+      "step": "start",
+      "t": "14:06:40",
+      "offset_ms": 254,
+      "bid": 84596,
+      "ask": 84596.01,
+      "cash": 50000.0,
+      "holdings": {},
+      "price_precision": 2,
+      "amount_precision": 5,
+      "min_order": 1.0
+    },
+    {
+      "step": "resting_limit",
+      "t": "14:06:40",
+      "ok": true,
+      "detail": {
+        "Pair": "BTC/USD",
+        "OrderID": 3403171,
+        "Status": "PENDING",
+        "Role": "MAKER",
+        "ServerTimeUsage": 0.003453034,
+        "CreateTimestamp": 1790777200910,
+        "FinishTimestamp": 0,
+        "Side": "BUY",
+        "Type": "LIMIT",
+        "StopType": "GTC",
+        "Price": 76136.4,
+        "Quantity": 0.00262,
+        "FilledQuantity": 0,
+        "FilledAverPrice": 0,
+        "CoinChange": 0,
+        "UnitChange": 0,
+        "CommissionCoin": "BTC",
+        "CommissionChargeValue": 0,
+        "CommissionPercent": 0.0005,
+        "OrderWalletType": "SPOT",
+        "OrderSource": "PUBLIC_API"
+      }
+    },
+    {
+      "step": "query_pending",
+      "t": "14:06:41",
+      "ok": true,
+      "count": 0,
+      "contains_ours": false
+    },
+    {
+      "step": "query_by_id",
+      "t": "14:06:41",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "step": "cancel",
+      "t": "14:06:41",
+      "ok": true,
+      "response": {
+        "Success": true,
+        "ErrMsg": "",
+        "CanceledList": [
+          3403171
+        ]
+      }
+    },
+    {
+      "step": "query_pending_after_cancel",
+      "t": "14:06:41",
+      "ok": true,
+      "gone": true
+    },
+    {
+      "step": "below_min_order",
+      "t": "14:06:41",
+      "ok": false,
+      "error": "/v3/place_order:quantity error"
+    },
+    {
+      "step": "market_buy",
+      "t": "14:06:42",
+      "ok": true,
+      "detail": {
+        "Pair": "BTC/USD",
+        "OrderID": 3403172,
+        "Status": "FILLED",
+        "Role": "TAKER",
+        "ServerTimeUsage": 0.007641497,
+        "CreateTimestamp": 1790777202079,
+        "FinishTimestamp": 1790777202087,
+        "Side": "BUY",
+        "Type": "MARKET",
+        "StopType": "GTC",
+        "Price": 84596.01,
+        "Quantity": 0.00236,
+        "FilledQuantity": 0.00236,
+        "FilledAverPrice": 84596.01,
+        "CoinChange": 0.00236,
+        "UnitChange": 199.64658359999999,
+        "CommissionCoin": "USD",
+        "CommissionChargeValue": 0.199646,
+        "CommissionPercent": 0.001,
+        "OrderWalletType": "SPOT",
+        "OrderSource": "PUBLIC_API"
+      },
+      "quoted_ask": 84596.01,
+      "slip_bps": 0.0
+    },
+    {
+      "step": "wallet_after_buy",
+      "t": "14:06:44",
+      "holdings": {
+        "BTCUSDT": 0.00236
+      },
+      "cash": 49800.15
+    },
+    {
+      "step": "market_sell",
+      "t": "14:06:44",
+      "ok": true,
+      "detail": {
+        "Pair": "BTC/USD",
+        "OrderID": 3403173,
+        "Status": "FILLED",
+        "Role": "TAKER",
+        "ServerTimeUsage": 0.005437821,
+        "CreateTimestamp": 1790777204608,
+        "FinishTimestamp": 1790777204613,
+        "Side": "SELL",
+        "Type": "MARKET",
+        "StopType": "GTC",
+        "Price": 84596,
+        "Quantity": 0.00236,
+        "FilledQuantity": 0.00236,
+        "FilledAverPrice": 84596,
+        "CoinChange": 0.00236,
+        "UnitChange": 199.64656000000002,
+        "CommissionCoin": "USD",
+        "CommissionChargeValue": 0.199646,
+        "CommissionPercent": 0.001,
+        "OrderWalletType": "SPOT",
+        "OrderSource": "PUBLIC_API"
+      },
+      "quoted_bid": 84596
+    },
+    {
+      "step": "limit_at_bid",
+      "t": "14:06:44",
+      "ok": true,
+      "detail": {
+        "Pair": "BTC/USD",
+        "OrderID": 3403174,
+        "Status": "PENDING",
+        "Role": "MAKER",
+        "ServerTimeUsage": 0.005145461,
+        "CreateTimestamp": 1790777205042,
+        "FinishTimestamp": 0,
+        "Side": "BUY",
+        "Type": "LIMIT",
+        "StopType": "GTC",
+        "Price": 84596,
+        "Quantity": 0.00236,
+        "FilledQuantity": 0,
+        "FilledAverPrice": 0,
+        "CoinChange": 0,
+        "UnitChange": 0,
+        "CommissionCoin": "BTC",
+        "CommissionChargeValue": 0,
+        "CommissionPercent": 0.0005,
+        "OrderWalletType": "SPOT",
+        "OrderSource": "PUBLIC_API"
+      }
+    },
+    {
+      "step": "limit_at_bid_30s",
+      "t": "14:07:15",
+      "ok": true,
+      "detail": {}
+    },
+    {
+      "step": "limit_at_bid_cancel",
+      "t": "14:07:15",
+      "ok": false,
+      "error": "/v3/cancel_order:no order canceled"
+    },
+    {
+      "step": "limit_flatten",
+      "t": "14:07:17",
+      "ok": true,
+      "detail": {
+        "Pair": "BTC/USD",
+        "OrderID": 3403175,
+        "Status": "FILLED",
+        "Role": "TAKER",
+        "ServerTimeUsage": 0.00565708,
+        "CreateTimestamp": 1790777236350,
+        "FinishTimestamp": 1790777236356,
+        "Side": "SELL",
+        "Type": "MARKET",
+        "StopType": "GTC",
+        "Price": 84480,
+        "Quantity": 0.00236,
+        "FilledQuantity": 0.00236,
+        "FilledAverPrice": 84480,
+        "CoinChange": 0.00236,
+        "UnitChange": 199.3728,
+        "CommissionCoin": "USD",
+        "CommissionChargeValue": 0.199372,
+        "CommissionPercent": 0.001,
+        "OrderWalletType": "SPOT",
+        "OrderSource": "PUBLIC_API"
+      }
+    },
+    {
+      "step": "short_open",
+      "t": "14:07:17",
+      "ok": true,
+      "response": {
+        "Success": true,
+        "ID": 4055,
+        "Pair": "BTC/USD",
+        "OrderType": "MARKET",
+        "EntryPrice": 84480,
+        "ShortQty": 0.00118,
+        "Collateral": 99.68,
+        "OpenFee": 0.099686,
+        "Status": "OPEN",
+        "CreateTimestamp": 1790777237470
+      }
+    },
+    {
+      "step": "short_positions",
+      "t": "14:07:18",
+      "ok": true,
+      "rows": [
+        {
+          "ID": 4055,
+          "Pair": "BTC/USD",
+          "EntryPrice": 84480,
+          "ShortQty": 0.00118,
+          "Collateral": 99.68,
+          "CurrentPrice": 84480.01,
+          "UnrealizedPNL": -1.2e-05,
+          "UnrealizedPNLPct": -1e-06,
+          "PositionValue": 99.679988,
+          "CreateTimestamp": 1790777237458,
+          "PositionStatus": "OPEN"
+        }
+      ]
+    },
+    {
+      "step": "balance_with_short",
+      "t": "14:07:18",
+      "raw": {
+        "Success": true,
+        "ErrMsg": "",
+        "SpotWallet": {
+          "BTC": {
+            "Free": 0,
+            "Lock": 0,
+            "PendingOrders": 0,
+            "ShortCollateral": 0
+          },
+          "USD": {
+            "Free": 49899.24,
+            "Lock": 99.68,
+            "PendingOrders": 0,
+            "ShortCollateral": 99.68
+          }
+        },
+        "MarginWallet": {}
+      }
+    },
+    {
+      "step": "short_close",
+      "t": "14:07:19",
+      "ok": true,
+      "response": {
+        "Success": true,
+        "ClosePrice": 84480.01,
+        "RealizedPNL": -1.1799999993818347e-05,
+        "CloseFee": 0.099686,
+        "ReturnAmount": 99.5803022,
+        "ClosedQty": 0.00118,
+        "FullyClosed": true
+      }
+    },
+    {
+      "step": "end",
+      "t": "14:07:19",
+      "raw": {
+        "Success": true,
+        "ErrMsg": "",
+        "SpotWallet": {
+          "BTC": {
+            "Free": 0,
+            "Lock": 0,
+            "PendingOrders": 0,
+            "ShortCollateral": 0
+          },
+          "USD": {
+            "Free": 49998.82,
+            "Lock": 0,
+            "PendingOrders": 0,
+            "ShortCollateral": 0
+          }
+        },
+        "MarginWallet": {}
+      }
+    }
+  ]
+}

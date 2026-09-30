@@ -1,0 +1,77 @@
+meta:
+  name: podcast_edges
+  declared_before_any_backtest: true
+  declared_utc: '2026-09-23'
+  requested_by: operator
+  operator_request: 'Get insights from this conversation (a mid-frequency crypto fund manager on edge
+    in crypto) and create a high-Sharpe, high-profitability strategy; identify the gaps, learn the
+    insights, implement a scalable more robust strategy with the best hyperparameters.'
+  source: 'Operator-supplied podcast transcript, 2026-09-23. Claims are the speaker''s, unaudited, on
+    his own data and cost structure, and are quoted as hypotheses, not evidence.'
+  hyperparameters: 'Taken verbatim from the source where it states them (20-day high, 5-day hold
+    window, top-N, equal weight). No grid is searched: the source''s parameters were set on other
+    data, which makes this an out-of-sample test of them; every searched parameter in this repo has
+    reversed out of sample. Where the source gives no number, one value is declared here and not
+    varied.'
+  screened_out: 'Already dead here: taker-aggression and order-flow rankers (#alpha-flow-declaration,
+    #flow-scalp-outcome), 30-minute mean reversion (#scalp-meanrev-outcome), market-neutral long-short
+    (#scoring-funnel, #beta-is-the-only-screen3-lever), exit clocks (#exit-clock-outcome). Not
+    testable here: carry (Roostoo spot and Roostoo shorts pay no funding, so the source of the carry
+    return does not exist on this venue; the price-only component was tested at
+    #positioning-edges-outcome), and the 7-days-after-listing short (almost no Roostoo listings fall
+    inside the window).'
+  engine: gates.competition_wf.book_hourly, every 14-day window, 5 bps plus tick per side long,
+    10 bps plus tick per side short, booking ladder on as deployed; periods 2022, 2023-24, 2025-26.
+    Daily signals reach the 4h clock through signals.exit_clock.to_fast (close-time alignment).
+  decision_rule: 'Same as config/competition_wf.yaml: raise P(14-day > 2%) AND the median against C0
+    in every period, worst window no more than 5 points worse, and the arm''s nonsense control
+    reproduces less than half its P(>2%) gain in 2025-26. Screen 3 and median in-window drawdown are
+    reported beside it. A survivor paper-trades as a new book beside C0; nothing replaces a running
+    book on a backtest.'
+  control: C0 = momentum_top3_full as deployed.
+arms:
+  P1_daily_trend_5d_window:
+    claim: '"Hold everything within 5 days of a 20-day high, equal weighted, top 20 cryptos: about
+      Sharpe 1.3 through bull and bear."'
+    rule: 'Daily bars, the point-in-time 30-name pool (this repo''s settled pool, #roostoo-universe-
+      pool-size; the source says 20). A name is held while its last close above the prior 20 daily
+      closes is at most 5 daily bars old. Equal weight across held names, fully deployed.'
+    mechanism: Large caps trend (big beat small); a 5-day grace window holds through the pauses
+      inside a trend and exits when the trend stops making highs, rather than on a price floor.
+    failure_mode: It is the same breakout family as the deployed channel on a slower clock, so it
+      mostly re-expresses C0's beta with less concentration and less tail.
+    nonsense_control: The same rule on a signal delayed by 10 daily bars.
+  P3_volume_trend_rank:
+    claim: '"Higher volume predicts higher prices, lower volume lower prices, after adjusting for the
+      market; long rising volume, short falling: well over Sharpe 2."'
+    rule: 'At each daily close, growth = log(mean daily dollar volume over the last 20 days) - log(mean
+      over the 60 days before them), minus the pool median of the same. Hold the top third of the
+      pool by growth, equal weight, long only, rebalanced daily.'
+    mechanism: Rising participation is new attention and capital arriving at a coin (the source's
+      sticky, reflexive capital); falling volume is attention leaving.
+    failure_mode: '#alpha-flow-declaration found a 4h-3d volume surge NEGATIVE; volume rises after
+      price rises, so this may be momentum measured noisily, or late.'
+    nonsense_control: The growth score permuted across names each day, 20 seeds.
+  P4_small_cap_pump_short:
+    claim: '"Anything in the bottom 20% of market cap that makes a 20-day high, short it; small coins
+      show negative trend, driven by price-insensitive sellers."'
+    rule: 'The point-in-time names ranked 31 to 80 by liquidity (just below the book''s pool). A close
+      above the prior 20 daily closes opens a short held 10 days, 1/10 of the sleeve each, at most 10
+      at once. Run on C0''s idle cash as a sleeve (gates.literature_edges.combine).'
+    mechanism: VC unlocks, market-maker option hedging and insiders sell into strength in small coins
+      regardless of price.
+    failure_mode: 'Ranks 31-80 on Binance are not the source''s bottom quintile of perps; shorts cost
+      20 bps a round trip and small caps squeeze; Roostoo lists few of these names live.'
+    nonsense_control: Shorts opened at random days on random names of the same set, same count, 20
+      seeds.
+  P2_equal_weight_stack:
+    claim: '"Throw trend, momentum and carry together equal weighted and it comes out to Sharpe 2;
+      equal weighting is surprisingly hard to beat."'
+    rule: One third of capital each in C0 (cross-sectional momentum), P1 (trend) and P3 (volume), each
+      run as its own book with its own costs; carry is replaced by P3 because carry cannot be earned
+      here. Fixed thirds, not chosen after seeing P1 or P3.
+    mechanism: Signals with low correlation to each other raise the Sharpe of the sum.
+    failure_mode: 'All three are long-only large-cap books whose returns are mostly the same beta
+      (#beta-is-the-only-screen3-lever), so they diversify little and the stack dilutes C0''s tail;
+      the source''s Sharpe 2 comes from signals that are long AND short.'
+    nonsense_control: none; it is a combination of arms each with its own control.

@@ -55,3 +55,11 @@ def test_network_blips_are_not_counted_as_errors():
     assert transient({"event": "cycle_error", "error": "RoostooError('/v3/ticker:try again later')"})
     assert not transient({"event": "cycle_error", "error": "KeyError('equity')"})
     assert not transient({"event": "wallet_read_failed", "error": "RoostooError('missing_api_key')"})
+
+
+def test_leaderboard_splits_net_pnl_into_realised_and_open():
+    from bot.dashboard import portfolio_leaderboard
+    row = portfolio_leaderboard([{"bot": "b", "pnl_pct": 5.0, "pnl": 5000.0, "realised_pnl": 3800.0,
+                                  "open_pnl": 1200.0, "equity": 105000.0}])[0]
+    assert row["realised_pnl"] == 3800.0 and row["open_pnl"] == 1200.0
+    assert row["realised_pnl"] + row["open_pnl"] == row["pnl"]

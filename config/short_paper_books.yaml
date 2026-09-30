@@ -1,0 +1,58 @@
+meta:
+  name: short_paper_books
+  declared_before_any_backtest: true
+  declared_utc: '2026-09-23'
+  requested_by: operator
+  operator_request: 'Our bots do not short but the competition allows it. Integrate shorting into the
+    system and modify the bots accordingly.'
+  operator_decision: 'Shown that S1 (#competition-wf-outcome), the short sleeve, failed in all three
+    periods and that its random-regime control matched it, the operator chose venue-short plumbing
+    plus long/short PAPER books beside the two competition candidates. The live competition books
+    stay long-only unless the paper books earn promotion by the book-choice date.'
+  prior_evidence: 'S1 short sleeve on momentum_top3_full: P(>2%) 0.37/0.53/0.47 against the control
+    0.36/0.57/0.53, median -2.39/+3.36/+1.06 against -0.73/+4.43/+2.91. Fails. The regime flag
+    carried nothing (the block-shuffled control did as well). DECISIONS.md#competition-wf-outcome.
+    Shorts cost 20 bps a round trip with no maker discount. DECISIONS.md#plan-correction-shorting.'
+  evaluation: 'The competition_wf engine and windows, unchanged: every 14-day window from 00:00 UTC,
+    hourly live-cycle simulator, 5 bps spot fee plus tick, 10 bps plus tick per side on shorts,
+    reported for 2022, 2023-24 and 2025-26.'
+  decision_rule: 'Identical to config/competition_wf.yaml: an arm is a candidate only if, against its
+    control, it raises P(>2%) AND median in all three periods, its worst window is no more than 5
+    points worse, and its nonsense control does not reproduce more than half its gain. Either way the
+    books paper-trade as forward evidence; a failed arm is never promoted on paper alone.'
+books:
+  momentum_top3_ls:
+    rule: 'momentum_top3_full plus the S1 sleeve exactly: while BTC''s 4h close is below its 180-bar
+      mean, names in the universe whose 4h close breaks below the prior 20-bar low and whose long
+      channel is not live are short candidates, held until the close exceeds the prior 10-bar high.
+      They fill the slots the longs leave free (3 minus longs selected), ranked by most negative
+      40-bar momentum. Full deployment spreads the book over longs plus shorts. Shorts are never
+      topped up and never laddered. A short that leaves the selection is closed.'
+    control: momentum_top3_full
+    backtest: S1 in #competition-wf-outcome; not re-run, it is this arm.
+    new_trial: false
+  donchian_4h_ls:
+    rule: 'donchian_4h plus the same breakdown sleeve under the same BTC regime: free slots are 20
+      minus longs held, filled by the most negative 40-bar momentum, 1/20 each, sharing the 1.0 gross
+      cap with the longs (longs first). Shorts never topped up, never laddered.'
+    control: donchian_4h
+    mechanism: 'donchian_4h holds up to 20 names at 1/20 and in a falling market mostly holds cash.
+      Breakdowns are the mirror of the breakouts it already monetises, and at 1/20 per name the
+      20 bps short round trip is diluted across a wide book rather than concentrated in three.'
+    failure_mode: 'The same one S1 met: crypto drifts up, bear rallies are violent and short-lived,
+      and 20 bps whipsaws eat the sleeve, adding drawdown without adding positive fortnights. The
+      donchian book''s value is its shallow worst window (-4 to -9%), and shorts may deepen it.'
+    nonsense_control: 'The same sleeve with the regime flag replaced by a block-shuffled copy of
+      itself (same share of time, random timing), 20 seeds, as S1.'
+    new_trial: true
+live_mechanics:
+  venue: 'POST /v6/short_open (collateral in USD, MARKET fills at MaxBid), POST /v6/short_close
+    (close_qty, fills at MinAsk, reduce only), GET /v6/short_positions. 0.1% of position value per
+    side, charged on acceptance. Collateral leaves the wallet on open and returns with the P&L on
+    close (ReturnAmount), so equity = USD + longs + sum(collateral + unrealized P&L).'
+  paper: 'Dry-run books charge exactly that: open at the bid, close at the ask, 0.1% of filled value
+    each side, loss capped at the collateral.'
+  unverified_until_keys: 'Whether open collateral also shows under the USD Lock balance. The README
+    implies it leaves the wallet; gates/short_smoke.py checks it with the test keys before any live
+    short.'
+trials_added: 1

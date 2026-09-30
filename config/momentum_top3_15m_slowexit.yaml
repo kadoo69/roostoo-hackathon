@@ -1,0 +1,121 @@
+meta:
+  name: momentum_top3_15m_slowexit
+  frozen: true
+  declared_utc: '2026-09-27'
+  paper_only: true
+  requested_by: 'operator: make the bots pick up momentum and capture the rally better'
+  description: 'momentum_top3_15m exactly as it runs live with the channel exit widened from 10 to 40 bars (2.5 h -> 10 h):
+    fast 15m entry, slow exit. momentum_top3_15m is its control.'
+  design_basis: 'DECISIONS.md#rally-capture-score-2026-09-27: fast books detect 41-64% of live rallies but capture a median
+    6% to -1%; 1h/4h books detect 16-26% but capture 42-64%.'
+  falsification: Stop it if after 14 live days (2026-10-11) it is below momentum_top3_15m over the same days.
+  declaration_ref: DECISIONS.md#rally-capture-score-2026-09-27
+contenders:
+  n: 3
+  momentum_bars: 40
+  breadth_max: 0.4
+  max_weight: 0.5
+  sizing: proportional to absolute 40-bar momentum
+  declared_ref: DECISIONS.md#lowtf-contenders-declaration
+  sticky: true
+  sticky_ref: DECISIONS.md#let-winners-run-outcome
+  htf_confirm: false
+  htf_ref: DECISIONS.md#no-htf-15m-5m
+  volume_confirm: 1.5
+  confirm_ref: DECISIONS.md#breakout-quality-outcome
+  skip_short_z:
+  - - null
+    - -3
+  - - -3
+    - -2.5
+  - - -2.5
+    - -2
+  - - -2
+    - -1.5
+  - - -1.5
+    - -1
+  - - -1
+    - 1
+  skip_long_z:
+  - - -2
+    - -1.5
+  - - 3
+    - null
+  skip_source: frozen from the 15m fit period, DECISIONS.md#lowtf-exhaustion-outcome
+strategy:
+  interval: 15m
+  entry_bars: 20
+  exit_bars: 40
+  top_n_pool: 30
+  ranking_rule: momentum
+  n_positions: 3
+  momentum_bars: 40
+  weight_divisor: 20
+  max_gross: 1.0
+  quote: USDT
+  universe_refresh_hours: 24
+  max_spread_bps: 5.0
+  min_history_bars: 30
+  regime_gate: always_on
+  full_deployment: true
+execution:
+  order_type: LIMIT
+  limit_offset_bps: 1.0
+  limit_timeout_s: 300
+  poll_seconds: 30
+risk:
+  max_drawdown: 0.25
+  max_error_rate: 0.25
+  max_ticker_age_s: 120
+  mirror_max_deviation_bps: 50.0
+  derisk_start_utc: '2026-10-15T00:00:00+00:00'
+  derisk_end_utc: '2026-10-17T20:00:00+00:00'
+booking:
+  enabled: true
+  step_pct: 0.03
+  skim_fraction: 0.15
+  recycle: false
+  min_skim_notional: 10.0
+  shorts: true
+  added_utc: '2026-09-22'
+  added_by: operator instruction to book profits on every bot, controls included
+  parameters_ref: DECISIONS.md#alpha-flow-declaration
+  parameters_basis: 3 percent step with a 15 percent slice. Tightening the step alone is the only statistically significant
+    effect in the ladder grid and it is harmful - holdout P(>20%) falls 0.168 to 0.070 at a 1 percent step, p=0.004. Cutting
+    the slice at the same time removes that cost. Step and slice move together or not at all.
+  honest_status: Not a validated improvement. The holdout return gain is p=0.14 and the drawdown gain is reproduced by a random-timing
+    nonsense control, so it is exposure reduction rather than timing.
+  confound_warning: paper-only comparison book, nobody's control.
+short:
+  enabled: false
+  disabled_utc: '2026-09-26'
+  disabled_by: 'operator: turn off shorts on the short-term books, keep the profit ladder'
+  disabled_ref: DECISIONS.md#short-term-shorts-off-2026-09-26
+  regime: breadth_below
+  breadth_max: 0.4
+  momentum_bars: 40
+  own_slots: true
+  slots: 3
+  require_negative_momentum: true
+  regime_bars: 180
+  entry_bars: 20
+  exit_bars: 10
+  execution: MARKET both legs, open at MaxBid, close at MinAsk, 0.1% per side
+  topped_up: false
+  laddered: true
+  added_utc: '2026-09-23'
+  added_by: 'operator instruction: add shorting to the short-term books'
+  rule: While fewer than 40% of the pool have positive 40-bar momentum, names in a 20-bar breakdown with negative momentum
+    and no live long channel are shorted, weakest first, in their own slots; closed when the close exceeds the prior 10-bar
+    high.
+  evidence_ref: DECISIONS.md#lowtf-breadth-shorts-declaration
+target_lock:
+  enabled: false
+  disabled_utc: '2026-09-26'
+  disabled_by: 'operator: the best books should be able to reach +20k; the lock caps them at +5% on the window anchor'
+  disabled_ref: DECISIONS.md#short-term-lock-off-2026-09-26
+  window_start_utc: '2026-09-24T00:00:00+00:00'
+  window_end_utc: '2026-10-08T00:00:00+00:00'
+  lock_return: 0.05
+  keep_gross: 0.3
+  declared_ref: DECISIONS.md#lowtf-lock-declaration

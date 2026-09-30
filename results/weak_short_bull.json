@@ -1,0 +1,104 @@
+{
+ "declaration": "config/weak_short_bull.yaml",
+ "arms": {
+  "C0": {
+   "2022": {
+    "n": 352,
+    "median_pct": -1.18,
+    "worst_pct": -31.1,
+    "median_screen3": -1.65,
+    "p_gt0": 0.435,
+    "p_gt2": 0.347,
+    "p_gt5": 0.253,
+    "p_gt10": 0.134,
+    "p_gt15": 0.088,
+    "p_gt20": 0.045
+   },
+   "2023-24": {
+    "n": 732,
+    "median_pct": 2.3,
+    "worst_pct": -36.2,
+    "median_screen3": 2.89,
+    "p_gt0": 0.587,
+    "p_gt2": 0.516,
+    "p_gt5": 0.414,
+    "p_gt10": 0.305,
+    "p_gt15": 0.21,
+    "p_gt20": 0.139
+   },
+   "2025-26": {
+    "n": 617,
+    "median_pct": 2.24,
+    "worst_pct": -28.3,
+    "median_screen3": 2.83,
+    "p_gt0": 0.588,
+    "p_gt2": 0.512,
+    "p_gt5": 0.4,
+    "p_gt10": 0.285,
+    "p_gt15": 0.203,
+    "p_gt20": 0.126
+   }
+  },
+  "W1": {
+   "2022": {
+    "n": 352,
+    "median_pct": 1.4,
+    "worst_pct": -19.3,
+    "median_screen3": 2.44,
+    "p_gt0": 0.58,
+    "p_gt2": 0.472,
+    "p_gt5": 0.321,
+    "p_gt10": 0.148,
+    "p_gt15": 0.085,
+    "p_gt20": 0.023
+   },
+   "2023-24": {
+    "n": 732,
+    "median_pct": 1.44,
+    "worst_pct": -27.5,
+    "median_screen3": 2.43,
+    "p_gt0": 0.549,
+    "p_gt2": 0.482,
+    "p_gt5": 0.367,
+    "p_gt10": 0.26,
+    "p_gt15": 0.165,
+    "p_gt20": 0.124
+   },
+   "2025-26": {
+    "n": 617,
+    "median_pct": 3.05,
+    "worst_pct": -32.5,
+    "median_screen3": 3.08,
+    "p_gt0": 0.606,
+    "p_gt2": 0.533,
+    "p_gt5": 0.439,
+    "p_gt10": 0.31,
+    "p_gt15": 0.196,
+    "p_gt20": 0.123
+   }
+  }
+ },
+ "W1_short_bar_share": 0.14,
+ "W1_nonsense": {
+  "2022": {
+   "median_pct_mean": 0.16,
+   "p_gt2_mean": 0.409
+  },
+  "2023-24": {
+   "median_pct_mean": 0.45,
+   "p_gt2_mean": 0.446
+  },
+  "2025-26": {
+   "median_pct_mean": 1.81,
+   "p_gt2_mean": 0.495
+  }
+ },
+ "verdict": {
+  "W1": {
+   "all_three_periods": false,
+   "worst_ok": true,
+   "nonsense_ok": true,
+   "candidate": false
+  }
+ }
+}

@@ -1,0 +1,40 @@
+meta:
+  name: lowtf_idle_sleeve_v1
+  declared_before_any_backtest: true
+  declared_utc: '2026-09-24'
+  research_only: true
+  question: Can a low-turnover 1h breakout sleeve use idle cash in the 4h momentum book and improve both return and daily risk ratios after costs?
+  periods:
+    fit: ['2022-01-15', '2023-01-01']
+    validation: ['2023-01-01', '2025-01-01']
+    holdout: ['2025-01-01', '2026-09-19']
+  rule: Keep execution bots unchanged; promote only after a separate forward paper comparison.
+baseline:
+  selection: 4h Donchian 20/10, 40-bar momentum top 3, PIT full-market top-30 liquidity universe
+  execution: existing hourly portfolio simulator with 3 percent profit skim and 25 percent drift band
+  unused_cash: 1 minus baseline gross exposure after its hourly decision
+  reference: gates/competition_wf.py C0
+arms:
+  hourly_breakout:
+    signal: 1h Donchian close breakout of previous 20 bars, exit below previous 10-bar low
+    weight: 5 percent per eligible name, multiplied by available cash; cap sleeve to available cash
+    universe: same PIT membership, aligned only after each 4h membership bar closes
+  four_hour_breakout_control:
+    signal: same Donchian 20/10 and 5 percent per name on 4h closes
+    purpose: determine whether the 1h clock adds value over a slower sleeve
+  stale_seven_day_control:
+    signal: hourly breakout selection delayed seven days
+    purpose: preserve activity and asset exposure while removing timely entry information
+  bitcoin_idle_control:
+    signal: deploy half of idle cash to BTC continuously
+    purpose: distinguish signal value from generic long crypto beta
+costs:
+  base_fee_per_side: 0.0005
+  tick_per_side: symbol tick divided by observed close
+  stress: double fee and tick cost of the sleeve
+  accounting: charge sleeve entry, exit and reallocation turnover at the next hourly bar
+pass_rule:
+  per_period: candidate has higher 14-day median return, Sharpe, Sortino and Calmar than unchanged baseline in fit, validation and holdout
+  controls: holdout return and Sharpe must exceed all three controls
+  stress: holdout return and Sharpe still exceed unchanged baseline at twice sleeve costs
+  drawdown: worst 14-day window no more than five percentage points below baseline

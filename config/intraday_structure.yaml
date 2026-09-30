@@ -1,0 +1,84 @@
+meta:
+  name: intraday_structure
+  declared_before_any_backtest: true
+  declared_utc: '2026-09-23'
+  requested_by: operator
+  operator_request: 'Find hidden alphas in the live data feed and monitor it closely; where are the best
+    entry and exit points; find crypto trading-bot literature for smaller time frames; what are the key
+    factors: correlation pairs, momentum.'
+  screen: 'Only families FINDINGS.md does not already record as dead. Excluded without a new trial:
+    sub-hourly mean reversion and order-flow scalping (#scalp-meanrev-outcome, #flow-scalp-outcome,
+    arXiv:2608.21888), residual momentum (#concentration idio_40), correlation caps
+    (#correlation-cap-outcome), BTC overnight and weekday seasonality (#literature-edges-outcome),
+    BTC-to-alt lead-lag at 1-4h (N6 diagnostic), take-profit, ratchet and exit-clock exits. The
+    quarter-hour effect (arXiv:2607.09426, about 0.5 bp per boundary) and the turn-of-the-candle effect
+    (Shanaev et al. 2023, 0.58 bp per minute) are an order of magnitude below a 10 bps round trip on
+    their own authors'' numbers and are not tested.'
+  engine: gates.competition_wf - every 14-day window, hourly live-cycle simulator, 5 bps fee plus each
+    coin's tick per side, 10 bps plus tick per side on shorts; periods 2022, 2023-24, 2025-26.
+  decision_rule: 'An arm that trades idle cash or changes the book is a candidate only if it raises
+    P(14-day > 2%) AND the median against C0 in every period, the worst window is no more than 5 points
+    worse in every period, and its nonsense control reproduces less than half the P(>2%) gain in
+    2025-26. A standalone sleeve (S1, S2) is combined with C0 only if its mean NET return per trade is
+    positive in all three periods; otherwise it is recorded as null without a book run.'
+  control: C0 = momentum_top3_full as deployed.
+arms:
+  S1_intraday_tsmom:
+    source: 'Shen, Urquhart and Wang, "Bitcoin intraday time series momentum", Financial Review 2022:
+      the first half-hour return predicts the last half-hour, driven by liquidity provision; Wen, Bouri,
+      Xu and Zhao, "Intraday return predictability in the cryptocurrency markets: momentum, reversal,
+      or both", NAJEF 2022.'
+    rule: 'Idle cash holds BTC during the 23:00 UTC hour bar when the 00:00 UTC hour bar of the same UTC
+      day closed up. Long only.'
+    mechanism: The first hour of the UTC day carries the highest volume after the daily candle turns;
+      liquidity providers who absorb it unwind before the next daily close.
+    failure_mode: Hourly BTC moves are about 50 bps; any predictable part is a few bps against a 10 bps
+      round trip every day it fires.
+    nonsense_control: Each of the other 22 predictor hours (01:00 to 22:00) in place of 00:00; the
+      declared hour must rank in the top 5 of 23 by net bps in every period.
+  S2_pairs_spread_1h:
+    source: 'Fil and Kristoufek, "Pairs trading in cryptocurrency markets", IEEE Access 2020 (26 Binance
+      coins, 5m/1h/daily, cointegration and distance); Tadi and Witzany, "Copula-based trading of
+      cointegrated cryptocurrency pairs", Financial Innovation 2025. Both report positive gross and
+      negative or marginal net returns at hourly frequency.'
+    rule: 'Each UTC day, the 12 most liquid names of the point-in-time top-30 pool; every pair. Hedge
+      ratio by OLS of log price on log price over the trailing 720 hourly bars; a pair is eligible when
+      the Dickey-Fuller t of the residual on those 720 bars is below -3.37 (Engle-Granger, 5%). Spread
+      z uses the trailing 720-bar residual mean and standard deviation, frozen at the daily refit.
+      Enter when |z| > 2.5 (long the cheap leg, short the rich leg, beta-weighted), exit when |z| < 0.5,
+      after 72 hours, or when |z| > 5. At most one open trade per pair.'
+    costs: long leg 5 bps plus tick per side, short leg 10 bps plus tick per side, both legs both ways.
+    mechanism: Common factor exposure (BTC beta, sector) makes spreads between liquid coins mean revert
+      once idiosyncratic flow shocks fade.
+    failure_mode: Crypto spreads break on listings, unlocks and narrative rotation; 30 bps and more per
+      round trip against spread moves of a few percent that often do not revert inside 72 hours.
+    nonsense_control: The same rule with the second leg's price series shifted back by 30 days, which
+      keeps each series' own dynamics and destroys co-movement; the true pairs must beat it by at least
+      2x in mean gross bps per trade in every period.
+  S3_quiet_market_gate:
+    source: This repo, DECISIONS.md#competition-oos-outcome (dispersion tercile table), where every trend
+      book earns nothing in the bottom dispersion tercile and pays fees; Cheema et al. and the
+      cross-sectional momentum literature that ties momentum payoffs to dispersion.
+    rule: 'At each 4h close, C0 is set flat when BOTH the cross-sectional standard deviation of 24h
+      returns across the 30-name pool AND BTC 7-day realised hourly volatility are below their own
+      trailing 90-day 33rd percentiles. It re-enters on the rule at the first 4h close where either
+      is above.'
+    mechanism: In compressed, low-dispersion markets the channel fires on breakouts that do not extend;
+      standing aside saves the entry and exit costs of those trades.
+    failure_mode: Compression precedes expansion; the gate may sit out exactly the breakout that starts
+      the fortnight's trend, which is where the book earns.
+    nonsense_control: A random gate with the same fraction of 4h bars flat and the same mean episode
+      length (geometric episodes), 20 seeds.
+diagnostic:
+  D1_alt_hour_of_day: 'Mean hourly return by UTC hour of the equal-weight point-in-time pool and of the
+    pool net of BTC, per period, with t. Reported as a candidate for a later declaration only if one
+    hour has the same sign in all three periods AND magnitude above 10 bps in all three. Never
+    traded from this file.'
+  D2_live_minute_structure: 'On the live Binance 1m feed of the last 72 hours for the current pool:
+    BTC 1m return against each alt''s next 1m and 5m return (lead-lag), the minute-of-hour mean
+    absolute return (quarter-hour effect), and the first principal component share. Reported, never
+    traded: 72 hours is a description of now, not a test.'
+  D3_live_correlation_structure: 'Current 30-day hourly correlation matrix and BTC beta of the pool,
+    average pairwise correlation and its 1-year percentile, hierarchical clusters, the book''s own
+    40-bar momentum rank, and each name''s distance to its 4h entry (20-bar high) and exit (10-bar low).
+    A description of the book''s world for the operator.'

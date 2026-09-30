@@ -234,7 +234,7 @@ def positions(name: str) -> dict:
 
     entry: dict[str, tuple[str, float]] = {}
     for o in j.read("orders"):
-        if o.get("side") == "BUY" and o.get("price") and o.get("symbol"):
+        if o.get("side") in ("BUY", "SHORT_OPEN") and o.get("price") and o.get("symbol"):
             entry[o["symbol"]] = (o.get("ts_utc"), float(o["price"]))
 
     chans: dict[str, dict] = {}
@@ -243,7 +243,7 @@ def positions(name: str) -> dict:
             chans[sym] = c
 
     rows, total = [], 0.0
-    for sym, w in sorted(held.items(), key=lambda x: -x[1]):
+    for sym, w in sorted(held.items(), key=lambda x: -abs(x[1])):
         mark = marks.get(sym)
         ent = entry.get(sym, (None, None))
         floor = (chans.get(sym) or {}).get("floor")

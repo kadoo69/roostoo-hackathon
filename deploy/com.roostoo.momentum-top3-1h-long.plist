@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+<key>Label</key><string>com.roostoo.momentum-top3-1h-long</string>
+<key>ProgramArguments</key><array>
+  <string>/opt/anaconda3/bin/python3</string>
+  <string>-m</string><string>bot.contenders_run</string>
+  <string>/Users/aaravmahajan/roostoo-hackathon/config/momentum_top3_1h_long.yaml</string>
+</array>
+<key>WorkingDirectory</key><string>/Users/aaravmahajan/roostoo-hackathon</string>
+<key>EnvironmentVariables</key><dict>
+  <key>ROOSTOO_DRY_RUN</key><string>1</string>
+</dict>
+<key>RunAtLoad</key><true/>
+<key>KeepAlive</key><true/>
+<key>ThrottleInterval</key><integer>30</integer>
+<key>StandardOutPath</key><string>/Users/aaravmahajan/roostoo-hackathon/live/momentum_top3_1h_long.launchd.out</string>
+<key>StandardErrorPath</key><string>/Users/aaravmahajan/roostoo-hackathon/live/momentum_top3_1h_long.launchd.err</string>
+</dict></plist>

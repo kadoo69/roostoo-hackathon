@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Roostoo Desk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+ --bg:#0b0d10; --panel:#111418; --panel2:#151a1f; --line:#1d232a; --line2:#27303a;
+ --fg:#e7ecf1; --dim:#9aa6b2; --faint:#5f6b77; --acc:#7cc4ff;
+ --up:#3ecf8e; --up-bg:rgba(62,207,142,.12); --dn:#ff6b6b; --dn-bg:rgba(255,107,107,.12); --warn:#f2c94c;
+ --sans:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+*{box-sizing:border-box} html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:13px/1.45 var(--sans);-webkit-font-smoothing:antialiased;overflow:hidden}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.up{color:var(--up)} .dn{color:var(--dn)} .dim{color:var(--dim)} .faint{color:var(--faint)}
+a{color:var(--dim);text-decoration:none} a:hover{color:var(--fg)}
+.app{display:grid;grid-template-rows:auto auto 1fr;height:100vh;padding:12px 18px;gap:10px}
+header{display:flex;align-items:center;gap:14px}
+.brand{font-weight:700;letter-spacing:.2px;font-size:15px}
+.brand span{color:var(--faint);font-weight:500}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:999px;border:1px solid var(--line2);color:var(--dim);font-size:12px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--up);box-shadow:0 0 0 3px rgba(62,207,142,.15)}
+.dot.stale{background:var(--dn);box-shadow:0 0 0 3px rgba(255,107,107,.15)}
+header .sp{flex:1} header nav{display:flex;gap:14px;font-size:12px}
+.kpis{display:grid;grid-template-columns:1.6fr repeat(4,1fr);gap:10px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 14px;min-width:0}
+.kpi .k{font-size:11px;color:var(--faint);text-transform:uppercase;letter-spacing:.6px}
+.kpi .v{font-size:21px;font-weight:600;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpi .s{font-size:12px;color:var(--dim);margin-top:2px}
+.split{display:flex;height:6px;border-radius:4px;overflow:hidden;background:var(--line);margin-top:8px}
+.split i{display:block;height:100%} .split .r{background:var(--up)} .split .o{background:var(--acc);opacity:.75} .split .neg{background:var(--dn)}
+.main{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:12px;min-height:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;min-height:0;display:flex;flex-direction:column}
+.card h3{margin:0;font-size:12px;font-weight:600;color:var(--dim);text-transform:uppercase;letter-spacing:.6px}
+.card .hd{display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--line)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{white-space:nowrap;padding:3px 10px;border-radius:999px;border:1px solid var(--line2);color:var(--dim);font-size:12px;cursor:pointer;background:none}
+.chip.on{color:var(--fg);border-color:var(--acc);background:rgba(124,196,255,.08)}
+.scroll{overflow:auto;min-height:0}
+table{width:100%;border-collapse:collapse}
+th{position:sticky;top:0;background:var(--panel);z-index:1;font-size:11px;font-weight:500;color:var(--faint);text-align:left;padding:6px 10px;white-space:nowrap;border-bottom:1px solid var(--line);text-transform:uppercase;letter-spacing:.5px}
+td{padding:2px 10px;border-bottom:1px solid var(--line);white-space:nowrap;height:28px}
+th.r,td.r{text-align:right}
+tr.grp td{background:var(--panel2);color:var(--faint);font-size:11px;text-transform:uppercase;letter-spacing:.6px;padding:2px 10px;height:22px}
+tr.row{cursor:pointer} tr.row:hover td{background:rgba(255,255,255,.025)}
+tr.row.sel td{background:rgba(124,196,255,.06)}
+.name{font-weight:600} .clock{margin-left:6px;font-size:11px;color:var(--faint);border:1px solid var(--line2);border-radius:5px;padding:0 5px}
+.ret{font-weight:600}
+.bar{display:flex;width:92px;height:6px;border-radius:3px;overflow:hidden;background:var(--line);margin-left:auto}
+.bar i{display:block;height:100%}
+.hold{display:flex;gap:4px}
+.coin{font-size:11px;padding:1px 6px;border-radius:5px;background:var(--panel2);border:1px solid var(--line)}
+.coin.u{border-color:rgba(62,207,142,.35)} .coin.d{border-color:rgba(255,107,107,.35)}
+.ab{font-size:11px;padding:1px 7px;border-radius:5px}
+.ab.u{background:var(--up-bg);color:var(--up)} .ab.d{background:var(--dn-bg);color:var(--dn)} .ab.z{background:var(--panel2);color:var(--dim)}
+.side{display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:12px;min-height:0}
+.list{padding:6px 14px 10px}
+.exp{display:grid;grid-template-columns:52px 1fr 72px;align-items:center;gap:8px;padding:4px 0;font-size:12px}
+.exp .b{height:6px;border-radius:3px;background:var(--acc);opacity:.7}
+.ev{display:grid;grid-template-columns:44px 1fr auto;gap:8px;padding:5px 0;border-bottom:1px solid var(--line);font-size:12px}
+.ev:last-child{border-bottom:none}
+.tag{font-size:10px;padding:0 5px;border-radius:4px;text-transform:uppercase;letter-spacing:.4px}
+.tag.o{background:rgba(124,196,255,.12);color:var(--acc)} .tag.c{background:var(--panel2);color:var(--dim)}
+.tag.exit{background:var(--panel2);color:var(--fg)} .tag.skim{background:var(--up-bg);color:var(--up)} .tag.trim{background:rgba(242,201,76,.1);color:var(--warn)}
+.alert{padding:8px 12px;border-radius:9px;font-size:12px;margin:8px 14px}
+.alert.bad{background:var(--dn-bg);color:#ffb3b3} .alert.warn{background:rgba(242,201,76,.1);color:var(--warn)}
+.ok{padding:10px 14px;color:var(--faint);font-size:12px}
+.tabs{display:flex;gap:2px;background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:2px}
+.tab{background:none;border:0;color:var(--faint);font:600 12px var(--sans);text-transform:uppercase;letter-spacing:.6px;padding:4px 10px;border-radius:7px;cursor:pointer}
+.tab.on{background:var(--line2);color:var(--fg)}
+.sum{display:flex;gap:18px;flex-wrap:wrap;padding:8px 14px;border-bottom:1px solid var(--line);font-size:12px;color:var(--dim)}
+.sum b{font-weight:600}
+tr.fresh td{background:rgba(124,196,255,.05)}
+.sel-in{background:var(--panel2);border:1px solid var(--line2);color:var(--fg);border-radius:7px;padding:3px 8px;font:12px var(--sans)}
+.drawer{position:fixed;top:0;right:0;height:100vh;width:min(560px,100vw);background:var(--panel);border-left:1px solid var(--line2);transform:translateX(100%);transition:transform .22s ease;z-index:10;display:flex;flex-direction:column}
+.drawer.open{transform:none}
+.drawer .dh{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;align-items:start;gap:10px}
+.drawer .dh h2{margin:0;font-size:17px} .drawer .x{margin-left:auto;background:none;border:1px solid var(--line2);color:var(--dim);border-radius:8px;padding:3px 9px;cursor:pointer}
+.drawer .db{overflow:auto;padding:14px 18px;display:flex;flex-direction:column;gap:16px}
+.grid4{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.mini{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.mini .k{font-size:10px;color:var(--faint);text-transform:uppercase;letter-spacing:.5px} .mini .v{font-size:15px;font-weight:600}
+.sec{font-size:11px;color:var(--faint);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px}
+.desc{color:var(--dim);font-size:12px}
+.shade{position:fixed;inset:0;background:rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:opacity .2s;z-index:9}
+.shade.open{opacity:1;pointer-events:auto}
+.main>*,.kpis>*,.side>*{min-width:0}
+@media (max-width:1100px){body{overflow:auto}.app{height:auto;padding:12px 16px}.main{grid-template-columns:1fr}.kpis{grid-template-columns:1fr 1fr}.scroll{overflow-x:auto}header{flex-wrap:wrap}}
+@media (max-width:700px){.kpis{grid-template-columns:1fr}.hide-sm{display:none}header nav{width:100%;justify-content:flex-start}.chips{overflow-x:auto;flex-wrap:nowrap}.card .hd{flex-wrap:wrap}.drawer .grid4{grid-template-columns:1fr 1fr}}
+</style></head>
+<body>
+<div class="app">
+ <header>
+  <div class="brand">Roostoo Desk <span>· paper fleet</span></div>
+  <span class="pill" id="live"><span class="dot"></span>loading</span>
+  <span class="pill faint" id="upd">-</span>
+  <div class="sp"></div>
+  <nav><a href="/heatmap">Heatmap</a><a href="/analysis">Analysis</a><a href="/full">Full view</a></nav>
+ </header>
+ <section class="kpis" id="kpis"></section>
+ <section class="main">
+  <div class="card">
+   <div class="hd"><div class="tabs"><button class="tab" data-v="books">Books</button><button class="tab" data-v="closed">Closed trades</button></div><div class="sp" style="flex:1"></div><div class="chips" id="filters"></div></div>
+   <div class="sum" id="sum" hidden></div>
+   <div class="scroll" id="closedWrap" hidden><table>
+    <thead><tr><th>Closed</th><th>Book</th><th>Coin</th><th class="r">Entry → exit</th><th class="r hide-sm">Size</th><th class="r">Held</th><th class="r">Net</th><th class="r">%</th></tr></thead>
+    <tbody id="closedRows"></tbody></table></div>
+   <div class="scroll" id="booksWrap"><table>
+    <thead><tr><th>Book</th><th class="hide-sm">Trend</th><th class="r">Return</th><th class="r">Net</th><th class="r">Realised</th><th class="r">Open</th><th class="r hide-sm">Split</th><th class="r hide-sm">Invested</th><th class="hide-sm">Holding</th><th class="r">vs ctrl</th></tr></thead>
+    <tbody id="rows"></tbody></table></div>
+  </div>
+  <div class="side">
+   <div class="card"><div class="hd"><h3>Fleet exposure</h3><span class="faint" style="margin-left:auto;font-size:11px">USD · books · open P&amp;L</span></div><div class="list" id="exposure"></div></div>
+   <div class="card"><div class="hd"><h3>Activity</h3><span class="faint" style="margin-left:auto;font-size:11px">your local time</span></div><div class="list scroll" id="activity"></div></div>
+   <div class="card"><div class="hd"><h3>Health</h3></div><div id="alerts"></div></div>
+  </div>
+ </section>
+</div>
+<div class="shade" id="shade"></div>
+<aside class="drawer" id="drawer"><div class="dh"><div><h2 id="dTitle"></h2><div class="desc" id="dSub"></div></div><button class="x" id="dClose">Esc</button></div><div class="db" id="dBody"></div></aside>
+<script>
+let D=null, filt='all', sel=null, view='books', win='6h', cbook='', ckind='';
+const KINDS={exit:'position fully closed',skim:'profit ladder sold 15% after a +3% step',trim:'partial sale by the rebalance, rest still held'};
+const ktag=k=>k?`<span class="tag ${k}" title="${KINDS[k]||''}">${k}</span>`:'';
+try{ view=localStorage.getItem('deskView')||'books'; win=localStorage.getItem('deskWin')||'6h'; }catch(e){}
+const WINS=[['1h',1],['6h',6],['24h',24],['all',null]];
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const cls=v=>v>0?'up':v<0?'dn':'dim';
+const usd=(v,d=0)=>v==null?'-':(v<0?'-':'')+Math.abs(v).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d});
+const sgn=(v,d=0)=>v==null?'-':(v>0?'+':'')+usd(v,d);
+const pct=(v,d=2)=>v==null?'-':(v>0?'+':'')+v.toFixed(d)+'%';
+const px=v=>v==null?'-':Number(v).toPrecision(6).replace(/(\.\d*?)0+$/,'$1').replace(/\.$/,'');
+const tloc=t=>t?new Date(t).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}):'-';
+const ago=s=>s==null?'-':s<90?Math.round(s)+'s':s<5400?Math.round(s/60)+'m':Math.round(s/3600)+'h';
+function spark(v,w=96,h=20){
+ if(!v||v.length<2) return `<svg width="${w}" height="${h}"></svg>`;
+ const lo=Math.min(...v),hi=Math.max(...v),r=hi-lo||1;
+ const p=v.map((y,i)=>`${(i/(v.length-1)*w).toFixed(1)},${(h-2-(y-lo)/r*(h-4)).toFixed(1)}`).join(' ');
+ const c=v[v.length-1]>=v[0]?'var(--up)':'var(--dn)';
+ return `<svg width="${w}" height="${h}"><polyline fill="none" stroke="${c}" stroke-width="1.6" points="${p}"/></svg>`;
+}
+function curve(pts,w=520,h=150){
+ if(!pts||pts.length<2) return '<div class="faint">collecting</div>';
+ const v=pts.map(p=>p.e),lo=Math.min(...v),hi=Math.max(...v),r=hi-lo||1,base=v[0];
+ const xy=v.map((y,i)=>[i/(v.length-1)*w,h-6-(y-lo)/r*(h-12)]);
+ const line=xy.map(p=>p.map(n=>n.toFixed(1)).join(',')).join(' ');
+ const by=(h-6-(base-lo)/r*(h-12)).toFixed(1), c=v.at(-1)>=base?'var(--up)':'var(--dn)';
+ return `<svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}"><line x1="0" x2="${w}" y1="${by}" y2="${by}" stroke="var(--line2)" stroke-dasharray="3 4"/><polygon fill="${c}" opacity=".08" points="0,${h} ${line} ${w},${h}"/><polyline fill="none" stroke="${c}" stroke-width="1.8" points="${line}"/></svg>
+ <div class="faint" style="display:flex;justify-content:space-between;font-size:11px"><span>${new Date(pts[0].t).toLocaleString([], {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}</span><span>low ${usd(lo)} · high ${usd(hi)}</span><span>now</span></div>`;
+}
+function splitBar(r,o){
+ const a=Math.abs(r||0),b=Math.abs(o||0),t=a+b||1;
+ return `<div class="bar" title="realised ${sgn(r)} · open ${sgn(o)}"><i style="width:${a/t*100}%;background:${r>=0?'var(--up)':'var(--dn)'}"></i><i style="width:${b/t*100}%;background:${o>=0?'var(--acc)':'#b86b6b'};opacity:.75"></i></div>`;
+}
+function kpis(){
+ const t=D.totals, b=D.breadth||{};
+ const r=Math.max(0,t.realised), o=Math.abs(t.open), s=r+o||1;
+ $('kpis').innerHTML=`
+ <div class="kpi"><div class="k">Fleet net P&amp;L</div><div class="v num ${cls(t.net)}">${sgn(t.net)}</div>
+  <div class="s"><span class="up">${sgn(t.realised)}</span> realised · <span class="${t.open>=0?'dim':'dn'}">${sgn(t.open)}</span> open</div>
+  <div class="split"><i class="r" style="width:${r/s*100}%"></i><i class="${t.open>=0?'o':'neg'}" style="width:${o/s*100}%"></i></div></div>
+ <div class="kpi"><div class="k">Books</div><div class="v"><span class="up">${t.up}</span> <span class="faint">/</span> <span class="dn">${t.down}</span></div><div class="s">up / down of ${t.books}</div></div>
+ <div class="kpi"><div class="k">Leader</div><div class="v" style="font-size:16px">${esc(t.best)}</div><div class="s num up">${pct((D.books.find(x=>x.bot===t.best)||{}).ret_pct)}</div></div>
+ <div class="kpi"><div class="k">Market breadth</div><div class="v num">${b.pct_long_all!=null?b.pct_long_all.toFixed(0)+'%':'<span class="faint" style="font-size:14px">warming up</span>'}</div><div class="s">${b.pct_long_all!=null?`in a 4h uptrend · ${b.near_entry} near breakout`:'first read within 4 min of a restart'}</div></div>
+ <div class="kpi"><div class="k">Health</div><div class="v" style="font-size:16px">${D.alerts.length?`<span class="${D.alerts.some(a=>a.level==='bad')?'dn':'dim'}">${D.alerts.length} alert${D.alerts.length>1?'s':''}</span>`:'<span class="up">All clear</span>'}</div><div class="s">${t.online}/${t.books} books cycling</div></div>`;
+}
+function rows(){
+ const groups=D.groups.filter(g=>filt==='all'||g.key===filt);
+ let h='';
+ for(const g of groups){
+  const bs=D.books.filter(b=>b.group===g.key); if(!bs.length) continue;
+  const net=bs.reduce((a,b)=>a+(b.net||0),0);
+  h+=`<tr class="grp"><td colspan="7">${esc(g.label)} · ${bs.length}</td><td colspan="3" class="r num ${cls(net)}">${sgn(net)}</td></tr>`;
+  for(const b of bs){
+   const stale=(b.age_s||0)>300;
+   const hold=b.positions.slice(0,3).map(p=>`<span class="coin ${p.pnl>0?'u':p.pnl<0?'d':''}" title="${p.weight*100>0?'':'short '}${(Math.abs(p.weight)*100).toFixed(0)}% · ${pct(p.pnl_pct)}">${p.weight<0?'↓':''}${esc(p.symbol)}</span>`).join('')+(b.positions.length>3?`<span class="faint">+${b.positions.length-3}</span>`:'');
+   const ab=b.ab?`<span class="ab ${b.ab.delta_pts>0?'u':b.ab.delta_pts<0?'d':'z'}" title="since ${new Date(b.ab.since).toLocaleString()}: arm ${pct(b.ab.arm_pct)} vs ${esc(b.ab.control)} ${pct(b.ab.control_pct)}">${b.ab.delta_pts>0?'+':''}${b.ab.delta_pts.toFixed(2)} pts</span>`:(b.control?`<span class="faint" style="font-size:11px">vs ${esc(b.control.replace('momentum_top3_','m_'))}</span>`:'');
+   h+=`<tr class="row ${sel===b.bot?'sel':''}" data-b="${esc(b.bot)}">
+    <td><span class="dot ${stale?'stale':''}" style="display:inline-block;margin-right:8px;vertical-align:middle"></span><span class="name">${esc(b.bot)}</span><span class="clock">${esc(b.clock||'')}</span></td>
+    <td class="hide-sm">${spark(b.spark)}</td>
+    <td class="r num ret ${cls(b.ret_pct)}">${pct(b.ret_pct)}</td>
+    <td class="r num ${cls(b.net)}">${sgn(b.net)}</td>
+    <td class="r num ${cls(b.realised)}">${sgn(b.realised)}</td>
+    <td class="r num ${cls(b.open)}">${sgn(b.open)}</td>
+    <td class="r hide-sm">${splitBar(b.realised,b.open)}</td>
+    <td class="r num dim hide-sm">${((b.gross||0)*100).toFixed(0)}%</td>
+    <td class="hide-sm"><div class="hold">${hold||'<span class="faint">cash</span>'}</div></td>
+    <td class="r">${ab}</td></tr>`;
+  }
+ }
+ $('rows').innerHTML=h;
+ document.querySelectorAll('tr.row').forEach(r=>r.onclick=()=>open(r.dataset.b));
+}
+function side(){
+ const ex=D.exposure.slice(0,8), mx=Math.max(1,...ex.map(e=>Math.abs(e.usd)));
+ $('exposure').innerHTML=ex.length?ex.map(e=>`<div class="exp"><span class="name">${esc(e.symbol)}</span>
+  <div><div class="b" style="width:${Math.abs(e.usd)/mx*100}%;${e.usd<0?'background:var(--dn)':''}"></div><div class="faint" style="font-size:11px;margin-top:2px">${usd(e.usd)} · ${e.books} book${e.books>1?'s':''}</div></div>
+  <span class="num r ${cls(e.pnl)}" style="text-align:right">${sgn(e.pnl)}</span></div>`).join(''):'<div class="ok">all books in cash</div>';
+ $('activity').innerHTML=D.activity.map(e=>`<div class="ev"><span class="faint num">${tloc(e.ts)}</span>
+  <span>${e.kind==='open'?`<span class="tag o">${e.dir==='short'?'short':'buy'}</span>`:(e.exit_kind?ktag(e.exit_kind):'<span class="tag c">close</span>')} <b>${esc(e.symbol)}</b> <span class="faint">${esc(e.bot.replace('momentum_top3_','m_'))}</span></span>
+  <span class="num ${e.kind==='close'?cls(e.net):'dim'}">${e.kind==='close'?sgn(e.net):(Math.abs(e.weight)*100).toFixed(0)+'%'}</span></div>`).join('');
+ $('alerts').innerHTML=D.alerts.length?D.alerts.map(a=>`<div class="alert ${a.level}">${esc(a.text)}</div>`).join(''):'<div class="ok">All books cycling, no faults, no deep drawdowns.</div>';
+}
+function open(name){
+ sel=name; const b=D.books.find(x=>x.bot===name); if(!b) return;
+ $('dTitle').innerHTML=`${esc(b.bot)} <span class="clock">${esc(b.clock||'')}</span>`;
+ $('dSub').textContent=b.description||'';
+ const s=b.stats||{};
+ const pos=b.positions.length?`<table><thead><tr><th>Coin</th><th class="r">Weight</th><th class="r">Entry</th><th class="r">Mark</th><th class="r">P&amp;L</th><th class="r">%</th></tr></thead><tbody>${b.positions.map(p=>`<tr><td><b>${esc(p.symbol)}</b>${p.weight<0?' <span class="faint">short</span>':''}</td><td class="r num">${(Math.abs(p.weight)*100).toFixed(1)}%</td><td class="r num dim">${px(p.entry)}</td><td class="r num">${px(p.mark)}</td><td class="r num ${cls(p.pnl)}">${sgn(p.pnl)}</td><td class="r num ${cls(p.pnl_pct)}">${pct(p.pnl_pct)}</td></tr>`).join('')}</tbody></table>`:'<div class="faint">in cash</div>';
+ const rec=b.recent.length?`<table><thead><tr><th>Closed</th><th>Coin</th><th class="r">Held</th><th class="r">Net</th><th class="r">%</th></tr></thead><tbody>${b.recent.map(t=>`<tr><td class="faint num">${new Date(t.exit).toLocaleString([], {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}</td><td><b>${esc(t.symbol)}</b>${t.dir==='short'?' <span class="faint">short</span>':''} ${ktag(t.kind)}</td><td class="r num dim">${t.hold_h!=null?t.hold_h.toFixed(1)+'h':'-'}</td><td class="r num ${cls(t.net)}">${sgn(t.net)}</td><td class="r num ${cls(t.ret_pct)}">${pct(t.ret_pct)}</td></tr>`).join('')}</tbody></table>`:'<div class="faint">no closed trades yet</div>';
+ $('dBody').innerHTML=`
+  <div class="grid4">
+   <div class="mini"><div class="k">Equity</div><div class="v num">${usd(b.equity)}</div></div>
+   <div class="mini"><div class="k">Return</div><div class="v num ${cls(b.ret_pct)}">${pct(b.ret_pct)}</div></div>
+   <div class="mini"><div class="k">Drawdown</div><div class="v num ${b.drawdown_pct<0?'dn':'dim'}">${pct(b.drawdown_pct)}</div></div>
+   <div class="mini"><div class="k">Realised</div><div class="v num ${cls(b.realised)}">${sgn(b.realised)}</div></div>
+   <div class="mini"><div class="k">Open</div><div class="v num ${cls(b.open)}">${sgn(b.open)}</div></div>
+   <div class="mini"><div class="k">Invested</div><div class="v num">${((b.gross||0)*100).toFixed(0)}%</div></div>
+  </div>
+  ${b.ab?`<div class="alert ${b.ab.delta_pts>=0?'':'warn'}" style="margin:0;background:var(--panel2);color:var(--dim)">A/B since ${new Date(b.ab.since).toLocaleString([], {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}: this book <b class="${cls(b.ab.arm_pct)}">${pct(b.ab.arm_pct)}</b> vs ${esc(b.ab.control)} <b class="${cls(b.ab.control_pct)}">${pct(b.ab.control_pct)}</b> → <b class="${cls(b.ab.delta_pts)}">${b.ab.delta_pts>0?'+':''}${b.ab.delta_pts.toFixed(2)} pts</b></div>`:''}
+  <div><div class="sec">Equity</div>${curve(b.curve)}</div>
+  <div><div class="sec">Open positions</div>${pos}</div>
+  <div class="grid4">
+   <div class="mini"><div class="k">Trades</div><div class="v num">${s.trades??'-'}</div></div>
+   <div class="mini"><div class="k">Win rate</div><div class="v num">${s.win_rate!=null?(s.win_rate*100).toFixed(0)+'%':'-'}</div></div>
+   <div class="mini"><div class="k">Payoff</div><div class="v num">${s.payoff!=null?s.payoff.toFixed(2)+'x':'-'}</div></div>
+   <div class="mini"><div class="k">Fees</div><div class="v num">${s.fees!=null?usd(s.fees):'-'}</div></div>
+   <div class="mini"><div class="k">Fees / gross</div><div class="v num">${s.fees_pct_gross!=null?s.fees_pct_gross.toFixed(0)+'%':'-'}</div></div>
+   <div class="mini"><div class="k">Median hold</div><div class="v num">${s.median_hold_h!=null?s.median_hold_h.toFixed(1)+'h':'-'}</div></div>
+  </div>
+  <div><div class="sec">Recent closed trades</div>${rec}</div>`;
+ $('drawer').classList.add('open'); $('shade').classList.add('open'); rows();
+}
+function close_(){ sel=null; $('drawer').classList.remove('open'); $('shade').classList.remove('open'); rows(); }
+$('dClose').onclick=close_; $('shade').onclick=close_; document.addEventListener('keydown',e=>{if(e.key==='Escape')close_()});
+function when(t){
+ const d=new Date(t), today=new Date().toDateString()===d.toDateString();
+ return today?d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}):d.toLocaleString([], {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+}
+function closedView(){
+ const C=D.closed||{trades:[]}, h=(WINS.find(w=>w[0]===win)||[])[1];
+ const since=h?Date.now()-h*3600e3:0;
+ const base=C.trades.filter(t=>(!h||new Date(t.exit).getTime()>=since)&&(filt==='all'||t.group===filt)&&(!cbook||t.bot===cbook));
+ const ts=base.filter(t=>!ckind||t.kind===ckind);
+ const byKind=k=>{const r=base.filter(t=>t.kind===k);return {n:r.length,net:r.reduce((a,t)=>a+t.net,0)}};
+ const net=ts.reduce((a,t)=>a+t.net,0), w=ts.filter(t=>t.net>0), l=ts.filter(t=>t.net<0);
+ const gw=w.reduce((a,t)=>a+t.net,0), gl=l.reduce((a,t)=>a+t.net,0), fees=ts.reduce((a,t)=>a+(t.fees||0),0);
+ const best=ts.length?ts.reduce((a,t)=>t.net>a.net?t:a):null, worst=ts.length?ts.reduce((a,t)=>t.net<a.net?t:a):null;
+ const books=[...new Set(C.trades.map(t=>t.bot))].sort();
+ const partial=h&&C.complete_since&&new Date(C.complete_since).getTime()>since;
+ $('sum').innerHTML=`<span><b class="num">${ts.length}</b> trades</span>
+  <span>net <b class="num ${cls(net)}">${sgn(net)}</b></span>
+  <span><b class="up num">${w.length}</b> won <span class="num up">${sgn(gw)}</span> · <b class="dn num">${l.length}</b> lost <span class="num dn">${sgn(gl)}</span></span>
+  <span>win rate <b class="num">${ts.length?(w.length/ts.length*100).toFixed(0)+'%':'-'}</b></span>
+  <span>fees <span class="num">${usd(fees)}</span></span>
+  ${best?`<span>best <b>${esc(best.symbol)}</b> <span class="num up">${sgn(best.net)}</span> · worst <b>${esc(worst.symbol)}</b> <span class="num dn">${sgn(worst.net)}</span></span>`:''}
+  <span style="width:100%;display:flex;gap:14px;flex-wrap:wrap">${['exit','skim','trim'].map(k=>{const v=byKind(k);return `<span>${ktag(k)} <b class="num">${v.n}</b> <span class="num ${cls(v.net)}">${sgn(v.net)}</span></span>`}).join('')}
+   <select class="sel-in" id="ckind" style="margin-left:auto"><option value="">all kinds</option>${Object.keys(KINDS).map(k=>`<option value="${k}" ${k===ckind?'selected':''}>${k}s only</option>`).join('')}</select>
+   <select class="sel-in" id="cbook"><option value="">all books</option>${books.map(b=>`<option ${b===cbook?'selected':''}>${esc(b)}</option>`).join('')}</select></span>
+  ${partial||(!h&&C.complete_since)?`<span class="faint" style="width:100%">showing trades back to ${when(C.complete_since)}; older ones are in each book's drawer</span>`:''}`;
+ $('cbook').onchange=e=>{cbook=e.target.value;closedView()};
+ $('ckind').onchange=e=>{ckind=e.target.value;closedView()};
+ const fresh=Date.now()-15*60e3;
+ $('closedRows').innerHTML=ts.length?ts.map(t=>`<tr class="row ${new Date(t.exit).getTime()>=fresh?'fresh':''}" data-b="${esc(t.bot)}">
+  <td class="num faint">${when(t.exit)}</td>
+  <td><span class="dim">${esc(t.bot.replace('momentum_top3_','m_'))}</span></td>
+  <td><b>${esc(t.symbol)}</b>${t.dir==='short'?' <span class="faint">short</span>':''} ${ktag(t.kind)}</td>
+  <td class="r num dim">${px(t.entry)} → ${px(t.exit_price)}</td>
+  <td class="r num dim hide-sm">${t.notional!=null?usd(t.notional):'-'}</td>
+  <td class="r num dim">${t.hold_h!=null?(t.hold_h<1?Math.round(t.hold_h*60)+'m':t.hold_h.toFixed(1)+'h'):'-'}</td>
+  <td class="r num ${cls(t.net)}">${sgn(t.net)}</td>
+  <td class="r num ${cls(t.ret_pct)}">${pct(t.ret_pct)}</td></tr>`).join(''):'<tr><td colspan="8" class="faint" style="padding:14px 10px">no trades closed in this window</td></tr>';
+ document.querySelectorAll('#closedRows tr.row').forEach(r=>r.onclick=()=>open(r.dataset.b));
+}
+function tabs(){
+ document.querySelectorAll('.tab').forEach(t=>{t.classList.toggle('on',t.dataset.v===view);t.onclick=()=>{view=t.dataset.v;try{localStorage.setItem('deskView',view)}catch(e){};render()}});
+ $('booksWrap').hidden=view!=='books'; $('closedWrap').hidden=view!=='closed'; $('sum').hidden=view!=='closed';
+}
+function filters(){
+ if(view==='closed'){
+  const g=[{key:'all',label:'All'},...D.groups.filter(g=>D.books.some(b=>b.group===g.key))];
+  $('filters').innerHTML=WINS.map(w=>`<button class="chip ${win===w[0]?'on':''}" data-w="${w[0]}">${w[0]}</button>`).join('')+'<span style="width:10px"></span>'+g.map(o=>`<button class="chip ${filt===o.key?'on':''}" data-f="${o.key}">${esc(o.label)}</button>`).join('');
+  document.querySelectorAll('[data-w]').forEach(c=>c.onclick=()=>{win=c.dataset.w;try{localStorage.setItem('deskWin',win)}catch(e){};filters();closedView()});
+  document.querySelectorAll('[data-f]').forEach(c=>c.onclick=()=>{filt=c.dataset.f;filters();closedView()});
+  return;
+ }
+ const opts=[{key:'all',label:'All'},...D.groups.filter(g=>D.books.some(b=>b.group===g.key))];
+ $('filters').innerHTML=opts.map(o=>`<button class="chip ${filt===o.key?'on':''}" data-f="${o.key}">${esc(o.label)}</button>`).join('');
+ document.querySelectorAll('[data-f]').forEach(c=>c.onclick=()=>{filt=c.dataset.f;filters();rows()});
+}
+function render(){
+ const t=D.totals, allOk=t.online===t.books;
+ $('live').innerHTML=`<span class="dot ${allOk?'':'stale'}"></span>${t.online}/${t.books} live`;
+ $('upd').textContent='updated '+tloc(D.generated);
+ kpis(); tabs(); filters(); rows(); if(view==='closed') closedView(); side(); if(sel) open(sel);
+}
+async function load(){
+ try{ D=await (await fetch('/api/desk',{cache:'no-store'})).json(); render(); }
+ catch(e){ $('live').innerHTML='<span class="dot stale"></span>offline'; }
+}
+load(); setInterval(load,30000);
+</script>
+</body></html>

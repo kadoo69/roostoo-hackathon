@@ -155,6 +155,13 @@ def publish(payload: dict) -> None:
     with (OUT / f"scans-{dt.date.today().isoformat()}.jsonl").open("a") as fh:
         fh.write(json.dumps({"ts_utc": payload["ts_utc"],
                              **payload["universe"]}, default=str) + "\n")
+    # Preserve the actual enrichment sample for forward feature studies. The
+    # state file carries old enrichment between polls; logging it every time
+    # would invent observations at timestamps when no API read happened.
+    if payload.get("enriched_at") == payload["ts_utc"] and payload.get("enriched"):
+        with (OUT / f"enriched-{dt.date.today().isoformat()}.jsonl").open("a") as fh:
+            fh.write(json.dumps({"ts_utc": payload["ts_utc"],
+                                 "enriched": payload["enriched"]}, default=str) + "\n")
 
 
 def main() -> int:

@@ -16,6 +16,11 @@ DECISIONS.md#alpha-flow-declaration amendment: booking harder by tightening the
 step ALONE is the one statistically significant effect in the whole grid, and it
 is harmful - holdout P(>20%) falls to 0.070 at a 1% step, p=0.004. Cutting the
 SLICE at the same time removes that cost. Step and fraction move together.
+
+A short passes through untouched: the S1 sleeve was declared without a ladder.
+DECISIONS.md#short-paper-books. A config with `shorts: true` ladders shorts as the mirror image:
+15% of the short is covered each time the mark falls 3% below its reference.
+DECISIONS.md#topdown-ls-declaration
 """
 from __future__ import annotations
 
@@ -33,7 +38,17 @@ def apply(base: dict[str, float], current: dict[str, float], prices: dict[str, f
     floor = float(cfg.get("min_skim_notional", 0.0))
     out: dict[str, float] = {}
     events: list[dict] = []
+    short_ladder = bool(cfg.get("shorts"))
     for sym, want in base.items():
+        if want < 0 or current.get(sym, 0.0) < 0:
+            if short_ladder:
+                out[sym], ev = _short_step(sym, want, current.get(sym, 0.0), prices.get(sym),
+                                           refs, equity, step, frac, floor)
+                events.extend(ev)
+            else:
+                out[sym] = want
+                refs.pop(sym, None)
+            continue
         px = prices.get(sym)
         held = current.get(sym, 0.0)
         if px is None or px <= 0:
@@ -67,3 +82,28 @@ def apply(base: dict[str, float], current: dict[str, float], prices: dict[str, f
         if s not in base:
             refs.pop(s, None)
     return out, events
+
+
+def _short_step(sym: str, want: float, held: float, px: float | None, refs: dict[str, float],
+                equity: float, step: float, frac: float, floor: float) -> tuple[float, list[dict]]:
+    """The ladder mirrored for a short: cover `frac` of it each time the mark falls `step` below
+    its reference, then reset the reference. A short is never topped up."""
+    if px is None or px <= 0 or want >= 0:
+        refs.pop(sym, None)
+        return want, []
+    if held >= 0:
+        refs[sym] = px
+        return want, []
+    ref = refs.get(sym)
+    if not ref or ref <= 0:
+        refs[sym] = px
+        ref = px
+    tgt = max(want, held)
+    if px <= ref * (1.0 - step):
+        covered = held * (1.0 - frac)
+        if (covered - held) * equity >= floor:
+            refs[sym] = px
+            return round(covered, 8), [{"symbol": sym, "side": "short", "mark": px, "ref": round(ref, 10),
+                                        "from_weight": round(held, 6), "to_weight": round(covered, 6),
+                                        "notional": round((covered - held) * equity, 2)}]
+    return round(tgt, 8), []

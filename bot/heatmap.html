@@ -1,0 +1,119 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Market Heatmap</title>
+<style>
+:root{
+ --bg:#090b0e; --panel:#11151a; --line:#1e252e; --line2:#2a333e;
+ --fg:#e8eef5; --dim:#7d8b9a; --faint:#586472;
+ --up:#2ea043; --dn:#e5484d; --warn:#d29922; --acc:#4493f8;
+ --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,monospace;
+ --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--fg);font:400 14px/1.5 var(--sans);-webkit-font-smoothing:antialiased}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+header{position:sticky;top:0;z-index:10;background:rgba(9,11,14,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);padding:13px 22px;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+h1{font-size:14px;font-weight:600;letter-spacing:.14em;text-transform:uppercase}
+header a{color:var(--acc);text-decoration:none;font-size:11px;margin-left:12px}
+.sub{font-size:11px;color:var(--faint)}
+main{max-width:1560px;margin:0 auto;padding:20px 22px 60px;display:flex;flex-direction:column;gap:22px}
+.sect{font-size:10px;color:var(--faint);text-transform:uppercase;letter-spacing:.13em;margin-bottom:9px;font-weight:600}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px}
+.step{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:12px 14px;border-left:2px solid var(--line2)}
+.step .k{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.08em}
+.step .v{font-size:19px;margin:4px 0 4px;font-family:var(--mono)}
+.step .d{font-size:11.5px;color:var(--faint);line-height:1.45}
+.bull{border-left-color:var(--up)} .bull .v{color:var(--up)}
+.bear{border-left-color:var(--dn)} .bear .v{color:var(--dn)}
+.neutral{border-left-color:var(--warn)} .neutral .v{color:var(--warn)}
+.bar{height:8px;border-radius:4px;background:var(--line);position:relative;margin-top:6px;overflow:hidden}
+.bar i{position:absolute;top:0;bottom:0;left:0;background:var(--up)}
+.bar b{position:absolute;top:-2px;bottom:-2px;width:1px;background:var(--fg);opacity:.5}
+.ctrl{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.ctrl button{background:var(--panel);border:1px solid var(--line2);color:var(--dim);font:500 11px var(--sans);padding:5px 11px;border-radius:5px;cursor:pointer}
+.ctrl button.on{color:var(--fg);border-color:var(--acc)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:6px}
+.tile{border-radius:6px;padding:9px 10px;min-height:78px;position:relative;border:1px solid transparent}
+.tile .s{font-weight:600;font-size:13px;letter-spacing:.02em}
+.tile .p{font-family:var(--mono);font-size:15px;margin-top:3px}
+.tile .m{font-family:var(--mono);font-size:10px;opacity:.75;margin-top:2px}
+.tile .tag{position:absolute;top:7px;right:7px;font:700 9.5px var(--mono);padding:1px 5px;border-radius:3px;background:rgba(0,0,0,.45)}
+.tile.long{border-color:var(--up);box-shadow:0 0 0 1px var(--up) inset}
+.tile.short{border-color:var(--dn);box-shadow:0 0 0 1px var(--dn) inset}
+.tile.out{opacity:.55}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--faint);align-items:center}
+.sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line)}
+th{font-size:10px;color:var(--faint);text-transform:uppercase;letter-spacing:.08em;font-weight:600}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;overflow-x:auto}
+.err{color:var(--dn);font-family:var(--mono);font-size:12px}
+</style></head><body>
+<header><div><h1>Market Heatmap</h1><div class="sub" id="upd">loading...</div></div>
+<div><a href="/">Desk</a><a href="/analysis">Analysis</a></div></header>
+<main>
+<section><div class="sect">1 · Market</div><div class="steps" id="market"></div></section>
+<section><div class="sect">2 · What the running books hold</div><div class="panel"><table id="book"></table></div></section>
+<section>
+ <div style="display:flex;justify-content:space-between;align-items:end;gap:12px;flex-wrap:wrap;margin-bottom:10px">
+  <div class="sect" style="margin:0">3 · Every Roostoo coin</div>
+  <div class="ctrl"><span class="sub">Colour by</span>
+   <button data-k="ret_1h">1h</button><button data-k="ret_4h">4h</button><button data-k="ret_24h" class="on">24h</button><button data-k="ret_7d">7d momentum</button>
+   <span class="sub" style="margin-left:10px">Show</span>
+   <button data-f="all" class="on">all</button><button data-f="pool">tradable pool</button></div>
+ </div>
+ <div class="legend" style="margin-bottom:10px">
+  <span><span class="sw" style="background:#e5484d"></span>down</span>
+  <span><span class="sw" style="background:#1e252e"></span>flat</span>
+  <span><span class="sw" style="background:#2ea043"></span>up</span>
+  <span>L3 / S5 = number of running books long / short that coin (hover for which) · faded = outside the top-30 pool (never traded)</span>
+ </div>
+ <div class="grid" id="grid"></div>
+</section>
+</main>
+<script>
+let data=null, key="ret_24h", filt="all";
+const fmt=v=>v==null?"-":(v>0?"+":"")+v.toFixed(Math.abs(v)<10?2:1)+"%";
+function col(v,scale){
+ if(v==null) return "#1e252e";
+ const t=Math.max(-1,Math.min(1,v/scale)), a=Math.abs(t);
+ const base=[30,37,46], up=[46,160,67], dn=[229,72,77], c=t>0?up:dn;
+ return `rgb(${base.map((b,i)=>Math.round(b+(c[i]-b)*Math.pow(a,.7))).join(",")})`;
+}
+function render(){
+ if(!data) return;
+ if(data.loading){document.getElementById("upd").textContent="building the first snapshot (about a minute)...";return}
+ if(data.error && !data.stale){document.getElementById("market").innerHTML=`<div class="err">${data.error}</div>`;return}
+ const d=data.stale||data, r=d.regime, n=d.counts;
+ document.getElementById("upd").textContent=`bar ${d.bar} · updated ${d.updated}`+(data.error?` · STALE: ${data.error}`:"");
+ const pct=Math.round(r.breadth*100);
+ document.getElementById("market").innerHTML=`
+  <div class="step ${r.state}"><div class="k">4h regime (slow)</div><div class="v">${r.state.toUpperCase()}</div>
+   <div class="d">Bull needs breadth ≥ ${r.breadth_bull*100}% and BTC above its 180-bar mean; bear needs ≤ ${r.breadth_bear*100}% and BTC below.</div></div>
+  <div class="step"><div class="k">Breadth, tradable pool</div><div class="v">${pct}%</div>
+   <div class="bar"><i style="width:${pct}%"></i><b style="left:${r.breadth_bear*100}%"></b><b style="left:${r.breadth_bull*100}%"></b></div>
+   <div class="d" style="margin-top:6px">Share of pool coins up over 7 days. All Roostoo: ${n.up_7d} up, ${n.down_7d} down of ${n.venue}.</div></div>
+  <div class="step ${r.btc_up?"bull":"bear"}"><div class="k">BTC trend</div><div class="v">${r.btc_up?"ABOVE":"BELOW"}</div><div class="d">BTC 4h close against its 180-bar mean.</div></div>
+  <div class="step"><div class="k">Side budgets</div><div class="v"><span style="color:var(--up)">L ${r.long_budget}</span> · <span style="color:var(--dn)">S ${r.short_budget}</span></div>
+   <div class="d">Up to ${d.rules.n_long} longs from breakouts, ${d.rules.n_short} shorts from breakdowns, inverse-vol sized, max ${d.rules.max_weight} each. Take profit: ${d.rules.take_profit}.</div></div>`;
+ const nm=s=>s.replace("USDT","");
+ document.getElementById("book").innerHTML=`<tr><th>Book</th><th>Clock</th><th>Short switch</th><th>Equity</th><th>Long</th><th>Short</th></tr>`+
+  (d.books||[]).map(b=>{const L=Object.entries(b.positions).filter(([,w])=>w>0).sort((x,y)=>y[1]-x[1]),S=Object.entries(b.positions).filter(([,w])=>w<0).sort((x,y)=>x[1]-y[1]);
+   const sw=b.short_on==null?"long-only":(b.short_on?`ON · breadth ${Math.round((b.breadth??0)*100)}%`:`off · breadth ${Math.round((b.breadth??0)*100)}%`);
+   return `<tr><td><b>${b.book}</b></td><td class="num">${b.interval}</td><td style="color:var(--${b.short_on?"dn":"dim"})">${sw}</td>
+   <td class="num">${b.equity?Math.round(b.equity).toLocaleString():"-"}</td>
+   <td style="color:var(--up)">${L.map(([s,w])=>`${nm(s)} ${(w*100).toFixed(0)}%`).join(", ")||"-"}</td>
+   <td style="color:var(--dn)">${S.map(([s,w])=>`${nm(s)} ${(-w*100).toFixed(0)}%`).join(", ")||"-"}</td></tr>`}).join("");
+ const scale=key==="ret_7d"?25:key==="ret_24h"?8:key==="ret_1h"?1.5:3;
+ const coins=d.coins.filter(c=>filt==="all"||c.in_pool).slice().sort((a,b)=>(b[key]??-1e9)-(a[key]??-1e9));
+ document.getElementById("grid").innerHTML=coins.map(c=>`<div class="tile ${c.books_short&&c.books_short.length>(c.books_long||[]).length?"short":(c.books_long&&c.books_long.length?"long":"")} ${c.in_pool?"":"out"}" style="background:${col(c[key],scale)}"
+   title="1h ${fmt(c.ret_1h)} · 4h ${fmt(c.ret_4h)} · 24h ${fmt(c.ret_24h)} · 7d ${fmt(c.ret_7d)} · channel ${c.channel}\nlong in: ${(c.books_long||[]).join(", ")||"none"}\nshort in: ${(c.books_short||[]).join(", ")||"none"}">
+   ${(c.books_long||[]).length||(c.books_short||[]).length?`<span class="tag">${(c.books_long||[]).length?"L"+c.books_long.length:""}${(c.books_short||[]).length?" S"+c.books_short.length:""}</span>`:""}
+   <div class="s">${c.symbol}</div><div class="p">${fmt(c[key])}</div>
+   <div class="m">${c.channel==="breakout"?"▲ breakout":c.channel==="breakdown"?"▼ breakdown":"&nbsp;"}</div></div>`).join("");
+}
+document.querySelectorAll("[data-k]").forEach(b=>b.onclick=()=>{key=b.dataset.k;document.querySelectorAll("[data-k]").forEach(x=>x.classList.toggle("on",x===b));render()});
+document.querySelectorAll("[data-f]").forEach(b=>b.onclick=()=>{filt=b.dataset.f;document.querySelectorAll("[data-f]").forEach(x=>x.classList.toggle("on",x===b));render()});
+async function load(){try{data=await (await fetch("/api/heatmap")).json()}catch(e){data={error:String(e)}}render()}
+load(); setInterval(load,60000);
+</script></body></html>

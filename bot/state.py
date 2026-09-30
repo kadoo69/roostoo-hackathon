@@ -38,6 +38,11 @@ def wallet_positions(wallet: dict, quote: str = "USD",
     believes it holds ~500 positions and tries to liquidate every one on its
     first cycle. Anything outside the universe is reported, not adopted.
     DECISIONS.md#testnet-live
+
+    Cash is the venue's own quote asset only. The testnet wallet holds 112,776
+    USDT and a seeded, never-spent 10,000 USD; reading "USD or USDT" kept the
+    last one seen, so cash sat at 10,000 while buys spent USDT and equity rose by
+    every order. DECISIONS.md#execution-gaps-2026-09-23
     """
     holdings: dict[str, float] = {}
     ignored: dict[str, float] = {}
@@ -47,8 +52,10 @@ def wallet_positions(wallet: dict, quote: str = "USD",
         free = float(detail.get("Free", 0.0)) if isinstance(detail, dict) else float(detail)
         lock = float(detail.get("Lock", 0.0)) if isinstance(detail, dict) else 0.0
         total = free + lock
-        if coin.upper() in (quote, "USD", "USDT"):
+        if coin.upper() == quote.upper():
             cash = total
+        elif coin.upper() in ("USD", "USDT", "USDC", "FDUSD", "TUSD"):
+            ignored[coin.upper()] = total
         elif total > 0:
             sym = f"{coin.upper()}USDT"
             if universe is None or sym in universe:

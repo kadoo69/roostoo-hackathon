@@ -98,6 +98,36 @@ shadow days beforehand.
     ./run_bots.sh dashboard          # http://127.0.0.1:8787
     ./run_bots.sh dashboard --port 9000 --host 0.0.0.0
 
+The local dashboard, Binance scanner and observational source collector also have
+launchd units at `deploy/com.roostoo.dashboard.plist`,
+`deploy/com.roostoo.scanner.plist` and `deploy/com.roostoo.source-hub.plist`.
+Install each in `~/Library/LaunchAgents/`
+and run `launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/<name>.plist`.
+The launchd data dashboard listens at `http://127.0.0.1:8789/`; port 8787 is
+left for other local services.
+The scanner polls every five minutes and writes `live/scanner/state.json`.
+The collector polls every 15 minutes, writes `live/source_hub/state.json` and
+appends each poll to daily JSONL. It never sends orders. Use
+`launchctl bootout gui/$(id -u)/<label>` to stop an installed unit; killing its
+process only causes launchd to restart it.
+
+The separate research units are `deploy/com.roostoo.source-features.plist`
+(feature materialisation every 15 minutes) and
+`deploy/com.roostoo.source-forward-validation.plist` (daily closed-price
+collection and matured outcome labels). Their outputs are under `results/`;
+neither unit imports or changes a trading bot. Inspect them with
+`launchctl print gui/$(id -u)/com.roostoo.source-features` and
+`launchctl print gui/$(id -u)/com.roostoo.source-forward-validation`.
+
+The 1-hour confirmed long-only candidate runs as an isolated paper bot under
+`deploy/com.roostoo.momentum-top3-1h-long.plist`. Its label is
+`com.roostoo.momentum-top3-1h-long`; inspect it with
+`launchctl print gui/$(id -u)/com.roostoo.momentum-top3-1h-long` and compare it
+with the unchanged `momentum_top3_1h` in `./run_bots.sh compare` or on the
+dashboard. `paper_only: true` forces dry run in the settings loader. The
+current historical evidence and limitations are in
+`results/LOWTF_EDGE_REVIEW.md`.
+
 Reads the journals directly, so it reflects whatever the bots have actually
 written rather than a separate copy of the state.
 It serves the desk at `/`, deeper diagnostics at `/analysis`, and JSON at

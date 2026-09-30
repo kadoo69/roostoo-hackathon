@@ -1,0 +1,19 @@
+meta:
+  name: lowtf_clock_ensemble
+  declared_before_any_backtest: true
+  declared_utc: '2026-09-26'
+  requested_by: 'operator: make the short-term signals more robust and scale into what works'
+  declaration_ref: DECISIONS.md#lowtf-clock-ensemble-declaration
+mechanism: 'Live, the short-term books earn from runners held over 4 h that every clock picks up (ONDO, LTC) and lose on lone fast breakouts that fail inside 1-4 h, plus fee churn (15m turnover 143 per fortnight). Averaging the 15m, 30m and 1h targets sizes a name by how many clocks hold it: a runner all three agree on gets full weight, a lone 15m breakout a third, and one clock flipping moves the book by a third, so turnover falls while the fast clock still gets the book into a trend early.'
+failure_mode: 'The average dilutes the one clock that is right, the slow clocks drag the entry late so the fast clock''s early capture is lost, or averaging just reproduces the 1h book with extra fees.'
+components:
+  C15: momentum_top3_15m live rule (4h check off, volume 1.5x, frozen skips, breadth-switched shorts)
+  C30: momentum_top3_30m live rule (4h check on)
+  C1h_LO: momentum_top3_1h live rule long-only (passed at #lowtf-long-only-clocks-outcome)
+arms:
+  E_mean: mean of the three component targets, slow targets carried to the 15m grid on close times (signals.exit_clock.to_fast), simulated on 15m bars with the live ladder, drift band and fee plus tick
+  NC_shifted: nonsense control, identical to E_mean with the C30 and C1h_LO targets shifted 7 days later, so the average keeps its turnover character but the clocks no longer agree about the same moves
+  singles: each component alone on its own clock (reported, the comparators)
+periods: competition_wf.PERIODS (2022, 2023-24, 2025-26), 14-day windows on hourly-compounded net
+pass_rule: 'E_mean passes if it beats every single component on median 14-day return AND P(>2%) in 2023-24 and 2025-26, is no more than 1 point of median below the best component in 2022, its worst window is no more than 5 points below the best component''s worst in every period, and its mean-median gain over the average of the components is more than twice NC_shifted''s. Sharpe, Sortino, Calmar, P(>15%) and turnover reported, not gating.'
+next_step: a pass runs as a new paper book beside the existing short-term books; no running book is edited from a backtest

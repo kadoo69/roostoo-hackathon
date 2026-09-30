@@ -8,6 +8,8 @@ DECISIONS.md#booking-flattened-the-book
 """
 from __future__ import annotations
 
+import pytest
+
 from bot import booking, portfolio
 from bot.settings import load
 
@@ -75,3 +77,15 @@ def test_carrying_forward_still_lets_the_ladder_skim():
                               force={e["symbol"] for e in ev})
     assert [o["side"] for o in orders] == ["SELL"]
     assert orders[0]["symbol"] == "AAAUSDT"
+
+
+def test_short_ladder_covers_a_slice_after_a_three_percent_fall_and_never_tops_up():
+    cfg = {"enabled": True, "step_pct": 0.03, "skim_fraction": 0.15, "min_skim_notional": 0.0, "shorts": True}
+    refs = {"X": 100.0}
+    out, ev = booking.apply({"X": -0.5}, {"X": -0.4}, {"X": 96.9}, refs, 1000.0, cfg)
+    assert out["X"] == pytest.approx(-0.34) and ev and refs["X"] == 96.9
+    out, ev = booking.apply({"X": -0.5}, {"X": -0.4}, {"X": 99.0}, {"X": 100.0}, 1000.0, cfg)
+    assert out["X"] == pytest.approx(-0.4) and not ev
+    off = {k: v for k, v in cfg.items() if k != "shorts"}
+    out, ev = booking.apply({"X": -0.5}, {"X": -0.4}, {"X": 90.0}, {"X": 100.0}, 1000.0, off)
+    assert out["X"] == -0.5 and not ev

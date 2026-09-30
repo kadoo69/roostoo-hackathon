@@ -10,6 +10,8 @@ from bot.journal import Journal
 from bot.settings import ROOT
 
 FILLED_EVENTS = ("placed", "dry_run")
+SHORT_SIDES = ("SHORT_OPEN", "SHORT_CLOSE")
+OPENING = ("BUY", "SHORT_OPEN")
 
 
 def _fill(o: dict) -> dict | None:
@@ -36,9 +38,38 @@ def _fill(o: dict) -> dict | None:
 # position. Stated in absolute terms because the books run a fixed 100k NAV.
 DUST_NOTIONAL = 50.0
 
+# A close rounded down to the venue lot step leaves a remnant of one lot (3 PEPE, 1 PUMP, worth
+# fractions of a cent) that the venue itself does not hold; it is not an open position.
+RESIDUE_NOTIONAL = 1.0
+
+
+SKIM_MATCH_S = 30.0
+
+
+def _skim_times(journal: Journal) -> dict[str, list[pd.Timestamp]]:
+    out: dict[str, list[pd.Timestamp]] = {}
+    for ev in journal.read("signals"):
+        if ev.get("event") == "skim":
+            for sk in ev.get("skims") or []:
+                out.setdefault(sk["symbol"], []).append(pd.Timestamp(ev["ts_utc"]))
+    return out
+
+
+def _exit_kind(symbol: str, ts: str, flat: bool, skims: dict[str, list[pd.Timestamp]]) -> str:
+    """`exit` when the fill leaves the position flat, `skim` when the booking ladder sold it,
+    otherwise `trim`, a partial sale by the rebalance. DECISIONS.md#closed-trade-kinds-2026-09-27"""
+    if flat:
+        return "exit"
+    t = pd.Timestamp(ts)
+    if any(abs((t - s).total_seconds()) <= SKIM_MATCH_S for s in skims.get(symbol, ())):
+        return "skim"
+    return "trim"
+
 
 def build(bot: str) -> dict:
-    orders = Journal(bot).read("orders")
+    journal = Journal(bot)
+    orders = journal.read("orders")
+    skims = _skim_times(journal)
     fills = [f for f in (_fill(o) for o in orders) if f]
     fills.sort(key=lambda x: x["ts"])
 
@@ -51,25 +82,28 @@ def build(bot: str) -> dict:
             errors += 1
 
     for f in fills:
-        q = lots.setdefault(f["symbol"], deque())
-        if f["side"] == "BUY":
+        short = f["side"] in SHORT_SIDES
+        q = lots.setdefault((f["symbol"], "short") if short else f["symbol"], deque())
+        if f["side"] in OPENING:
             q.append(dict(f, remaining=f["qty"]))
             continue
+        sign = -1.0 if short else 1.0
         to_sell = f["qty"]
+        first = len(closed)
         while to_sell > 1e-12 and q:
             lot = q[0]
             take = min(lot["remaining"], to_sell)
             entry_fee = lot["fee"] * (take / lot["qty"])
             exit_fee = f["fee"] * (take / f["qty"])
-            gross = (f["price"] - lot["price"]) * take
+            gross = sign * (f["price"] - lot["price"]) * take
             closed.append({
-                "symbol": f["symbol"],
+                "symbol": f["symbol"], "direction": "short" if short else "long",
                 "entry_ts": lot["ts"], "exit_ts": f["ts"],
                 "qty": round(take, 10),
                 "entry_price": lot["price"], "exit_price": f["price"],
                 "gross_pnl": gross, "fees": entry_fee + exit_fee,
                 "net_pnl": gross - entry_fee - exit_fee,
-                "return_pct": (f["price"] / lot["price"] - 1.0) * 100.0,
+                "return_pct": sign * (f["price"] / lot["price"] - 1.0) * 100.0,
                 "net_return_pct": ((gross - entry_fee - exit_fee)
                                    / (lot["price"] * take) * 100.0),
                 "hold_hours": round((pd.Timestamp(f["ts"])
@@ -81,11 +115,18 @@ def build(bot: str) -> dict:
             to_sell -= take
             if lot["remaining"] <= 1e-12:
                 q.popleft()
+        kind = _exit_kind(f["symbol"], f["ts"],
+                          sum(lot["remaining"] * lot["price"] for lot in q) < RESIDUE_NOTIONAL, skims)
+        for c in closed[first:]:
+            c["exit_kind"] = kind
 
-    open_lots = [{"symbol": s, "entry_ts": lot["ts"], "qty": round(lot["remaining"], 10),
+    open_lots = [{"symbol": k[0] if isinstance(k, tuple) else k,
+                  "direction": "short" if isinstance(k, tuple) else "long",
+                  "entry_ts": lot["ts"], "qty": round(lot["remaining"], 10),
                   "entry_price": lot["price"],
                   "cost_basis": round(lot["remaining"] * lot["price"], 4)}
-                 for s, q in lots.items() for lot in q if lot["remaining"] > 1e-12]
+                 for k, q in lots.items() for lot in q
+                 if lot["remaining"] > 1e-12 and lot["remaining"] * lot["price"] >= RESIDUE_NOTIONAL]
 
     t = pd.DataFrame(closed)
     stats = {"closed_trades": len(t), "open_lots": len(open_lots),

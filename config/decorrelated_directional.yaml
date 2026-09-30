@@ -1,0 +1,55 @@
+meta:
+  name: decorrelated_directional
+  declared_before_any_backtest: true
+  declared_utc: '2026-09-23'
+  requested_by: operator
+  operator_request: 'Find uncorrelated coins so we can define entry and exit based on direction, as we
+    are currently losing to market beta.'
+  prior_evidence: '#beta-is-the-only-screen3-lever: over 14 days beta sets the sign of the return, so
+    cutting beta has cut P(positive) with it in every blend tested. #competition-wf-outcome: a
+    regime-gated short sleeve fails every period. #correlation-cap-outcome and residual momentum
+    (idio_40) are dead. #scoring-funnel argues market-neutral scores well on Screen 3 and fails
+    Screen 2, but that was never run on this engine. None of those tested a universe CHOSEN for low
+    correlation, traded in both directions, and none tested a beta hedge of C0.'
+  engine: gates.competition_wf.book_hourly, every 14-day window, 5 bps plus tick per side on longs,
+    10 bps plus tick per side on shorts (#plan-correction-shorting); periods 2022, 2023-24, 2025-26.
+    Gross (longs plus shorts) is capped at 1.0, the no-leverage rule.
+  decision_rule: 'Same as config/competition_wf.yaml: raise P(14-day > 2%) AND the median against C0
+    in every period, worst window no more than 5 points worse, and the nonsense control reproduces
+    less than half the P(>2%) gain in 2025-26. Median in-window drawdown and P(>15%) are reported
+    beside it. Survivors paper-trade before anything else.'
+  control: C0 = momentum_top3_full as deployed.
+selection:
+  correlation: 'At each 4h close, the Pearson correlation of each pool name''s hourly log returns
+    with BTC''s over the trailing 720 hourly bars, using only bars closed by then (aligned on close
+    times). BTC and ETH are excluded from selection.'
+  decorrelated_set: 'The lowest-correlation third of the point-in-time pool that bar (floor of n/3
+    names, about 9).'
+arms:
+  U1_decorrelated_long_short:
+    rule: 'Inside the decorrelated set, the 20/10 channel in both directions: long on a close above
+      the prior 20-bar high, exit below the prior 10-bar low; short on a close below the prior 20-bar
+      low, exit above the prior 10-bar high. Each open position 1/10 of equity. A name leaving the
+      set is closed.'
+    mechanism: Coins with little BTC in them trend on their own news; taking both directions earns
+      their trends without a net bet on BTC.
+    failure_mode: Low correlation to BTC is mostly low liquidity or a stablecoin-like asset (TRX,
+      PAXG) whose trends are small; shorts pay 20 bps a round trip; with little beta the fortnight
+      return sits near zero and fails the return screen, as #beta-is-the-only-screen3-lever predicts.
+  U2_decorrelated_long_only:
+    rule: U1 without the short leg.
+    mechanism: Isolates whether choosing the universe by low correlation helps at all.
+  U3_beta_hedged_c0:
+    rule: 'C0 as deployed plus a BTC short sized to the book''s trailing 720-hour beta to BTC,
+      rebalanced at 4h closes, with longs scaled by 1/(1+h) so longs plus the hedge stay within 1.0
+      gross; h is capped at 1.5.'
+    mechanism: Keeps the momentum selection and removes the market direction that the live drawdowns
+      come from.
+    failure_mode: The selection's return IS mostly beta (#beta-is-the-only-screen3-lever); hedging it
+      leaves a small residual and halves the long book.
+nonsense_control: 'U1 and U2 run on a RANDOM third of the pool of the same size each bar instead of
+  the lowest-correlation third, 20 seeds; the decorrelated set must beat the random set''s P(>2%) by
+  at least twice the random set''s own gain over C0.'
+diagnostic:
+  persistence: Spearman correlation of each name's BTC-correlation rank between consecutive 30-day
+    blocks, and the mean BTC beta of the decorrelated set against the pool.

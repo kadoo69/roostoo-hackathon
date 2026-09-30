@@ -12,7 +12,8 @@ LEVERAGED = re.compile(r"(UP|DOWN|BULL|BEAR)USDT$")
 STABLES = {
     "USDCUSDT", "FDUSDUSDT", "TUSDUSDT", "BUSDUSDT", "DAIUSDT", "USDPUSDT",
     "EURUSDT", "AEURUSDT", "USD1USDT", "XUSDUSDT", "PAXGUSDT", "USDEUSDT",
-    "RLUSDUSDT", "USDSUSDT", "BFUSDUSDT", "EURIUSDT",
+    "RLUSDUSDT", "USDSUSDT", "BFUSDUSDT", "EURIUSDT", "UUSDT", "KGSTUSDT", "XAUTUSDT",
+    "WBTCUSDT", "USDSBUSDT",
 }
 
 
@@ -53,9 +54,17 @@ def research_symbols() -> list[str]:
 
 
 def working_set() -> list[str]:
-    tradable = set(tradable_symbols())
-    delisted = set(research_symbols()) - binance.currently_trading("USDT")
-    return sorted(tradable | delisted)
+    """Every name the point-in-time pool may rank: live and delisted, listed on Roostoo or not.
+
+    The live bot ranks the whole Binance USDT market and trades the Roostoo
+    intersection. Leaving out live names Roostoo does not list put BCH, DASH,
+    INJ, TIA and 427 others outside history, so the backtest pool was not the
+    pool the bot trades. DECISIONS.md#universe-completeness
+    """
+    trading = binance.currently_trading("USDT")
+    delisted = set(research_symbols()) - trading
+    live = {s for s in trading if not LEVERAGED.search(s) and s not in STABLES}
+    return sorted(set(tradable_symbols()) | delisted | live)
 
 
 def _panel_path(interval: str) -> object:
