@@ -23,7 +23,7 @@ from gates.let_winners_run import simulate
 from signals import contenders
 from signals.exit_clock import to_fast
 
-MINUTES = {"5m": 5, "15m": 15, "30m": 30, "1h": 60}
+MINUTES = {"5m": 5, "15m": 15, "30m": 30, "1h": 60, "4h": 240}
 CASH = "cash"
 WARMUP_BARS = 100
 
@@ -52,7 +52,9 @@ def frames_to(frames: dict[str, pd.DataFrame], field: str) -> pd.DataFrame:
 def build_variants(ad: dict) -> dict[str, dict]:
     """Candidate rules by id. `clocks` maps a clock to a book config used as is (id = clock);
     `variants` crosses each clock's base config with 4h-confirmation and volume settings
-    (id = "15m|htf0|vol1.5"). DECISIONS.md#walkforward-live-declaration"""
+    (id = "15m|htf0|vol1.5"); clocks in `no_htf_on` skip the 4h confirmation, which on the 4h
+    clock only repeats its own breakout. DECISIONS.md#walkforward-live-declaration,
+    DECISIONS.md#dynamic-bot-4h-2026-10-01"""
     out = {}
     if ad.get("clocks"):
         for iv, name in ad["clocks"].items():
@@ -72,6 +74,8 @@ def build_variants(ad: dict) -> dict[str, dict]:
                 else:
                     cc.pop("volume_confirm", None)
                 vid = f"{iv}|htf{int(bool(htf))}|vol{vol if vol else 0}"
+                if htf and iv in (grid.get("no_htf_on") or []):
+                    continue
                 out[vid] = {"clock": iv, "cc": cc, "entry": int(c["strategy"]["entry_bars"]),
                             "exit": int(c["strategy"]["exit_bars"])}
     return out

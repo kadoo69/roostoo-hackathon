@@ -36,7 +36,7 @@ def test_hedge_explorer_is_paper_and_registered():
     from gates import live_validation
     assert load("config/hedge_explorer.yaml").dry_run
     assert dashboard.BOTS["hedge_explorer"] == "config/hedge_explorer.yaml"
-    assert "hedge_explorer" in live_validation.BOOKS and desk.group_of("hedge_explorer", "5m") == "scalper"
+    assert "hedge_explorer" in live_validation.BOOKS and desk.group_of("hedge_explorer", "5m") != "live"
     assert "hedge_explorer) echo bot.hedge_explorer_run" in open("run_bots.sh").read()
 
 

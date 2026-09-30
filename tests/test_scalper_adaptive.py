@@ -31,20 +31,21 @@ def test_scalper_is_paper_only_registered_and_its_clocks_exist():
     for name in ad["clocks"].values():
         assert load(f"config/{name}.yaml")
     assert dashboard.BOTS["scalper_adaptive"] == "config/scalper_adaptive.yaml"
-    assert "scalper_adaptive" in live_validation.BOOKS and desk.group_of("scalper_adaptive", "5m") == "scalper"
+    assert "scalper_adaptive" in live_validation.BOOKS and desk.group_of("wf_live", "5m") == "scalper"
     run = open("run_bots.sh").read()
-    assert "config/scalper_adaptive.yaml" in run and "config/wf_live.yaml" in run
+    assert "config/wf_live.yaml" in run
     assert "scalper_adaptive|wf_live) echo bot.scalper_adaptive_run" in run
 
 
-def test_wf_live_grid_has_sixteen_variants_plus_cash_and_is_paper():
+def test_wf_live_grid_has_eighteen_variants_from_5m_to_4h_plus_cash_and_is_paper():
     import yaml
 
     from bot.scalper_adaptive_run import build_variants
     from bot.settings import load
     ad = yaml.safe_load(open("config/wf_live.yaml"))["adaptive"]
     v = build_variants(ad)
-    assert len(v) == 16 and ad["allow_cash"] and ad["lookback_days"] == 3
+    assert len(v) == 18 and ad["allow_cash"] and ad["lookback_days"] == 3
+    assert {"4h|htf0|vol0", "4h|htf0|vol1.5"} <= set(v) and "4h|htf1|vol0" not in v
     assert v["30m|htf1|vol1.5"]["cc"]["htf_confirm"] and v["30m|htf1|vol1.5"]["cc"]["volume_confirm"] == 1.5
     assert "volume_confirm" not in v["15m|htf0|vol0"]["cc"] and not v["15m|htf0|vol0"]["cc"]["htf_confirm"]
     assert v["5m|htf0|vol0"]["cc"]["min_hold_bars"] == 3

@@ -5,13 +5,14 @@ meta:
   paper_only: true
   requested_by: 'operator 2026-09-30: walk-forward validation in the live market, not a backtest; whatever works
     on the current timeframe and conditions'
-  description: 'Live walk-forward (PAPER): every hour scores 16 rule variants (5m/15m/30m/1h x 4h confirmation on/off
-    x volume confirmation on/off) on the last 3 days of live bars, trades the leader, and journals every variant''s
-    out-of-sample return since the previous pick.'
+  description: 'THE dynamic bot (PAPER): every hour it replays its strategy on the last 3 days at every holding
+    style (5m, 15m, 30m, 1h and 4h breakouts, each with the 4h-trend and volume filters on or off) plus cash, and
+    trades whichever style earned most, switching only on a 1-point lead.'
   declared_ref: DECISIONS.md#walkforward-live-declaration
   why_it_runs: operator instruction; forward evidence on paper only
   falsification: after 7 live days, if the pick's cumulative forward return is not above the mean variant's, selection
     on the live window adds nothing
+  changed_utc: '2026-10-01: 4h clock added, DECISIONS.md#dynamic-bot-4h-2026-10-01'
 adaptive:
   variants:
     clocks:
@@ -19,12 +20,15 @@ adaptive:
       15m: momentum_top3_15m
       30m: competition
       1h: momentum_top3_1h_long
+      4h: competition
     htf_confirm:
     - false
     - true
     volume_confirm:
     - null
     - 1.5
+    no_htf_on:
+    - 4h
   lookback_days: 3
   reselect_minutes: 60
   switch_margin_pp: 1.0
