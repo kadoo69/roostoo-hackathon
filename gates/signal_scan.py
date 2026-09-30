@@ -53,7 +53,27 @@ def scan(symbols: list[str]) -> dict:
                          "mom_pct": round(float(mom.get(sym, 0)) * 100, 2), "vol_x": round(float(volx.get(sym, 0)), 2),
                          "rule_weight": round(float(w.get(sym, 0)), 3), "blocked_by": reasons})
         rows.sort(key=lambda r: -r["mom_pct"])
-        out[iv] = {"bar": str(close.index[-1]), "in_breakout": len(rows),
+        c4n = c4.reindex(columns=close.columns)
+        need4 = ((c4n.shift(1).rolling(20).max().iloc[-1] / c4n.iloc[-1]) - 1.0) * 100
+        need = ((prior_hi / close.iloc[-1]) - 1.0) * 100
+        near = []
+        for sym in close.columns:
+            if in_ch.get(sym, False) or not (need.get(sym, 99) <= 2.0) or mom.get(sym, 0) <= 0:
+                continue
+            gates = []
+            if cc.get("volume_confirm"):
+                gates.append(f"needs volume {float(cc['volume_confirm']):.1f}x (now {volx.get(sym, 0):.2f}x)")
+            if cc.get("htf_confirm") and not up4.get(sym, False):
+                gates.append(f"needs 4h breakout (+{need4.get(sym, float('nan')):.2f}% away)")
+            near.append({"symbol": sym.replace("USDT", ""), "pct_to_breakout": round(float(need[sym]), 2),
+                         "mom_pct": round(float(mom[sym]) * 100, 2), "then": gates})
+        near.sort(key=lambda r: r["pct_to_breakout"])
+        for r in rows:
+            sym = r["symbol"] + "USDT"
+            if "no 4h breakout" in r["blocked_by"]:
+                r["blocked_by"] = [b if b != "no 4h breakout" else f"no 4h breakout (+{need4.get(sym, float('nan')):.2f}% away)"
+                                   for b in r["blocked_by"]]
+        out[iv] = {"bar": str(close.index[-1]), "in_breakout": len(rows), "near_breakout": near,
                    "rule_holds": {k.replace("USDT", ""): round(float(v), 3) for k, v in w.items() if abs(v) > 1e-9},
                    "candidates": rows}
     return out
@@ -71,6 +91,8 @@ def main() -> int:
         return 0
     for iv, r in res.items():
         print(f"\n== {iv} (last closed bar {r['bar']}): {r['in_breakout']} of {len(pool)} pool coins in a breakout; rule holds {r['rule_holds'] or 'cash'}")
+        for c in r["near_breakout"][:6]:
+            print(f"   NEAR {c['symbol']:8s} +{c['pct_to_breakout']:.2f}% to a 20-bar high  mom {c['mom_pct']:+6.2f}%  " + "; ".join(c["then"]))
         for c in r["candidates"][:10]:
             flag = "NEW " if c["fresh_breakout"] else "    "
             why = ", ".join(c["blocked_by"]) or ("HELD" if c["rule_weight"] else "passes, slot/sticky")
