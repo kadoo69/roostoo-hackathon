@@ -1,0 +1,41 @@
+meta:
+  name: stress_harness
+  frozen: true
+  declared_utc: '2026-09-30T20:10:00Z'
+  requested_by: 'operator 2026-10-01: launch 3 sub agents to analyse our 3 best bots in depth and try to break them by
+    strict analysis so we make them stronger for live markets; create a harness and specialised tools around the bots first'
+  declared_ref: DECISIONS.md#stress-harness-declaration
+  written_before_any_number: true
+purpose: >
+  A red-team harness, not a strategy search. It replays each book's exact live rule (the contenders
+  engine with the book's own config, the ladder, maker fees and ticks) on history and applies declared
+  perturbations that model the ways the live books actually fail. A scenario that breaks a book names a
+  weakness to fix in code or operations; it never licenses a parameter change on its own (any fix is
+  declared and tested separately under the usual rules).
+books:
+  competition: config/competition.yaml (30m, 4h + volume confirmation), the real-money rule
+  momentum_top3_15m: config/momentum_top3_15m.yaml (15m, volume confirmation only)
+  wf_live: config/wf_live.yaml, replayed by its red-team agent on top of this harness (hourly selection over styles)
+scenarios:
+  baseline: the rule as live
+  fee_taker: every fill pays the 0.10% taker fee instead of 0.05% maker (a limit that crosses or a market fallback)
+  slip_10bps: 10 bps extra cost per unit turnover on top of maker fees (fills worse than the close)
+  delay_1bar: every target fills one bar late (a slow cycle, a missed close, a retry)
+  outage: the book is offline for ~8% of the time in 4-16 h blocks and keeps its last target (Mac sleep, host loss)
+  data_holes: 2% of (bar, coin) closes are missing when the rule decides; prices stay true (partial-universe decisions)
+  flash_wick: at 30 random holdout bars the largest held coin prints a one-bar close 12% lower, then recovers
+  gap_shock: at 30 random holdout bars the largest held coin gaps 15% lower and stays there
+  jitter: entry 15/25, exit 7/14, momentum 30/50, volume 1.25/2.0, n 2/4, each alone (parameter neighbourhood)
+seeds: 3 for every random scenario; the median across seeds is reported
+metrics: >
+  14-day windows (the competition's Screen 2 horizon) from gates.competition_window, per period fit
+  2023-01-01..2025-01-01, holdout 2025-01-01..2026-09-19 and recent 2026-06-01..data end: median, P(>5%),
+  worst, median max drawdown and median Screen 3 composite; baseline daily P&L split by BTC regime
+  (72 h return above +3% up, below -3% down, otherwise chop; 24 h below -5% crash).
+break_rule: >
+  A scenario BREAKS a book on a period when its median 14-day return is at or below zero, or it loses more
+  than half of the baseline median, or its worst 14-day window is below -25% (the live max_drawdown kill),
+  or its median 14-day max drawdown is worse than -15%.
+nonsense_control: >
+  The identity scenario (baseline run through the perturbation path with zero perturbation) must reproduce
+  the baseline exactly; a harness that moves the identity is broken and every number from it is void.
