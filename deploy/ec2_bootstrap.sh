@@ -72,7 +72,7 @@ log "pre-flight (read-only, places no order)"
 sudo -u roostoo bash -c "cd $DEST && .venv/bin/python -m gates.preflight"
 
 log "tests"
-sudo -u roostoo bash -c "cd $DEST && .venv/bin/pip install -q pytest >/dev/null && .venv/bin/python -m pytest tests -q -p no:warnings -x" | tail -2
+sudo -u roostoo bash -c "cd $DEST && .venv/bin/pip install -q -r requirements-dev.txt >/dev/null && .venv/bin/python -m pytest tests -q -p no:warnings -x" | tail -2
 
 if [ "${SKIP_SYSTEMD:-0}" = 1 ]; then log "SKIP_SYSTEMD=1: stopping before services (container test)"; exit 0; fi
 log "systemd"
