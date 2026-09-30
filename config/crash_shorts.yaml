@@ -1,0 +1,42 @@
+meta:
+  name: crash_shorts
+  frozen: true
+  declared_utc: '2026-09-30T20:20:00Z'
+  requested_by: 'operator 2026-10-01: what about shorting the most obvious down trend when the market is all down; yes,
+    test the crash regime shorts'
+  declared_ref: DECISIONS.md#crash-shorts-declaration
+  written_before_any_number: true
+mechanism: >
+  Breadth-switched shorts failed because a mere majority of falling coins is the ordinary chop inside
+  crypto uptrends, where breakdowns are bought back and shorts are squeezed. A true crash (BTC down
+  more than 5% over 24 h) is a different state: forced liquidations cascade and breakdowns continue for
+  hours. Shorting breakdowns only while that state holds should capture the continuation and skip the chop.
+failure_mode: >
+  Crash days are few, so any result is noise; or the crash is over by the time a closed 4h bar shows it
+  (the flag is late by construction) and the shorts sell the low and get squeezed on the rebound, as
+  every earlier short sleeve did; or the timing of the flag does not matter (a time-shifted flag does as well).
+dead_families_checked:
+  - '#lowtf-breadth-shorts-outcome: breadth < 40% switch; this uses a BTC 24 h crash switch instead, on at most a few percent of bars'
+  - '#topdown-ls-outcome: breadth + BTC regime gated the side of the whole book; this adds shorts only in own slots, longs untouched'
+  - '#weak-short-bull-outcome and #short-paper-books-outcome: shorts in bull or unconditional regimes; not crash-gated'
+flag: >
+  crash = BTC close / close 6 closed 4h bars earlier - 1 < -0.05, read at the 4h bar's close time and
+  forward-filled onto the fast clock (the same label as gates.stress.regimes), so no bar sees its own future.
+arms:
+  S_only: 'short-only book: 20-bar breakdown with negative 40-bar momentum, weakest 3 sized by |momentum|, cap 0.5, only while crash is on; exit on the prior 10-bar high; cash otherwise'
+  C0: 'the competition rule as live (config/competition.yaml contenders block, shorts off), the baseline'
+  C_crash: 'C0 plus shorts in the contenders rule with short_on = crash (both sides compete for the 3 slots, longs unchanged in form)'
+clocks: [30m, 1h]
+costs: shorts pay 0.10% per side (the measured Roostoo short fee, SHORT_FEE in gates/let_winners_run.py); longs 0.05% maker; ticks
+periods: fit 2023-01-01..2025-01-01, holdout 2025-01-01..2026-09-19 (gates.stress.PERIODS)
+nonsense_control: >
+  shifted: the crash flag circularly shifted by a uniform random offset of 30-180 days, 20 seeds; same number
+  and length of on-spells, wrong timing.
+decision_rule: >
+  Minimum evidence: at least 20 crash-flag days in each of fit and holdout, otherwise the verdict is
+  INSUFFICIENT (a null). C_crash PASSES on a clock only if, on BOTH fit and holdout, (1) its median 14-day
+  return is at least C0's, (2) its worst 14-day window is no more than 2 pp worse than C0's, (3) S_only's
+  summed net return over crash-flag bars is positive, and (4) S_only's crash-bar net return beats at least
+  18 of the 20 shifted controls. Anything else fails. A pass only earns a paper book; nothing reaches the
+  competition book without an operator decision.
+trials: 4 (S_only and C_crash on 30m and 1h), recorded in config/trials.yaml with the controls

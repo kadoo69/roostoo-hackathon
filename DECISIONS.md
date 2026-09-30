@@ -4383,3 +4383,9 @@ Declared in `config/stress_harness.yaml` before any number was computed. `gates/
 Break rule (fixed): a period breaks when the median 14-day return is at or below zero, loses more than half of the baseline median, the worst window is below -25% (the live max-drawdown kill) or the median window drawdown is worse than -15%. Nonsense control: the identity scenario must reproduce the baseline exactly.
 A break names a weakness to fix; it never licenses a parameter change on its own.
 The three books: `competition` (real money, 30m), `momentum_top3_15m` (15m baseline) and `wf_live` (the dynamic selector, replayed by its agent on top of this harness).
+
+## crash-shorts-declaration
+
+Operator question 2026-10-01: why not short the most obvious downtrend when the whole market is down; after the record of failed short sleeves was shown, the operator asked for the one untested case, shorts only in a true crash regime.
+Declared in `config/crash_shorts.yaml` before any number was computed. The switch is BTC down more than 5% over the last six closed 4h bars (the `crash` label of `gates.stress.regimes`), not breadth, so it is on for a few percent of bars rather than in ordinary chop. Arms on 30m and 1h: a short-only crash book, the competition rule, and the competition rule with crash-gated shorts competing for its slots; shorts pay 0.10% a side. Nonsense control: the same flag shifted 30-180 days, 20 seeds.
+Decision rule (fixed): at least 20 crash days in each period or the verdict is insufficient; otherwise the combined book must match the competition rule's median 14-day return and stay within 2 pp of its worst window on both fit and holdout, and the short-only book's crash-bar P&L must be positive and beat 18 of 20 shifted flags. A pass earns a paper book only.
