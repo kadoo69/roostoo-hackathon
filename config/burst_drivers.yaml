@@ -1,0 +1,30 @@
+meta:
+  name: burst_drivers
+  frozen: true
+  declared_utc: '2026-09-30T17:25:00Z'
+  requested_by: 'operator 2026-09-30: exploit short-term burst trends; study whether sudden upward moves are caused by spiked volume or other factors; go all in on such trends, keep Sharpe smooth, book profits'
+  declared_ref: DECISIONS.md#burst-drivers-declaration
+  written_before_any_number: true
+event: 'a pool coin whose last three 5m bars (15 minutes) returned at least +2.0%, detected at the 5m close; one event per coin per 60 minutes (the first bar that qualifies)'
+data: 'Binance 5m klines, the live 25-coin pool, the last 30 days to 2026-09-30 17:00Z; discovery = first 15 days, validation = last 15 days'
+features_at_detection:
+  vol_x: 'burst quote volume over the median 15-minute quote volume of the prior 24 h'
+  taker_share: 'taker-buy quote volume / quote volume during the burst (aggressive buying)'
+  btc_15m: 'BTC return over the same 15 minutes (market-wide versus coin-specific)'
+  breadth_15m: 'share of the other pool coins up more than 0.5% over the same 15 minutes'
+  prior_4h: 'the coin''s return over the 4 h before the burst began'
+  dist_hi24: 'close at detection over the prior 24 h high, minus 1 (new high versus rebound)'
+  trade_size_x: 'average trade size (quote volume / trades) during the burst over its prior 24 h median'
+  burst_pct: 'size of the burst itself'
+outcomes: 'forward returns from the detection close at +15m, +1h, +4h, net of 0.10% round trip (maker both sides); max run-up within 4 h'
+mechanisms:
+  vol_x: 'a burst on heavy volume carries real new demand (news, listings, whale entry) that takes hours to be absorbed'
+  taker_share: 'aggressive market buying signals informed or forced flow; passive-fill rallies are thin and revert'
+  btc_15m: 'coin-specific bursts reflect coin-specific information and persist; market-wide beta pops revert with BTC'
+  dist_hi24: 'a burst through the 24 h high meets no overhead supply; a rebound burst meets sellers from the high'
+failure_mode: 'short-horizon crypto reverses after sharp moves (#accel-outcome); every driver is noise and the forward return after bursts is below costs in the validation half'
+decision_rule: >
+  A driver is REAL only if its top-versus-bottom tercile difference in +1h and +4h net forward return has the
+  same sign in discovery and validation with |t| >= 2 in each half (Welch). A paper burst book is built only on
+  REAL drivers, and only if the events it would take have positive mean +4h net return in BOTH halves. Nothing
+  here reaches the competition account; the book is judged on live paper afterwards.
