@@ -191,6 +191,11 @@ class AdaptiveScalperBot(ContendersBot):
             scores[CASH] = 0.0
             if prev_at is not None:
                 fwd[CASH] = 0.0
+        decision = None
+        if self.ad.get("use_decision_point"):
+            from gates.decision_point import active
+            decision = active(now)
+        eligible = {k: v for k, v in scores.items() if decision is None or k in decision["allowed_styles"]}
         prev = self.clock
         if fwd and prev in fwd:
             ranked = sorted(fwd, key=fwd.get, reverse=True)
@@ -199,11 +204,16 @@ class AdaptiveScalperBot(ContendersBot):
                 "pick_fwd_pct": fwd[prev], "mean_fwd_pct": round(float(np.mean(list(fwd.values()))), 4),
                 "best": ranked[0], "best_fwd_pct": fwd[ranked[0]], "pick_rank": ranked.index(prev) + 1,
                 "n_variants": len(fwd), "fwd_pct": fwd, "ref": "DECISIONS.md#walkforward-live-declaration"})
-        self.clock = pick_clock(scores, prev, float(self.ad["switch_margin_pp"]))
+        self.clock = pick_clock(eligible or scores, prev if prev in (eligible or scores) else None,
+                                float(self.ad["switch_margin_pp"]))
+        self.gross_cap = float(decision["max_gross"]) if decision else 1.0
         self.selected_at = now
         self.ad_path.parent.mkdir(parents=True, exist_ok=True)
         self.ad_path.write_text(json.dumps({"clock": self.clock, "at": now.isoformat(), "scores": scores}))
         self.journal.write("signals", {"event": "adaptive_select", "clock": self.clock, "previous": prev,
+                                       "decision_point": ({"allowed": len(decision["allowed_styles"]), "max_gross": decision["max_gross"],
+                                                           "regime": decision.get("regime"), "generated": decision["generated_utc"]}
+                                                          if decision else None),
                                        "switched": self.clock != prev, "trailing_pct": scores,
                                        "detail": detail, "lookback_days": days,
                                        "ref": "DECISIONS.md#scalper-adaptive-declaration"})
@@ -239,7 +249,8 @@ class AdaptiveScalperBot(ContendersBot):
         target = {s: float(v) for s, v in last.items() if abs(v) > 1e-9}
         self.journal.write("signals", {"event": "contenders", "bar": str(m.index[-1]), "clock": iv, "variant": self.clock,
                                        "target": {s: round(v, 5) for s, v in target.items()}})
-        target = {s: math.copysign(math.floor(abs(v) * derisk * 1e8) / 1e8, v) for s, v in target.items()}
+        cap = getattr(self, "gross_cap", 1.0)
+        target = {s: math.copysign(math.floor(abs(v) * derisk * cap * 1e8) / 1e8, v) for s, v in target.items()}
         min_hold = int(spec["cc"].get("min_hold_bars") or 0) * MINUTES[iv] // MINUTES[self.s.interval]
         return self.guard(target, w5, prices, min_hold)
 
