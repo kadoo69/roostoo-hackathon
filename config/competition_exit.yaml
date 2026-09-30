@@ -1,0 +1,39 @@
+meta:
+  name: competition_exit
+  frozen: true
+  declared_utc: '2026-09-30T15:40:00Z'
+  requested_by: 'operator 2026-09-30: draw insights from the fleet''s most successful trades and modify and scale the competition strategy for a high return'
+  declared_ref: DECISIONS.md#competition-exit-declaration
+  written_before_any_number: true
+evidence_that_motivated_it:
+  - 'live paper, 2,297 closed lots over 20 books 2026-09-22..30: lots held <2 h net -74.9k, lots held >4 h net +81.1k (win 62-72%)'
+  - 'rally capture (#rally-capture-score-2026-09-27): fast clocks detect most rallies but keep ~0%; slow exits keep 25-64%'
+  - 'live hold time (#live-hold-time-2026-09-26): 30m/1h positions peak +4.2% after 2.2 h and give back 2.4%'
+  - 'caveat: hold time is an outcome; winners last longer because the exit only fires on weakness, so the live split alone proves nothing'
+mechanism: >
+  A 20-bar breakout on a 30m clock is followed by a pullback that often retests the prior 10-bar
+  low (5 hours) before the trend resumes. A 10-bar exit sells that routine pullback, pays the round
+  trip, and re-enters later or never. A slower exit (20 or 40 bars, 10 or 20 hours) holds through
+  the pullback and keeps more of the rally, at the cost of a larger giveback when the trend truly ends.
+failure_mode: >
+  The slower exit gives back more at real trend ends than it saves on pullbacks, so the median
+  fortnight falls and the worst fortnight deepens; or it helps only because any extra holding helps
+  in a rising market (then the price-blind control does as well).
+dead_families_checked:
+  - '#exit-clock-outcome: moved the 4h book''s exit to a different bar clock; this changes the lookback on the same 30m clock, not the clock'
+  - '#exit-walkforward-outcome: chose exit_bars 10 on the 4h book; never run on the 30m contenders stack'
+  - '#max-return-levers-outcome: top2/top1 concentration fails out of sample; NOT re-tested'
+  - '#lowtf-clock-ensemble-outcome: multi-clock ensemble fails; NOT re-tested'
+base: 'the live competition rule exactly: config/competition.yaml contenders block (sticky, htf_confirm, volume_confirm 1.5, frozen stretch filter), shorts off, 30m, ladder on'
+arms:
+  C0: exit 10 bars (live)
+  E20: exit 20 bars
+  E40: exit 40 bars
+  H6_ctrl: 'nonsense control: exit 10 bars plus a price-blind 6-bar (3 h) minimum hold, the same extra holding with no channel information'
+  S15_slowexit: 'the live momentum_top3_15m_slowexit book (15m clock, exit 40 bars, htf off, volume 1.5, sticky), reported for comparison as an alternate book'
+windows: 'gates.lowtf_paper_bots.W: fit 2023-01-01..2025-01-01, holdout 2025-01-01..2026-09-19; every 14-day window, fee 5 bps plus one tick a side, ladder 3%/15%'
+decision_rule: >
+  An exit arm (E20, E40) replaces C0 only if ALL hold: holdout median 14d return > C0's; holdout
+  P(>5%) >= C0's; fit median > C0's; holdout median > H6_ctrl's; holdout worst 14d not more than
+  5 points below C0's. If both pass, the one with the higher holdout median. S15_slowexit replaces
+  C0 only on the same first four conditions against C0. Otherwise C0 stays. Thresholds are never moved.
