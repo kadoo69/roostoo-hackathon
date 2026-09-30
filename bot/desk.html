@@ -198,6 +198,8 @@ function rows(){
 function style(v){
  if(!v) return '-';
  if(v==='cash') return 'Cash (stand aside)';
+ if(v.startsWith('short|')) return `${v.split('|')[1]} short · breakdowns`;
+ if(v.startsWith('ride|')) return 'Momentum ride · +2% jump, hold for +5%';
  const m=v.match(/^(\w+)\|htf(\d)\|vol([\d.]+)/); if(!m) return v;
  const f=[]; if(m[2]==='1') f.push('4h trend'); if(m[3]!=='0') f.push('volume '+m[3]+'x');
  return `${m[1]} breakout · ${f.length?f.join(' + '):'no filters'}`;

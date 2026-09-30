@@ -44,7 +44,7 @@ def test_wf_live_grid_has_eighteen_variants_from_5m_to_4h_plus_cash_and_is_paper
     from bot.settings import load
     ad = yaml.safe_load(open("config/wf_live.yaml"))["adaptive"]
     v = build_variants(ad)
-    assert len(v) == 18 and ad["allow_cash"] and ad["lookback_days"] == 3
+    assert len([k for k in v if k[0].isdigit()]) == 18 and ad["allow_cash"] and ad["lookback_days"] == 3
     assert {"4h|htf0|vol0", "4h|htf0|vol1.5"} <= set(v) and "4h|htf1|vol0" not in v
     assert v["30m|htf1|vol1.5"]["cc"]["htf_confirm"] and v["30m|htf1|vol1.5"]["cc"]["volume_confirm"] == 1.5
     assert "volume_confirm" not in v["15m|htf0|vol0"]["cc"] and not v["15m|htf0|vol0"]["cc"]["htf_confirm"]
@@ -93,3 +93,33 @@ def test_wf_report_compounds_the_forward_record(tmp_path, monkeypatch):
     assert abs(out["pick_cum_pct"] - (1.01 * 0.99 - 1) * 100) < 1e-3
     assert abs(out["fixed_competition_cum_pct"] - (-1.0)) < 1e-3
     assert json.dumps(out)
+
+
+def test_dynamic_bot_menu_has_shorts_and_the_momentum_ride():
+    import yaml
+
+    from bot.scalper_adaptive_run import bars_needed, build_variants
+    from bot.settings import load
+    ad = yaml.safe_load(open("config/wf_live.yaml"))["adaptive"]
+    v = build_variants(ad)
+    assert len(v) == 21
+    assert v["short|15m"]["cc"]["sides"] == "short" and v["short|1h"]["clock"] == "1h"
+    ride = v["ride|+5%|24h"]
+    assert ride["type"] == "burst" and ride["cc"]["tp_pct"] == 5.0 and bars_needed(ride) >= 288
+    s = load("config/wf_live.yaml")
+    assert s.shorts_enabled and s.dry_run and s.booking["shorts"]
+
+
+def test_variant_weights_short_side_is_negative():
+    import numpy as np
+    import pandas as pd
+
+    from bot.scalper_adaptive_run import variant_weights
+    idx = pd.date_range("2026-09-01", periods=120, freq="1h", tz="UTC")
+    down = pd.DataFrame({"X": np.linspace(100, 60, 120), "Y": np.full(120, 100.0)}, index=idx)
+    qv = pd.DataFrame(1.0, index=idx, columns=down.columns)
+    qv.iloc[-30:] = 5.0
+    cc = {"n": 2, "momentum_bars": 40, "breadth_max": 0.4, "max_weight": 0.5, "sticky": True, "sides": "short",
+          "volume_confirm": 1.5, "skip_short_z": [], "skip_long_z": []}
+    w = variant_weights({"clock": "1h", "cc": cc, "entry": 20, "exit": 10}, down, qv, down, down)
+    assert (w["X"] <= 0).all() and w["X"].min() < 0 and (w["Y"] == 0).all()

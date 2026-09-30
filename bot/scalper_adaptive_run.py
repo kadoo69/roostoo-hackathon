@@ -45,6 +45,21 @@ def clock_weights(close: pd.DataFrame, qv: pd.DataFrame, close4: pd.DataFrame, c
     return contenders.targets(close, members, cc, entry, exit_lb, short_on=off, entry_ok=ok)
 
 
+def variant_weights(v: dict, close: pd.DataFrame, qv: pd.DataFrame, high: pd.DataFrame,
+                    close4: pd.DataFrame) -> pd.DataFrame:
+    """Weights of one style: the burst ride or the contenders rule (long or short side).
+    DECISIONS.md#dynamic-bot-shorts-and-ride-2026-10-01"""
+    if v.get("type") == "burst":
+        from signals import burst_rider
+        return burst_rider.weights(close, high, v["cc"])
+    return clock_weights(close, qv, close4, v["cc"], v["entry"], v["exit"])
+
+
+def bars_needed(v: dict) -> int:
+    """History a live target must replay so a position opened earlier is still on the path."""
+    return max(WARMUP_BARS + 60, int(v["cc"].get("hold_bars") or 0) + 60)
+
+
 def frames_to(frames: dict[str, pd.DataFrame], field: str) -> pd.DataFrame:
     return pd.DataFrame({s: f.set_index("open_time")[field] for s, f in frames.items() if len(f)}).sort_index()
 
@@ -63,6 +78,10 @@ def build_variants(ad: dict) -> dict[str, dict]:
                        "exit": int(c["strategy"]["exit_bars"])}
     for vid, arm in (ad.get("burst_arms") or {}).items():
         out[vid] = {"clock": arm["clock"], "type": "burst", "cc": dict(arm), "entry": 0, "exit": 0}
+    for vid, arm in (ad.get("extra_arms") or {}).items():
+        c = yaml.safe_load((ROOT / "config" / f"{arm['config']}.yaml").read_text())
+        out[vid] = {"clock": arm["clock"], "cc": c["contenders"], "entry": int(c["strategy"]["entry_bars"]),
+                    "exit": int(c["strategy"]["exit_bars"])}
     grid = ad.get("variants") or {}
     for iv, name in (grid.get("clocks") or {}).items():
         c = yaml.safe_load((ROOT / "config" / f"{name}.yaml").read_text())
@@ -103,12 +122,12 @@ class AdaptiveScalperBot(ContendersBot):
         data = {}
         for iv in sorted({v["clock"] for v in self.variants.values()}):
             fr = feed.bar_frame(symbols, iv, int(days * 1440 / MINUTES[iv]) + WARMUP_BARS)
-            data[iv] = (frames_to(fr, "close"), frames_to(fr, "quote_volume"))
+            data[iv] = (frames_to(fr, "close"), frames_to(fr, "quote_volume"), frames_to(fr, "high"))
         prev_at = self.selected_at
         scores, fwd, detail = {}, {}, {}
         for vid, v in self.variants.items():
-            close, qv = data[v["clock"]]
-            w = clock_weights(close, qv, c4, v["cc"], v["entry"], v["exit"])
+            close, qv, high = data[v["clock"]]
+            w = variant_weights(v, close, qv, high, c4)
             net, turn = simulate(close, w, self.tick_map(), True)
             window = net.loc[now - pd.Timedelta(days=days):]
             scores[vid] = round(float(np.expm1(np.log1p(window).sum()) * 100), 3)
@@ -160,16 +179,11 @@ class AdaptiveScalperBot(ContendersBot):
             return {}
         spec = self.variants[self.clock]
         iv = spec["clock"]
-        need = WARMUP_BARS + 60
-        if iv == self.s.interval:
-            close = m
-            qv = frames_to(feed.bar_frame(cols, iv, len(m) + 1), "quote_volume")
-        else:
-            fr = feed.bar_frame(cols, iv, need)
-            close, qv = frames_to(fr, "close"), frames_to(fr, "quote_volume")
+        fr = feed.bar_frame(cols, iv, bars_needed(spec))
+        close, qv, high = frames_to(fr, "close"), frames_to(fr, "quote_volume"), frames_to(fr, "high")
         c4 = feed.close_matrix(feed.bar_frame(cols, "4h", 60))
-        w = clock_weights(close, qv, c4, spec["cc"], spec["entry"], spec["exit"])
-        w5 = w if iv == self.s.interval else to_fast(w, close.index, m.index).fillna(0.0)
+        w = variant_weights(spec, close, qv, high, c4).reindex(columns=cols).fillna(0.0)
+        w5 = to_fast(w, close.index, m.index).fillna(0.0)
         last = w5.iloc[-1]
         target = {s: float(v) for s, v in last.items() if abs(v) > 1e-9}
         self.journal.write("signals", {"event": "contenders", "bar": str(m.index[-1]), "clock": iv, "variant": self.clock,

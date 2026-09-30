@@ -5,9 +5,9 @@ meta:
   paper_only: true
   requested_by: 'operator 2026-09-30: walk-forward validation in the live market, not a backtest; whatever works
     on the current timeframe and conditions'
-  description: 'THE dynamic bot (PAPER): every hour it replays its strategy on the last 3 days at every holding
-    style (5m, 15m, 30m, 1h and 4h breakouts, each with the 4h-trend and volume filters on or off) plus cash, and
-    trades whichever style earned most, switching only on a 1-point lead.'
+  description: 'THE dynamic bot (PAPER): every hour it replays its strategy on the last 3 days in every style -
+    long breakouts held on 5m, 15m, 30m, 1h or 4h (filters on/off), short breakdowns on 15m or 1h, and a momentum
+    ride (buy a +2%/15m jump, hold for +5% up to 24 h) - plus cash, and trades whichever earned most.'
   declared_ref: DECISIONS.md#walkforward-live-declaration
   why_it_runs: operator instruction; forward evidence on paper only
   falsification: after 7 live days, if the pick's cumulative forward return is not above the mean variant's, selection
@@ -34,6 +34,21 @@ adaptive:
   switch_margin_pp: 1.0
   start_variant: 15m|htf0|vol1.5
   allow_cash: true
+  extra_arms:
+    short|15m:
+      clock: 15m
+      config: short_pullback_15m
+    short|1h:
+      clock: 1h
+      config: short_pullback_15m
+  burst_arms:
+    ride|+5%|24h:
+      clock: 5m
+      thresh_pct: 2.0
+      tp_pct: 5.0
+      hold_bars: 288
+      n: 3
+      cooldown_bars: 12
 contenders:
   min_hold_bars: 3
   min_hold_ref: DECISIONS.md#min-hold-5m
@@ -114,10 +129,7 @@ booking:
     by a random-timing nonsense control, so it is exposure reduction rather than timing.
   confound_warning: paper-only comparison book, nobody's control.
 short:
-  enabled: false
-  disabled_utc: '2026-09-26'
-  disabled_by: 'operator: turn off shorts on the short-term books, keep the profit ladder'
-  disabled_ref: DECISIONS.md#short-term-shorts-off-2026-09-26
+  enabled: true
   regime: breadth_below
   breadth_max: 0.4
   momentum_bars: 40
@@ -130,12 +142,11 @@ short:
   execution: MARKET both legs, open at MaxBid, close at MinAsk, 0.1% per side
   topped_up: false
   laddered: true
-  added_utc: '2026-09-23'
-  added_by: 'operator instruction: add shorting to the short-term books'
-  rule: While fewer than 40% of the pool have positive 40-bar momentum, names in a 20-bar breakdown with negative
-    momentum and no live long channel are shorted, weakest first, in their own slots; closed when the close exceeds
-    the prior 10-bar high.
-  evidence_ref: DECISIONS.md#lowtf-breadth-shorts-declaration
+  note: 'short-only book; entries come from the contenders rule with sides: short (switch always on); the regime
+    fields feed only the engine log'
+  declared_ref: DECISIONS.md#short-accel-declaration
+  enabled_utc: '2026-10-01'
+  enabled_ref: DECISIONS.md#dynamic-bot-shorts-and-ride-2026-10-01
 target_lock:
   enabled: false
   disabled_utc: '2026-09-26'
