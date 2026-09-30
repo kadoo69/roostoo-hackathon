@@ -4,7 +4,10 @@ ROOT="$(cd "$(dirname "$0")" && pwd)"
 cd "$ROOT"
 PY=${PY:-python3}
 # Gated arms are listed next to the control they must be read against.
-CONFIGS=${CONFIGS:-"config/donchian_4h.yaml config/momentum_top3_full.yaml config/momentum_top3_lock.yaml config/momentum_top3_30m.yaml config/momentum_top3_15m.yaml config/momentum_top3_5m.yaml config/momentum_top3_1h_allcash.yaml config/momentum_top3_30m_allcash.yaml config/accel_15m.yaml config/burst_5m.yaml config/burst_15m.yaml config/burst_strong_15m.yaml config/momentum_top3_15m_eq.yaml config/short_accel_15m.yaml config/momentum_top3_15m_hold3h.yaml config/momentum_top3_5m_hold2h.yaml config/short_pullback_15m.yaml config/momentum_top3_15m_slowexit.yaml"}
+# The paper fleet was stopped 2026-09-30 (DECISIONS.md#paper-fleet-stopped-2026-09-30); only the
+# competition rule's paper twin starts by default. "$0 fleet" restarts the whole list.
+PAPER_FLEET="config/donchian_4h.yaml config/momentum_top3_full.yaml config/momentum_top3_lock.yaml config/momentum_top3_30m.yaml config/momentum_top3_15m.yaml config/momentum_top3_5m.yaml config/momentum_top3_1h_allcash.yaml config/momentum_top3_30m_allcash.yaml config/accel_15m.yaml config/burst_5m.yaml config/burst_15m.yaml config/burst_strong_15m.yaml config/momentum_top3_15m_eq.yaml config/short_accel_15m.yaml config/momentum_top3_15m_hold3h.yaml config/momentum_top3_5m_hold2h.yaml config/short_pullback_15m.yaml config/momentum_top3_15m_slowexit.yaml"
+CONFIGS=${CONFIGS:-"config/momentum_top3_30m.yaml"}
 # alpha_flow runs under bot.alpha_flow_run, not bot.run, so it is started separately.
 ALPHA_FLOW_CONFIG=${ALPHA_FLOW_CONFIG:-"config/alpha_flow.yaml"}
 # Books that place REAL Roostoo orders; each config's meta.keyset picks its keys.
@@ -94,6 +97,8 @@ case "${1:-start}" in
     echo "stopping:"; for c in $CONFIGS; do stop_one "$(basename "$c" .yaml)"; done
     ;;
   restart) "$0" stop; sleep 2; "$0" start ;;
+  fleet) CONFIGS="$PAPER_FLEET" "$0" start ;;
+  fleetstop) CONFIGS="$PAPER_FLEET" "$0" stop ;;
   live)
     echo "starting LIVE ORDER books:"; for c in $LIVE_CONFIGS; do start_one "$c" 0; done
     ;;
@@ -217,5 +222,5 @@ case "${1:-start}" in
   report) shift; exec "$PY" -m bot.status "$@" ;;
   trades) shift; exec "$PY" -m bot.blotter --csv "$@" ;;
   dashboard) shift; exec "$PY" -m bot.dashboard "$@" ;;
-  *) echo "usage: $0 {start|stop|restart|live|livestop|status|scanner|scanstop|sources|sourcestop|paperlab|labstop|scalper|scalperstop|scalpreport|compare|report|trades|dashboard}"; exit 2 ;;
+  *) echo "usage: $0 {start|stop|restart|fleet|fleetstop|live|livestop|status|scanner|scanstop|sources|sourcestop|paperlab|labstop|scalper|scalperstop|scalpreport|compare|report|trades|dashboard}"; exit 2 ;;
 esac

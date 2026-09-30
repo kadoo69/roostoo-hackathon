@@ -4195,3 +4195,30 @@ Five trials recorded in `config/trials.yaml`.
 Operator request 2026-09-30: the desk dashboard shows only the competition books from now on.
 `/` (`bot/desk.py` `DESK_GROUPS`) lists `competition` and `competition_rehearsal`; totals, activity, alerts and the closed-trade feed are computed on those alone, and a "Competition account" tile shows whether the account is active.
 The paper fleet keeps running and stays visible on `/full`.
+
+## adaptive-clock-declaration
+
+Declared in `config/adaptive_clock.yaml` and committed (22b147d) before any number was computed.
+Operator request 2026-09-30: the bot should be dynamic, keep learning, identify patterns and adapt to the market.
+Coin-level adaptation is dead (`#coin-selection-does-not-persist`); the one untested form with a mechanism is strategy momentum across clocks: hold, each day, the clock (15m, 30m, 1h, same contenders rule) whose trailing return was best.
+
+## adaptive-clock-outcome
+
+`python3 -m gates.adaptive_clock`, `results/adaptive_clock.json`: NEAR-MISS, not adopted; the competition book stays on 30m.
+All arms are simulated on one 15m grid (30m and 1h weights carried by close time), so C0 here (+0.90% holdout) differs slightly from `#competition-exit-outcome` (+1.13%, native 30m grid).
+| arm | fit median | holdout median | holdout P(>5%) | holdout P(>10%) | holdout worst | clock share |
+|---|---|---|---|---|---|---|
+| C0 30m always | -0.75% | +0.90% | 0.33 | 0.19 | -22.4% | 30m 100% |
+| AD7 best trailing 7 d | +0.77% | +1.17% | 0.30 | 0.20 | -28.6% | 1h 47%, 30m 37%, 15m 16% |
+| AD3 best trailing 3 d | -0.61% | -0.29% | 0.24 | 0.14 | -25.8% | 1h 42%, 30m 36%, 15m 22% |
+| RND_ctrl random daily | -3.13% | -1.18% | 0.33 | 0.22 | -28.4% | even |
+AD7 passes three of five conditions (holdout median, fit median, beats random) and fails two (holdout P(>5%) 0.30 < 0.33; worst -28.6% is 6.3 points below C0, beyond the 5-point limit).
+Clock persistence is real but weak: the trailing 7-day clock ranking correlates 0.13 (Spearman) with the next day's.
+The random control shows switching itself is expensive (turnover 73 against 44 per fortnight); AD7's gain over it is selection, and its loss in the tail is switching into the fast clock just before trends end.
+Seven trials recorded (with `#competition-exit-outcome`'s five, twelve today).
+
+## paper-fleet-stopped-2026-09-30
+
+Operator delegated the call 2026-09-30 ("we will work on the competition bots only"): every paper book, the Binance testnet book, the source hub, scanner, paper lab and the other session's `momentum_top3_1h_long` launchd job were stopped; configs, state and journals stay on disk and restart with `./run_bots.sh start` or `launchctl bootstrap`.
+Still running: `competition`, `competition_rehearsal`, the paper twin `momentum_top3_30m` (same rule, the live books' control on the dashboard), the dashboards and keep-awake.
+`run_bots.sh` CONFIGS now defaults to `momentum_top3_30m` alone; the old list is `PAPER_FLEET` (`./run_bots.sh fleet` restarts it).

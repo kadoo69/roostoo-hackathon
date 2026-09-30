@@ -5868,3 +5868,23 @@ trials:
   config: competition_exit:S15_slowexit
   status: fail
   note: DECISIONS.md#competition-exit-outcome
+- signal: adaptive_clock
+  gate: adaptive_clock
+  config: adaptive_clock:C0
+  status: control
+  note: DECISIONS.md#adaptive-clock-outcome
+- signal: adaptive_clock
+  gate: adaptive_clock
+  config: adaptive_clock:AD7
+  status: fail
+  note: DECISIONS.md#adaptive-clock-outcome
+- signal: adaptive_clock
+  gate: adaptive_clock
+  config: adaptive_clock:AD3
+  status: fail
+  note: DECISIONS.md#adaptive-clock-outcome
+- signal: adaptive_clock
+  gate: adaptive_clock
+  config: adaptive_clock:RND_ctrl
+  status: control
+  note: DECISIONS.md#adaptive-clock-outcome
