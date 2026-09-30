@@ -33,7 +33,27 @@ def test_scalper_is_paper_only_registered_and_its_clocks_exist():
     assert dashboard.BOTS["scalper_adaptive"] == "config/scalper_adaptive.yaml"
     assert "scalper_adaptive" in live_validation.BOOKS and desk.group_of("scalper_adaptive", "5m") == "scalper"
     run = open("run_bots.sh").read()
-    assert "config/scalper_adaptive.yaml" in run and "scalper_adaptive) echo bot.scalper_adaptive_run" in run
+    assert "config/scalper_adaptive.yaml" in run and "config/wf_live.yaml" in run
+    assert "scalper_adaptive|wf_live) echo bot.scalper_adaptive_run" in run
+
+
+def test_wf_live_grid_has_sixteen_variants_plus_cash_and_is_paper():
+    import yaml
+
+    from bot.scalper_adaptive_run import build_variants
+    from bot.settings import load
+    ad = yaml.safe_load(open("config/wf_live.yaml"))["adaptive"]
+    v = build_variants(ad)
+    assert len(v) == 16 and ad["allow_cash"] and ad["lookback_days"] == 3
+    assert v["30m|htf1|vol1.5"]["cc"]["htf_confirm"] and v["30m|htf1|vol1.5"]["cc"]["volume_confirm"] == 1.5
+    assert "volume_confirm" not in v["15m|htf0|vol0"]["cc"] and not v["15m|htf0|vol0"]["cc"]["htf_confirm"]
+    assert v["5m|htf0|vol0"]["cc"]["min_hold_bars"] == 3
+    assert load("config/wf_live.yaml").dry_run
+
+
+def test_pick_clock_chooses_cash_when_every_variant_lost():
+    assert pick_clock({"a": -0.2, "b": -3.0, "cash": 0.0}, None, 1.0) == "cash"
+    assert pick_clock({"a": -0.2, "b": -3.0, "cash": 0.0}, "a", 1.0) == "a"
 
 
 def test_heatmap_counts_only_running_books(tmp_path, monkeypatch):
@@ -51,3 +71,24 @@ def test_heatmap_counts_only_running_books(tmp_path, monkeypatch):
         d.mkdir(parents=True)
         (d / "cycles-2026-09-30.jsonl").write_text(json.dumps({"ts_utc": ts, "positions": {"ENAUSDT": 0.5}}) + "\n")
     assert [b["book"] for b in heatmap.live_books(now)] == ["alive"]
+
+
+def test_wf_report_compounds_the_forward_record(tmp_path, monkeypatch):
+    import json
+
+    from bot import journal
+    from gates import wf_report
+    monkeypatch.setattr(journal, "LIVE", tmp_path, raising=False)
+    d = tmp_path / "wf_test"
+    d.mkdir()
+    rows = [{"from": "a", "to": "b", "pick": "x", "pick_fwd_pct": 1.0, "mean_fwd_pct": 0.0, "best": "x",
+             "best_fwd_pct": 1.0, "pick_rank": 1, "n_variants": 3, "fwd_pct": {"x": 1.0, "30m|htf1|vol1.5": -1.0}},
+            {"from": "b", "to": "c", "pick": "x", "pick_fwd_pct": -1.0, "mean_fwd_pct": 0.5, "best": "y",
+             "best_fwd_pct": 2.0, "pick_rank": 3, "n_variants": 3, "fwd_pct": {"x": -1.0, "30m|htf1|vol1.5": 0.0}}]
+    monkeypatch.setattr(wf_report, "Journal", lambda book: type("J", (), {"read": lambda self, s: rows})())
+    monkeypatch.setattr(wf_report, "ROOT", tmp_path)
+    out = wf_report.summary("wf_test")
+    assert out["periods"] == 2 and out["pick_beat_mean_share"] == 0.5 and out["pick_mean_rank"] == 2.0
+    assert abs(out["pick_cum_pct"] - (1.01 * 0.99 - 1) * 100) < 1e-3
+    assert abs(out["fixed_competition_cum_pct"] - (-1.0)) < 1e-3
+    assert json.dumps(out)

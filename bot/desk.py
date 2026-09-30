@@ -10,10 +10,10 @@ import pandas as pd
 
 from bot.blotter import DUST_NOTIONAL
 
-GROUPS = (("live", "LIVE on Roostoo - real orders"), ("scalper", "PAPER - adaptive scalper vs fixed clocks"), ("core", "Core 4h"),
+GROUPS = (("live", "LIVE on Roostoo - real orders"), ("scalper", "PAPER - live walk-forward, adaptive scalper, fixed clocks"), ("core", "Core 4h"),
           ("momentum", "Short-term momentum"), ("burst", "Burst"), ("ab", "A/B tests"), ("short", "Short"))
 LIVE_BOOKS = {"competition", "competition_rehearsal"}
-SCALPER_BOOKS = {"scalper_adaptive", "momentum_top3_5m", "momentum_top3_15m", "momentum_top3_30m"}
+SCALPER_BOOKS = {"scalper_adaptive", "wf_live", "momentum_top3_5m", "momentum_top3_15m", "momentum_top3_30m"}
 DESK_GROUPS = ("live", "scalper")
 TOTALS_GROUPS = ("live",)
 AB_ARMS = {"momentum_top3_15m_eq", "momentum_top3_15m_hold3h",
@@ -91,12 +91,21 @@ def adaptive_clock(name: str) -> str | None:
         return None
 
 
+def walkforward() -> dict:
+    """Live walk-forward scorecard for the desk. DECISIONS.md#walkforward-live-declaration"""
+    try:
+        from gates.wf_report import summary
+        return summary("wf_live")
+    except Exception:                                      # noqa: BLE001
+        return {}
+
+
 def book(b: dict, by_name: dict) -> dict:
     m = b.get("meta") or {}
     st = b.get("blotter") or {}
     curve = b.get("equity_curve") or []
     step = max(1, len(curve) // 60)
-    auto = adaptive_clock(b["bot"]) if b["bot"] == "scalper_adaptive" else None
+    auto = adaptive_clock(b["bot"]) if b["bot"] in ("scalper_adaptive", "wf_live") else None
     return {"bot": b["bot"], "group": group_of(b["bot"], m.get("interval")),
             "clock": f"auto: {auto}" if auto else m.get("interval"),
             "description": m.get("description"), "live": bool(b.get("live")),
@@ -210,5 +219,5 @@ def payload(snap: dict) -> dict:
     return {"generated": snap["generated"], "totals": total,
             "groups": [{"key": k, "label": v} for k, v in GROUPS if k in DESK_GROUPS],
             "books": books, "exposure": exposure(books), "activity": activity(books), "alerts": alerts(books),
-            "closed": closed_feed(shown),
+            "closed": closed_feed(shown), "walkforward": walkforward(),
             "breadth": snap.get("breadth")}

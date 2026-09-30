@@ -55,7 +55,7 @@ tr.row.sel td{background:rgba(124,196,255,.06)}
 .coin.u{border-color:rgba(62,207,142,.35)} .coin.d{border-color:rgba(255,107,107,.35)}
 .ab{font-size:11px;padding:1px 7px;border-radius:5px}
 .ab.u{background:var(--up-bg);color:var(--up)} .ab.d{background:var(--dn-bg);color:var(--dn)} .ab.z{background:var(--panel2);color:var(--dim)}
-.side{display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:12px;min-height:0}
+.side{display:grid;grid-template-rows:auto auto minmax(0,1fr) auto;gap:12px;min-height:0}
 .list{padding:6px 14px 10px}
 .exp{display:grid;grid-template-columns:52px 1fr 72px;align-items:center;gap:8px;padding:4px 0;font-size:12px}
 .exp .b{height:6px;border-radius:3px;background:var(--acc);opacity:.7}
@@ -112,6 +112,7 @@ tr.fresh td{background:rgba(124,196,255,.05)}
     <tbody id="rows"></tbody></table></div>
   </div>
   <div class="side">
+   <div class="card"><div class="hd"><h3>Walk-forward</h3><span class="faint" style="margin-left:auto;font-size:11px">live · hourly</span></div><div class="list" id="wf"></div></div>
    <div class="card"><div class="hd"><h3>Fleet exposure</h3><span class="faint" style="margin-left:auto;font-size:11px">USD · books · open P&amp;L</span></div><div class="list" id="exposure"></div></div>
    <div class="card"><div class="hd"><h3>Activity</h3><span class="faint" style="margin-left:auto;font-size:11px">your local time</span></div><div class="list scroll" id="activity"></div></div>
    <div class="card"><div class="hd"><h3>Health</h3></div><div id="alerts"></div></div>
@@ -194,8 +195,18 @@ function rows(){
  $('rows').innerHTML=h;
  document.querySelectorAll('tr.row').forEach(r=>r.onclick=()=>open(r.dataset.b));
 }
+function wfCard(){
+ const w=D.walkforward||{};
+ const top=(w.top_trailing||[]).map(v=>`<div class="exp"><span class="name" style="font-size:12px">${esc(v.variant)}</span><div></div><span class="num r ${cls(v.pct)}" style="text-align:right">${pct(v.pct)}</span></div>`).join('');
+ const fwd=w.periods?`<div class="exp"><span class="name">pick</span><div class="faint" style="font-size:11px">beat the mean ${(w.pick_beat_mean_share*100).toFixed(0)}% of ${w.periods} hours · avg rank ${w.pick_mean_rank}/${w.n_variants}</div><span class="num r ${cls(w.pick_cum_pct)}" style="text-align:right">${pct(w.pick_cum_pct)}</span></div>
+  <div class="exp"><span class="name">mean</span><div class="faint" style="font-size:11px">all variants</div><span class="num r ${cls(w.mean_variant_cum_pct)}" style="text-align:right">${pct(w.mean_variant_cum_pct)}</span></div>
+  <div class="exp"><span class="name">fixed</span><div class="faint" style="font-size:11px">competition rule 30m</div><span class="num r ${cls(w.fixed_competition_cum_pct)}" style="text-align:right">${pct(w.fixed_competition_cum_pct)}</span></div>`
+  :'<div class="ok">forward record starts at the second hourly selection</div>';
+ $('wf').innerHTML=`<div class="exp"><span class="name">now</span><div><b>${esc(w.current_pick||'-')}</b> <span class="faint" style="font-size:11px">best of last 3 days</span></div><span></span></div>${top}${fwd}`;
+}
 function side(){
- const ex=D.exposure.slice(0,8), mx=Math.max(1,...ex.map(e=>Math.abs(e.usd)));
+ wfCard();
+ const ex=D.exposure.slice(0,4), mx=Math.max(1,...ex.map(e=>Math.abs(e.usd)));
  $('exposure').innerHTML=ex.length?ex.map(e=>`<div class="exp"><span class="name">${esc(e.symbol)}</span>
   <div><div class="b" style="width:${Math.abs(e.usd)/mx*100}%;${e.usd<0?'background:var(--dn)':''}"></div><div class="faint" style="font-size:11px;margin-top:2px">${usd(e.usd)} · ${e.books} book${e.books>1?'s':''}</div></div>
   <span class="num r ${cls(e.pnl)}" style="text-align:right">${sgn(e.pnl)}</span></div>`).join(''):'<div class="ok">all books in cash</div>';

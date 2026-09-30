@@ -24,6 +24,7 @@ from signals import contenders
 from signals.exit_clock import to_fast
 
 MINUTES = {"5m": 5, "15m": 15, "30m": 30, "1h": 60}
+CASH = "cash"
 WARMUP_BARS = 100
 
 
@@ -48,19 +49,43 @@ def frames_to(frames: dict[str, pd.DataFrame], field: str) -> pd.DataFrame:
     return pd.DataFrame({s: f.set_index("open_time")[field] for s, f in frames.items() if len(f)}).sort_index()
 
 
+def build_variants(ad: dict) -> dict[str, dict]:
+    """Candidate rules by id. `clocks` maps a clock to a book config used as is (id = clock);
+    `variants` crosses each clock's base config with 4h-confirmation and volume settings
+    (id = "15m|htf0|vol1.5"). DECISIONS.md#walkforward-live-declaration"""
+    out = {}
+    if ad.get("clocks"):
+        for iv, name in ad["clocks"].items():
+            c = yaml.safe_load((ROOT / "config" / f"{name}.yaml").read_text())
+            out[iv] = {"clock": iv, "cc": c["contenders"], "entry": int(c["strategy"]["entry_bars"]),
+                       "exit": int(c["strategy"]["exit_bars"])}
+    grid = ad.get("variants") or {}
+    for iv, name in (grid.get("clocks") or {}).items():
+        c = yaml.safe_load((ROOT / "config" / f"{name}.yaml").read_text())
+        for htf in grid.get("htf_confirm", [False]):
+            for vol in grid.get("volume_confirm", [None]):
+                cc = {**c["contenders"], "htf_confirm": bool(htf)}
+                if vol:
+                    cc["volume_confirm"] = float(vol)
+                else:
+                    cc.pop("volume_confirm", None)
+                vid = f"{iv}|htf{int(bool(htf))}|vol{vol if vol else 0}"
+                out[vid] = {"clock": iv, "cc": cc, "entry": int(c["strategy"]["entry_bars"]),
+                            "exit": int(c["strategy"]["exit_bars"])}
+    return out
+
+
 class AdaptiveScalperBot(ContendersBot):
     def __init__(self, settings, mode: str = "continuous"):
         super().__init__(settings, mode=mode)
         raw = yaml.safe_load((ROOT / "config" / f"{settings.name}.yaml").read_text())
         self.ad = raw["adaptive"]
-        self.clock_cfgs = {}
-        for iv, name in self.ad["clocks"].items():
-            c = yaml.safe_load((ROOT / "config" / f"{name}.yaml").read_text())
-            self.clock_cfgs[iv] = {"cc": c["contenders"], "entry": int(c["strategy"]["entry_bars"]),
-                                   "exit": int(c["strategy"]["exit_bars"])}
+        self.variants = build_variants(self.ad)
         self.ad_path = ROOT / "live" / settings.name / "adaptive.json"
         saved = json.loads(self.ad_path.read_text()) if self.ad_path.exists() else {}
-        self.clock = saved.get("clock") or self.ad.get("start_clock", "15m")
+        start = self.ad.get("start_variant") or self.ad.get("start_clock", "15m")
+        valid = set(self.variants) | ({CASH} if self.ad.get("allow_cash") else set())
+        self.clock = saved.get("clock") if saved.get("clock") in valid else start
         self.selected_at = pd.Timestamp(saved["at"]) if saved.get("at") else None
 
     def tick_map(self) -> pd.Series:
@@ -69,17 +94,35 @@ class AdaptiveScalperBot(ContendersBot):
     def reselect(self, now: pd.Timestamp, symbols: list[str]) -> None:
         days = float(self.ad["lookback_days"])
         c4 = feed.close_matrix(feed.bar_frame(symbols, "4h", int(days * 6) + 60))
-        scores, detail = {}, {}
-        for iv, spec in self.clock_cfgs.items():
-            bars = int(days * 1440 / MINUTES[iv]) + WARMUP_BARS
-            fr = feed.bar_frame(symbols, iv, bars)
-            close, qv = frames_to(fr, "close"), frames_to(fr, "quote_volume")
-            w = clock_weights(close, qv, c4, spec["cc"], spec["entry"], spec["exit"])
+        data = {}
+        for iv in sorted({v["clock"] for v in self.variants.values()}):
+            fr = feed.bar_frame(symbols, iv, int(days * 1440 / MINUTES[iv]) + WARMUP_BARS)
+            data[iv] = (frames_to(fr, "close"), frames_to(fr, "quote_volume"))
+        prev_at = self.selected_at
+        scores, fwd, detail = {}, {}, {}
+        for vid, v in self.variants.items():
+            close, qv = data[v["clock"]]
+            w = clock_weights(close, qv, c4, v["cc"], v["entry"], v["exit"])
             net, turn = simulate(close, w, self.tick_map(), True)
             window = net.loc[now - pd.Timedelta(days=days):]
-            scores[iv] = round(float(np.expm1(np.log1p(window).sum()) * 100), 3)
-            detail[iv] = {"bars": int(len(close)), "turnover": round(float(turn.loc[window.index].sum()), 2)}
+            scores[vid] = round(float(np.expm1(np.log1p(window).sum()) * 100), 3)
+            detail[vid] = {"bars": int(len(close)), "turnover": round(float(turn.loc[window.index].sum()), 2)}
+            if prev_at is not None:
+                close_t = net.index + pd.Timedelta(minutes=MINUTES[v["clock"]])
+                seg = net[(close_t > prev_at) & (close_t <= now)]
+                fwd[vid] = round(float(np.expm1(np.log1p(seg).sum()) * 100), 4)
+        if self.ad.get("allow_cash"):
+            scores[CASH] = 0.0
+            if prev_at is not None:
+                fwd[CASH] = 0.0
         prev = self.clock
+        if fwd and prev in fwd:
+            ranked = sorted(fwd, key=fwd.get, reverse=True)
+            self.journal.write("walkforward", {
+                "from": prev_at.isoformat(), "to": now.isoformat(), "pick": prev,
+                "pick_fwd_pct": fwd[prev], "mean_fwd_pct": round(float(np.mean(list(fwd.values()))), 4),
+                "best": ranked[0], "best_fwd_pct": fwd[ranked[0]], "pick_rank": ranked.index(prev) + 1,
+                "n_variants": len(fwd), "fwd_pct": fwd, "ref": "DECISIONS.md#walkforward-live-declaration"})
         self.clock = pick_clock(scores, prev, float(self.ad["switch_margin_pp"]))
         self.selected_at = now
         self.ad_path.parent.mkdir(parents=True, exist_ok=True)
@@ -105,8 +148,12 @@ class AdaptiveScalperBot(ContendersBot):
             except Exception as exc:                      # noqa: BLE001
                 self.journal.write("errors", {"event": "adaptive_select_failed", "error": repr(exc),
                                               "kept_clock": self.clock})
-        iv = self.clock
-        spec = self.clock_cfgs[iv]
+        if self.clock == CASH:
+            self.journal.write("signals", {"event": "contenders", "bar": str(m.index[-1]), "variant": CASH,
+                                           "target": {}})
+            return {}
+        spec = self.variants[self.clock]
+        iv = spec["clock"]
         need = WARMUP_BARS + 60
         if iv == self.s.interval:
             close = m
@@ -119,7 +166,7 @@ class AdaptiveScalperBot(ContendersBot):
         w5 = w if iv == self.s.interval else to_fast(w, close.index, m.index).fillna(0.0)
         last = w5.iloc[-1]
         target = {s: float(v) for s, v in last.items() if abs(v) > 1e-9}
-        self.journal.write("signals", {"event": "contenders", "bar": str(m.index[-1]), "clock": iv,
+        self.journal.write("signals", {"event": "contenders", "bar": str(m.index[-1]), "clock": iv, "variant": self.clock,
                                        "target": {s: round(v, 5) for s, v in target.items()}})
         target = {s: math.copysign(math.floor(abs(v) * derisk * 1e8) / 1e8, v) for s, v in target.items()}
         min_hold = int(spec["cc"].get("min_hold_bars") or 0) * MINUTES[iv] // MINUTES[self.s.interval]
