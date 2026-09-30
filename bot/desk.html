@@ -112,7 +112,7 @@ tr.fresh td{background:rgba(124,196,255,.05)}
     <tbody id="rows"></tbody></table></div>
   </div>
   <div class="side">
-   <div class="card"><div class="hd"><h3>Walk-forward</h3><span class="faint" style="margin-left:auto;font-size:11px">live · hourly</span></div><div class="list" id="wf" style="max-height:190px;overflow:auto"></div></div>
+   <div class="card"><div class="hd"><h3>What the learning bots see</h3><span class="faint" style="margin-left:auto;font-size:11px">live · hourly</span></div><div class="list" id="wf" style="max-height:230px;overflow:auto"></div></div>
    <div class="card"><div class="hd"><h3>Fleet exposure</h3><span class="faint" style="margin-left:auto;font-size:11px">USD · books · open P&amp;L</span></div><div class="list" id="exposure"></div></div>
    <div class="card"><div class="hd"><h3>Activity</h3><span class="faint" style="margin-left:auto;font-size:11px">your local time</span></div><div class="list scroll" id="activity"></div></div>
    <div class="card"><div class="hd"><h3>Health</h3></div><div id="alerts"></div></div>
@@ -195,16 +195,27 @@ function rows(){
  $('rows').innerHTML=h;
  document.querySelectorAll('tr.row').forEach(r=>r.onclick=()=>open(r.dataset.b));
 }
+function style(v){
+ if(!v) return '-';
+ if(v==='cash') return 'Cash (stand aside)';
+ const m=v.match(/^(\w+)\|htf(\d)\|vol([\d.]+)/); if(!m) return v;
+ const f=[]; if(m[2]==='1') f.push('4h trend'); if(m[3]!=='0') f.push('volume '+m[3]+'x');
+ return `${m[1]} breakout · ${f.length?f.join(' + '):'no filters'}`;
+}
 function wfCard(){
  const w=D.walkforward||{};
- const top=(w.top_trailing||[]).slice(0,3).map(v=>`<div class="exp"><span class="name" style="font-size:12px">${esc(v.variant)}</span><div></div><span class="num r ${cls(v.pct)}" style="text-align:right">${pct(v.pct)}</span></div>`).join('');
- const fwd=w.periods?`<div class="exp"><span class="name">pick</span><div class="faint" style="font-size:11px">beat the mean ${(w.pick_beat_mean_share*100).toFixed(0)}% of ${w.periods} hours · avg rank ${w.pick_mean_rank}/${w.n_variants}</div><span class="num r ${cls(w.pick_cum_pct)}" style="text-align:right">${pct(w.pick_cum_pct)}</span></div>
-  <div class="exp"><span class="name">mean</span><div class="faint" style="font-size:11px">all variants</div><span class="num r ${cls(w.mean_variant_cum_pct)}" style="text-align:right">${pct(w.mean_variant_cum_pct)}</span></div>
-  <div class="exp"><span class="name">fixed</span><div class="faint" style="font-size:11px">competition rule 30m</div><span class="num r ${cls(w.fixed_competition_cum_pct)}" style="text-align:right">${pct(w.fixed_competition_cum_pct)}</span></div>`
-  :'<div class="ok">forward record starts at the second hourly selection</div>';
+ const row=(l,sub,val,c)=>`<div style="display:flex;justify-content:space-between;gap:10px;padding:4px 0;border-bottom:1px solid var(--line)"><span style="font-size:12.5px">${l}${sub?` <span class="faint" style="font-size:11px">${sub}</span>`:''}</span><span class="num ${c||''}">${val}</span></div>`;
+ const head=(t,sub)=>`<div style="padding:8px 0 2px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim)">${t}</div><div class="faint" style="font-size:11px;margin-bottom:4px">${sub}</div>`;
  const ht=(w.hedge_top||[]).slice(0,3);
- const hd=ht.length?`<div class="exp"><span class="name">learn</span><div class="faint" style="font-size:11px">hedge_explorer capital shares</div><span></span></div>`+ht.map(h=>`<div class="exp"><span class="name" style="font-size:12px">${esc(h.variant)}</span><div></div><span class="num r dim" style="text-align:right">${h.share.toFixed(1)}%</span></div>`).join(''):'';
- $('wf').innerHTML=hd+`<div class="exp"><span class="name">now</span><div><b>${esc(w.current_pick||'-')}</b> <span class="faint" style="font-size:11px">best of last 3 days</span></div><span></span></div>${top}${fwd}`;
+ const eq=ht.length&&ht.every(h=>Math.abs(h.share-ht[0].share)<0.05);
+ let h=head('Learning · hedge_explorer', eq?'All 17 styles hold an equal share until the first hourly update; winners then gain capital.':'Share of capital per style. It rises when a style made money in the last hour.');
+ h+=ht.map(x=>row(style(x.variant),'',x.share.toFixed(1)+'%','dim')).join('');
+ const pick=w.current_pick;
+ h+=head('Choosing · wf_live', pick==='cash'?'Every style lost money over the last 3 days, so it holds cash.':`It trades the best style of the last 3 days: <b>${esc(style(pick))}</b>.`);
+ h+=(w.top_trailing||[]).slice(0,3).map(v=>row(style(v.variant),'last 3 days',pct(v.pct),cls(v.pct))).join('');
+ h+=head('Scorecard · after each pick', w.periods?`${w.periods} hourly picks so far; the pick beat the average style ${(w.pick_beat_mean_share*100).toFixed(0)}% of the time.`:'Starts after the second hourly pick: it then shows what each pick earned on the next hour.');
+ if(w.periods){ h+=row('Its picks','',pct(w.pick_cum_pct),cls(w.pick_cum_pct))+row('Average style','',pct(w.mean_variant_cum_pct),cls(w.mean_variant_cum_pct))+row('Competition rule','30m breakout · 4h trend + volume',pct(w.fixed_competition_cum_pct),cls(w.fixed_competition_cum_pct)); }
+ $('wf').innerHTML=h;
 }
 function side(){
  wfCard();
