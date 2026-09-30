@@ -103,7 +103,7 @@ case "${1:-start}" in
     # return over drawdown. DECISIONS.md#progress-review-2026-09-30
     if pgrep -f "progressroot=$ROOT" >/dev/null; then echo "  progress review already running"; else
       nohup bash -c 'r="$1"; cd "$r"; while true; do "$2" -m gates.progress >> live/progress.out 2>&1; "$2" -m gates.market_structure >> live/progress.out 2>&1; sleep 1800; done' "progressroot=$ROOT" "$ROOT" "$PY" >> live/progress.supervisor.out 2>&1 &
-      echo $! > run/progress.pid; disown 2>/dev/null || true; echo "  progress review started (pid $!), hourly -> results/progress/latest.json"
+      echo $! > run/progress.pid; disown 2>/dev/null || true; echo "  progress review started (pid $!), every 30 min -> results/progress/latest.json"
     fi ;;
   progressstop)
     p=$(cat run/progress.pid 2>/dev/null) && { pkill -P "$p" 2>/dev/null; kill "$p" 2>/dev/null; }
