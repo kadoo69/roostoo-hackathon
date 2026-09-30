@@ -102,7 +102,7 @@ def test_dynamic_bot_menu_has_shorts_and_the_momentum_ride():
     from bot.settings import load
     ad = yaml.safe_load(open("config/wf_live.yaml"))["adaptive"]
     v = build_variants(ad)
-    assert len(v) == 27
+    assert len(v) == 29
     assert v["short|15m"]["cc"]["sides"] == "short" and v["short|1h"]["clock"] == "1h"
     ride = v["ride|+5%|24h"]
     assert ride["type"] == "burst" and ride["cc"]["tp_pct"] == 5.0 and bars_needed(ride) >= 288

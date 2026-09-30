@@ -68,7 +68,8 @@ def oi_ok(close: pd.DataFrame, oi: pd.DataFrame, iv: str, bars: int) -> pd.DataF
 def variant_weights(v: dict, d: dict, close4: pd.DataFrame) -> pd.DataFrame:
     """Weights of one style: the burst ride, or the contenders rule on raw or market-neutral prices,
     with optional order-flow and open-interest entry confirmations. Positions are always in the real
-    coins. DECISIONS.md#dynamic-bot-shorts-and-ride-2026-10-01, DECISIONS.md#confirmations-and-residual-declaration"""
+    coins. DECISIONS.md#dynamic-bot-shorts-and-ride-2026-10-01, DECISIONS.md#confirmations-and-residual-declaration,
+    DECISIONS.md#pick-across-blocks-2026-10-01"""
     cc = v["cc"]
     if v.get("type") == "burst":
         from signals import burst_rider
@@ -84,6 +85,12 @@ def variant_weights(v: dict, d: dict, close4: pd.DataFrame) -> pd.DataFrame:
         o = oi_ok(d["close"], d["oi"], v["clock"], int(cc["oi_confirm_bars"])) if d.get("oi") is not None \
             else pd.DataFrame(False, index=d["close"].index, columns=d["close"].columns)
         extra = o if extra is None else (extra & o)
+    if cc.get("blocks"):
+        from signals import blocks
+        bk = cc["blocks"]
+        wide = clock_weights(sig, d["qv"], close4, {**cc, "n": int(bk["n_candidates"])}, v["entry"], v["exit"], extra)
+        lab = blocks.block_labels(d["close"], int(bk["window_bars"]), int(bk["refresh_bars"]), float(bk["min_corr"]))
+        return blocks.select(wide, lab, int(cc["n"]), float(cc["max_weight"]))
     return clock_weights(sig, d["qv"], close4, cc, v["entry"], v["exit"], extra)
 
 

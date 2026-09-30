@@ -83,6 +83,26 @@ adaptive:
         htf_confirm: false
         volume_confirm: 1.5
         residual_halflife_bars: 72
+    blocks|30m:
+      clock: 30m
+      config: competition
+      overrides:
+        blocks:
+          n_candidates: 8
+          window_bars: 144
+          refresh_bars: 12
+          min_corr: 0.7
+    blocks|1h:
+      clock: 1h
+      config: momentum_top3_1h_long
+      overrides:
+        htf_confirm: false
+        volume_confirm: null
+        blocks:
+          n_candidates: 8
+          window_bars: 72
+          refresh_bars: 12
+          min_corr: 0.7
   burst_arms:
     ride|+5%|24h:
       clock: 5m

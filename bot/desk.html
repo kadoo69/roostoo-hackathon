@@ -203,6 +203,7 @@ function style(v){
  if(v.startsWith('flow|')) return `${v.split('|')[1]} breakout · order-flow confirmed`;
  if(v.startsWith('oi|')) return `${v.split('|')[1]} breakout · open interest rising`;
  if(v.startsWith('resid|')) return `${v.split('|')[1]} breakout · market stripped out`;
+ if(v.startsWith('blocks|')) return `${v.split('|')[1]} breakout · one coin per block`;
  const m=v.match(/^(\w+)\|htf(\d)\|vol([\d.]+)/); if(!m) return v;
  const f=[]; if(m[2]==='1') f.push('4h trend'); if(m[3]!=='0') f.push('volume '+m[3]+'x');
  return `${m[1]} breakout · ${f.length?f.join(' + '):'no filters'}`;
