@@ -28,3 +28,12 @@ decision_rule: >
   same sign in discovery and validation with |t| >= 2 in each half (Welch). A paper burst book is built only on
   REAL drivers, and only if the events it would take have positive mean +4h net return in BOTH halves. Nothing
   here reaches the competition account; the book is judged on live paper afterwards.
+exit_test:
+  declared_utc: '2026-09-30T17:40:00Z'
+  written_after: 'the driver results (no driver real; +1h net about -0.08% and +4h +0.13..+0.45% in both halves, but mean 4 h run-up +3.3..+4.1%) and before any exit number'
+  mechanism: 'bursts overshoot and give back; the upside after detection is real but transient, so a resting take-profit books it before the giveback'
+  entry: 'every burst event above, bought at the detection close'
+  exits: 'take-profit T in {1.0, 1.5, 2.0, 3.0, 5.0}% as a resting limit (fills when a later 5m high reaches it), crossed with stop S in {none, -1.5%} (fills at the stop when a later 5m low reaches it; a bar touching both counts as the stop), else exit at the close 4 h after entry'
+  cost: '0.10% round trip; a stop exit pays 0.15% (taker on the stop)'
+  decision_rule: 'a combination is REAL only if its mean net return per trade is positive in both halves with t >= 2 in the validation half; only a REAL combination may run as a paper burst book'
+  nonsense_control: 'the same exits on random entries (same coins, same count, uniformly random 5m bars) in each half'
