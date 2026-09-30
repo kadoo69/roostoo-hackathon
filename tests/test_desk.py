@@ -41,7 +41,8 @@ def test_positions_carry_open_pnl_from_cost_basis_and_mark():
     assert p["symbol"] == "WLD" and p["pnl"] == 50.0 and p["pnl_pct"] == 10.0
 
 
-def test_payload_totals_exposure_and_alerts():
+def test_payload_totals_exposure_and_alerts(monkeypatch):
+    monkeypatch.setattr(desk, "DESK_GROUPS", tuple(k for k, _ in desk.GROUPS))
     snap = {"generated": "2026-09-26T18:00:00+00:00", "breadth": {},
             "bots": [_bot("momentum_top3_30m", 112000.0, realised=9000.0, open_pnl=3000.0, interval="30m",
                           positions={"WLDUSDT": 0.5}, marks={"WLDUSDT": 0.5}),
@@ -106,3 +107,13 @@ def test_live_books_lead_their_own_group_and_stay_out_of_paper_totals():
     waiting = {"bot": "competition", "waiting_for_account": True, "last_poll": "2026-09-30T15:00:00",
                "age_s": None, "drawdown_pct": None}
     assert "not active yet" in desk.alerts([waiting])[0]["text"]
+
+
+def test_desk_shows_only_the_competition_books():
+    from bot import desk
+    snap = {"generated": "x", "bots": [
+        {"bot": "competition", "meta": {"interval": "30m"}, "waiting_for_account": True, "last_poll": "2026-09-30T15:00:00"},
+        {"bot": "momentum_top3_30m", "meta": {"interval": "30m"}, "equity": 100.0}]}
+    out = desk.payload(snap)
+    assert [b["bot"] for b in out["books"]] == ["competition"]
+    assert [g["key"] for g in out["groups"]] == ["live"]

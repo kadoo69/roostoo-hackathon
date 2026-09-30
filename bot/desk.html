@@ -93,7 +93,7 @@ tr.fresh td{background:rgba(124,196,255,.05)}
 <body>
 <div class="app">
  <header>
-  <div class="brand">Roostoo Desk <span>· paper fleet</span></div>
+  <div class="brand">Roostoo Desk <span>· competition</span></div>
   <span class="pill" id="live"><span class="dot"></span>loading</span>
   <span class="pill faint" id="upd">-</span>
   <div class="sp"></div>
@@ -159,11 +159,11 @@ function kpis(){
  const t=D.totals, b=D.breadth||{};
  const r=Math.max(0,t.realised), o=Math.abs(t.open), s=r+o||1;
  $('kpis').innerHTML=`
- <div class="kpi"><div class="k">Fleet net P&amp;L</div><div class="v num ${cls(t.net)}">${sgn(t.net)}</div>
+ <div class="kpi"><div class="k">Live net P&amp;L</div><div class="v num ${cls(t.net)}">${sgn(t.net)}</div>
   <div class="s"><span class="up">${sgn(t.realised)}</span> realised · <span class="${t.open>=0?'dim':'dn'}">${sgn(t.open)}</span> open</div>
   <div class="split"><i class="r" style="width:${r/s*100}%"></i><i class="${t.open>=0?'o':'neg'}" style="width:${o/s*100}%"></i></div></div>
  <div class="kpi"><div class="k">Books</div><div class="v"><span class="up">${t.up}</span> <span class="faint">/</span> <span class="dn">${t.down}</span></div><div class="s">up / down of ${t.books}</div></div>
- <div class="kpi"><div class="k">Leader</div><div class="v" style="font-size:16px">${esc(t.best)}</div><div class="s num up">${pct((D.books.find(x=>x.bot===t.best)||{}).ret_pct)}</div></div>
+ <div class="kpi"><div class="k">Competition account</div>${(()=>{const c=D.books.find(x=>x.bot==='competition')||{};return c.waiting_for_account?`<div class="v dn" style="font-size:16px">Not active yet</div><div class="s">last poll ${esc(String(c.last_poll||'').slice(11,19))}Z · no orders possible</div>`:c.equity!=null?`<div class="v num">$${Math.round(c.equity).toLocaleString()}</div><div class="s num ${cls(c.ret_pct)}">${pct(c.ret_pct)}</div>`:'<div class="v faint" style="font-size:16px">no data</div><div class="s">book not cycling</div>'})()}</div>
  <div class="kpi"><div class="k">Market breadth</div><div class="v num">${b.pct_long_all!=null?b.pct_long_all.toFixed(0)+'%':'<span class="faint" style="font-size:14px">warming up</span>'}</div><div class="s">${b.pct_long_all!=null?`in a 4h uptrend · ${b.near_entry} near breakout`:'first read within 4 min of a restart'}</div></div>
  <div class="kpi"><div class="k">Health</div><div class="v" style="font-size:16px">${D.alerts.length?`<span class="${D.alerts.some(a=>a.level==='bad')?'dn':'dim'}">${D.alerts.length} alert${D.alerts.length>1?'s':''}</span>`:'<span class="up">All clear</span>'}</div><div class="s">${t.online}/${t.books} books cycling</div></div>`;
 }
@@ -175,7 +175,7 @@ function rows(){
   const net=bs.reduce((a,b)=>a+(b.net||0),0);
   h+=`<tr class="grp"><td colspan="7">${esc(g.label)} · ${bs.length}</td><td colspan="3" class="r num ${cls(net)}">${sgn(net)}</td></tr>`;
   for(const b of bs){
-   const stale=(b.age_s||0)>300;
+   const stale=(b.age_s||0)>300||b.waiting_for_account||(b.equity==null&&!b.live);
    const hold=b.positions.slice(0,3).map(p=>`<span class="coin ${p.pnl>0?'u':p.pnl<0?'d':''}" title="${p.weight*100>0?'':'short '}${(Math.abs(p.weight)*100).toFixed(0)}% · ${pct(p.pnl_pct)}">${p.weight<0?'↓':''}${esc(p.symbol)}</span>`).join('')+(b.positions.length>3?`<span class="faint">+${b.positions.length-3}</span>`:'');
    const ab=b.ab?`<span class="ab ${b.ab.delta_pts>0?'u':b.ab.delta_pts<0?'d':'z'}" title="since ${new Date(b.ab.since).toLocaleString()}: arm ${pct(b.ab.arm_pct)} vs ${esc(b.ab.control)} ${pct(b.ab.control_pct)}">${b.ab.delta_pts>0?'+':''}${b.ab.delta_pts.toFixed(2)} pts</span>`:(b.control?`<span class="faint" style="font-size:11px">vs ${esc(b.control.replace('momentum_top3_','m_'))}</span>`:'');
    h+=`<tr class="row ${sel===b.bot?'sel':''}" data-b="${esc(b.bot)}">

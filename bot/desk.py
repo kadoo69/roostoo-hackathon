@@ -1,6 +1,8 @@
 """Compact payload for the desk page: fleet totals, books grouped by role, A/B deltas against
 their controls measured from the arm's own start, fleet coin exposure, recent activity and alerts.
 Built from `bot.dashboard.snapshot()`; read-only. DECISIONS.md#desk-dashboard-2026-09-26
+Since 2026-09-30 the desk shows only the live competition books (`DESK_GROUPS`); the paper fleet
+stays on `/full`. DECISIONS.md#desk-competition-only-2026-09-30
 """
 from __future__ import annotations
 
@@ -11,6 +13,7 @@ from bot.blotter import DUST_NOTIONAL
 GROUPS = (("live", "LIVE on Roostoo - real orders"), ("core", "Core 4h"),
           ("momentum", "Short-term momentum"), ("burst", "Burst"), ("ab", "A/B tests"), ("short", "Short"))
 LIVE_BOOKS = {"competition", "competition_rehearsal"}
+DESK_GROUPS = ("live",)
 AB_ARMS = {"momentum_top3_15m_eq", "momentum_top3_15m_hold3h",
            "momentum_top3_5m_hold2h", "burst_strong_15m", "momentum_top3_15m_slowexit"}
 STALE_S = 300
@@ -176,15 +179,17 @@ def alerts(books: list[dict]) -> list[dict]:
 
 def payload(snap: dict) -> dict:
     by_name = {b["bot"]: b for b in snap["bots"]}
-    books = [book(b, by_name) for b in snap["bots"]]
+    shown = [b for b in snap["bots"] if group_of(b["bot"], (b.get("meta") or {}).get("interval")) in DESK_GROUPS]
+    books = [book(b, by_name) for b in shown]
     books.sort(key=lambda b: -(b["ret_pct"] or 0.0))
-    live = [b for b in books if b["equity"] is not None and b["group"] != "live"]
+    live = [b for b in books if b["equity"] is not None]
     total = {"net": round(sum(b["net"] or 0.0 for b in live)), "realised": round(sum(b["realised"] or 0.0 for b in live)),
              "open": round(sum(b["open"] or 0.0 for b in live)), "books": len(live),
              "up": sum(1 for b in live if (b["net"] or 0) > 0), "down": sum(1 for b in live if (b["net"] or 0) < 0),
              "online": sum(1 for b in live if (b["age_s"] or 1e9) <= STALE_S),
              "best": max(live, key=lambda b: b["ret_pct"] or -1e9)["bot"] if live else None}
-    return {"generated": snap["generated"], "totals": total, "groups": [{"key": k, "label": v} for k, v in GROUPS],
+    return {"generated": snap["generated"], "totals": total,
+            "groups": [{"key": k, "label": v} for k, v in GROUPS if k in DESK_GROUPS],
             "books": books, "exposure": exposure(books), "activity": activity(books), "alerts": alerts(books),
-            "closed": closed_feed(snap["bots"]),
+            "closed": closed_feed(shown),
             "breadth": snap.get("breadth")}

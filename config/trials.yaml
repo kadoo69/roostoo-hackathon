@@ -5843,3 +5843,28 @@ trials:
   config: momentum_top3_15m_slowexit
   status: live_paper_ab_vs_momentum_top3_15m
   note: DECISIONS.md#rally-capture-score-2026-09-27
+- signal: exit_bars
+  gate: competition_exit
+  config: competition_exit:C0
+  status: control
+  note: DECISIONS.md#competition-exit-outcome
+- signal: exit_bars
+  gate: competition_exit
+  config: competition_exit:E20
+  status: fail
+  note: DECISIONS.md#competition-exit-outcome
+- signal: exit_bars
+  gate: competition_exit
+  config: competition_exit:E40
+  status: fail
+  note: DECISIONS.md#competition-exit-outcome
+- signal: exit_bars
+  gate: competition_exit
+  config: competition_exit:H6_ctrl
+  status: control
+  note: DECISIONS.md#competition-exit-outcome
+- signal: exit_bars
+  gate: competition_exit
+  config: competition_exit:S15_slowexit
+  status: fail
+  note: DECISIONS.md#competition-exit-outcome

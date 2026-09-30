@@ -4166,3 +4166,32 @@ Its 2026-09-23 backtest verdict (`#lowtf-paper-bots`) was a FAIL before the late
 `config/competition.yaml` copies every rule parameter from `config/momentum_top3_30m.yaml` unchanged and differs in three places only: it is not paper, `meta.keyset: comp`, and the derisk ramp is moved past the window because the round end date is unconfirmed (FAQ 2026-09-30 versus the event page's 2026-10-17) and the venue auto-liquidates at the end.
 `config/competition_rehearsal.yaml` is the identical rule on the TEST account, so real fills are measured beside the competition book; `momentum_top3_30m` stays as the paper control of both (`bot/dashboard.py` CONTROL_OF).
 Both start with `./run_bots.sh live`, which sets `ROOSTOO_DRY_RUN=0` for those two configs only.
+
+## competition-exit-declaration
+
+Declared in `config/competition_exit.yaml` and committed (857ea2f) before any number was computed.
+Operator request 2026-09-30: draw insights from the fleet's most successful trades and modify and scale the competition strategy for a high return.
+Live paper evidence (2,297 closed lots, 20 books, 2026-09-22..30): lots held under 2 h netted -74.9k and lots held over 4 h +81.1k; skim-ladder sales netted +103.4k at a 99% win rate while channel exits netted -105.1k; longs +13.4k, shorts -12.4k; entries at 04-12Z earned and 16-24Z lost; AAVE, AVAX and ONDO carried most of the profit.
+Only the hold-time pattern has a mechanism the record has not already killed: a 10-bar exit on 30m sells the routine post-breakout pullback.
+Hour-of-day (`#intraday-structure-outcome`), concentration (`#max-return-levers-outcome`), clock ensembles (`#lowtf-clock-ensemble-outcome`), shorts and idle-cash redeployment (`#idle-cash-declaration`) are dead families and were not re-tested; coin identity is not forecastable.
+
+## competition-exit-outcome
+
+`python3 -m gates.competition_exit`, `results/competition_exit.json`: NULL, the competition rule keeps `exit_bars` 10.
+| arm (30m, every 14-day window) | fit median | holdout median | holdout P(>5%) | holdout P(>10%) | holdout worst |
+|---|---|---|---|---|---|
+| C0 live, exit 10 | -0.76% | +1.13% | 0.35 | 0.19 | -22.3% |
+| E20 exit 20 | +0.70% | +0.11% | 0.29 | 0.16 | -22.2% |
+| E40 exit 40 | +0.44% | +0.16% | 0.29 | 0.19 | -23.1% |
+| H6_ctrl price-blind 3 h hold | -0.38% | +0.58% | 0.33 | 0.21 | -19.9% |
+| S15_slowexit (15m, exit 40) | -4.27% | -4.59% | 0.24 | 0.12 | -31.5% |
+Slower exits win the fit period and lose the holdout, and lose to the price-blind control there; the live split between short and long holds was mostly a rising market and survivorship (a position lasts long because it kept rising).
+The 15m slow-exit book is worse than C0 everywhere, so its live +7.5% is not evidence for switching clocks.
+Honest expectation for the competition book on 2025-26 history: median fortnight +1.1%, a 35% chance of beating +5% and 19% of beating +10%, worst fortnight -22%.
+Five trials recorded in `config/trials.yaml`.
+
+## desk-competition-only-2026-09-30
+
+Operator request 2026-09-30: the desk dashboard shows only the competition books from now on.
+`/` (`bot/desk.py` `DESK_GROUPS`) lists `competition` and `competition_rehearsal`; totals, activity, alerts and the closed-trade feed are computed on those alone, and a "Competition account" tile shows whether the account is active.
+The paper fleet keeps running and stays visible on `/full`.
