@@ -202,7 +202,8 @@ function wfCard(){
   <div class="exp"><span class="name">mean</span><div class="faint" style="font-size:11px">all variants</div><span class="num r ${cls(w.mean_variant_cum_pct)}" style="text-align:right">${pct(w.mean_variant_cum_pct)}</span></div>
   <div class="exp"><span class="name">fixed</span><div class="faint" style="font-size:11px">competition rule 30m</div><span class="num r ${cls(w.fixed_competition_cum_pct)}" style="text-align:right">${pct(w.fixed_competition_cum_pct)}</span></div>`
   :'<div class="ok">forward record starts at the second hourly selection</div>';
- $('wf').innerHTML=`<div class="exp"><span class="name">now</span><div><b>${esc(w.current_pick||'-')}</b> <span class="faint" style="font-size:11px">best of last 3 days</span></div><span></span></div>${top}${fwd}`;
+ const hd=(w.hedge_top||[]).length?`<div class="exp"><span class="name">learn</span><div class="faint" style="font-size:11px">hedge_explorer capital shares</div><span></span></div>`+w.hedge_top.map(h=>`<div class="exp"><span class="name" style="font-size:12px">${esc(h.variant)}</span><div></div><span class="num r dim" style="text-align:right">${h.share.toFixed(1)}%</span></div>`).join(''):'';
+ $('wf').innerHTML=hd+`<div class="exp"><span class="name">now</span><div><b>${esc(w.current_pick||'-')}</b> <span class="faint" style="font-size:11px">best of last 3 days</span></div><span></span></div>${top}${fwd}`;
 }
 function side(){
  wfCard();

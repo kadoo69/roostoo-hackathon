@@ -37,7 +37,7 @@ from gates.concentration import rank_score
 from venue.roostoo import RoostooClient
 
 BOOKS = ("donchian_4h", "momentum_top3_full", "momentum_top3_lock", "testnet_live",
-         "competition", "competition_rehearsal", "scalper_adaptive", "wf_live",
+         "competition", "competition_rehearsal", "scalper_adaptive", "wf_live", "hedge_explorer",
          "momentum_top3_30m", "momentum_top3_15m", "momentum_top3_5m",
          "momentum_top3_1h_allcash", "momentum_top3_30m_allcash",
          "accel_15m", "burst_5m", "burst_15m", "burst_strong_15m", "momentum_top3_15m_eq", "short_accel_15m",

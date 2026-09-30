@@ -4266,3 +4266,12 @@ The walk-forward record is the point: at every re-selection the `walkforward` jo
 `cash` is a seventeenth candidate scored at 0%: when every variant lost over the window the book stands aside instead of trading the least-bad loser (added before any forward record existed, after the first selection found all 16 variants negative over the last 3 days: best `1h|htf0|vol0` -0.22%, the competition variant `30m|htf1|vol1.5` -7.90%).
 A 3-day window chases current conditions and will switch often; with 16 candidates the best trailing score is biased upward, which is exactly what the forward record measures.
 Stop rule: after 7 live days, if the pick's cumulative forward return is not above the mean variant's, live selection adds nothing and the book stops.
+
+## hedge-explorer-declaration
+
+Operator instruction 2026-09-30: take the trades, hold them, and adjust as per our profits so we learn about the market conditions.
+`hedge_explorer` (`config/hedge_explorer.yaml`, `bot/hedge_explorer_run.py`, PAPER): capital is split across the same 16 variants as `wf_live` plus cash, starting equal. The book holds the capital-weighted blend of every variant's current target, so every entry any variant takes is taken at that variant's share, and each position is held and exited under its own variant's rule (20-bar breakout, 10-bar exit, sticky slots, ladder); a 3-bar (15-minute) live minimum hold applies to the blend.
+Every 60 minutes each variant's share is multiplied by exp(0.5 x its return since the previous update, in percent), renormalised, and floored at 1% so no variant stops being explored (the Hedge rule of Freund and Schapire, whose regret against the best variant in hindsight grows only with the square root of time). Returns are measured on bars closed after the previous update, so the weights learn only from the live market.
+The `hedge` journal stream records every update: each variant's return, the book's weighted return, the equal-weight mean, and the weights before and after; the desk shows the top weights.
+Difference from `wf_live`: that book puts everything in one variant (winner takes all); this one keeps a portfolio and moves it gradually, so it takes many more, smaller trades.
+Stop rule: after 7 live days, if its return is not above the equal-weight blend of the same variants, the learning adds nothing.

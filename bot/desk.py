@@ -13,7 +13,7 @@ from bot.blotter import DUST_NOTIONAL
 GROUPS = (("live", "LIVE on Roostoo - real orders"), ("scalper", "PAPER - live walk-forward, adaptive scalper, fixed clocks"), ("core", "Core 4h"),
           ("momentum", "Short-term momentum"), ("burst", "Burst"), ("ab", "A/B tests"), ("short", "Short"))
 LIVE_BOOKS = {"competition", "competition_rehearsal"}
-SCALPER_BOOKS = {"scalper_adaptive", "wf_live", "momentum_top3_5m", "momentum_top3_15m", "momentum_top3_30m"}
+SCALPER_BOOKS = {"scalper_adaptive", "wf_live", "hedge_explorer", "momentum_top3_5m", "momentum_top3_15m", "momentum_top3_30m"}
 DESK_GROUPS = ("live", "scalper")
 TOTALS_GROUPS = ("live",)
 AB_ARMS = {"momentum_top3_15m_eq", "momentum_top3_15m_hold3h",
@@ -92,12 +92,24 @@ def adaptive_clock(name: str) -> str | None:
 
 
 def walkforward() -> dict:
-    """Live walk-forward scorecard for the desk. DECISIONS.md#walkforward-live-declaration"""
+    """Live walk-forward scorecard and the hedge explorer's learned weights for the desk.
+    DECISIONS.md#walkforward-live-declaration, DECISIONS.md#hedge-explorer-declaration"""
+    import json
+
+    from bot.settings import ROOT
     try:
         from gates.wf_report import summary
-        return summary("wf_live")
+        out = summary("wf_live")
     except Exception:                                      # noqa: BLE001
-        return {}
+        out = {}
+    try:
+        h = json.loads((ROOT / "live" / "hedge_explorer" / "hedge.json").read_text())
+        top = sorted(h["weights"].items(), key=lambda kv: -kv[1])[:4]
+        out["hedge_top"] = [{"variant": k, "share": round(v * 100, 1)} for k, v in top]
+        out["hedge_at"] = h.get("at")
+    except (OSError, ValueError, KeyError):
+        out["hedge_top"] = []
+    return out
 
 
 def book(b: dict, by_name: dict) -> dict:
@@ -105,7 +117,7 @@ def book(b: dict, by_name: dict) -> dict:
     st = b.get("blotter") or {}
     curve = b.get("equity_curve") or []
     step = max(1, len(curve) // 60)
-    auto = adaptive_clock(b["bot"]) if b["bot"] in ("scalper_adaptive", "wf_live") else None
+    auto = adaptive_clock(b["bot"]) if b["bot"] in ("scalper_adaptive", "wf_live", "hedge_explorer") else None
     return {"bot": b["bot"], "group": group_of(b["bot"], m.get("interval")),
             "clock": f"auto: {auto}" if auto else m.get("interval"),
             "description": m.get("description"), "live": bool(b.get("live")),
