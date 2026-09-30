@@ -456,7 +456,7 @@ class Bot:
         if not self.s.dry_run:
             self.adopt_wallet()
             if not self.wallet_ok:
-                return self.journal.write("cycles", {
+                return self.journal.write("waiting", {
                     "event": "wallet_unavailable", "orders": 0,
                     "ref": "DECISIONS.md#roostoo-keys-2026-09-30"})
         equity, prices = self.mark(quotes)

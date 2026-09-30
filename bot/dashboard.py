@@ -125,7 +125,8 @@ def _breadth_loop():
 
 def bot_state(name: str, cfg: str) -> dict:
     j = Journal(name)
-    cycles = j.read("cycles")
+    cycles = [c for c in j.read("cycles") if c.get("equity") is not None]
+    waiting = j.read("waiting")
     errors = j.read("errors")
     life = j.read("lifecycle")
     try:
@@ -145,7 +146,9 @@ def bot_state(name: str, cfg: str) -> dict:
     if not cycles:
         return {"bot": name, "meta": meta, "live": False, "cycles": 0,
                 "blotter": bl["stats"], "closed": [], "open": bl["open"],
-                "equity_series": []}
+                "equity_series": [],
+                "waiting_for_account": bool(waiting),
+                "last_poll": waiting[-1].get("ts_utc") if waiting else None}
 
     f = pd.DataFrame(cycles)
     f["ts"] = pd.to_datetime(f["ts_utc"], utc=True)

@@ -8,14 +8,17 @@ import pandas as pd
 
 from bot.blotter import DUST_NOTIONAL
 
-GROUPS = (("core", "Core 4h"), ("momentum", "Short-term momentum"), ("burst", "Burst"),
-          ("ab", "A/B tests"), ("short", "Short"))
+GROUPS = (("live", "LIVE on Roostoo - real orders"), ("core", "Core 4h"),
+          ("momentum", "Short-term momentum"), ("burst", "Burst"), ("ab", "A/B tests"), ("short", "Short"))
+LIVE_BOOKS = {"competition", "competition_rehearsal"}
 AB_ARMS = {"momentum_top3_15m_eq", "momentum_top3_15m_hold3h",
            "momentum_top3_5m_hold2h", "burst_strong_15m", "momentum_top3_15m_slowexit"}
 STALE_S = 300
 
 
 def group_of(name: str, interval: str | None) -> str:
+    if name in LIVE_BOOKS:
+        return "live"
     if name.startswith("short_"):
         return "short"
     if name in AB_ARMS:
@@ -75,6 +78,7 @@ def book(b: dict, by_name: dict) -> dict:
     step = max(1, len(curve) // 60)
     return {"bot": b["bot"], "group": group_of(b["bot"], m.get("interval")), "clock": m.get("interval"),
             "description": m.get("description"), "live": bool(b.get("live")),
+        "waiting_for_account": bool(b.get("waiting_for_account")), "last_poll": b.get("last_poll"),
             "age_s": b.get("seconds_since_cycle"), "equity": b.get("equity"), "net": b.get("pnl"),
             "realised": b.get("realised_pnl"), "open": b.get("open_pnl"), "ret_pct": b.get("pnl_pct"),
             "drawdown_pct": b.get("drawdown_pct"), "gross": b.get("gross"),
@@ -148,7 +152,13 @@ def closed_feed(bots: list[dict], limit: int = 1500) -> dict:
 
 
 def alerts(books: list[dict]) -> list[dict]:
+    """Fleet alerts; a live book still waiting for its Roostoo account leads the list.
+    DECISIONS.md#competition-book-2026-09-30"""
     out = []
+    for b in books:
+        if b.get("waiting_for_account"):
+            out.append({"level": "bad", "text": f"{b['bot']}: Roostoo account not active yet "
+                                                f"(last poll {str(b.get('last_poll') or '')[:19]}Z), no orders possible"})
     stale = [b["bot"] for b in books if (b["age_s"] or 0) > STALE_S]
     if stale:
         out.append({"level": "bad", "text": f"{len(stale)} book(s) not cycling: {', '.join(stale)}"})
@@ -168,7 +178,7 @@ def payload(snap: dict) -> dict:
     by_name = {b["bot"]: b for b in snap["bots"]}
     books = [book(b, by_name) for b in snap["bots"]]
     books.sort(key=lambda b: -(b["ret_pct"] or 0.0))
-    live = [b for b in books if b["equity"] is not None]
+    live = [b for b in books if b["equity"] is not None and b["group"] != "live"]
     total = {"net": round(sum(b["net"] or 0.0 for b in live)), "realised": round(sum(b["realised"] or 0.0 for b in live)),
              "open": round(sum(b["open"] or 0.0 for b in live)), "books": len(live),
              "up": sum(1 for b in live if (b["net"] or 0) > 0), "down": sum(1 for b in live if (b["net"] or 0) < 0),

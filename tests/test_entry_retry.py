@@ -170,4 +170,6 @@ def test_a_live_cycle_without_a_readable_wallet_does_nothing(monkeypatch):
     monkeypatch.setattr(run.feed, "roostoo_quotes", lambda client: {})
     out = b.cycle()
     assert out["event"] == "wallet_unavailable" and out["orders"] == 0
+    streams = [stream for stream, _ in written]
+    assert "cycles" not in streams and streams.count("waiting") == 1
     assert b.equity_curve == [100_000.0]

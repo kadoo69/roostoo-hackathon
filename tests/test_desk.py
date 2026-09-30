@@ -96,3 +96,13 @@ def test_closed_feed_leaves_out_dust_slices():
     dust = dict(_trade("ENA", "2026-09-27T12:00:00+00:00", 0.0), qty=1.0)
     b = _bot("x", 100000.0, closed_total=2, closed=[dust, _trade("PUMP", "2026-09-27T11:00:00+00:00", 5.0)])
     assert [t["symbol"] for t in desk.closed_feed([b])["trades"]] == ["PUMP"]
+
+
+def test_live_books_lead_their_own_group_and_stay_out_of_paper_totals():
+    from bot import desk
+    assert desk.GROUPS[0][0] == "live"
+    assert desk.group_of("competition", "30m") == "live"
+    assert desk.group_of("momentum_top3_30m", "30m") == "momentum"
+    waiting = {"bot": "competition", "waiting_for_account": True, "last_poll": "2026-09-30T15:00:00",
+               "age_s": None, "drawdown_pct": None}
+    assert "not active yet" in desk.alerts([waiting])[0]["text"]
