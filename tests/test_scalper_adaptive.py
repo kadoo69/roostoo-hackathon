@@ -34,3 +34,20 @@ def test_scalper_is_paper_only_registered_and_its_clocks_exist():
     assert "scalper_adaptive" in live_validation.BOOKS and desk.group_of("scalper_adaptive", "5m") == "scalper"
     run = open("run_bots.sh").read()
     assert "config/scalper_adaptive.yaml" in run and "scalper_adaptive) echo bot.scalper_adaptive_run" in run
+
+
+def test_heatmap_counts_only_running_books(tmp_path, monkeypatch):
+    import json
+
+    import pandas as pd
+
+    from bot import dashboard, heatmap
+    monkeypatch.setattr(heatmap, "ROOT", tmp_path)
+    monkeypatch.setattr(dashboard, "BOTS", {"alive": "config/competition.yaml", "dead": "config/competition.yaml"})
+    monkeypatch.setattr(heatmap, "load", lambda p: type("S", (), {"interval": "30m"})())
+    now = pd.Timestamp("2026-09-30T16:30:00Z")
+    for name, ts in (("alive", "2026-09-30T16:29:00+00:00"), ("dead", "2026-09-30T15:00:00+00:00")):
+        d = tmp_path / "live" / name
+        d.mkdir(parents=True)
+        (d / "cycles-2026-09-30.jsonl").write_text(json.dumps({"ts_utc": ts, "positions": {"ENAUSDT": 0.5}}) + "\n")
+    assert [b["book"] for b in heatmap.live_books(now)] == ["alive"]

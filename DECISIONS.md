@@ -4243,3 +4243,17 @@ A slower clock's weights reach the 5m book by bar close time (`signals.exit_cloc
 Paper only. Side-by-side controls on the desk: the fixed-clock twins `momentum_top3_5m`, `momentum_top3_15m`, `momentum_top3_30m`.
 Stop rule: after 7 live days, if it trails the best fixed-clock twin on return, it is stopped.
 `bot.feed.closed_bars` now pages backwards past Binance's 1,000-bar limit so a 7-day 5m window can be read.
+
+## heatmap-running-books-2026-09-30
+
+The heatmap's L/S badges read the last cycle of every registered book, stopped ones included, so after the paper fleet stopped it showed eight books long ENA and shorts on PUMP, AVAX and SOL that no running book held.
+`bot.heatmap.live_books` now counts only books whose last cycle is under 10 minutes old; real holdings at 16:20Z were SUI (3 books), ENA (2), PUMP (1), TRUMP (1).
+
+## signal-scan-2026-09-30
+
+Operator question 2026-09-30, from the heatmap: are the momentum timeframes giving signals, and how agile are the bots. Tool: `python3 -m gates.signal_scan` (per clock: pool coins in a breakout, fresh breakouts, momentum, volume multiple, what blocks each, what the rule holds).
+Scan at 16:20Z: 5m 23 of 25 coins in a breakout (rule holds PUMP, SUI, TRUMP); 15m 3 (holds ENA, SUI); **30m 7, every one blocked by the 4h confirmation** (WLD +8.6%, ENA +7.7%, ZEC, SUI), so the competition rule is in cash; 1h 20, all blocked by the 4h confirmation except its sticky TRX; 4h 6 (holds PUMP, AAVE, XLM).
+**Reaction speed:** with the Mac awake every book decides 6 to 14 s after its bar closes; the long gaps on 2026-09-30 were machine sleep until 13:52Z, restarts at ~16:00Z, and one 3-minute stall while backtests loaded the CPU (run research beside the fleet one job at a time).
+**Signal speed:** on the day's biggest pool movers, measured from each coin's 24 h low, the first 20-bar breakout fired after this share of the eventual move: 5m 12-31%, 15m 20-41%, 30m 20-59%, 1h 42-88% (PUMP 81% on 5m, never on slower clocks). Faster clocks see moves earlier; `#rally-capture-score-2026-09-27` records that they keep less of them.
+**The 4h confirmation over the last 7 days** (live-rule simulation, fees and ticks): 30m +5.1% with it against +12.5% without; 1h -3.2% against +0.4%; 15m (which runs without it) -2.4% with it against +11.6% without. On 2023-26 history the same filter is what made the 30m rule positive (`#breakout-quality-outcome`: 30m holdout median -3.39% without, +1.19% with, beating its permuted-coin control; 1h -3.34% to +0.46%).
+Reading: this was a week of intraday bursts that 4h channels did not confirm. One week against 20 months of holdout does not overturn the filter; the competition rule keeps it. The adaptive scalper already covers this state, since its pool includes the 15m rule without the filter, and it chose 15m at its first selection.

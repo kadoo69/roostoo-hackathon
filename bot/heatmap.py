@@ -32,12 +32,21 @@ def _ret(s: pd.Series, bars: int) -> float | None:
     return round(float(s.iloc[-1] / s.iloc[-1 - bars] - 1.0) * 100.0, 2)
 
 
-def live_books() -> list[dict]:
-    """Last cycle of every registered book: its positions and, for a short book, its switch."""
+LIVE_WITHIN_S = 600
+
+
+def live_books(now: pd.Timestamp | None = None) -> list[dict]:
+    """Last cycle of every RUNNING book: its positions and, for a short book, its switch.
+
+    A book whose last cycle is older than `LIVE_WITHIN_S` is stopped and is left out; counting
+    stopped books' frozen positions showed eight books long ENA after the paper fleet was
+    stopped. DECISIONS.md#heatmap-running-books-2026-09-30
+    """
     import glob
     import json
 
     from bot.dashboard import BOTS
+    now = now or pd.Timestamp.now(tz="UTC")
     out = []
     for name in BOTS:
         files = sorted(glob.glob(str(ROOT / "live" / name / "cycles-*.jsonl")))
@@ -48,6 +57,8 @@ def live_books() -> list[dict]:
         if not lines:
             continue
         c = json.loads(lines[-1])
+        if c.get("ts_utc") is None or (now - pd.Timestamp(c["ts_utc"])).total_seconds() > LIVE_WITHIN_S:
+            continue
         reg = ((c.get("shorts") or {}).get("regime") or {})
         if not reg:
             for line in reversed(lines):
