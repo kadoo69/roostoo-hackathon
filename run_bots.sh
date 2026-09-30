@@ -102,7 +102,7 @@ case "${1:-start}" in
     # Hourly log review of every running book: trades, fills, booked profits, Sharpe, Sortino,
     # return over drawdown. DECISIONS.md#progress-review-2026-09-30
     if pgrep -f "progressroot=$ROOT" >/dev/null; then echo "  progress review already running"; else
-      nohup bash -c 'r="$1"; cd "$r"; while true; do "$2" -m gates.progress >> live/progress.out 2>&1; "$2" -m gates.market_structure >> live/progress.out 2>&1; sleep 3600; done' "progressroot=$ROOT" "$ROOT" "$PY" >> live/progress.supervisor.out 2>&1 &
+      nohup bash -c 'r="$1"; cd "$r"; while true; do "$2" -m gates.progress >> live/progress.out 2>&1; "$2" -m gates.market_structure >> live/progress.out 2>&1; sleep 1800; done' "progressroot=$ROOT" "$ROOT" "$PY" >> live/progress.supervisor.out 2>&1 &
       echo $! > run/progress.pid; disown 2>/dev/null || true; echo "  progress review started (pid $!), hourly -> results/progress/latest.json"
     fi ;;
   progressstop)
