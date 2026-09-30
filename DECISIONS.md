@@ -4275,3 +4275,17 @@ Every 60 minutes each variant's share is multiplied by exp(0.5 x its return sinc
 The `hedge` journal stream records every update: each variant's return, the book's weighted return, the equal-weight mean, and the weights before and after; the desk shows the top weights.
 Difference from `wf_live`: that book puts everything in one variant (winner takes all); this one keeps a portfolio and moves it gradually, so it takes many more, smaller trades.
 Stop rule: after 7 live days, if its return is not above the equal-weight blend of the same variants, the learning adds nothing.
+
+## burst-drivers-declaration
+
+Declared in `config/burst_drivers.yaml` (caad329) before any number, with the exit test added as a declared addendum (ed867e0) after the driver results and before any exit number.
+Operator request 2026-09-30: exploit short-term burst trends; find whether sudden upward moves are caused by spiked volume or other factors; go all in on such trends, keep Sharpe smooth and book profits.
+Event: a pool coin up at least 2% over three 5m bars, detected at the 5m close, one per coin per hour; 30 days of Binance 5m bars to 2026-09-30 17:15Z, discovery = first 15 days, validation = last 15.
+
+## burst-drivers-outcome
+
+`python3 -m gates.burst_drivers --cache <5m parquet>`, `results/burst_drivers.json`: NULL on every driver and every exit. 573 bursts (209 discovery, 364 validation, so bursts nearly doubled in the recent half).
+**What happens after a burst** (net of 0.10% round trip, from the detection close): +15 min +0.19% / -0.11%; +1 h -0.08% / -0.08%; +4 h +0.45% (t 1.4) / +0.13% (t 0.7); 40-46% of bursts are higher 1-4 h later. Mean best price within 4 h +4.1% / +3.3%, so the upside after detection exists but is given back.
+**Drivers** (top against bottom tercile of +4 h net return, discovery then validation): volume spike +1.75 (t 2.3) then -0.03; aggressive buying (taker share) -0.56 then +0.92; BTC moving at the same time -1.39 (t -2.1) then +0.09; market breadth -1.78 (t -2.6) then -0.30; prior 4 h momentum +2.23 (t 3.1) then -0.11; breaking the 24 h high +1.41 (t 2.1) then -0.51; trade size +0.34 then -1.12 (t -2.3); burst size -0.39 then -1.10 (t -2.2). None keeps its sign with |t| >= 2 in both halves. In the first half a volume-backed, coin-specific burst that broke the 24 h high after a rising 4 h did continue; in the last 15 days none of that holds.
+**Exits** (mean net per trade, discovery / validation; random entries with the same exits in brackets): take-profit +1.5% no stop +0.36% (t 2.6) [-0.02] / -0.00% [+0.20]; +2% no stop +0.47% (t 3.0) [+0.19] / -0.01% [+0.06]; +3% no stop +0.36% / +0.08% (t 0.5); every -1.5% stop variant is worse, and negative in validation at t -2.1 to -3.3. No combination is positive with t >= 2 in validation, so no burst book is built.
+Reading: the burst regime changed around 2026-09-15; bursts became more frequent and stopped following through. Stops cut the Sharpe rather than smoothing it. The live learning books (`#walkforward-live-declaration`, `#hedge-explorer-declaration`) are the mechanism that detects when breakouts start paying again. Eighteen trials recorded.

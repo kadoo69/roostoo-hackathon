@@ -1,0 +1,430 @@
+{
+ "n_events": {
+  "discovery": 209,
+  "validation": 364
+ },
+ "split_at": "2026-09-15 15:15:00+00:00",
+ "baseline": {
+  "discovery": {
+   "f15m": {
+    "mean": 0.187,
+    "t": 2.01,
+    "hit": 0.493
+   },
+   "f1h": {
+    "mean": -0.082,
+    "t": -0.53,
+    "hit": 0.397
+   },
+   "f4h": {
+    "mean": 0.452,
+    "t": 1.42,
+    "hit": 0.455
+   },
+   "runup_4h": {
+    "mean": 4.055,
+    "t": 14.24,
+    "hit": 0.981
+   }
+  },
+  "validation": {
+   "f15m": {
+    "mean": -0.105,
+    "t": -1.46,
+    "hit": 0.371
+   },
+   "f1h": {
+    "mean": -0.075,
+    "t": -0.59,
+    "hit": 0.409
+   },
+   "f4h": {
+    "mean": 0.128,
+    "t": 0.65,
+    "hit": 0.462
+   },
+   "runup_4h": {
+    "mean": 3.294,
+    "t": 18.49,
+    "hit": 0.995
+   }
+  }
+ },
+ "drivers": {
+  "vol_x": {
+   "discovery": {
+    "f1h": {
+     "top": 0.292,
+     "bottom": -0.673,
+     "spread": 0.966,
+     "t": 2.58
+    },
+    "f4h": {
+     "top": 1.514,
+     "bottom": -0.235,
+     "spread": 1.749,
+     "t": 2.3
+    }
+   },
+   "validation": {
+    "f1h": {
+     "top": 0.066,
+     "bottom": -0.124,
+     "spread": 0.189,
+     "t": 0.62
+    },
+    "f4h": {
+     "top": 0.26,
+     "bottom": 0.284,
+     "spread": -0.025,
+     "t": -0.05
+    }
+   },
+   "real": false
+  },
+  "taker_share": {
+   "discovery": {
+    "f1h": {
+     "top": -0.239,
+     "bottom": -0.09,
+     "spread": -0.149,
+     "t": -0.41
+    },
+    "f4h": {
+     "top": 0.261,
+     "bottom": 0.817,
+     "spread": -0.556,
+     "t": -0.74
+    }
+   },
+   "validation": {
+    "f1h": {
+     "top": -0.169,
+     "bottom": 0.016,
+     "spread": -0.185,
+     "t": -0.56
+    },
+    "f4h": {
+     "top": 0.686,
+     "bottom": -0.233,
+     "spread": 0.919,
+     "t": 1.85
+    }
+   },
+   "real": false
+  },
+  "btc_15m": {
+   "discovery": {
+    "f1h": {
+     "top": -0.685,
+     "bottom": 0.05,
+     "spread": -0.735,
+     "t": -1.97
+    },
+    "f4h": {
+     "top": -0.982,
+     "bottom": 0.409,
+     "spread": -1.391,
+     "t": -2.09
+    }
+   },
+   "validation": {
+    "f1h": {
+     "top": -0.027,
+     "bottom": -0.295,
+     "spread": 0.268,
+     "t": 0.83
+    },
+    "f4h": {
+     "top": 0.024,
+     "bottom": -0.069,
+     "spread": 0.093,
+     "t": 0.2
+    }
+   },
+   "real": false
+  },
+  "breadth_15m": {
+   "discovery": {
+    "f1h": {
+     "top": -0.328,
+     "bottom": 0.21,
+     "spread": -0.538,
+     "t": -1.5
+    },
+    "f4h": {
+     "top": -0.608,
+     "bottom": 1.17,
+     "spread": -1.778,
+     "t": -2.56
+    }
+   },
+   "validation": {
+    "f1h": {
+     "top": -0.178,
+     "bottom": -0.329,
+     "spread": 0.15,
+     "t": 0.49
+    },
+    "f4h": {
+     "top": -0.347,
+     "bottom": -0.044,
+     "spread": -0.303,
+     "t": -0.65
+    }
+   },
+   "real": false
+  },
+  "prior_4h": {
+   "discovery": {
+    "f1h": {
+     "top": 0.697,
+     "bottom": -0.492,
+     "spread": 1.189,
+     "t": 3.03
+    },
+    "f4h": {
+     "top": 1.805,
+     "bottom": -0.424,
+     "spread": 2.229,
+     "t": 3.1
+    }
+   },
+   "validation": {
+    "f1h": {
+     "top": -0.265,
+     "bottom": -0.028,
+     "spread": -0.237,
+     "t": -0.75
+    },
+    "f4h": {
+     "top": -0.149,
+     "bottom": -0.042,
+     "spread": -0.107,
+     "t": -0.22
+    }
+   },
+   "real": false
+  },
+  "dist_hi24": {
+   "discovery": {
+    "f1h": {
+     "top": 0.403,
+     "bottom": -0.556,
+     "spread": 0.959,
+     "t": 2.82
+    },
+    "f4h": {
+     "top": 0.925,
+     "bottom": -0.487,
+     "spread": 1.412,
+     "t": 2.12
+    }
+   },
+   "validation": {
+    "f1h": {
+     "top": -0.316,
+     "bottom": -0.045,
+     "spread": -0.271,
+     "t": -0.87
+    },
+    "f4h": {
+     "top": -0.265,
+     "bottom": 0.245,
+     "spread": -0.51,
+     "t": -1.08
+    }
+   },
+   "real": false
+  },
+  "trade_size_x": {
+   "discovery": {
+    "f1h": {
+     "top": -0.079,
+     "bottom": -0.161,
+     "spread": 0.083,
+     "t": 0.21
+    },
+    "f4h": {
+     "top": 0.543,
+     "bottom": 0.206,
+     "spread": 0.337,
+     "t": 0.43
+    }
+   },
+   "validation": {
+    "f1h": {
+     "top": -0.378,
+     "bottom": 0.292,
+     "spread": -0.67,
+     "t": -2.14
+    },
+    "f4h": {
+     "top": -0.405,
+     "bottom": 0.714,
+     "spread": -1.12,
+     "t": -2.26
+    }
+   },
+   "real": false
+  },
+  "burst_pct": {
+   "discovery": {
+    "f1h": {
+     "top": -0.224,
+     "bottom": 0.013,
+     "spread": -0.237,
+     "t": -0.57
+    },
+    "f4h": {
+     "top": 0.257,
+     "bottom": 0.648,
+     "spread": -0.391,
+     "t": -0.49
+    }
+   },
+   "validation": {
+    "f1h": {
+     "top": -0.001,
+     "bottom": -0.021,
+     "spread": 0.021,
+     "t": 0.06
+    },
+    "f4h": {
+     "top": -0.435,
+     "bottom": 0.668,
+     "spread": -1.104,
+     "t": -2.16
+    }
+   },
+   "real": false
+  }
+ },
+ "exits": {
+  "discovery": {
+   "tp1.0_stopnone": {
+    "mean": 0.157,
+    "t": 1.34,
+    "hit": 0.804,
+    "random_mean": -0.067
+   },
+   "tp1.0_stop1.5": {
+    "mean": 0.011,
+    "t": 0.13,
+    "hit": 0.651,
+    "random_mean": -0.064
+   },
+   "tp1.5_stopnone": {
+    "mean": 0.355,
+    "t": 2.56,
+    "hit": 0.761,
+    "random_mean": -0.015
+   },
+   "tp1.5_stop1.5": {
+    "mean": 0.155,
+    "t": 1.49,
+    "hit": 0.593,
+    "random_mean": -0.052
+   },
+   "tp2.0_stopnone": {
+    "mean": 0.474,
+    "t": 2.97,
+    "hit": 0.708,
+    "random_mean": 0.187
+   },
+   "tp2.0_stop1.5": {
+    "mean": 0.216,
+    "t": 1.77,
+    "hit": 0.531,
+    "random_mean": -0.01
+   },
+   "tp3.0_stopnone": {
+    "mean": 0.359,
+    "t": 1.84,
+    "hit": 0.565,
+    "random_mean": 0.344
+   },
+   "tp3.0_stop1.5": {
+    "mean": 0.159,
+    "t": 1.04,
+    "hit": 0.407,
+    "random_mean": -0.044
+   },
+   "tp5.0_stopnone": {
+    "mean": 0.235,
+    "t": 1.01,
+    "hit": 0.469,
+    "random_mean": 0.043
+   },
+   "tp5.0_stop1.5": {
+    "mean": 0.084,
+    "t": 0.45,
+    "hit": 0.316,
+    "random_mean": -0.305
+   }
+  },
+  "validation": {
+   "tp1.0_stopnone": {
+    "mean": -0.04,
+    "t": -0.42,
+    "hit": 0.75,
+    "random_mean": 0.01
+   },
+   "tp1.0_stop1.5": {
+    "mean": -0.221,
+    "t": -3.33,
+    "hit": 0.56,
+    "random_mean": -0.138
+   },
+   "tp1.5_stopnone": {
+    "mean": -0.001,
+    "t": -0.01,
+    "hit": 0.668,
+    "random_mean": 0.198
+   },
+   "tp1.5_stop1.5": {
+    "mean": -0.235,
+    "t": -2.96,
+    "hit": 0.462,
+    "random_mean": -0.104
+   },
+   "tp2.0_stopnone": {
+    "mean": -0.01,
+    "t": -0.07,
+    "hit": 0.596,
+    "random_mean": 0.063
+   },
+   "tp2.0_stop1.5": {
+    "mean": -0.283,
+    "t": -3.15,
+    "hit": 0.385,
+    "random_mean": -0.03
+   },
+   "tp3.0_stopnone": {
+    "mean": 0.082,
+    "t": 0.54,
+    "hit": 0.53,
+    "random_mean": 0.047
+   },
+   "tp3.0_stop1.5": {
+    "mean": -0.224,
+    "t": -2.06,
+    "hit": 0.321,
+    "random_mean": -0.191
+   },
+   "tp5.0_stopnone": {
+    "mean": 0.078,
+    "t": 0.45,
+    "hit": 0.473,
+    "random_mean": 0.246
+   },
+   "tp5.0_stop1.5": {
+    "mean": -0.285,
+    "t": -2.23,
+    "hit": 0.255,
+    "random_mean": 0.091
+   }
+  }
+ },
+ "exits_real": []
+}
