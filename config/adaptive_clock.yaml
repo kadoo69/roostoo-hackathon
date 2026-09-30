@@ -1,0 +1,34 @@
+meta:
+  name: adaptive_clock
+  frozen: true
+  declared_utc: '2026-09-30T16:05:00Z'
+  requested_by: 'operator 2026-09-30: the bot should be dynamic, keep learning, identify patterns and adapt to the market'
+  declared_ref: DECISIONS.md#adaptive-clock-declaration
+  written_before_any_number: true
+mechanism: >
+  The same breakout-momentum rule earns on different clocks in different market states: a fast
+  clock catches more of a trending market's rallies, a slow clock is shaken out less in chop
+  (#rally-capture-score-2026-09-27). If those states persist for days, the clock that earned most
+  over the last week is more likely than a fixed clock to earn most tomorrow ("strategy momentum").
+failure_mode: >
+  Clock returns do not persist day to day, so the selector chases last week's winner, pays the
+  switching turnover, and lands on the clock that is about to mean-revert; it then does no better
+  than a random daily choice.
+distinct_from: '#lowtf-clock-ensemble-outcome blended clocks with fixed weights; this switches wholly to one clock chosen by trailing return. Coin-level adaptation is dead (#coin-selection-does-not-persist) and is not attempted.'
+arms_pool: 'contenders rule exactly as the live books: 30m = config/competition.yaml, 1h = config/momentum_top3_1h_long.yaml, 15m = config/momentum_top3_15m.yaml; long only, ladder on'
+selector: >
+  At each 00:00 UTC, every clock's simulated net return over the previous L days (its own bars,
+  data up to the previous close only) is ranked; the book holds the top clock's target for the next
+  24 h. Weights of the 30m and 1h clocks are mapped onto the 15m grid by bar CLOSE time
+  (signals.exit_clock.to_fast). Switching trades are simulated and charged like any other trade.
+arms:
+  C0: 30m live rule, never switches
+  AD7: selector, L = 7 days
+  AD3: selector, L = 3 days
+  RND_ctrl: 'nonsense control: a random clock each day (seed 11), same switching mechanics'
+windows: 'gates.lowtf_paper_bots.W: fit 2023-01-01..2025-01-01, holdout 2025-01-01..2026-09-19; every 14-day window, fee 5 bps plus one tick a side'
+decision_rule: >
+  A selector (AD7 or AD3) replaces C0 only if ALL hold: holdout median 14d return > C0's; holdout
+  P(>5%) >= C0's; fit median > C0's; holdout median > RND_ctrl's; holdout worst 14d not more than
+  5 points below C0's. If both pass, the higher holdout median. Otherwise C0 stays and the finding
+  is recorded as null. Thresholds are never moved.
