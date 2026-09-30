@@ -1,0 +1,234 @@
+{
+ "generated": "2026-09-30T17:29:51.634814+00:00",
+ "books": [
+  {
+   "book": "momentum_top3_5m",
+   "live_orders": false,
+   "equity": 109871.05,
+   "return_total_pct": 9.871,
+   "return_24h_pct": 0.35,
+   "ratios_total": {
+    "sharpe": 6.23,
+    "sortino": 11.52,
+    "calmar": 1.22,
+    "max_dd_pct": -8.08
+   },
+   "ratios_24h": {
+    "sharpe": 2.42,
+    "sortino": 4.1,
+    "calmar": 0.12,
+    "max_dd_pct": -2.92
+   },
+   "orders_24h": 72,
+   "order_failures_24h": 0,
+   "stale_cancels_24h": 0,
+   "fill_rate_24h": 1.0,
+   "closed_24h": 49,
+   "win_rate_24h": 0.429,
+   "realised_24h": 600.03,
+   "booked_skims_24h": 3,
+   "booked_skim_pnl_24h": 518.22,
+   "fees_24h": 1082.91,
+   "uptime_24h": 0.438,
+   "faults_24h": 0,
+   "network_blips_24h": 31
+  },
+  {
+   "book": "competition_rehearsal",
+   "live_orders": true,
+   "equity": 49900.28,
+   "return_total_pct": -0.197,
+   "return_24h_pct": -0.197,
+   "ratios_total": {
+    "sharpe": null,
+    "sortino": null,
+    "calmar": null,
+    "max_dd_pct": -0.2
+   },
+   "ratios_24h": {
+    "sharpe": null,
+    "sortino": null,
+    "calmar": null,
+    "max_dd_pct": -0.2
+   },
+   "orders_24h": 2,
+   "order_failures_24h": 0,
+   "stale_cancels_24h": 0,
+   "fill_rate_24h": 1.0,
+   "closed_24h": 1,
+   "win_rate_24h": 0.0,
+   "realised_24h": -98.55,
+   "booked_skims_24h": 0,
+   "booked_skim_pnl_24h": 0,
+   "fees_24h": 24.96,
+   "uptime_24h": 1.0,
+   "faults_24h": 0,
+   "network_blips_24h": 1
+  },
+  {
+   "book": "hedge_explorer",
+   "live_orders": false,
+   "equity": 99565.66,
+   "return_total_pct": -0.434,
+   "return_24h_pct": -0.434,
+   "ratios_total": {
+    "sharpe": null,
+    "sortino": null,
+    "calmar": null,
+    "max_dd_pct": -0.99
+   },
+   "ratios_24h": {
+    "sharpe": null,
+    "sortino": null,
+    "calmar": null,
+    "max_dd_pct": -0.99
+   },
+   "orders_24h": 12,
+   "order_failures_24h": 0,
+   "stale_cancels_24h": 0,
+   "fill_rate_24h": 1.0,
+   "closed_24h": 1,
+   "win_rate_24h": 0.0,
+   "realised_24h": -2.91,
+   "booked_skims_24h": 0,
+   "booked_skim_pnl_24h": 0,
+   "fees_24h": 0.74,
+   "uptime_24h": 1.0,
+   "faults_24h": 0,
+   "network_blips_24h": 1
+  },
+  {
+   "book": "scalper_adaptive",
+   "live_orders": false,
+   "equity": 99210.11,
+   "return_total_pct": -0.79,
+   "return_24h_pct": -0.79,
+   "ratios_total": {
+    "sharpe": null,
+    "sortino": null,
+    "calmar": null,
+    "max_dd_pct": -1.84
+   },
+   "ratios_24h": {
+    "sharpe": null,
+    "sortino": null,
+    "calmar": null,
+    "max_dd_pct": -1.84
+   },
+   "orders_24h": 4,
+   "order_failures_24h": 0,
+   "stale_cancels_24h": 0,
+   "fill_rate_24h": 1.0,
+   "closed_24h": 1,
+   "win_rate_24h": 0.0,
+   "realised_24h": -268.8,
+   "booked_skims_24h": 0,
+   "booked_skim_pnl_24h": 0,
+   "fees_24h": 26.23,
+   "uptime_24h": 1.0,
+   "faults_24h": 0,
+   "network_blips_24h": 0
+  },
+  {
+   "book": "momentum_top3_15m",
+   "live_orders": false,
+   "equity": 106019.61,
+   "return_total_pct": 6.02,
+   "return_24h_pct": -1.26,
+   "ratios_total": {
+    "sharpe": 4.75,
+    "sortino": 8.23,
+    "calmar": 0.5,
+    "max_dd_pct": -12.0
+   },
+   "ratios_24h": {
+    "sharpe": -5.45,
+    "sortino": -7.57,
+    "calmar": -0.32,
+    "max_dd_pct": -3.98
+   },
+   "orders_24h": 36,
+   "order_failures_24h": 0,
+   "stale_cancels_24h": 0,
+   "fill_rate_24h": 1.0,
+   "closed_24h": 25,
+   "win_rate_24h": 0.36,
+   "realised_24h": -1601.79,
+   "booked_skims_24h": 2,
+   "booked_skim_pnl_24h": 765.51,
+   "fees_24h": 574.3,
+   "uptime_24h": 0.42,
+   "faults_24h": 0,
+   "network_blips_24h": 31
+  },
+  {
+   "book": "momentum_top3_30m",
+   "live_orders": false,
+   "equity": 107916.96,
+   "return_total_pct": 7.917,
+   "return_24h_pct": -2.351,
+   "ratios_total": {
+    "sharpe": 5.63,
+    "sortino": 9.67,
+    "calmar": 0.86,
+    "max_dd_pct": -9.22
+   },
+   "ratios_24h": {
+    "sharpe": -22.04,
+    "sortino": -24.53,
+    "calmar": -0.83,
+    "max_dd_pct": -2.82
+   },
+   "orders_24h": 10,
+   "order_failures_24h": 0,
+   "stale_cancels_24h": 0,
+   "fill_rate_24h": 1.0,
+   "closed_24h": 6,
+   "win_rate_24h": 0.5,
+   "realised_24h": -2447.13,
+   "booked_skims_24h": 0,
+   "booked_skim_pnl_24h": 0,
+   "fees_24h": 206.9,
+   "uptime_24h": 0.441,
+   "faults_24h": 0,
+   "network_blips_24h": 32
+  },
+  {
+   "book": "wf_live",
+   "live_orders": false,
+   "equity": 100000.0,
+   "return_total_pct": 0.0,
+   "return_24h_pct": 0.0,
+   "ratios_total": {
+    "sharpe": null,
+    "sortino": null,
+    "calmar": null,
+    "max_dd_pct": 0.0
+   },
+   "ratios_24h": {
+    "sharpe": null,
+    "sortino": null,
+    "calmar": null,
+    "max_dd_pct": 0.0
+   },
+   "orders_24h": 0,
+   "order_failures_24h": 0,
+   "stale_cancels_24h": 0,
+   "fill_rate_24h": 1.0,
+   "closed_24h": 0,
+   "win_rate_24h": null,
+   "realised_24h": 0,
+   "booked_skims_24h": 0,
+   "booked_skim_pnl_24h": 0,
+   "fees_24h": 0,
+   "uptime_24h": 1.0,
+   "faults_24h": 0,
+   "network_blips_24h": 1
+  }
+ ],
+ "alerts": [
+  "momentum_top3_5m: online 44% of the last 24 h",
+  "momentum_top3_15m: online 42% of the last 24 h",
+  "momentum_top3_30m: online 44% of the last 24 h"
+ ]
+}

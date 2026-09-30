@@ -98,6 +98,17 @@ case "${1:-start}" in
     ;;
   restart) "$0" stop; sleep 2; "$0" start ;;
   fleet) CONFIGS="$PAPER_FLEET" "$0" start ;;
+  progress)
+    # Hourly log review of every running book: trades, fills, booked profits, Sharpe, Sortino,
+    # return over drawdown. DECISIONS.md#progress-review-2026-09-30
+    if pgrep -f "progressroot=$ROOT" >/dev/null; then echo "  progress review already running"; else
+      nohup bash -c 'r="$1"; cd "$r"; while true; do "$2" -m gates.progress >> live/progress.out 2>&1; sleep 3600; done' "progressroot=$ROOT" "$ROOT" "$PY" >> live/progress.supervisor.out 2>&1 &
+      echo $! > run/progress.pid; disown 2>/dev/null || true; echo "  progress review started (pid $!), hourly -> results/progress/latest.json"
+    fi ;;
+  progressstop)
+    p=$(cat run/progress.pid 2>/dev/null) && { pkill -P "$p" 2>/dev/null; kill "$p" 2>/dev/null; }
+    sup=$(pgrep -f "progressroot=$ROOT"); [ -n "$sup" ] && kill $sup 2>/dev/null
+    rm -f run/progress.pid; echo "  progress review stopped" ;;
   fleetstop) CONFIGS="$PAPER_FLEET" "$0" stop ;;
   live)
     echo "starting LIVE ORDER books:"; for c in $LIVE_CONFIGS; do start_one "$c" 0; done
@@ -222,5 +233,5 @@ case "${1:-start}" in
   report) shift; exec "$PY" -m bot.status "$@" ;;
   trades) shift; exec "$PY" -m bot.blotter --csv "$@" ;;
   dashboard) shift; exec "$PY" -m bot.dashboard "$@" ;;
-  *) echo "usage: $0 {start|stop|restart|fleet|fleetstop|live|livestop|status|scanner|scanstop|sources|sourcestop|paperlab|labstop|scalper|scalperstop|scalpreport|compare|report|trades|dashboard}"; exit 2 ;;
+  *) echo "usage: $0 {start|stop|restart|fleet|fleetstop|progress|progressstop|live|livestop|status|scanner|scanstop|sources|sourcestop|paperlab|labstop|scalper|scalperstop|scalpreport|compare|report|trades|dashboard}"; exit 2 ;;
 esac

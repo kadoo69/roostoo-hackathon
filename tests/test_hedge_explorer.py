@@ -38,3 +38,42 @@ def test_hedge_explorer_is_paper_and_registered():
     assert dashboard.BOTS["hedge_explorer"] == "config/hedge_explorer.yaml"
     assert "hedge_explorer" in live_validation.BOOKS and desk.group_of("hedge_explorer", "5m") == "scalper"
     assert "hedge_explorer) echo bot.hedge_explorer_run" in open("run_bots.sh").read()
+
+
+def test_burst_rider_enters_on_a_burst_books_at_target_and_times_out():
+    import numpy as np
+
+    from signals import burst_rider
+    idx = pd.date_range("2026-09-30", periods=10, freq="5min", tz="UTC")
+    close = pd.DataFrame({"X": [100, 100, 100, 100, 103, 103, 104, 104, 104, 104.0],
+                          "Y": [100, 100, 100, 100, 100.5, 101, 101, 101, 101, 101.0]}, index=idx)
+    high = close.copy()
+    high.loc[idx[6], "X"] = 105.1
+    w = burst_rider.weights(close, high, {"thresh_pct": 2.0, "tp_pct": 2.0, "hold_bars": 48, "n": 3, "cooldown_bars": 12})
+    assert list(w["X"].to_numpy()) == [0, 0, 0, 0, 1 / 3, 1 / 3, 0, 0, 0, 0]
+    assert (w["Y"] == 0).all()
+    w2 = burst_rider.weights(close, close, {"thresh_pct": 2.0, "tp_pct": 50.0, "hold_bars": 3, "n": 3, "cooldown_bars": 12})
+    assert np.count_nonzero(w2["X"].to_numpy()) == 3
+
+
+def test_hedge_explorer_has_the_burst_arm():
+    import yaml
+
+    from bot.scalper_adaptive_run import build_variants
+    v = build_variants(yaml.safe_load(open("config/hedge_explorer.yaml"))["adaptive"])
+    assert len(v) == 17 and v["burst_5m|tp2|4h"]["type"] == "burst"
+
+
+def test_progress_ratios_wait_for_a_day_and_calmar_is_return_over_drawdown():
+    import numpy as np
+
+    from gates.progress import ratios
+    idx = pd.date_range("2026-09-30", periods=12 * 10, freq="5min", tz="UTC")
+    short = pd.Series(np.linspace(100, 101, len(idx)), index=idx)
+    assert ratios(short)["sharpe"] is None
+    idx = pd.date_range("2026-09-28", periods=12 * 48, freq="5min", tz="UTC")
+    path = 100 * np.cumprod(1 + np.random.default_rng(3).normal(0.0004, 0.003, len(idx)))
+    r = ratios(pd.Series(path, index=idx))
+    dd = (pd.Series(path) / pd.Series(path).cummax() - 1).min()
+    assert r["sharpe"] > 0 and r["sortino"] > r["sharpe"]
+    assert abs(r["calmar"] - round((path[-1] / path[0] - 1) / abs(dd), 2)) < 0.02

@@ -108,7 +108,7 @@ tr.fresh td{background:rgba(124,196,255,.05)}
     <thead><tr><th>Closed</th><th>Book</th><th>Coin</th><th class="r">Entry → exit</th><th class="r hide-sm">Size</th><th class="r">Held</th><th class="r">Net</th><th class="r">%</th></tr></thead>
     <tbody id="closedRows"></tbody></table></div>
    <div class="scroll" id="booksWrap"><table>
-    <thead><tr><th>Book</th><th class="hide-sm">Trend</th><th class="r">Return</th><th class="r">Net</th><th class="r">Realised</th><th class="r">Open</th><th class="r hide-sm">Split</th><th class="r hide-sm">Invested</th><th class="hide-sm">Holding</th><th class="r">vs ctrl</th></tr></thead>
+    <thead><tr><th>Book</th><th class="hide-sm">Trend</th><th class="r">Return</th><th class="r">Net</th><th class="r">Realised</th><th class="r">Open</th><th class="r hide-sm" title="from the hourly review: annualised hourly Sharpe · Sortino · return over max drawdown (needs 24 h of data)">Sharpe · Sortino · R/DD</th><th class="r hide-sm">Invested</th><th class="hide-sm">Holding</th><th class="r">vs ctrl</th></tr></thead>
     <tbody id="rows"></tbody></table></div>
   </div>
   <div class="side">
@@ -186,7 +186,7 @@ function rows(){
     <td class="r num ${cls(b.net)}">${sgn(b.net)}</td>
     <td class="r num ${cls(b.realised)}">${sgn(b.realised)}</td>
     <td class="r num ${cls(b.open)}">${sgn(b.open)}</td>
-    <td class="r hide-sm">${splitBar(b.realised,b.open)}</td>
+    <td class="r num hide-sm" style="font-size:12px">${riskCell(b.risk)}</td>
     <td class="r num dim hide-sm">${((b.gross||0)*100).toFixed(0)}%</td>
     <td class="hide-sm"><div class="hold">${hold||'<span class="faint">cash</span>'}</div></td>
     <td class="r">${ab}</td></tr>`;
@@ -201,6 +201,11 @@ function style(v){
  const m=v.match(/^(\w+)\|htf(\d)\|vol([\d.]+)/); if(!m) return v;
  const f=[]; if(m[2]==='1') f.push('4h trend'); if(m[3]!=='0') f.push('volume '+m[3]+'x');
  return `${m[1]} breakout · ${f.length?f.join(' + '):'no filters'}`;
+}
+function riskCell(r){
+ if(!r||r.sharpe==null) return '<span class="faint" title="needs 24 h of equity marks">building</span>';
+ const f=v=>v==null?'-':v.toFixed(1);
+ return `<span class="${cls(r.sharpe)}">${f(r.sharpe)}</span> · <span class="${cls(r.sortino)}">${f(r.sortino)}</span> · <span class="${cls(r.calmar)}">${f(r.calmar)}</span>`;
 }
 function wfCard(){
  const w=D.walkforward||{};

@@ -20,6 +20,7 @@ from bot import feed
 from bot.scalper_adaptive_run import CASH, MINUTES, WARMUP_BARS, AdaptiveScalperBot, clock_weights, frames_to
 from bot.settings import ROOT, load
 from gates.let_winners_run import simulate
+from signals import burst_rider
 from signals.exit_clock import to_fast
 
 
@@ -60,9 +61,12 @@ class HedgeExplorerBot(AdaptiveScalperBot):
         data = {}
         for iv, n in bars_by_clock.items():
             fr = feed.bar_frame(symbols, iv, n)
-            data[iv] = (frames_to(fr, "close"), frames_to(fr, "quote_volume"))
-        ws = {vid: clock_weights(data[v["clock"]][0], data[v["clock"]][1], c4, v["cc"], v["entry"], v["exit"])
-              for vid, v in self.variants.items()}
+            data[iv] = (frames_to(fr, "close"), frames_to(fr, "quote_volume"), frames_to(fr, "high"))
+        ws = {}
+        for vid, v in self.variants.items():
+            close, qv, high = data[v["clock"]]
+            ws[vid] = (burst_rider.weights(close, high, v["cc"]) if v.get("type") == "burst"
+                       else clock_weights(close, qv, c4, v["cc"], v["entry"], v["exit"]))
         return ws, data
 
     def update(self, now: pd.Timestamp, symbols: list[str]) -> None:

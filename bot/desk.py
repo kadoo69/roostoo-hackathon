@@ -91,6 +91,18 @@ def adaptive_clock(name: str) -> str | None:
         return None
 
 
+def progress_by_book() -> dict:
+    """The hourly review's latest row per book. DECISIONS.md#progress-review-2026-09-30"""
+    import json
+
+    from bot.settings import ROOT
+    try:
+        rep = json.loads((ROOT / "results" / "progress" / "latest.json").read_text())
+        return {r["book"]: r for r in rep.get("books", [])}
+    except (OSError, ValueError):
+        return {}
+
+
 def walkforward() -> dict:
     """Live walk-forward scorecard and the hedge explorer's learned weights for the desk.
     DECISIONS.md#walkforward-live-declaration, DECISIONS.md#hedge-explorer-declaration"""
@@ -221,6 +233,9 @@ def payload(snap: dict) -> dict:
     by_name = {b["bot"]: b for b in snap["bots"]}
     shown = [b for b in snap["bots"] if group_of(b["bot"], (b.get("meta") or {}).get("interval")) in DESK_GROUPS]
     books = [book(b, by_name) for b in shown]
+    prog = progress_by_book()
+    for b in books:
+        b["risk"] = (prog.get(b["bot"]) or {}).get("ratios_total")
     books.sort(key=lambda b: -(b["ret_pct"] or 0.0))
     live = [b for b in books if b["equity"] is not None and b["group"] in TOTALS_GROUPS]
     total = {"net": round(sum(b["net"] or 0.0 for b in live)), "realised": round(sum(b["realised"] or 0.0 for b in live)),

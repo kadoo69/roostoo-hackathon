@@ -12,6 +12,7 @@ meta:
   why_it_runs: operator instruction; forward learning on paper only
   falsification: after 7 live days, if its return is not above the equal-weight blend of the same variants (the
     mean_pct in its hedge journal, compounded), the learning adds nothing
+  burst_arm: operator override 2026-09-30 of a failed test, DECISIONS.md#burst-rider-override-2026-09-30
 adaptive:
   variants:
     clocks:
@@ -35,6 +36,14 @@ adaptive:
   reselect_minutes: 60
   switch_margin_pp: 1.0
   start_variant: 15m|htf0|vol1.5
+  burst_arms:
+    burst_5m|tp2|4h:
+      clock: 5m
+      thresh_pct: 2.0
+      tp_pct: 2.0
+      hold_bars: 48
+      n: 3
+      cooldown_bars: 12
 contenders:
   min_hold_bars: 3
   min_hold_ref: DECISIONS.md#min-hold-5m

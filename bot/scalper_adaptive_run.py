@@ -59,6 +59,8 @@ def build_variants(ad: dict) -> dict[str, dict]:
             c = yaml.safe_load((ROOT / "config" / f"{name}.yaml").read_text())
             out[iv] = {"clock": iv, "cc": c["contenders"], "entry": int(c["strategy"]["entry_bars"]),
                        "exit": int(c["strategy"]["exit_bars"])}
+    for vid, arm in (ad.get("burst_arms") or {}).items():
+        out[vid] = {"clock": arm["clock"], "type": "burst", "cc": dict(arm), "entry": 0, "exit": 0}
     grid = ad.get("variants") or {}
     for iv, name in (grid.get("clocks") or {}).items():
         c = yaml.safe_load((ROOT / "config" / f"{name}.yaml").read_text())
