@@ -115,6 +115,14 @@ def walkforward() -> dict:
     except Exception:                                      # noqa: BLE001
         out = {}
     try:
+        ms = json.loads((ROOT / "results" / "market_structure.json").read_text())
+        out["market"] = {"pc1_share": ms["pc_share"][0], "effective_bets": ms["effective_bets"], "n": ms["n_coins"],
+                         "cluster": (ms.get("clusters_corr_0.7") or [[]])[0][:6],
+                         "leaders": [k for k, _ in sorted(ms["coins"].items(), key=lambda kv: -kv[1]["resid_24h_pct"])[:3]],
+                         "at": ms["generated"]}
+    except (OSError, ValueError, KeyError, IndexError):
+        out["market"] = None
+    try:
         h = json.loads((ROOT / "live" / "hedge_explorer" / "hedge.json").read_text())
         top = sorted(h["weights"].items(), key=lambda kv: -kv[1])[:4]
         out["hedge_top"] = [{"variant": k, "share": round(v * 100, 1)} for k, v in top]

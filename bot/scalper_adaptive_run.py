@@ -37,22 +37,66 @@ def pick_clock(scores: dict[str, float], current: str | None, margin_pp: float) 
 
 
 def clock_weights(close: pd.DataFrame, qv: pd.DataFrame, close4: pd.DataFrame, cc: dict,
-                  entry: int, exit_lb: int) -> pd.DataFrame:
+                  entry: int, exit_lb: int, extra_ok: pd.DataFrame | None = None) -> pd.DataFrame:
     members = pd.DataFrame(True, index=close.index, columns=close.columns)
     ok = (contenders.entry_confirmation(close, qv.reindex_like(close), close4, cc)
           if contenders.needs_confirmation(cc) else None)
+    if extra_ok is not None:
+        extra = extra_ok.reindex_like(close).fillna(False).astype(bool)
+        ok = extra if ok is None else (ok & extra)
     off = pd.Series(False, index=close.index)
     return contenders.targets(close, members, cc, entry, exit_lb, short_on=off, entry_ok=ok)
 
 
-def variant_weights(v: dict, close: pd.DataFrame, qv: pd.DataFrame, high: pd.DataFrame,
-                    close4: pd.DataFrame) -> pd.DataFrame:
-    """Weights of one style: the burst ride or the contenders rule (long or short side).
-    DECISIONS.md#dynamic-bot-shorts-and-ride-2026-10-01"""
+def taker_ok(sig: pd.DataFrame, qv: pd.DataFrame, taker: pd.DataFrame, share: float, mb: int) -> pd.DataFrame:
+    """Aggressive buyers above `share` of the bar's volume for a long, sellers for a short."""
+    s = (taker / qv.replace(0, np.nan)).reindex_like(sig)
+    up = (sig / sig.shift(mb) - 1.0) > 0
+    return (up & (s > share)) | (~up & (s < 1.0 - share))
+
+
+def oi_ok(close: pd.DataFrame, oi: pd.DataFrame, iv: str, bars: int) -> pd.DataFrame:
+    """Open interest up over the last `bars` bars, read only once each reading's period has ended."""
+    step = pd.Timedelta(minutes=MINUTES[iv])
+    avail = oi.copy()
+    avail.index = avail.index + step
+    at = avail.reindex(close.index + step, method="ffill").set_axis(close.index)
+    at = at.reindex(columns=close.columns)
+    return (at / at.shift(bars) - 1.0) > 0
+
+
+def variant_weights(v: dict, d: dict, close4: pd.DataFrame) -> pd.DataFrame:
+    """Weights of one style: the burst ride, or the contenders rule on raw or market-neutral prices,
+    with optional order-flow and open-interest entry confirmations. Positions are always in the real
+    coins. DECISIONS.md#dynamic-bot-shorts-and-ride-2026-10-01, DECISIONS.md#confirmations-and-residual-declaration"""
+    cc = v["cc"]
     if v.get("type") == "burst":
         from signals import burst_rider
-        return burst_rider.weights(close, high, v["cc"])
-    return clock_weights(close, qv, close4, v["cc"], v["entry"], v["exit"])
+        return burst_rider.weights(d["close"], d["high"], cc)
+    sig = d["close"]
+    if cc.get("residual_halflife_bars"):
+        from signals.residual import residual_prices
+        sig = residual_prices(d["close"], int(cc["residual_halflife_bars"]))
+    extra = None
+    if cc.get("taker_confirm"):
+        extra = taker_ok(sig, d["qv"], d["taker"], float(cc["taker_confirm"]), int(cc["momentum_bars"]))
+    if cc.get("oi_confirm_bars"):
+        o = oi_ok(d["close"], d["oi"], v["clock"], int(cc["oi_confirm_bars"])) if d.get("oi") is not None \
+            else pd.DataFrame(False, index=d["close"].index, columns=d["close"].columns)
+        extra = o if extra is None else (extra & o)
+    return clock_weights(sig, d["qv"], close4, cc, v["entry"], v["exit"], extra)
+
+
+def load_clock(symbols: list[str], iv: str, bars: int, need_oi: bool) -> dict:
+    fr = feed.bar_frame(symbols, iv, bars)
+    d = {"close": frames_to(fr, "close"), "qv": frames_to(fr, "quote_volume"), "high": frames_to(fr, "high"),
+         "taker": frames_to(fr, "taker_buy_quote")}
+    if need_oi:
+        try:
+            d["oi"] = feed.oi_frame(symbols, iv, min(500, bars + 10))
+        except Exception:                                      # noqa: BLE001
+            d["oi"] = None
+    return d
 
 
 def bars_needed(v: dict) -> int:
@@ -80,8 +124,8 @@ def build_variants(ad: dict) -> dict[str, dict]:
         out[vid] = {"clock": arm["clock"], "type": "burst", "cc": dict(arm), "entry": 0, "exit": 0}
     for vid, arm in (ad.get("extra_arms") or {}).items():
         c = yaml.safe_load((ROOT / "config" / f"{arm['config']}.yaml").read_text())
-        out[vid] = {"clock": arm["clock"], "cc": c["contenders"], "entry": int(c["strategy"]["entry_bars"]),
-                    "exit": int(c["strategy"]["exit_bars"])}
+        out[vid] = {"clock": arm["clock"], "cc": {**c["contenders"], **(arm.get("overrides") or {})},
+                    "entry": int(c["strategy"]["entry_bars"]), "exit": int(c["strategy"]["exit_bars"])}
     grid = ad.get("variants") or {}
     for iv, name in (grid.get("clocks") or {}).items():
         c = yaml.safe_load((ROOT / "config" / f"{name}.yaml").read_text())
@@ -121,13 +165,13 @@ class AdaptiveScalperBot(ContendersBot):
         c4 = feed.close_matrix(feed.bar_frame(symbols, "4h", int(days * 6) + 60))
         data = {}
         for iv in sorted({v["clock"] for v in self.variants.values()}):
-            fr = feed.bar_frame(symbols, iv, int(days * 1440 / MINUTES[iv]) + WARMUP_BARS)
-            data[iv] = (frames_to(fr, "close"), frames_to(fr, "quote_volume"), frames_to(fr, "high"))
+            need_oi = any(v["clock"] == iv and v["cc"].get("oi_confirm_bars") for v in self.variants.values())
+            data[iv] = load_clock(symbols, iv, int(days * 1440 / MINUTES[iv]) + WARMUP_BARS, need_oi)
         prev_at = self.selected_at
         scores, fwd, detail = {}, {}, {}
         for vid, v in self.variants.items():
-            close, qv, high = data[v["clock"]]
-            w = variant_weights(v, close, qv, high, c4)
+            close = data[v["clock"]]["close"]
+            w = variant_weights(v, data[v["clock"]], c4)
             net, turn = simulate(close, w, self.tick_map(), True)
             window = net.loc[now - pd.Timedelta(days=days):]
             scores[vid] = round(float(np.expm1(np.log1p(window).sum()) * 100), 3)
@@ -179,10 +223,10 @@ class AdaptiveScalperBot(ContendersBot):
             return {}
         spec = self.variants[self.clock]
         iv = spec["clock"]
-        fr = feed.bar_frame(cols, iv, bars_needed(spec))
-        close, qv, high = frames_to(fr, "close"), frames_to(fr, "quote_volume"), frames_to(fr, "high")
+        d = load_clock(cols, iv, bars_needed(spec), bool(spec["cc"].get("oi_confirm_bars")))
+        close = d["close"]
         c4 = feed.close_matrix(feed.bar_frame(cols, "4h", 60))
-        w = variant_weights(spec, close, qv, high, c4).reindex(columns=cols).fillna(0.0)
+        w = variant_weights(spec, d, c4).reindex(columns=cols).fillna(0.0)
         w5 = to_fast(w, close.index, m.index).fillna(0.0)
         last = w5.iloc[-1]
         target = {s: float(v) for s, v in last.items() if abs(v) > 1e-9}

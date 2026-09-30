@@ -200,6 +200,9 @@ function style(v){
  if(v==='cash') return 'Cash (stand aside)';
  if(v.startsWith('short|')) return `${v.split('|')[1]} short · breakdowns`;
  if(v.startsWith('ride|')) return 'Momentum ride · +2% jump, hold for +5%';
+ if(v.startsWith('flow|')) return `${v.split('|')[1]} breakout · order-flow confirmed`;
+ if(v.startsWith('oi|')) return `${v.split('|')[1]} breakout · open interest rising`;
+ if(v.startsWith('resid|')) return `${v.split('|')[1]} breakout · market stripped out`;
  const m=v.match(/^(\w+)\|htf(\d)\|vol([\d.]+)/); if(!m) return v;
  const f=[]; if(m[2]==='1') f.push('4h trend'); if(m[3]!=='0') f.push('volume '+m[3]+'x');
  return `${m[1]} breakout · ${f.length?f.join(' + '):'no filters'}`;
@@ -213,12 +216,14 @@ function wfCard(){
  const w=D.walkforward||{};
  const row=(l,sub,val,c)=>`<div style="display:flex;justify-content:space-between;gap:10px;padding:4px 0;border-bottom:1px solid var(--line)"><span style="font-size:12.5px">${l}${sub?` <span class="faint" style="font-size:11px">${sub}</span>`:''}</span><span class="num ${c||''}">${val}</span></div>`;
  const head=(t,sub)=>`<div style="padding:8px 0 2px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim)">${t}</div><div class="faint" style="font-size:11px;margin-bottom:4px">${sub}</div>`;
+ const mk=w.market;
+ let h0=mk?head('Market structure · PCA', `One shared factor explains <b>${(mk.pc1_share*100).toFixed(0)}%</b> of moves: about <b>${mk.effective_bets.toFixed(1)}</b> independent bets among ${mk.n} coins. Moving as one: ${esc((mk.cluster||[]).join(', '))}. Strongest on their own: <b>${esc((mk.leaders||[]).join(', '))}</b>.`):'';
  const ht=(w.hedge_top||[]).slice(0,3);
  const eq=ht.length&&ht.every(h=>Math.abs(h.share-ht[0].share)<0.05);
- let h=head('Learning · hedge_explorer', eq?'All 17 styles hold an equal share until the first hourly update; winners then gain capital.':'Share of capital per style. It rises when a style made money in the last hour.');
- h+=ht.map(x=>row(style(x.variant),'',x.share.toFixed(1)+'%','dim')).join('');
+ let h=h0; if(ht.length) h+=head('Learning · hedge_explorer', eq?'All 17 styles hold an equal share until the first hourly update; winners then gain capital.':'Share of capital per style. It rises when a style made money in the last hour.');
+ if(ht.length) h+=ht.map(x=>row(style(x.variant),'',x.share.toFixed(1)+'%','dim')).join('');
  const pick=w.current_pick;
- h+=head('Dynamic bot · wf_live', pick==='cash'?'Every holding style (5m to 4h) lost money over the last 3 days, so it holds cash.':`Best holding style over the last 3 days, so it trades: <b>${esc(style(pick))}</b>.`);
+ h+=head('Dynamic bot · wf_live', pick==='cash'?'Every style (longs 5m-4h, shorts, momentum ride, order-flow, open-interest and market-neutral breakouts) lost money over the last 3 days, so it holds cash.':`Best holding style over the last 3 days, so it trades: <b>${esc(style(pick))}</b>.`);
  h+=(w.top_trailing||[]).slice(0,3).map(v=>row(style(v.variant),'last 3 days',pct(v.pct),cls(v.pct))).join('');
  h+=head('Scorecard · after each pick', w.periods?`${w.periods} hourly picks so far; the pick beat the average style ${(w.pick_beat_mean_share*100).toFixed(0)}% of the time.`:'Starts after the second hourly pick: it then shows what each pick earned on the next hour.');
  if(w.periods){ h+=row('Its picks','',pct(w.pick_cum_pct),cls(w.pick_cum_pct))+row('Average style','',pct(w.mean_variant_cum_pct),cls(w.mean_variant_cum_pct))+row('Competition rule','30m breakout · 4h trend + volume',pct(w.fixed_competition_cum_pct),cls(w.fixed_competition_cum_pct)); }

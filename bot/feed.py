@@ -161,3 +161,49 @@ def mirror_check(quotes: dict[str, dict], specs: dict[str, PairSpec],
                      "ticks": round(abs(dev) / tick_bps, 2) if tick_bps > 0 else None,
                      "material": bool(abs(dev) > 2.0 * tick_bps)})
     return rows
+
+
+_PERPS: dict = {"at": 0.0, "listed": set()}
+
+
+def perp_listing() -> set[str]:
+    """Binance USD-M perpetual symbols, cached for six hours. DECISIONS.md#confirmations-and-residual-declaration"""
+    import time
+
+    from data.vision import FAPI
+    if time.time() - _PERPS["at"] > 6 * 3600 or not _PERPS["listed"]:
+        r = SESSION.get(f"{FAPI}/fapi/v1/exchangeInfo", timeout=20)
+        r.raise_for_status()
+        _PERPS["listed"] = {s["symbol"] for s in r.json()["symbols"]
+                            if s.get("contractType") == "PERPETUAL" and s.get("status") == "TRADING"}
+        _PERPS["at"] = time.time()
+    return _PERPS["listed"]
+
+
+def oi_frame(symbols: list[str], period: str, limit: int = 500) -> pd.DataFrame:
+    """Perpetual open interest in USD per spot symbol, indexed by the observation time Binance stamps.
+    A coin without a perpetual, or whose request fails, is left out. DECISIONS.md#confirmations-and-residual-declaration"""
+    from concurrent.futures import ThreadPoolExecutor
+
+    from data.vision import FAPI, perp_symbol
+    listed = perp_listing()
+
+    def one(s: str):
+        p = perp_symbol(s, listed)
+        if p is None:
+            return s, None
+        try:
+            r = SESSION.get(f"{FAPI}/futures/data/openInterestHist",
+                            params={"symbol": p, "period": period, "limit": min(limit, 500)}, timeout=20)
+            r.raise_for_status()
+            rows = r.json()
+        except Exception:                                      # noqa: BLE001
+            return s, None
+        if not rows:
+            return s, None
+        return s, pd.Series({pd.Timestamp(x["timestamp"], unit="ms", tz="UTC"): float(x["sumOpenInterestValue"])
+                             for x in rows})
+
+    with ThreadPoolExecutor(max_workers=min(FETCH_WORKERS, max(1, len(symbols)))) as pool:
+        got = dict(pool.map(one, symbols))
+    return pd.DataFrame({s: v for s, v in got.items() if v is not None}).sort_index()

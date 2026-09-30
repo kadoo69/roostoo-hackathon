@@ -12,7 +12,7 @@ meta:
   why_it_runs: operator instruction; forward evidence on paper only
   falsification: after 7 live days, if the pick's cumulative forward return is not above the mean variant's, selection
     on the live window adds nothing
-  changed_utc: '2026-10-01: 4h clock added, DECISIONS.md#dynamic-bot-4h-2026-10-01'
+  changed_utc: '2026-10-01: order-flow, open-interest and residual styles, DECISIONS.md#confirmations-and-residual-declaration'
 adaptive:
   variants:
     clocks:
@@ -41,6 +41,48 @@ adaptive:
     short|1h:
       clock: 1h
       config: short_pullback_15m
+    flow|30m:
+      clock: 30m
+      config: competition
+      overrides:
+        htf_confirm: false
+        volume_confirm: 1.5
+        taker_confirm: 0.5
+    oi|30m:
+      clock: 30m
+      config: competition
+      overrides:
+        htf_confirm: false
+        volume_confirm: 1.5
+        oi_confirm_bars: 4
+    resid|30m:
+      clock: 30m
+      config: competition
+      overrides:
+        htf_confirm: false
+        volume_confirm: 1.5
+        residual_halflife_bars: 144
+    flow|1h:
+      clock: 1h
+      config: momentum_top3_1h_long
+      overrides:
+        htf_confirm: false
+        volume_confirm: 1.5
+        taker_confirm: 0.5
+    oi|1h:
+      clock: 1h
+      config: momentum_top3_1h_long
+      overrides:
+        htf_confirm: false
+        volume_confirm: 1.5
+        oi_confirm_bars: 4
+    resid|1h:
+      clock: 1h
+      config: momentum_top3_1h_long
+      overrides:
+        htf_confirm: false
+        volume_confirm: 1.5
+        residual_halflife_bars: 72
   burst_arms:
     ride|+5%|24h:
       clock: 5m

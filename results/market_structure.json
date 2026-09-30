@@ -1,0 +1,512 @@
+{
+ "generated": "2026-09-30T19:02:48.462651+00:00",
+ "window": "last 7 days of 1h returns",
+ "n_coins": 25,
+ "pc_share": [
+  0.599,
+  0.045,
+  0.041
+ ],
+ "effective_bets": 2.71,
+ "mean_pair_corr": 0.564,
+ "pc1_vs_equal_weight_corr": 0.992,
+ "pc1_loadings": {
+  "AAVEUSDT": 0.186,
+  "ADAUSDT": 0.24,
+  "ARBUSDT": 0.217,
+  "AVAXUSDT": 0.207,
+  "BNBUSDT": 0.227,
+  "BTCUSDT": 0.216,
+  "DOGEUSDT": 0.244,
+  "ENAUSDT": 0.143,
+  "ETHUSDT": 0.229,
+  "FILUSDT": 0.184,
+  "LINKUSDT": 0.188,
+  "LTCUSDT": 0.135,
+  "NEARUSDT": 0.159,
+  "PEPEUSDT": 0.231,
+  "PUMPUSDT": 0.152,
+  "SOLUSDT": 0.233,
+  "SUIUSDT": 0.2,
+  "TAOUSDT": 0.21,
+  "TRUMPUSDT": 0.221,
+  "TRXUSDT": 0.104,
+  "UNIUSDT": 0.201,
+  "WLDUSDT": 0.183,
+  "XLMUSDT": 0.201,
+  "XRPUSDT": 0.228,
+  "ZECUSDT": 0.185
+ },
+ "clusters_corr_0.7": [
+  [
+   "ADA",
+   "BNB",
+   "BTC",
+   "DOGE",
+   "ETH",
+   "PEPE",
+   "SOL",
+   "TAO",
+   "TRUMP",
+   "XRP"
+  ],
+  [
+   "ARB",
+   "UNI"
+  ]
+ ],
+ "coins": {
+  "AAVE": {
+   "beta": 1.0,
+   "r2_market": 0.53,
+   "resid_24h_pct": -4.21,
+   "resid_72h_pct": 5.31,
+   "raw_24h_pct": -4.06
+  },
+  "ADA": {
+   "beta": 1.13,
+   "r2_market": 0.83,
+   "resid_24h_pct": -0.53,
+   "resid_72h_pct": -1.5,
+   "raw_24h_pct": -0.41
+  },
+  "ARB": {
+   "beta": 1.37,
+   "r2_market": 0.72,
+   "resid_24h_pct": -1.84,
+   "resid_72h_pct": -5.56,
+   "raw_24h_pct": -1.69
+  },
+  "AVAX": {
+   "beta": 1.12,
+   "r2_market": 0.63,
+   "resid_24h_pct": -3.04,
+   "resid_72h_pct": 2.81,
+   "raw_24h_pct": -2.91
+  },
+  "BNB": {
+   "beta": 0.4,
+   "r2_market": 0.7,
+   "resid_24h_pct": 1.65,
+   "resid_72h_pct": 0.01,
+   "raw_24h_pct": 1.7
+  },
+  "BTC": {
+   "beta": 0.36,
+   "r2_market": 0.62,
+   "resid_24h_pct": 0.4,
+   "resid_72h_pct": 0.28,
+   "raw_24h_pct": 0.37
+  },
+  "DOGE": {
+   "beta": 0.86,
+   "r2_market": 0.85,
+   "resid_24h_pct": -0.11,
+   "resid_72h_pct": -0.2,
+   "raw_24h_pct": -0.01
+  },
+  "ENA": {
+   "beta": 1.22,
+   "r2_market": 0.35,
+   "resid_24h_pct": 5.57,
+   "resid_72h_pct": -4.32,
+   "raw_24h_pct": 5.83
+  },
+  "ETH": {
+   "beta": 0.45,
+   "r2_market": 0.72,
+   "resid_24h_pct": -0.64,
+   "resid_72h_pct": 0.99,
+   "raw_24h_pct": -0.62
+  },
+  "FIL": {
+   "beta": 1.21,
+   "r2_market": 0.53,
+   "resid_24h_pct": -3.95,
+   "resid_72h_pct": -6.04,
+   "raw_24h_pct": -3.75
+  },
+  "LINK": {
+   "beta": 1.08,
+   "r2_market": 0.52,
+   "resid_24h_pct": -1.68,
+   "resid_72h_pct": 4.76,
+   "raw_24h_pct": -1.6
+  },
+  "LTC": {
+   "beta": 0.74,
+   "r2_market": 0.27,
+   "resid_24h_pct": -2.14,
+   "resid_72h_pct": -4.12,
+   "raw_24h_pct": -2.07
+  },
+  "NEAR": {
+   "beta": 1.47,
+   "r2_market": 0.44,
+   "resid_24h_pct": 5.93,
+   "resid_72h_pct": 4.62,
+   "raw_24h_pct": 6.31
+  },
+  "PEPE": {
+   "beta": 1.06,
+   "r2_market": 0.77,
+   "resid_24h_pct": 0.32,
+   "resid_72h_pct": 1.06,
+   "raw_24h_pct": 0.47
+  },
+  "PUMP": {
+   "beta": 1.5,
+   "r2_market": 0.39,
+   "resid_24h_pct": 0.98,
+   "resid_72h_pct": 22.34,
+   "raw_24h_pct": 1.29
+  },
+  "SOL": {
+   "beta": 0.73,
+   "r2_market": 0.76,
+   "resid_24h_pct": -0.4,
+   "resid_72h_pct": -1.1,
+   "raw_24h_pct": -0.38
+  },
+  "SUI": {
+   "beta": 1.38,
+   "r2_market": 0.61,
+   "resid_24h_pct": 1.16,
+   "resid_72h_pct": -3.84,
+   "raw_24h_pct": 1.22
+  },
+  "TAO": {
+   "beta": 1.19,
+   "r2_market": 0.66,
+   "resid_24h_pct": -2.11,
+   "resid_72h_pct": -3.57,
+   "raw_24h_pct": -1.98
+  },
+  "TRUMP": {
+   "beta": 1.02,
+   "r2_market": 0.72,
+   "resid_24h_pct": -0.99,
+   "resid_72h_pct": -1.75,
+   "raw_24h_pct": -0.78
+  },
+  "TRX": {
+   "beta": 0.08,
+   "r2_market": 0.14,
+   "resid_24h_pct": 0.61,
+   "resid_72h_pct": 1.2,
+   "raw_24h_pct": 0.63
+  },
+  "UNI": {
+   "beta": 1.13,
+   "r2_market": 0.62,
+   "resid_24h_pct": -1.53,
+   "resid_72h_pct": -4.8,
+   "raw_24h_pct": -1.49
+  },
+  "WLD": {
+   "beta": 1.46,
+   "r2_market": 0.54,
+   "resid_24h_pct": 6.9,
+   "resid_72h_pct": -1.56,
+   "raw_24h_pct": 7.21
+  },
+  "XLM": {
+   "beta": 1.08,
+   "r2_market": 0.59,
+   "resid_24h_pct": 1.49,
+   "resid_72h_pct": 7.94,
+   "raw_24h_pct": 1.66
+  },
+  "XRP": {
+   "beta": 0.82,
+   "r2_market": 0.74,
+   "resid_24h_pct": -0.39,
+   "resid_72h_pct": 0.23,
+   "raw_24h_pct": -0.3
+  },
+  "ZEC": {
+   "beta": 1.15,
+   "r2_market": 0.52,
+   "resid_24h_pct": -0.55,
+   "resid_72h_pct": -9.06,
+   "raw_24h_pct": -0.46
+  }
+ },
+ "history_72h_every_12h": [
+  {
+   "to": "2026-09-03 10:00:00+00:00",
+   "pc1_share": 0.628,
+   "effective_bets": 2.47
+  },
+  {
+   "to": "2026-09-03 22:00:00+00:00",
+   "pc1_share": 0.589,
+   "effective_bets": 2.77
+  },
+  {
+   "to": "2026-09-04 10:00:00+00:00",
+   "pc1_share": 0.561,
+   "effective_bets": 3.03
+  },
+  {
+   "to": "2026-09-04 22:00:00+00:00",
+   "pc1_share": 0.622,
+   "effective_bets": 2.51
+  },
+  {
+   "to": "2026-09-05 10:00:00+00:00",
+   "pc1_share": 0.588,
+   "effective_bets": 2.78
+  },
+  {
+   "to": "2026-09-05 22:00:00+00:00",
+   "pc1_share": 0.559,
+   "effective_bets": 3.05
+  },
+  {
+   "to": "2026-09-06 10:00:00+00:00",
+   "pc1_share": 0.531,
+   "effective_bets": 3.35
+  },
+  {
+   "to": "2026-09-06 22:00:00+00:00",
+   "pc1_share": 0.502,
+   "effective_bets": 3.72
+  },
+  {
+   "to": "2026-09-07 10:00:00+00:00",
+   "pc1_share": 0.494,
+   "effective_bets": 3.82
+  },
+  {
+   "to": "2026-09-07 22:00:00+00:00",
+   "pc1_share": 0.447,
+   "effective_bets": 4.52
+  },
+  {
+   "to": "2026-09-08 10:00:00+00:00",
+   "pc1_share": 0.484,
+   "effective_bets": 3.96
+  },
+  {
+   "to": "2026-09-08 22:00:00+00:00",
+   "pc1_share": 0.522,
+   "effective_bets": 3.46
+  },
+  {
+   "to": "2026-09-09 10:00:00+00:00",
+   "pc1_share": 0.591,
+   "effective_bets": 2.77
+  },
+  {
+   "to": "2026-09-09 22:00:00+00:00",
+   "pc1_share": 0.625,
+   "effective_bets": 2.49
+  },
+  {
+   "to": "2026-09-10 10:00:00+00:00",
+   "pc1_share": 0.658,
+   "effective_bets": 2.26
+  },
+  {
+   "to": "2026-09-10 22:00:00+00:00",
+   "pc1_share": 0.667,
+   "effective_bets": 2.21
+  },
+  {
+   "to": "2026-09-11 10:00:00+00:00",
+   "pc1_share": 0.675,
+   "effective_bets": 2.16
+  },
+  {
+   "to": "2026-09-11 22:00:00+00:00",
+   "pc1_share": 0.766,
+   "effective_bets": 1.69
+  },
+  {
+   "to": "2026-09-12 10:00:00+00:00",
+   "pc1_share": 0.752,
+   "effective_bets": 1.75
+  },
+  {
+   "to": "2026-09-12 22:00:00+00:00",
+   "pc1_share": 0.759,
+   "effective_bets": 1.72
+  },
+  {
+   "to": "2026-09-13 10:00:00+00:00",
+   "pc1_share": 0.759,
+   "effective_bets": 1.72
+  },
+  {
+   "to": "2026-09-13 22:00:00+00:00",
+   "pc1_share": 0.764,
+   "effective_bets": 1.7
+  },
+  {
+   "to": "2026-09-14 10:00:00+00:00",
+   "pc1_share": 0.756,
+   "effective_bets": 1.73
+  },
+  {
+   "to": "2026-09-14 22:00:00+00:00",
+   "pc1_share": 0.599,
+   "effective_bets": 2.7
+  },
+  {
+   "to": "2026-09-15 10:00:00+00:00",
+   "pc1_share": 0.608,
+   "effective_bets": 2.62
+  },
+  {
+   "to": "2026-09-15 22:00:00+00:00",
+   "pc1_share": 0.663,
+   "effective_bets": 2.23
+  },
+  {
+   "to": "2026-09-16 10:00:00+00:00",
+   "pc1_share": 0.668,
+   "effective_bets": 2.19
+  },
+  {
+   "to": "2026-09-16 22:00:00+00:00",
+   "pc1_share": 0.635,
+   "effective_bets": 2.41
+  },
+  {
+   "to": "2026-09-17 10:00:00+00:00",
+   "pc1_share": 0.644,
+   "effective_bets": 2.36
+  },
+  {
+   "to": "2026-09-17 22:00:00+00:00",
+   "pc1_share": 0.629,
+   "effective_bets": 2.46
+  },
+  {
+   "to": "2026-09-18 10:00:00+00:00",
+   "pc1_share": 0.613,
+   "effective_bets": 2.58
+  },
+  {
+   "to": "2026-09-18 22:00:00+00:00",
+   "pc1_share": 0.518,
+   "effective_bets": 3.46
+  },
+  {
+   "to": "2026-09-19 10:00:00+00:00",
+   "pc1_share": 0.458,
+   "effective_bets": 4.3
+  },
+  {
+   "to": "2026-09-19 22:00:00+00:00",
+   "pc1_share": 0.418,
+   "effective_bets": 4.98
+  },
+  {
+   "to": "2026-09-20 10:00:00+00:00",
+   "pc1_share": 0.464,
+   "effective_bets": 4.21
+  },
+  {
+   "to": "2026-09-20 22:00:00+00:00",
+   "pc1_share": 0.494,
+   "effective_bets": 3.79
+  },
+  {
+   "to": "2026-09-21 10:00:00+00:00",
+   "pc1_share": 0.526,
+   "effective_bets": 3.39
+  },
+  {
+   "to": "2026-09-21 22:00:00+00:00",
+   "pc1_share": 0.501,
+   "effective_bets": 3.7
+  },
+  {
+   "to": "2026-09-22 10:00:00+00:00",
+   "pc1_share": 0.504,
+   "effective_bets": 3.67
+  },
+  {
+   "to": "2026-09-22 22:00:00+00:00",
+   "pc1_share": 0.504,
+   "effective_bets": 3.64
+  },
+  {
+   "to": "2026-09-23 10:00:00+00:00",
+   "pc1_share": 0.468,
+   "effective_bets": 4.12
+  },
+  {
+   "to": "2026-09-23 22:00:00+00:00",
+   "pc1_share": 0.514,
+   "effective_bets": 3.52
+  },
+  {
+   "to": "2026-09-24 10:00:00+00:00",
+   "pc1_share": 0.511,
+   "effective_bets": 3.55
+  },
+  {
+   "to": "2026-09-24 22:00:00+00:00",
+   "pc1_share": 0.562,
+   "effective_bets": 3.01
+  },
+  {
+   "to": "2026-09-25 10:00:00+00:00",
+   "pc1_share": 0.59,
+   "effective_bets": 2.75
+  },
+  {
+   "to": "2026-09-25 22:00:00+00:00",
+   "pc1_share": 0.605,
+   "effective_bets": 2.64
+  },
+  {
+   "to": "2026-09-26 10:00:00+00:00",
+   "pc1_share": 0.624,
+   "effective_bets": 2.5
+  },
+  {
+   "to": "2026-09-26 22:00:00+00:00",
+   "pc1_share": 0.563,
+   "effective_bets": 3.03
+  },
+  {
+   "to": "2026-09-27 10:00:00+00:00",
+   "pc1_share": 0.527,
+   "effective_bets": 3.41
+  },
+  {
+   "to": "2026-09-27 22:00:00+00:00",
+   "pc1_share": 0.522,
+   "effective_bets": 3.46
+  },
+  {
+   "to": "2026-09-28 10:00:00+00:00",
+   "pc1_share": 0.544,
+   "effective_bets": 3.22
+  },
+  {
+   "to": "2026-09-28 22:00:00+00:00",
+   "pc1_share": 0.619,
+   "effective_bets": 2.53
+  },
+  {
+   "to": "2026-09-29 10:00:00+00:00",
+   "pc1_share": 0.629,
+   "effective_bets": 2.46
+  },
+  {
+   "to": "2026-09-29 22:00:00+00:00",
+   "pc1_share": 0.65,
+   "effective_bets": 2.31
+  },
+  {
+   "to": "2026-09-30 10:00:00+00:00",
+   "pc1_share": 0.651,
+   "effective_bets": 2.31
+  }
+ ]
+}

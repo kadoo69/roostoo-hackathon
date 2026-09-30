@@ -102,7 +102,7 @@ def test_dynamic_bot_menu_has_shorts_and_the_momentum_ride():
     from bot.settings import load
     ad = yaml.safe_load(open("config/wf_live.yaml"))["adaptive"]
     v = build_variants(ad)
-    assert len(v) == 21
+    assert len(v) == 27
     assert v["short|15m"]["cc"]["sides"] == "short" and v["short|1h"]["clock"] == "1h"
     ride = v["ride|+5%|24h"]
     assert ride["type"] == "burst" and ride["cc"]["tp_pct"] == 5.0 and bars_needed(ride) >= 288
@@ -121,5 +121,49 @@ def test_variant_weights_short_side_is_negative():
     qv.iloc[-30:] = 5.0
     cc = {"n": 2, "momentum_bars": 40, "breadth_max": 0.4, "max_weight": 0.5, "sticky": True, "sides": "short",
           "volume_confirm": 1.5, "skip_short_z": [], "skip_long_z": []}
-    w = variant_weights({"clock": "1h", "cc": cc, "entry": 20, "exit": 10}, down, qv, down, down)
+    w = variant_weights({"clock": "1h", "cc": cc, "entry": 20, "exit": 10},
+                        {"close": down, "qv": qv, "high": down, "taker": qv * 0.5}, down)
     assert (w["X"] <= 0).all() and w["X"].min() < 0 and (w["Y"] == 0).all()
+
+
+def test_oi_confirmation_reads_a_reading_only_after_its_period_ends():
+    import pandas as pd
+
+    from bot.scalper_adaptive_run import oi_ok
+    idx = pd.date_range("2026-09-30 10:00", periods=8, freq="30min", tz="UTC")
+    close = pd.DataFrame({"X": 1.0}, index=idx)
+    oi = pd.DataFrame({"X": [100, 100, 100, 100, 100, 100, 100, 200.0]}, index=idx)
+    ok = oi_ok(close, oi, "30m", 1)
+    assert not ok["X"].iloc[-2] and bool(ok["X"].iloc[-1])
+
+
+def test_taker_confirmation_is_side_aware():
+    import pandas as pd
+
+    from bot.scalper_adaptive_run import taker_ok
+    idx = pd.date_range("2026-09-30", periods=3, freq="1h", tz="UTC")
+    sig = pd.DataFrame({"UP": [1.0, 1.1, 1.2], "DN": [1.2, 1.1, 1.0]}, index=idx)
+    qv = pd.DataFrame(100.0, index=idx, columns=sig.columns)
+    taker = pd.DataFrame({"UP": [70.0] * 3, "DN": [30.0] * 3}, index=idx)
+    ok = taker_ok(sig, qv, taker, 0.5, 1)
+    assert bool(ok["UP"].iloc[-1]) and bool(ok["DN"].iloc[-1])
+    assert not bool(taker_ok(sig, qv, 100 - taker, 0.5, 1)["UP"].iloc[-1])
+
+
+def test_residual_prices_strip_the_market_and_use_only_past_betas():
+    import numpy as np
+    import pandas as pd
+
+    from signals.residual import betas, residual_prices
+    rng = np.random.default_rng(0)
+    idx = pd.date_range("2026-09-01", periods=400, freq="1h", tz="UTC")
+    m = rng.normal(0, 0.01, 400)
+    own = rng.normal(0, 0.002, (400, 3))
+    r = pd.DataFrame(m[:, None] * np.array([1.0, 1.5, 0.5]) + own, index=idx, columns=list("ABC"))
+    close = 100 * np.exp(r.cumsum())
+    res = np.log(residual_prices(close, 48)).diff().iloc[100:]
+    raw = np.log(close).diff().iloc[100:]
+    assert (res.std() < raw.std() * 0.6).all()
+    b = betas(close, 48)
+    b2 = betas(close.iloc[:300], 48)
+    assert np.allclose(b.iloc[:300].dropna(), b2.dropna())
