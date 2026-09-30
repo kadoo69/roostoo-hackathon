@@ -40,7 +40,7 @@ def merge(now: pd.Timestamp | None = None) -> dict:
     if risk.get("allow_shorts") is False:
         allowed = {s for s in allowed if not s.startswith("short|")}
         notes.append("shorts blocked by the risk review")
-    ok_conf = set(data.get("allow_confirmations") or ["flow", "oi", "volume"])
+    ok_conf = set(data["allow_confirmations"]) if isinstance(data.get("allow_confirmations"), list) else {"flow", "oi", "volume"}
     for fam in ("flow", "oi"):
         if fam not in ok_conf:
             allowed = {s for s in allowed if not s.startswith(fam + "|")}

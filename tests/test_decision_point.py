@@ -31,3 +31,13 @@ def test_missing_inputs_fall_back_to_the_full_menu(tmp_path, monkeypatch):
     assert len(d["allowed_styles"]) == 30 and d["max_gross"] == 1.0
     _write(tmp_path / "out", "latest", {"garbage": 1})
     assert dp.active() is None
+
+
+def test_an_empty_confirmation_list_blocks_flow_and_oi(tmp_path, monkeypatch):
+    monkeypatch.setattr(dp, "IN", tmp_path / "in")
+    monkeypatch.setattr(dp, "OUT", tmp_path / "out")
+    (tmp_path / "in").mkdir()
+    _write(tmp_path / "in", "strategies", {"enable": ["oi|1h", "flow|1h", "1h|htf0|vol0"]})
+    _write(tmp_path / "in", "datapoints", {"allow_confirmations": []})
+    d = dp.merge(pd.Timestamp("2026-10-01T00:00Z"))
+    assert d["allowed_styles"] == ["1h|htf0|vol0", "cash"]
