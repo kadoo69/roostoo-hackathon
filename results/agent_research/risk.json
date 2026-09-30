@@ -1,0 +1,42 @@
+{
+ "agent": "risk",
+ "generated_utc": "2026-09-30T19:28:18Z",
+ "max_gross": 0.9,
+ "max_weight_per_coin": 0.4,
+ "allow_shorts": false,
+ "target_lock": "on",
+ "block_diversify": false,
+ "drawdown_brake": null,
+ "expected_effects": {
+  "gross_1.0_to_0.9": "about -10% of daily vol and of drawdown, about -10% of return scale; Sharpe roughly unchanged (scale-free), Calmar unchanged, P(>5%) down ~1-2 pts (interpolated from sizing_sweep: holdout P(clear) 0.26->0.24->0.21 as mean gross falls 0.32->0.23->0.17 of a wider pool)",
+  "weight_cap_0.5_to_0.4": "three names near 0.33 each anyway, so cap binds only when top-2 or top-1 held; removes the 50%/50%/0% two-coin case; top2 holdout median 0.44 and top1 -2.56 vs top3 3.12 (max-return-levers L1)",
+  "concentration_vol": "with pairwise corr ~0.56 and first PC 60%, 3 equal names in the big block have portfolio vol ~0.85x a single name (sqrt((1+2*0.56*... )/3)~0.88), not 0.58x; effective bets 2.7 of 25 so diversifying within the pool cannot cut vol much",
+  "lock_on_30m_holdout": "median 1.16%->3.95%, P(>2%) 0.464->0.636, worst unchanged -22.2%, P(>15%) 0.093->0.023",
+  "brake_B1_2025_26": "median 2.91%->1.19%, P(>5%) 0.426->0.389, worst -28.5%->-24.7%, maxDD median -12.1%->-11.3%"
+ },
+ "evidence": [
+  "competition_exit: live rule 30m holdout median +1.13%, P(>5%) 0.35, P(>10%) 0.19, worst fortnight -22.3%",
+  "market_structure: PC1 60% of variance, mean pair corr 0.56, 2.7 effective bets of 25, ten-coin block (BTC ETH SOL DOGE XRP ADA PEPE TRUMP TAO BNB)",
+  "sizing_sweep holdout: lowering gross raises Sharpe/Calmar (1.11/1.74 at mean gross 0.31 vs 1.32/2.23 at 0.17) but lowers P(clear Screen 2) 0.24->0.19",
+  "max-return-levers L1: top3 holdout median 3.12, top2 0.44, top1 -2.56 with 81.8% drawdown",
+  "screen3-is-a-sign-indicator: composite is a function of sign of the fortnight; beta-is-the-only-screen3-lever: lowering beta cuts P(positive) and composite together",
+  "shorts: lowtf breadth shorts fail 5 of 6 holdouts; live paper shorts -12.4k vs longs +13.4k over 2,297 lots; short sleeve worst windows -27 to -39%",
+  "competition-wf: target lock +5%/keep 0.3 is the only arm passing all periods, P(>2%) 0.56/0.69/0.68 vs 0.36/0.57/0.53, median +3.2/+5.1/+5.0 vs -0.7/+4.4/+2.9; it is a barrier, not alpha",
+  "drawdown-brake: B1/B2 fail nonsense control (verdict candidate=false in both); B1 costs 1.7 pts median in 2025-26",
+  "adaptive-clock and exit tests null; correlation cap and decorrelated selection null (low-correlation pick = random third)",
+  "live competition book has no cycles yet (waiting); rehearsal book drawdown -1.2% at 19:27Z 09-30, flat, so no live ratio evidence; progress ratios all null"
+ ],
+ "caveats": [
+  "No live equity history for the competition book (still waiting for 12:00Z 10-01), so concentration/vol numbers are from backtest and market_structure, not live cycles.",
+  "Volatility arithmetic assumes the 0.56 mean pair correlation persists; it rises in sell-offs so real diversification is lower.",
+  "Sharpe/Sortino/Calmar are nearly scale-free, so exposure cuts mostly trade Screen 2 probability for shallower drawdown; they do not fix Screen 3 which tracks the sign of the fortnight.",
+  "Lock result is barrier-crossing, anchor is window start; ladder and lock interaction not retested with the confirmed 30m rule beyond lowtf_lock.",
+  "max_gross 0.9 and weight cap 0.4 are interpolations, not tested arms."
+ ],
+ "judgement_calls": [
+  "max_gross 0.9 vs 1.0: record says only that more gross raises P(clear) and lowers Sharpe; 0.9 is a hedge, 1.0 is defensible given the operator go-all-in and top-20 cut near 0-3%.",
+  "target_lock on: the operator turned it off to keep +20k reachable; record supports on for qualification (cap cuts P(>15%) 0.09->0.02). Turn on only if the objective is qualifying first; consider lock at +5% only once hit.",
+  "block_diversify false: pick-across-blocks is untested live and correlation-cap/decorrelation tests were null, yet 3 names in one block is one bet; the paper blocks|30m arm should decide.",
+  "drawdown_brake null: no tested brake passes; existing 25% max_drawdown kill switch remains the only protection, which is a disaster stop not a brake."
+ ]
+}

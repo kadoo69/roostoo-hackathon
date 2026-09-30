@@ -111,6 +111,7 @@ adaptive:
       hold_bars: 288
       n: 3
       cooldown_bars: 12
+  use_decision_point: true
 contenders:
   min_hold_bars: 3
   min_hold_ref: DECISIONS.md#min-hold-5m

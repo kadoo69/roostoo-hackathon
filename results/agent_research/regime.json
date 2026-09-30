@@ -1,0 +1,203 @@
+{
+ "agent": "regime",
+ "generated_utc": "2026-09-30T19:28:57Z",
+ "regime": "chop",
+ "confidence": 0.6,
+ "metrics": {
+  "data_last_closed_1h_bar_open_utc": "2026-09-30T18:00",
+  "windows_days": [
+   3,
+   7,
+   14
+  ],
+  "pool_size": 25,
+  "by_window": {
+   "3d": {
+    "er_1h_median": 0.085,
+    "er_4h_median": 0.167,
+    "btc_ret_pct": -1.02,
+    "ew_pool_ret_pct": -3.62,
+    "pct_coins_up": 0.2,
+    "pool_median_ret_pct": -3.67,
+    "ew_index_ER_1h": 0.063
+   },
+   "7d": {
+    "er_1h_median": 0.047,
+    "er_4h_median": 0.09,
+    "btc_ret_pct": -0.45,
+    "ew_pool_ret_pct": 7.85,
+    "pct_coins_up": 0.72,
+    "pool_median_ret_pct": 3.88,
+    "ew_index_ER_1h": 0.076
+   },
+   "14d": {
+    "er_1h_median": 0.103,
+    "er_4h_median": 0.195,
+    "btc_ret_pct": 11.0,
+    "ew_pool_ret_pct": 31.51,
+    "pct_coins_up": 1.0,
+    "pool_median_ret_pct": 27.76,
+    "ew_index_ER_1h": 0.141
+   }
+  },
+  "breadth_above_4h_20bar_high": 0.0,
+  "breadth_above_4h_sma20": 0.44,
+  "breadth_below_4h_10bar_low": 0.04,
+  "breadth_above_sma20_avg_last7d": 0.48,
+  "breadth_above_4h_channel_avg_last7d": 0.044,
+  "breadth_above_4h_channel_avg_last14d": 0.09,
+  "rv1h_last24h_vs_30d_median_ratio_median": 1.07,
+  "rv1h_last3d_over_prior_ratio_median": 1.08,
+  "rv1h_last7d_over_prior_ratio_median": 1.01,
+  "rv1h_last14d_over_prior_ratio_median": 1.15,
+  "btc_rv1h_pct_last24h": 0.498,
+  "btc_rv1h_pct_30d_median": 0.325,
+  "ew_index_rv1h_pct_last3d": 0.859,
+  "ew_index_rv1h_pct_30d": 0.71,
+  "ew_index_rv_last24h_vs_30d_median": 1.11,
+  "xs_std_24h_ret_now_pct": 2.82,
+  "xs_std_24h_ret_median_30d_pct": 4.22,
+  "xs_std_24h_ret_mean_last7d_pct": 4.34,
+  "xs_std_24h_ret_mean_last3d_pct": 4.46,
+  "ret24h_now_ew_pct": 0.17,
+  "pca_factor_share_7d_pc1": 0.6,
+  "pca_pc2_share": 0.04,
+  "pca_effective_bets": 2.7,
+  "pca_mean_pair_corr": 0.56,
+  "pca_pc1_share_30d_range": [
+   0.42,
+   0.77
+  ],
+  "pca_pc1_share_now_30d_window": 0.65,
+  "residual_leaders_24h": [
+   "WLD",
+   "NEAR",
+   "ENA"
+  ],
+  "residual_laggards_24h": [
+   "AAVE",
+   "FIL",
+   "AVAX"
+  ],
+  "breakout_bo_5m_3d": {
+   "n": 1087,
+   "follow_share": 0.421,
+   "mean_fwd4h_ret_pct": -0.115,
+   "pct_fwd4h_positive": 0.426
+  },
+  "breakout_bo_15m_3d": {
+   "n": 329,
+   "follow_share": 0.413,
+   "mean_fwd4h_ret_pct": -0.187,
+   "pct_fwd4h_positive": 0.426
+  },
+  "breakout_bo_30m_3d": {
+   "n": 145,
+   "follow_share": 0.428,
+   "mean_fwd4h_ret_pct": -0.105,
+   "pct_fwd4h_positive": 0.428
+  },
+  "breakout_bo_1h_3d": {
+   "n": 65,
+   "follow_share": 0.262,
+   "mean_fwd4h_ret_pct": -0.818,
+   "pct_fwd4h_positive": 0.292
+  },
+  "breakout_bo_4h_3d": {
+   "n": 13,
+   "follow_share": 0.308,
+   "mean_fwd4h_ret_pct": 0.39,
+   "pct_fwd4h_positive": 0.538
+  },
+  "breakout_bo_5m_7d": {
+   "n": 2776,
+   "follow_share": 0.417,
+   "mean_fwd4h_ret_pct": 0.25,
+   "pct_fwd4h_positive": 0.472
+  },
+  "breakout_bo_15m_7d": {
+   "n": 833,
+   "follow_share": 0.412,
+   "mean_fwd4h_ret_pct": 0.228,
+   "pct_fwd4h_positive": 0.477
+  },
+  "breakout_bo_30m_7d": {
+   "n": 401,
+   "follow_share": 0.394,
+   "mean_fwd4h_ret_pct": -0.014,
+   "pct_fwd4h_positive": 0.441
+  },
+  "breakout_bo_1h_7d": {
+   "n": 176,
+   "follow_share": 0.341,
+   "mean_fwd4h_ret_pct": -0.114,
+   "pct_fwd4h_positive": 0.415
+  },
+  "breakout_bo_4h_7d": {
+   "n": 46,
+   "follow_share": 0.152,
+   "mean_fwd4h_ret_pct": -0.578,
+   "pct_fwd4h_positive": 0.37
+  },
+  "breakout_bo_5m_14d": {
+   "n": 5984,
+   "follow_share": 0.455,
+   "mean_fwd4h_ret_pct": 0.429,
+   "pct_fwd4h_positive": 0.531
+  },
+  "breakout_bo_15m_14d": {
+   "n": 1934,
+   "follow_share": 0.435,
+   "mean_fwd4h_ret_pct": 0.453,
+   "pct_fwd4h_positive": 0.532
+  },
+  "breakout_bo_30m_14d": {
+   "n": 1027,
+   "follow_share": 0.405,
+   "mean_fwd4h_ret_pct": 0.218,
+   "pct_fwd4h_positive": 0.511
+  },
+  "breakout_bo_1h_14d": {
+   "n": 591,
+   "follow_share": 0.376,
+   "mean_fwd4h_ret_pct": 0.253,
+   "pct_fwd4h_positive": 0.521
+  },
+  "breakout_bo_4h_14d": {
+   "n": 189,
+   "follow_share": 0.238,
+   "mean_fwd4h_ret_pct": 0.042,
+   "pct_fwd4h_positive": 0.503
+  }
+ },
+ "breakout_follow_through": {
+  "5m": 0.417,
+  "15m": 0.412,
+  "30m": 0.394,
+  "1h": 0.341,
+  "4h": 0.152
+ },
+ "breakout_follow_through_definition": "7d window; 20-bar high breakout on the clock's own bars; follow = +1% high touched before -1% low within 4h (1 bar for 4h clock); ambiguous same-bar touches count as not following; 15m/30m resampled from 5m; 3d and 14d shares in metrics (breakout_bo_*)",
+ "favoured": [
+  "long_breakouts_fast",
+  "cash",
+  "momentum_ride_selective_residual_leaders"
+ ],
+ "evidence": [
+  "Efficiency ratio median 0.047 (1h) and 0.09 (4h) over 7d, 0.085/0.167 over 3d: path is almost all noise, not directional",
+  "3d EW pool -3.6% with 80% of coins down, but 7d EW +7.9% (BTC -0.45%) and 14d EW +31.5% (BTC +11%, all 25 coins up): pullback/consolidation inside a 2-week advance",
+  "Breadth: 0% of coins above their 4h 20-bar high now (7d avg 4.4%, 14d avg 9%); 44% above 4h SMA20; only 4% below 10-bar low, so not a breakdown",
+  "Realised 1h vol last 24h = 1.07x 30d median (BTC 0.50% vs 0.33% 30d median); EW index 1.11x: not a high-vol or quiet regime",
+  "Cross-sectional std of 24h returns 2.8% now vs 4.2% 30d median (7d mean 4.3%): dispersion compressed right now",
+  "PCA: PC1 = 60% (7d), 2.7 effective bets of 25, mean pair corr 0.56; market-neutral leaders WLD/NEAR/ENA (+6-7% residual), laggards AAVE/FIL/AVAX",
+  "Slow-clock breakouts are failing: 4h 7d follow 15% (n=46, mean fwd 4h -0.58%), 1h 34% (n=176); 3d 4h follow 31% (n=13)",
+  "Fast clocks less bad: 5m/15m follow 42%/41% (n=2776/833, 7d), 14d 5m mean fwd4h +0.43% but 3d -0.12%, i.e. fast edge fading with the recent pullback"
+ ],
+ "caveats": [
+  "4h breakout counts are small (n=13 over 3d, 46 over 7d, 189 over 14d); 3d results are noise-level",
+  "Follow-through has no random-entry baseline computed here; +1%/-1% first-touch on a 4h horizon is biased by clock size (5m bars carry a much smaller trigger move), so cross-clock comparison is not like-for-like",
+  "Breakouts across 25 coins are ~2.7 effective bets, so n is overstated and events cluster in time",
+  "14d window includes the strong advance, which dominates 14d stats; regime label reflects the last 3-7d",
+  "Regime label thresholds are judgement-based, not pre-registered; pool is 25 coins from Binance klines up to 2026-09-30 19:00 UTC close"
+ ]
+}

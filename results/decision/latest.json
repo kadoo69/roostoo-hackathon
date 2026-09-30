@@ -1,0 +1,28 @@
+{
+ "generated_utc": "2026-09-30T19:29:14.620342+00:00",
+ "valid_until_utc": "2026-10-01T07:29:14.620342+00:00",
+ "regime": "chop",
+ "regime_confidence": 0.6,
+ "allowed_styles": [
+  "1h|htf0|vol0",
+  "30m|htf0|vol0",
+  "blocks|1h",
+  "resid|30m",
+  "cash"
+ ],
+ "max_gross": 0.9,
+ "allow_shorts": false,
+ "target_lock": "on",
+ "notes": [
+  "shorts blocked by the risk review",
+  "flow confirmation not informative now (data review)",
+  "oi confirmation not informative now (data review)"
+ ],
+ "inputs_present": {
+  "regime": true,
+  "strategies": true,
+  "datapoints": true,
+  "risk": true
+ },
+ "ref": "DECISIONS.md#decision-point-2026-10-01"
+}

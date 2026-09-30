@@ -1,0 +1,212 @@
+{
+ "agent": "strategies",
+ "generated_utc": "2026-09-30T19:28:30Z",
+ "style_ranking": [
+  {
+   "style_id": "cash",
+   "score": 0.0,
+   "basis": "sim 0.00; every style negative on 3d sim at 19:13Z"
+  },
+  {
+   "style_id": "1h|htf0|vol0",
+   "score": -0.17,
+   "basis": "best sim; 1h whipsaw 4% (7d), but 1h live books -22k 7d/-15k 3d (n=115); slow-clock edge real historically"
+  },
+  {
+   "style_id": "oi|1h",
+   "score": -0.23,
+   "basis": "sim ~flat; new, zero live record, n tiny"
+  },
+  {
+   "style_id": "resid|30m",
+   "score": -0.69,
+   "basis": "sim near flat; new, zero live record"
+  },
+  {
+   "style_id": "blocks|1h",
+   "score": -1.0,
+   "basis": "sim -1.0; new, zero live record"
+  },
+  {
+   "style_id": "ride|+5%|24h",
+   "score": -1.56,
+   "basis": "sim -1.56; matching burst_15m/burst_strong_15m 7d +3.8k (n=107, win 61%, whip 5%) but 3d -3.4k"
+  },
+  {
+   "style_id": "30m|htf0|vol0",
+   "score": -3.17,
+   "basis": "sim -3.2; 30m live books 7d +5.1k (n=89, win 67%) but 3d -9.2k, post-reset n<=2"
+  },
+  {
+   "style_id": "flow|30m",
+   "score": -3.0,
+   "basis": "sim -3.0, no live record"
+  },
+  {
+   "style_id": "flow|1h",
+   "score": -3.2,
+   "basis": "sim -3.2, no live record"
+  },
+  {
+   "style_id": "1h|htf0|vol1.5",
+   "score": -2.547,
+   "basis": "sim -2.55"
+  },
+  {
+   "style_id": "30m|htf0|vol1.5",
+   "score": -4.504,
+   "basis": "sim -4.50"
+  },
+  {
+   "style_id": "resid|1h",
+   "score": -4.537,
+   "basis": "sim -4.54"
+  },
+  {
+   "style_id": "oi|30m",
+   "score": -5.234,
+   "basis": "sim -5.23"
+  },
+  {
+   "style_id": "short|1h",
+   "score": -5.332,
+   "basis": "sim -5.33 ; short books live 7d -10.0k (n=53), fee 38% of gross loss"
+  },
+  {
+   "style_id": "1h|htf1|vol1.5",
+   "score": -6.491,
+   "basis": "sim -6.49"
+  },
+  {
+   "style_id": "15m|htf0|vol1.5",
+   "score": -6.576,
+   "basis": "sim -6.58 ; 15m live 3d -11.7k, whipsaw 25%"
+  },
+  {
+   "style_id": "5m|htf1|vol0",
+   "score": -6.841,
+   "basis": "sim -6.84 ; 5m live 3d -8.2k, whipsaw 26%"
+  },
+  {
+   "style_id": "30m|htf1|vol0",
+   "score": -7.437,
+   "basis": "sim -7.44"
+  },
+  {
+   "style_id": "5m|htf0|vol0",
+   "score": -8.111,
+   "basis": "sim -8.11 ; 5m live 3d -8.2k, whipsaw 26%"
+  },
+  {
+   "style_id": "4h|htf0|vol0",
+   "score": -8.178,
+   "basis": "sim -8.18"
+  },
+  {
+   "style_id": "5m|htf0|vol1.5",
+   "score": -8.392,
+   "basis": "sim -8.39 ; 5m live 3d -8.2k, whipsaw 26%"
+  },
+  {
+   "style_id": "1h|htf1|vol0",
+   "score": -8.677,
+   "basis": "sim -8.68"
+  },
+  {
+   "style_id": "5m|htf1|vol1.5",
+   "score": -8.978,
+   "basis": "sim -8.98 ; 5m live 3d -8.2k, whipsaw 26%"
+  },
+  {
+   "style_id": "15m|htf0|vol0",
+   "score": -9.506,
+   "basis": "sim -9.51 ; 15m live 3d -11.7k, whipsaw 25%"
+  },
+  {
+   "style_id": "short|15m",
+   "score": -9.618,
+   "basis": "sim -9.62 ; short books live 7d -10.0k (n=53), fee 38% of gross loss"
+  },
+  {
+   "style_id": "4h|htf0|vol1.5",
+   "score": -10.018,
+   "basis": "sim -10.02"
+  },
+  {
+   "style_id": "30m|htf1|vol1.5",
+   "score": -10.077,
+   "basis": "sim -10.08"
+  },
+  {
+   "style_id": "15m|htf1|vol1.5",
+   "score": -10.155,
+   "basis": "sim -10.15 ; 15m live 3d -11.7k, whipsaw 25%"
+  },
+  {
+   "style_id": "15m|htf1|vol0",
+   "score": -11.277,
+   "basis": "sim -11.28 ; 15m live 3d -11.7k, whipsaw 25%"
+  },
+  {
+   "style_id": "blocks|30m",
+   "score": -11.699,
+   "basis": "sim -11.70"
+  }
+ ],
+ "enable": [
+  "cash",
+  "1h|htf0|vol0",
+  "oi|1h",
+  "resid|30m",
+  "blocks|1h",
+  "30m|htf0|vol0"
+ ],
+ "disable": [
+  "short|15m",
+  "short|1h",
+  "blocks|30m",
+  "5m|htf0|vol0",
+  "5m|htf0|vol1.5",
+  "5m|htf1|vol0",
+  "5m|htf1|vol1.5",
+  "15m|htf0|vol0",
+  "15m|htf0|vol1.5",
+  "15m|htf1|vol0",
+  "15m|htf1|vol1.5",
+  "30m|htf1|vol0",
+  "30m|htf1|vol1.5",
+  "1h|htf1|vol0",
+  "1h|htf1|vol1.5",
+  "oi|30m",
+  "resid|1h",
+  "flow|30m",
+  "flow|1h",
+  "4h|htf0|vol1.5"
+ ],
+ "fee_drag_pct_of_gross": 788,
+ "whipsaw_rate_by_clock": {
+  "5m": 0.27,
+  "15m": 0.25,
+  "30m": 0.09,
+  "1h": 0.04,
+  "4h": 0.0,
+  "burst15": 0.05,
+  "short15m": 0.02
+ },
+ "evidence": [
+  "Closed lots entered in last 7d (all 21 surviving books, n=1570): gross +4.8k, fees 37.5k, net -32.8k (fees = 7.9x net gross; fee_drag_pct_of_gross=788 is fees/gross).",
+  "Exits under 1h: n=426, net -28.9k, win 34%, whipsaw (<1h and losing) 63% of those; 1-3h holds net -69.5k (win 45%); 3-12h +25.8k (win 66%); >12h +39.8k (win 69%, fees only 1.5k).",
+  "By clock 7d net/3d net: 5m -2.1k/-8.2k (n=377, fees 6.7k); 15m -3.3k/-11.7k (n=584, fees 10.0k); 30m +5.1k/-9.2k (n=89); 1h -22.2k/-15.0k (n=115); 4h +4.0k/-8.0k (n=160, win 78%); burst15 +3.8k/-3.4k (n=107).",
+  "Shorts: short_pullback_15m -6.6k (n=39), short_accel_15m -3.4k (n=14); 3d -10.2k; win 40-43%.",
+  "Exit kinds 7d: stop/exit n=807 net -103.6k win 35%; skim (+3% ladder) n=377 net +73.4k win 99%; trim n=386 -2.5k with 13.6k fees.",
+  "wf_live 3d sim at 19:13Z: cash 0.0 beats all 29 styles; best 1h|htf0|vol0 -0.17, oi|1h -0.23, resid|30m -0.69, blocks|1h -1.0; worst blocks|30m -11.7, 15m|htf1|vol0 -11.3.",
+  "Post-reset live books (since 17:34Z): n=1 to 5 closed trades each (5m 5 trades -1.3k, whip 80%; 15m 3 trades -1.2k; 30m 1; rehearsal 2): no signal."
+ ],
+ "caveats": [
+  "Window is one falling/chop week; every clock lost over last 3d, so ranking mostly reflects regime, not style edge.",
+  "oi/resid/blocks/flow/ride have zero or tiny live record; scores are 3-day sims over 29 styles (selection bias).",
+  "Paper books include the booking-ladder skim, which inflates win rate; stopped books' last 7d ends 2026-09-30 19:00Z.",
+  "Clock-group numbers mix variants (e.g. 1h = allcash+long; 15m includes accel_15m and hold3h twins).",
+  "fee_drag 788 = fees / net gross P&L (gross is small); fees alone cost ~37.5k on ~4.8k gross."
+ ]
+}
