@@ -10,10 +10,12 @@ import pandas as pd
 
 from bot.blotter import DUST_NOTIONAL
 
-GROUPS = (("live", "LIVE on Roostoo - real orders"), ("core", "Core 4h"),
+GROUPS = (("live", "LIVE on Roostoo - real orders"), ("scalper", "PAPER - adaptive scalper vs fixed clocks"), ("core", "Core 4h"),
           ("momentum", "Short-term momentum"), ("burst", "Burst"), ("ab", "A/B tests"), ("short", "Short"))
 LIVE_BOOKS = {"competition", "competition_rehearsal"}
-DESK_GROUPS = ("live",)
+SCALPER_BOOKS = {"scalper_adaptive", "momentum_top3_5m", "momentum_top3_15m", "momentum_top3_30m"}
+DESK_GROUPS = ("live", "scalper")
+TOTALS_GROUPS = ("live",)
 AB_ARMS = {"momentum_top3_15m_eq", "momentum_top3_15m_hold3h",
            "momentum_top3_5m_hold2h", "burst_strong_15m", "momentum_top3_15m_slowexit"}
 STALE_S = 300
@@ -22,6 +24,8 @@ STALE_S = 300
 def group_of(name: str, interval: str | None) -> str:
     if name in LIVE_BOOKS:
         return "live"
+    if name in SCALPER_BOOKS:
+        return "scalper"
     if name.startswith("short_"):
         return "short"
     if name in AB_ARMS:
@@ -74,12 +78,27 @@ def positions(b: dict) -> list[dict]:
     return out
 
 
+def adaptive_clock(name: str) -> str | None:
+    """The clock an adaptive book is trading now, from its `adaptive.json`.
+    DECISIONS.md#scalper-adaptive-declaration"""
+    import json
+
+    from bot.settings import ROOT
+    f = ROOT / "live" / name / "adaptive.json"
+    try:
+        return json.loads(f.read_text()).get("clock")
+    except (OSError, ValueError):
+        return None
+
+
 def book(b: dict, by_name: dict) -> dict:
     m = b.get("meta") or {}
     st = b.get("blotter") or {}
     curve = b.get("equity_curve") or []
     step = max(1, len(curve) // 60)
-    return {"bot": b["bot"], "group": group_of(b["bot"], m.get("interval")), "clock": m.get("interval"),
+    auto = adaptive_clock(b["bot"]) if b["bot"] == "scalper_adaptive" else None
+    return {"bot": b["bot"], "group": group_of(b["bot"], m.get("interval")),
+            "clock": f"auto: {auto}" if auto else m.get("interval"),
             "description": m.get("description"), "live": bool(b.get("live")),
         "waiting_for_account": bool(b.get("waiting_for_account")), "last_poll": b.get("last_poll"),
             "age_s": b.get("seconds_since_cycle"), "equity": b.get("equity"), "net": b.get("pnl"),
@@ -182,7 +201,7 @@ def payload(snap: dict) -> dict:
     shown = [b for b in snap["bots"] if group_of(b["bot"], (b.get("meta") or {}).get("interval")) in DESK_GROUPS]
     books = [book(b, by_name) for b in shown]
     books.sort(key=lambda b: -(b["ret_pct"] or 0.0))
-    live = [b for b in books if b["equity"] is not None]
+    live = [b for b in books if b["equity"] is not None and b["group"] in TOTALS_GROUPS]
     total = {"net": round(sum(b["net"] or 0.0 for b in live)), "realised": round(sum(b["realised"] or 0.0 for b in live)),
              "open": round(sum(b["open"] or 0.0 for b in live)), "books": len(live),
              "up": sum(1 for b in live if (b["net"] or 0) > 0), "down": sum(1 for b in live if (b["net"] or 0) < 0),

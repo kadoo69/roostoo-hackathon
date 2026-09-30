@@ -19,7 +19,7 @@ def test_groups_follow_the_book_role():
     assert desk.group_of("burst_strong_15m", "15m") == "ab"
     assert desk.group_of("burst_5m", "5m") == "burst"
     assert desk.group_of("donchian_4h", "4h") == "core"
-    assert desk.group_of("momentum_top3_30m", "30m") == "momentum"
+    assert desk.group_of("momentum_top3_30m", "30m") == "scalper" and desk.group_of("momentum_top3_1h_long", "1h") == "momentum"
 
 
 def test_ab_delta_measures_the_control_from_the_arm_start_not_from_its_own():
@@ -43,6 +43,7 @@ def test_positions_carry_open_pnl_from_cost_basis_and_mark():
 
 def test_payload_totals_exposure_and_alerts(monkeypatch):
     monkeypatch.setattr(desk, "DESK_GROUPS", tuple(k for k, _ in desk.GROUPS))
+    monkeypatch.setattr(desk, "TOTALS_GROUPS", tuple(k for k, _ in desk.GROUPS))
     snap = {"generated": "2026-09-26T18:00:00+00:00", "breadth": {},
             "bots": [_bot("momentum_top3_30m", 112000.0, realised=9000.0, open_pnl=3000.0, interval="30m",
                           positions={"WLDUSDT": 0.5}, marks={"WLDUSDT": 0.5}),
@@ -73,7 +74,7 @@ def test_closed_feed_is_newest_first_and_cut_where_a_truncated_book_stops():
     f = desk.closed_feed([busy, quiet])
     assert f["complete_since"] == "2026-09-27T09:00:00+00:00"
     assert [t["symbol"] for t in f["trades"]] == ["NEAR", "LTC", "WLD"]
-    assert f["trades"][0]["group"] == "momentum" and f["trades"][1]["group"] == "core"
+    assert f["trades"][0]["group"] == "scalper" and f["trades"][1]["group"] == "core"
     assert f["trades"][0]["notional"] == 200 and f["trades"][0]["net"] == 50.0
 
 
@@ -103,7 +104,7 @@ def test_live_books_lead_their_own_group_and_stay_out_of_paper_totals():
     from bot import desk
     assert desk.GROUPS[0][0] == "live"
     assert desk.group_of("competition", "30m") == "live"
-    assert desk.group_of("momentum_top3_30m", "30m") == "momentum"
+    assert desk.group_of("momentum_top3_30m", "30m") == "scalper" and desk.group_of("momentum_top3_1h_long", "1h") == "momentum"
     waiting = {"bot": "competition", "waiting_for_account": True, "last_poll": "2026-09-30T15:00:00",
                "age_s": None, "drawdown_pct": None}
     assert "not active yet" in desk.alerts([waiting])[0]["text"]
@@ -115,5 +116,6 @@ def test_desk_shows_only_the_competition_books():
         {"bot": "competition", "meta": {"interval": "30m"}, "waiting_for_account": True, "last_poll": "2026-09-30T15:00:00"},
         {"bot": "momentum_top3_30m", "meta": {"interval": "30m"}, "equity": 100.0}]}
     out = desk.payload(snap)
-    assert [b["bot"] for b in out["books"]] == ["competition"]
-    assert [g["key"] for g in out["groups"]] == ["live"]
+    assert [b["bot"] for b in out["books"]] == ["competition", "momentum_top3_30m"]
+    assert [g["key"] for g in out["groups"]] == ["live", "scalper"]
+    assert out["totals"]["books"] == 0

@@ -4233,3 +4233,13 @@ Method: 2,297 closed lots collapsed to 1,114 long positions, grouped into 418 en
 - The strongest separators were breadth (Spearman -0.115) and BTC 24h return (-0.108): the best entries came when the whole market was less extended. At n = 418 that is z = 2.35, below the 2.87 a twelve-feature Bonferroni test needs, so it is not significant. It also belongs to dead families: ranking on the residual is destructive (`idio_40`, -67% worst window) and market crowding gates are null (`#positioning-edges-outcome`). Not tested further.
 - Winners were held a median 5.5 h and losers 2.2 h, which is the exit rule at work, not a choice; slower exits were tested and are null (`#competition-exit-outcome`).
 Implication: the rule earns by being in the market when one of a handful of big trends starts. The lever that matters is not a filter but never missing those entries, which is uptime (the fleet was offline ~69% of the time); EC2 is the fix.
+
+## scalper-adaptive-declaration
+
+Operator instruction 2026-09-30: a short-term scalper with dynamic adjusting, making trades, on paper side by side with the competition book.
+Evidence stated before launch: no 5m history is cached, so the book is untested; sub-15-minute trades had no gross edge live (+4.8 bps against 12.2 bps of fees, `#min-hold-5m`); fixed 5m books lost in the offline replay (`#fleet-review-2026-09-26`); the adaptive-clock analogue on 15m/30m/1h was a near-miss (`#adaptive-clock-outcome`).
+Rule (`config/scalper_adaptive.yaml`, `bot/scalper_adaptive_run.py`): the bot runs on 5m bars; every 60 minutes it replays the live contenders rules of `momentum_top3_5m`, `momentum_top3_15m` and `competition` (30m) on the last 7 days of Binance bars with `gates.let_winners_run.simulate` (ladder, 5 bps fee, tick) and trades the clock with the best trailing return, keeping the current clock unless another leads it by at least 1 point.
+A slower clock's weights reach the 5m book by bar close time (`signals.exit_clock.to_fast`); its minimum hold is converted to 5m bars; entry guard, ladder and kill switches are inherited unchanged; long only, lock off.
+Paper only. Side-by-side controls on the desk: the fixed-clock twins `momentum_top3_5m`, `momentum_top3_15m`, `momentum_top3_30m`.
+Stop rule: after 7 live days, if it trails the best fixed-clock twin on return, it is stopped.
+`bot.feed.closed_bars` now pages backwards past Binance's 1,000-bar limit so a 7-day 5m window can be read.

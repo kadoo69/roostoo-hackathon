@@ -42,8 +42,11 @@ def binance_get(path: str, **kw):
     return r
 
 
-def klines(symbol: str, interval: str, limit: int = 500) -> pd.DataFrame:
-    r = binance_get("/klines", params={"symbol": symbol, "interval": interval, "limit": limit})
+def klines(symbol: str, interval: str, limit: int = 500, end_ms: int | None = None) -> pd.DataFrame:
+    params = {"symbol": symbol, "interval": interval, "limit": limit}
+    if end_ms is not None:
+        params["endTime"] = end_ms
+    r = binance_get("/klines", params=params)
     r.raise_for_status()
     rows = r.json()
     if not rows:
@@ -57,7 +60,18 @@ def klines(symbol: str, interval: str, limit: int = 500) -> pd.DataFrame:
 
 
 def closed_bars(symbol: str, interval: str, limit: int = 500, asof: dt.datetime | None = None) -> pd.DataFrame:
-    f = klines(symbol, interval, limit)
+    """Closed bars; more than Binance's 1,000 per request are paged backwards with `endTime`.
+    DECISIONS.md#scalper-adaptive-declaration"""
+    f = klines(symbol, interval, min(limit, 1000))
+    while len(f) < limit:
+        try:
+            older = klines(symbol, interval, min(limit - len(f), 1000),
+                           end_ms=int(f["open_time"].iloc[0].timestamp() * 1000) - 1)
+        except FeedError:
+            break
+        f = pd.concat([older, f], ignore_index=True)
+        if len(older) < 1000:
+            break
     now = asof or dt.datetime.now(dt.timezone.utc)
     return f[f["close_time"] <= now].reset_index(drop=True)
 
