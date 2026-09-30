@@ -1,0 +1,67 @@
+[
+ {
+  "coin": "BNB",
+  "price": 766.49,
+  "entry_30m": 1.33,
+  "entry_1h": 1.33,
+  "exit_30m": -0.1,
+  "exit_5m": 0.05,
+  "atr_1h_pct": 0.75,
+  "vwap_24h_pct": -0.07,
+  "hi_24h_pct": 1.69,
+  "lo_24h_pct": -1.67,
+  "rsi_1h": 54.9
+ },
+ {
+  "coin": "ENA",
+  "price": 0.2645,
+  "entry_30m": 4.84,
+  "entry_1h": 4.84,
+  "exit_30m": -0.83,
+  "exit_5m": -1.17,
+  "atr_1h_pct": 3.3,
+  "vwap_24h_pct": -0.98,
+  "hi_24h_pct": 6.28,
+  "lo_24h_pct": -7.83,
+  "rsi_1h": 56.3
+ },
+ {
+  "coin": "NEAR",
+  "price": 5.356,
+  "entry_30m": 1.68,
+  "entry_1h": 1.21,
+  "exit_30m": -3.64,
+  "exit_5m": -0.3,
+  "atr_1h_pct": 2.97,
+  "vwap_24h_pct": -3.06,
+  "hi_24h_pct": 2.8,
+  "lo_24h_pct": -9.8,
+  "rsi_1h": 65.3
+ },
+ {
+  "coin": "WLD",
+  "price": 0.5302,
+  "entry_30m": 6.75,
+  "entry_1h": 3.83,
+  "exit_30m": -0.4,
+  "exit_5m": -1.06,
+  "atr_1h_pct": 3.24,
+  "vwap_24h_pct": -0.98,
+  "hi_24h_pct": 7.73,
+  "lo_24h_pct": -10.02,
+  "rsi_1h": 58.0
+ },
+ {
+  "coin": "XLM",
+  "price": 0.2262,
+  "entry_30m": 1.9,
+  "entry_1h": 1.9,
+  "exit_30m": -2.03,
+  "exit_5m": -0.66,
+  "atr_1h_pct": 1.62,
+  "vwap_24h_pct": -0.71,
+  "hi_24h_pct": 2.65,
+  "lo_24h_pct": -3.09,
+  "rsi_1h": 53.0
+ }
+]

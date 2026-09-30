@@ -30,7 +30,8 @@ contenders:
 strategy:
   interval: 5m
   entry_bars: 20
-  exit_bars: 10
+  exit_bars: 36
+  exit_bars_changed: '2026-10-01 operator: hold longer to stop whipsaws, exit below the 3 h low instead of the 50-minute low, DECISIONS.md#five-minute-slower-exit-2026-10-01'
   top_n_pool: 30
   ranking_rule: momentum
   n_positions: 3

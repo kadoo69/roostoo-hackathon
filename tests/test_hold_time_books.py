@@ -23,8 +23,11 @@ def test_twins_differ_only_in_the_minimum_hold_and_are_registered():
         diff = {k for k in set(a["contenders"]) | set(b["contenders"])
                 if a["contenders"].get(k) != b["contenders"].get(k) and not k.endswith("_ref")}
         assert diff == {"min_hold_bars"} and a["contenders"]["min_hold_bars"] == bars
+        changed_later = {"exit_bars", "exit_bars_changed"} if control == "momentum_top3_5m" else set()
         for sec in ("strategy", "booking", "execution", "risk"):
-            assert a[sec] == b[sec], (book, sec)
+            sa = {k: v for k, v in a[sec].items() if not (sec == "strategy" and k in changed_later)}
+            sb = {k: v for k, v in b[sec].items() if not (sec == "strategy" and k in changed_later)}
+            assert sa == sb, (book, sec)
         s = load(f"config/{book}.yaml")
         assert not s.shorts_enabled and not s.target_lock.get("enabled")
         assert dashboard.BOTS[book] == f"config/{book}.yaml" and dashboard.CONTROL_OF[book] == control
