@@ -111,9 +111,9 @@ Run the live books locally (real orders):
 Deploy to EC2 (Session Manager shell, no SSH):
 
 ```bash
-export REPO_URL=https://github.com/<you>/roostoo-hackathon.git
+export REPO_URL=https://github.com/kadoo69/roostoo-hackathon.git
 export ROOSTOO_COMP_API_KEY=... ROOSTOO_COMP_SECRET_KEY=... ROOSTOO_TEST_API_KEY=... ROOSTOO_TEST_SECRET_KEY=...
-curl -fsSL https://raw.githubusercontent.com/<you>/roostoo-hackathon/main/deploy/ec2_bootstrap.sh | sudo -E bash
+curl -fsSL https://raw.githubusercontent.com/kadoo69/roostoo-hackathon/main/deploy/ec2_bootstrap.sh | sudo -E bash
 ```
 
 The bootstrap installs Python, clones this repo to `/opt/roostoo-hackathon`, writes `.env` (mode 600), runs the pre-flight and tests, and starts each book as a systemd service that restarts on failure and on reboot.

@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # One-shot EC2 setup for the live Roostoo books. Paste into an AWS Session Manager shell:
 #
-#   export REPO_URL=https://github.com/<you>/roostoo-hackathon.git
+#   export REPO_URL=https://github.com/kadoo69/roostoo-hackathon.git
 #   export ROOSTOO_COMP_API_KEY=... ROOSTOO_COMP_SECRET_KEY=...
 #   export ROOSTOO_TEST_API_KEY=... ROOSTOO_TEST_SECRET_KEY=...
-#   curl -fsSL https://raw.githubusercontent.com/<you>/roostoo-hackathon/main/deploy/ec2_bootstrap.sh | sudo -E bash
+#   curl -fsSL https://raw.githubusercontent.com/kadoo69/roostoo-hackathon/main/deploy/ec2_bootstrap.sh | sudo -E bash
 #
 # Idempotent: re-running pulls the latest commit and restarts the books.
 # BOOKS defaults to the competition book and its test-account rehearsal.
