@@ -4,11 +4,12 @@ Lean on purpose: loaded into every agent session. Detail lives in the files it p
 
 ## What this is
 
-Trading bots for the Roostoo crypto competition: live window **2026-10-04 to 2026-10-17**, 100,000 USD paper capital (the venue's exchangeInfo says 50,000 - unconfirmed), 1x, spot long plus venue shorts.
+Trading bots for the Roostoo crypto competition. **The main round started 2026-09-30; first trade due 2026-10-01 12:00 UTC** (official FAQ; the event page's 10-04..17 is stale). Roostoo account = 50,000 USD, fees measured 0.10% taker / 0.05% maker.
 **Screen 2** ranks raw 14-day return, top 20 per region advance. **Screen 3** ranks survivors on `0.4*Sortino + 0.3*Sharpe + 0.3*Calmar`. **Screen 1** is rule and trade-log compliance.
-Past Roostoo events: top three finished +20.5%, +8.1%, +5.7%, so qualifying needs roughly a positive fortnight and winning roughly +17 to 20%.
+Rules (FAQ): 30 API calls/min all endpoints, EC2 Sydney via Session Manager, public GitHub repo, every live change committed, **no manual stop, override or trade on the competition account**.
 
-Signals come from Binance klines (Roostoo mirrors Binance at ~0 bps); orders go to Roostoo. **Roostoo API keys are not issued yet**, so every Roostoo book runs in dry run; `testnet_live` places real orders on Binance testnet.
+**Live since 2026-09-30:** `competition` (the `momentum_top3_30m` rule, lock off, comp keys) and `competition_rehearsal` (same rule, test keys) place REAL Roostoo orders via `./run_bots.sh live`; keys live in `.env` as `ROOSTOO_{TEST,COMP}_*`, picked by each config's `meta.keyset`. Everything else is paper. Deploy: `deploy/ec2_bootstrap.sh`; read-only check: `python3 -m gates.preflight`. `DECISIONS.md#roostoo-keys-2026-09-30`, `#competition-book-2026-09-30`.
+Never run the `competition` book on two hosts at once (Mac and EC2 would both trade one account).
 
 ## The strategy
 

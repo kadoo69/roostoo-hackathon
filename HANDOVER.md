@@ -2,6 +2,14 @@
 
 Current state only. The full history of sessions to 2026-09-23 is archived at `docs/archive/HANDOVER_2026-09-23.md`; older section references in code and configs point there.
 
+## Session 2026-09-30: LIVE on Roostoo (read first)
+
+- Official FAQ: round started 2026-09-30, first trade due 2026-10-01 12:00 UTC; 30 calls/min; EC2 Sydney via Session Manager; public repo; no manual stop/override/trade. Data Sources Pack = Binance Vision, CryptoDataDownload, CoinAPI (nothing new for research; added `data-api.binance.vision` failover).
+- Keys issued and in `.env`. Test account 50,000 USD. **Competition key answers "not yet a member of this competition"** as of 14:25Z; the `competition` book logs `wallet_unavailable` every poll and will start trading on the first successful wallet read. Ask the organisers if it is still inactive near the deadline.
+- `gates/roostoo_smoke.py` measured fees (0.10% taker, 0.05% maker) and found four live-API mismatches, all fixed with regression tests (`#roostoo-keys-2026-09-30`).
+- Operator chose `momentum_top3_30m`, lock OFF (`#competition-book-2026-09-30`). `competition` + `competition_rehearsal` started on the Mac at 14:22Z with `./run_bots.sh live`.
+- Next: `gh auth login`, create the public repo, push `main` + tag; accept AWS invite, run `deploy/ec2_bootstrap.sh` in Session Manager, then `./run_bots.sh livestop` on the Mac (never both hosts); watch the first real fills on the rehearsal book.
+
 ## Session summary 2026-09-25..27 (read first)
 
 **Fleet (19 books + testnet):** core 4h `donchian_4h`, `momentum_top3_full`, `momentum_top3_lock`; short-term `momentum_top3_30m/15m/5m`, `momentum_top3_30m_allcash`, `momentum_top3_1h_allcash`, `momentum_top3_1h_long` (other session), `accel_15m`; burst `burst_5m`, `burst_15m`; A/B arms `burst_strong_15m`, `momentum_top3_15m_eq`, `momentum_top3_15m_hold3h`, `momentum_top3_5m_hold2h`, `momentum_top3_15m_slowexit`; shorts `short_accel_15m`, `short_pullback_15m`. All short-term longs: shorts off, target lock off, ladder on. A/B stop rules fall due 2026-10-10/11.
