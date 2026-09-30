@@ -7,7 +7,6 @@ from __future__ import annotations
 import argparse
 import json
 
-import pandas as pd
 import yaml
 
 from bot import feed
