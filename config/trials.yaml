@@ -6043,3 +6043,23 @@ trials:
   config: residual_spread:RS48
   status: fail
   note: DECISIONS.md#residual-spread-outcome
+- signal: sizing
+  gate: sizing_competition
+  config: sizing_competition:EQ
+  status: fail
+  note: DECISIONS.md#sizing-competition-outcome
+- signal: sizing
+  gate: sizing_competition
+  config: sizing_competition:CAP33
+  status: fail
+  note: DECISIONS.md#sizing-competition-outcome
+- signal: sizing
+  gate: sizing_competition
+  config: sizing_competition:VT
+  status: fail
+  note: DECISIONS.md#sizing-competition-outcome
+- signal: sizing
+  gate: sizing_competition
+  config: sizing_competition:N2
+  status: fail
+  note: DECISIONS.md#sizing-competition-outcome

@@ -4542,3 +4542,20 @@ Operator request 2026-10-01: in-depth analysis of technicals (SMA, EMA, mean rev
 Live window, total (UP / NEUTRAL / DOWN contributions): buy and hold +13.6% on 30m (+5.2 / +11.7 / -3.2) and +13.8% on 1h; EMA 12/26 cross +14.1% on 30m; VWAP-48 reversion +15.4% on 1h (-0.1 / +17.9 / -2.0); Bollinger reversion +10.3% on 1h; Donchian 20/10 +5.8% on 30m and +7.8% on 1h; SMA 20/50 trend +3.6% on 30m and -10.9% on 15m; RSI 30/50 reversion -2.0% on 30m. No rule beat buying and holding the pool in this window. Every rule lost in the DOWN state (-1.0% to -13.8%), and the 15m versions were the worst.
 History disagrees on both counts. On the 2025-26 holdout every one of these rules has a negative median 14-day return on 30m after costs (SMA -8.9%, VWAP trend -9.6%, VWAP reversion -5.1%, Donchian -4.5%, Bollinger -4.3%, EMA -4.0%, RSI -2.5%), against buy and hold +1.0% and the competition contenders rule +1.1% (`#stress-harness-declaration`). And after a DOWN state the equal-weight pool's next 4 hours averaged +23.9 bps in 2023-24, -4.0 in 2025-26 and +23.3 in 2026-06..09: historically a confirmed broad 4 h drop is followed by a rebound more often than by more falling, which is why every short sleeve failed and is evidence against the regime book's short side (`#regime-ls-declaration`).
 Reading: plain textbook rules are worse than the competition rule's ranked, filtered breakout on history; in the last 12 days the rally lifted everything long and nothing beat holding the market. Nothing here earns a change; the regime book keeps running on paper as declared, now with this prior against it.
+
+## sizing-competition-declaration
+
+Operator instruction 2026-10-01: size positions to maximise portfolio value. Declared in `config/sizing_competition.yaml` before any number: the competition rule's entries and exits unchanged, sized four ways against the live momentum-proportional sizing: equal weight, a 0.33 cap per name, book-level volatility targeting with a fit-period target, and two names instead of three. An arm is recommended only if it beats the live sizing on both the 2025-26 holdout median and the unseen recent live window, with the worst window within 3 pp and Screen 3 not lower.
+
+## sizing-competition-outcome
+
+No arm passes the declared rule (`results/sizing_competition.json`, `python3 -m gates.sizing_competition`). Median 14-day return fit / holdout / recent, worst holdout window, holdout Screen 3, and the unseen live window 2026-09-19..now:
+| arm | fit | holdout | recent | holdout worst | holdout Screen 3 | live window |
+|---|---|---|---|---|---|---|
+| C0 live sizing | -0.76% | +1.13% | +0.19% | -22.3% | 2.13 | +6.72% |
+| equal weight | -1.14% | +1.03% | -0.54% | -22.3% | 1.90 | +10.17% |
+| 0.33 cap | -0.18% | +1.52% | +0.67% | -17.2% | 2.77 | +5.87% |
+| volatility target | +0.27% | +1.33% | +0.61% | -16.6% | 2.62 | +3.20% |
+| two names | -0.71% | +1.45% | +1.22% | -27.8% | 2.35 | +1.23% |
+The 0.33 cap and the volatility target improve the median, the worst window (5-6 pp shallower) and Screen 3 in every historical period, but hold more cash and trail the live sizing in the unseen rally window (+5.87% and +3.20% against +6.72%), so they fail the declared rule. Equal weight wins the live window only and loses history; two names raises the median and deepens the worst window, as before (`#max-return-levers-outcome`).
+Reading: the 0.33 cap is the strongest risk-adjusted sizing on history at a cost of under a point in a rally; whether that trade suits the competition (Screen 2 ranks raw return, Screen 3 risk-adjusted among survivors) is an operator decision. The live sizing stays.

@@ -1,0 +1,21 @@
+meta:
+  name: sizing_competition
+  frozen: true
+  declared_utc: '2026-10-01T13:30:00Z'
+  requested_by: 'operator 2026-10-01: do the position sizing appropriately and check what works best; we need to maximise portfolio value'
+  declared_ref: DECISIONS.md#sizing-competition-declaration
+  written_before_any_number: true
+prior: 'strength sizing beats random sizes (#lowtf-contenders-outcome); inverse-vol worse than equal weight (#topdown-ls-outcome); top2/top1 trade median for tail (#max-return-levers-outcome); gross is capped at 1.0 on spot (#sizing-sweep-outcome); strength and volatility tilts failed today (#strength-tilt-outcome)'
+base: 'C0 = the live competition rule (momentum-proportional weights, 0.5 cap, gross up to 1), same entries and exits in every arm'
+arms:
+  EQ: equal weight across the held names, same gross as C0, 0.5 cap
+  CAP33: momentum-proportional with a 0.33 cap per name (what cannot be placed stays in cash)
+  VT: C0 scaled each bar by min(1, target / trailing 48-bar realised volatility of C0's own returns), floor 0.3; target = the median of that volatility over the fit period (a fixed constant)
+  N2: the rule with 2 names instead of 3
+metric: 'maximise portfolio value: median 14-day return, with the worst window and Screen 3 as constraints'
+decision_rule: >
+  An arm is RECOMMENDED over C0 only if its median 14-day return is higher than C0's on BOTH the 2025-26 holdout
+  and the unseen recent live window 2026-09-19..now (whole-window return there), its holdout worst 14-day window is
+  no more than 3 pp worse, and its holdout median Screen 3 is not lower. Fit 2023-24 is reported. Changing the
+  competition book stays an operator decision.
+trials: 4
