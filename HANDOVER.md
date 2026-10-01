@@ -22,12 +22,14 @@ Current state only. The full history of sessions to 2026-09-23 is archived at `d
 | `resid_30m` | paper: competition rule on market-neutral prices, 4h filter off | 12:15Z |
 | `htf0_30m` | paper: competition rule with the 4h filter off | 12:15Z |
 | `ride1_5m` | paper: momentum ride with a 1% trigger (control `ride_5m`) | 12:17Z |
+| `wide_30m` | paper: competition rule on the whole Roostoo pool (~64 coins), control `momentum_top3_30m` (`#wide-pool-live-2026-10-01`) | 19:24Z |
+| `ride1_wide_5m` | paper: 1% ride on the whole pool, control `ride1_5m` | 19:24Z |
 Retired today: `momentum_top3_15m`, `momentum_top3_5m` (`#retired-2026-10-01`; configs stay, wf_live uses them).
 
 ### Fixed today (all committed, all books restarted on them)
 - Stale path entries are dropped on every decision, not only after a start or catch-up (`#stale-rebuy-2026-10-01`): the one-bar-late rebuy cost -5.4k on paper and would have been the competition account's first trade.
 - Roostoo cancel sends order_id or pair, never both (`#cancel-both-args-2026-10-01`): the venue rejected every stale-order cancel, which tripped the error-rate halt and liquidated the rehearsal at 07:06Z.
-- Ride books ran on ghost slots (`#ride-ghost-slots-2026-10-01`, commit c6804a9): the replayed ride path filled its 3 slots with entries the book never took, so `ride_5m`, `ride1_5m`, `blend_30m_ride` and `wf_live` averaged 2-17% gross. They now decide from their real positions (`burst_rider.live_step`, state in `live/<book>/ride_state.json`). **Takes effect only after these four books are restarted** (operator: `CONFIGS="config/ride_5m.yaml config/ride1_5m.yaml config/blend_30m_ride.yaml config/wf_live.yaml" ./run_bots.sh restart`, just after a 5m close).
+- Ride books ran on ghost slots (`#ride-ghost-slots-2026-10-01`, commit c6804a9): the replayed ride path filled its 3 slots with entries the book never took, so `ride_5m`, `ride1_5m`, `blend_30m_ride` and `wf_live` averaged 2-17% gross. They now decide from their real positions (`burst_rider.live_step`, state in `live/<book>/ride_state.json`). Live since the restart of those four books at 19:23Z; the blend's ride sleeve was not seeded, so it sold its open PUMP on restart.
 - Fault handling (`#live-faults-2026-10-01`): error rate over the last 40 venue calls; venue/ticker/mirror faults FREEZE the book instead of liquidating (only the 25% drawdown kill liquidates); mirror checks only held coins; last-known marks for unquoted coins; held coins survive a universe refresh; no resubmit after a failed pending query; an ambiguous submission reconciles every cycle and the process restarts after 10 failures.
 
 ### Research today (all in DECISIONS.md, all nulls recorded)
