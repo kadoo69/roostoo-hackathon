@@ -17,7 +17,8 @@ import numpy as np
 import pandas as pd
 
 from bot import feed
-from bot.scalper_adaptive_run import CASH, MINUTES, WARMUP_BARS, AdaptiveScalperBot, clock_weights, frames_to
+from bot.scalper_adaptive_run import (CASH, MINUTES, WARMUP_BARS, AdaptiveScalperBot, bars_needed, clock_weights,
+                                     frames_to)
 from bot.settings import ROOT, load
 from gates.let_winners_run import simulate
 from signals import burst_rider
@@ -112,7 +113,14 @@ class HedgeExplorerBot(AdaptiveScalperBot):
             except Exception as exc:                      # noqa: BLE001
                 self.journal.write("errors", {"event": "hedge_update_failed", "error": repr(exc)})
         clocks = {v["clock"] for v in self.variants.values()}
-        ws, data = self.variant_frames(cols, {iv: WARMUP_BARS + 60 for iv in clocks})
+        bars = {iv: max([WARMUP_BARS + 60] + [bars_needed(v) for v in self.variants.values() if v["clock"] == iv])
+                for iv in clocks}
+        ws, data = self.variant_frames(cols, bars)
+        for vid, v in self.variants.items():
+            if v.get("type") == "burst":
+                close, _, high = data[v["clock"]]
+                closed = close.index <= m.index[-1]
+                ws[vid] = self.ride_target(vid, close.loc[closed], high.loc[closed], prices, seed=False)
         on5 = {}
         for vid, w in ws.items():
             iv = self.variants[vid]["clock"]

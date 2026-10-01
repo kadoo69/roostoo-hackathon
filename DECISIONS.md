@@ -4559,3 +4559,18 @@ No arm passes the declared rule (`results/sizing_competition.json`, `python3 -m 
 | two names | -0.71% | +1.45% | +1.22% | -27.8% | 2.35 | +1.23% |
 The 0.33 cap and the volatility target improve the median, the worst window (5-6 pp shallower) and Screen 3 in every historical period, but hold more cash and trail the live sizing in the unseen rally window (+5.87% and +3.20% against +6.72%), so they fail the declared rule. Equal weight wins the live window only and loses history; two names raises the median and deepens the worst window, as before (`#max-return-levers-outcome`).
 Reading: the 0.33 cap is the strongest risk-adjusted sizing on history at a cost of under a point in a rally; whether that trade suits the competition (Screen 2 ranks raw return, Screen 3 risk-adjusted among survivors) is an operator decision. The live sizing stays.
+
+## ride-ghost-slots-2026-10-01
+
+Operator question 2026-10-01 14:40Z: `ride1_5m` is in profit, why is its position size so small.
+It held one name at a third of the book (gross 0.34, 66.8k cash) while its declared rule fills three slots.
+Cause, confirmed in the journals: the live target was the last row of `burst_rider.weights` replayed over a rolling window, and that path filled its three slots with entries the book never took.
+At the 12:17Z cold start the path already held PUMP, UNI and WLD; the stale-entry guard (`#stale-rebuy-2026-10-01`) correctly refused to buy them, but the path kept them for up to 24 h, so a fresh trigger found no free slot.
+As the window rolled the path also reshuffled (UNI at 13:05, PUMP at 13:25 and WLD at 14:10 reappeared as already-held entries, and NEAR was dropped at 13:45 without reaching +5% or 24 h), so the book's exits were artifacts too.
+Every ride book was affected: average gross on 2026-10-01 was 0.17 (`ride1_5m`), 0.03 (`ride_5m`), 0.02 (`blend_30m_ride`) and 0.04 (`wf_live` on the ride), against about 1.0 for the replayed rule; stale blocks 30, 64, 38 and 94.
+`blend_30m_ride` also replayed only 160 bars for a 288-bar hold.
+Fix (paper books only): `signals.burst_rider.live_step` decides each bar from the book's real ride positions (entry bar and entry close, cooldown by last entry); the state is kept per arm in `live/<book>/ride_state.json` before and after the last decided bar, an entry the book does not hold is dropped and never bought late, a style switch clears it, and pure ride books seed it from their held longs.
+`tests/test_burst_rider_live.py`: bar-for-bar parity with `weights()` on random panels, with the full history and with only the hold window, plus the ghost-slot, downtime-exit, unfilled-entry, re-decision and seeding cases.
+Replay of the fixed rule on live bars from the `ride1_5m` start (12:15Z) to 14:40Z: mean gross 0.62, three entries (ENA, NEAR, ARB), return -1.36% against the book's actual +0.72%; the actual profit came from the artifact exit that freed a slot for AAVE.
+Two and a half hours is noise; the point is that the books now run the declared rule, so their 7-day comparisons measure the rule.
+Open, not changed: the contenders books show the same mechanism after a cold start (sticky slots keep a path entry until its channel exit; `competition_rehearsal` had a ghost on 9 of 23 decisions today, `resid_30m` on 30 of 30). The competition book places real orders, so a change there is an operator decision.

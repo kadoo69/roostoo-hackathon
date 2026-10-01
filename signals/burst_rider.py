@@ -41,3 +41,48 @@ def weights(close: pd.DataFrame, high: pd.DataFrame, cfg: dict) -> pd.DataFrame:
                 entry[j], age[j], last[j] = c[t, j], 0, t
         out[t] = np.where(~np.isnan(entry), 1.0 / n, 0.0)
     return pd.DataFrame(out, index=close.index, columns=close.columns)
+
+
+def live_step(close: pd.DataFrame, high: pd.DataFrame, cfg: dict, held: dict[str, list],
+              last: dict[str, str]) -> tuple[dict[str, list], dict[str, str], dict[str, float]]:
+    """One decision of the ride at the last bar of `close`, from the book's real ride positions.
+
+    A live book cannot follow `weights()`: its path fills the slots with entries the book never
+    took (blocked at a start, or reshuffled as the replay window moves), and those ghost slots stop
+    every new entry (`DECISIONS.md#ride-ghost-slots-2026-10-01`). Here the slots are the positions
+    the book holds. `held[s] = [entry bar, entry close]`, `last[s]` = the bar of the last entry
+    (cooldown). Ages count bars by time, so the exit after downtime uses every bar since the entry.
+    Same rule as `weights()`, bar for bar (`tests/test_burst_rider_live.py`).
+    """
+    thresh = float(cfg.get("thresh_pct", 2.0)) / 100
+    tp = float(cfg.get("tp_pct", 2.0)) / 100
+    hold = int(cfg.get("hold_bars", 48))
+    n = int(cfg.get("n", 3))
+    cool = int(cfg.get("cooldown_bars", 12))
+    t = close.index[-1]
+    step = close.index[-1] - close.index[-2]
+    hi = high.reindex_like(close)
+    keep = {}
+    for s, (at, px) in held.items():
+        at = pd.Timestamp(at)
+        since = hi[s].loc[hi.index > at] if s in hi else pd.Series(dtype=float)
+        hit = bool((since >= float(px) * (1 + tp)).any())
+        if not hit and round((t - at) / step) < hold:
+            keep[s] = [str(at), float(px)]
+    new_last = dict(last)
+    free = n - len(keep)
+    if free > 0 and len(close) > 3:
+        r3 = close.iloc[-1] / close.iloc[-4] - 1.0
+        cand = []
+        for s, r in r3.items():
+            if s in keep or not np.isfinite(r) or r < thresh:
+                continue
+            if s in last and round((t - pd.Timestamp(last[s])) / step) < cool:
+                continue
+            cand.append((float(r), close.columns.get_loc(s), s))
+        for _, _, s in sorted(cand, reverse=True)[:free]:
+            keep[s] = [str(t), float(close[s].iloc[-1])]
+            new_last[s] = str(t)
+    floor = t - step * (cool + hold)
+    new_last = {s: at for s, at in new_last.items() if s in keep or pd.Timestamp(at) > floor}
+    return keep, new_last, {s: 1.0 / n for s in keep}

@@ -218,6 +218,49 @@ class AdaptiveScalperBot(ContendersBot):
                                        "detail": detail, "lookback_days": days,
                                        "ref": "DECISIONS.md#scalper-adaptive-declaration"})
 
+    def ride_target(self, vid: str, close: pd.DataFrame, high: pd.DataFrame, prices: dict[str, float],
+                    seed: bool) -> pd.DataFrame:
+        """The ride's target from the book's real ride positions, as a frame that is zero except on
+        its last row so the stale-entry guard never sees a path entry. State is kept per arm in
+        `ride_state.json` as it stood before and after the last decided bar, so a re-decided bar
+        starts from the same state; an entry the book does not hold is dropped, never bought late.
+        `seed` adopts the book's held longs when an arm has no saved state. DECISIONS.md#ride-ghost-slots-2026-10-01"""
+        from bot.entry_guard import HELD_MIN
+        from signals import burst_rider
+        bar = str(close.index[-1])
+        path = self.ad_path.with_name("ride_state.json")
+        saved = json.loads(path.read_text()) if path.exists() else {}
+        rec = saved.get(vid)
+        current = self.current_weights(prices)
+        if rec is None:
+            held = {}
+            if seed:
+                for s, (at, side) in (getattr(self, "opened", {}) or {}).items():
+                    if side > 0 and at and s in close and pd.Timestamp(at) in close.index:
+                        held[s] = [str(pd.Timestamp(at)), float(close.at[pd.Timestamp(at), s])]
+            state = {"held": held, "last": {s: v[0] for s, v in held.items()}}
+        else:
+            state = rec["before"] if rec.get("bar") == bar else rec["after"]
+        state = {"held": {s: v for s, v in state["held"].items() if current.get(s, 0.0) >= HELD_MIN},
+                 "last": dict(state["last"])}
+        held, last, target = burst_rider.live_step(close, high, self.variants[vid]["cc"], state["held"], state["last"])
+        saved[vid] = {"bar": bar, "before": state, "after": {"held": held, "last": last}}
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(saved))
+        out = pd.DataFrame(0.0, index=close.index, columns=close.columns)
+        for s, w in target.items():
+            out.at[close.index[-1], s] = w
+        return out
+
+    def clear_ride_state(self, keep: set[str]) -> None:
+        path = self.ad_path.with_name("ride_state.json")
+        if not path.exists():
+            return
+        saved = json.loads(path.read_text())
+        kept = {k: v for k, v in saved.items() if k in keep}
+        if kept != saved:
+            path.write_text(json.dumps(kept))
+
     def reselect_due(self, now: pd.Timestamp) -> bool:
         return (self.selected_at is None
                 or now - self.selected_at >= pd.Timedelta(minutes=int(self.ad["reselect_minutes"])))
@@ -234,6 +277,8 @@ class AdaptiveScalperBot(ContendersBot):
             except Exception as exc:                      # noqa: BLE001
                 self.journal.write("errors", {"event": "adaptive_select_failed", "error": repr(exc),
                                               "kept_clock": self.clock})
+        ride = self.clock if self.variants.get(self.clock, {}).get("type") == "burst" else None
+        self.clear_ride_state({ride} if ride else set())
         if self.clock == CASH:
             self.journal.write("signals", {"event": "contenders", "bar": str(m.index[-1]), "variant": CASH,
                                            "target": {}})
@@ -241,9 +286,15 @@ class AdaptiveScalperBot(ContendersBot):
         spec = self.variants[self.clock]
         iv = spec["clock"]
         d = load_clock(cols, iv, bars_needed(spec), bool(spec["cc"].get("oi_confirm_bars")))
+        if ride:
+            closed = d["close"].index + pd.Timedelta(minutes=MINUTES[iv]) <= m.index[-1] + pd.Timedelta(minutes=MINUTES[self.s.interval])
+            d = {k: (v.loc[closed] if isinstance(v, pd.DataFrame) else v) for k, v in d.items()}
         close = d["close"]
-        c4 = feed.close_matrix(feed.bar_frame(cols, "4h", 60))
-        w = variant_weights(spec, d, c4).reindex(columns=cols).fillna(0.0)
+        if ride:
+            w = self.ride_target(ride, close, d["high"], prices, seed=True).reindex(columns=cols).fillna(0.0)
+        else:
+            c4 = feed.close_matrix(feed.bar_frame(cols, "4h", 60))
+            w = variant_weights(spec, d, c4).reindex(columns=cols).fillna(0.0)
         w5 = to_fast(w, close.index, m.index).fillna(0.0)
         last = w5.iloc[-1]
         target = {s: float(v) for s, v in last.items() if abs(v) > 1e-9}
