@@ -1,0 +1,42 @@
+meta:
+  name: wf_live_selection_redteam
+  written_utc: '2026-09-30T20:04:00Z'
+  written_before_any_number: true
+  declared_ref: DECISIONS.md#stress-harness-declaration
+  book: config/wf_live.yaml (DECISIONS.md#walkforward-live-declaration)
+replay:
+  styles_from: bot.scalper_adaptive_run.build_variants(config/wf_live.yaml adaptive)
+  rule: gates.stress.weights with the style's cc, entry and exit (PIT top-30 membership, shorts off)
+  simulator: gates.stress.run (let_winners_run.simulate, ladder on, 0.05% maker, tick cost), compounded to the hour by bar CLOSE time
+  replayed: [15m|htf0|vol0, 15m|htf0|vol1.5, 15m|htf1|vol0, 15m|htf1|vol1.5, 30m|htf0|vol0, 30m|htf0|vol1.5,
+             30m|htf1|vol0, 30m|htf1|vol1.5, 1h|htf0|vol0, 1h|htf0|vol1.5, 1h|htf1|vol0, 1h|htf1|vol1.5,
+             4h|htf0|vol0, 4h|htf0|vol1.5, resid|30m, resid|1h, blocks|30m, blocks|1h, cash]
+  not_replayed:
+    5m and ride: no 5m panel in the harness loader
+    short|15m, short|1h: the harness forces shorts off
+    flow: no taker volume in the 15m and 1h panels
+    oi: no open-interest history in the harness
+  selector: at each hour close H score = compounded net over (H - lookback, H]; cash = 0.0; bot.scalper_adaptive_run.pick_clock with the margin; hold the pick over (H, H+1h]
+  switch_cost: (maker fee + tick/price) on |w_new(H) - w_old(H)|, target weights at H
+  live_setting: {lookback_days: 3, reselect_minutes: 60, switch_margin_pp: 1.0}
+periods: {fit: [2023-01-01, 2025-01-01], holdout: [2025-01-01, 2026-09-19]}
+comparisons: [selector, mean style (equal-weight average of style hourly returns), each fixed style,
+              random-hourly null (random style incl. cash each hour, 200 seeds),
+              random-matched null (switch at the selector's switch hours to a random other style, 200 seeds), cash]
+break_hypotheses:
+  H1_selection_adds_nothing: BREAK if on holdout the selector's mean daily log return does not beat the mean style with a one-sided circular block bootstrap p < 0.05 (14-day blocks, 2000 resamples), or its holdout median 14-day return <= the mean style's
+  H2_luck_at_same_turnover: BREAK if fewer than 95% of the 200 random-matched seeds have a lower holdout cumulative log return than the selector
+  H3_switch_cost: BREAK if holdout switching cost > half of the selector's gross gain over the mean style, or > 1.0% per 14 days
+  H4_tail: BREAK on a period if median 14-day return <= 0, worst 14-day window < -25%, or median 14-day max drawdown < -15%
+  H5_no_persistence: BREAK if the Spearman correlation of trailing 3-day style scores with the NEXT non-overlapping 3-day style returns has holdout mean <= 0 or t < 2
+  H6_consistency: a verdict that holds on only one of fit and holdout is reported as not robust
+nonsense_controls:
+  single_style_menu: a one-style menu must reproduce that style's series exactly with zero switches
+  shuffled_scores: scores shuffled across styles each hour must not beat the random-hourly null beyond sampling noise
+  failure_voids: every selection number is void if a control fails
+parity:
+  test: live score path (cold start 100 bars before a 3-day window) vs live target path (bars_needed = 160 bars); share of sampled hours whose last-row positions differ, per style
+  break: any style > 5% of sampled hours
+sensitivity_report_only: {lookback_days: [1, 3, 7], margin_pp: [0, 1, 3], menus: [full replayed, decision-point allow-list 1h|htf0|vol0 30m|htf0|vol0 blocks|1h resid|30m cash]}
+microstructure: [hour-to-hour and day-to-day rank autocorrelation of 3-day scores, next-period persistence by BTC regime, share of hours cash leads, stale inheritance at switches (age, run-up, forward return vs fresh entries)]
+live_audit_suspects: [stale entries at a style switch, switching churn and fees, decision expiry and malformed decision file, scoring-window fees ticks ladder look-ahead, restart mid-hour, cash tie-break, missing coin data]

@@ -196,4 +196,6 @@ def test_first_decision_after_a_start_blocks_entries_the_path_took_earlier():
     first = b.guard({"OLD": 0.5, "NEW": 0.5}, w, {}, 0)
     assert first == {"NEW": 0.5}
     again = b.guard({"OLD": 0.5, "NEW": 0.5}, w, {}, 0)
-    assert again == {"OLD": 0.5, "NEW": 0.5}
+    assert again == {"NEW": 0.5}
+    b.pending_entries = {"OLD": 0.5}
+    assert b.guard({"OLD": 0.5, "NEW": 0.5}, w, {}, 0) == {"OLD": 0.5, "NEW": 0.5}

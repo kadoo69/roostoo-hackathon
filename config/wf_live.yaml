@@ -12,6 +12,7 @@ meta:
   why_it_runs: operator instruction; forward evidence on paper only
   falsification: after 7 live days, if the pick's cumulative forward return is not above the mean variant's, selection
     on the live window adds nothing
+  operator_2026_10_01: 'take setups and ride the waves: decision point off, switch margin 1.0 -> 0.25 pp, DECISIONS.md#wf-ride-unblocked-2026-10-01'
   changed_utc: '2026-10-01: order-flow, open-interest and residual styles, DECISIONS.md#confirmations-and-residual-declaration'
 adaptive:
   variants:
@@ -31,7 +32,7 @@ adaptive:
     - 4h
   lookback_days: 3
   reselect_minutes: 60
-  switch_margin_pp: 1.0
+  switch_margin_pp: 0.25
   start_variant: 15m|htf0|vol1.5
   allow_cash: true
   extra_arms:
@@ -111,7 +112,7 @@ adaptive:
       hold_bars: 288
       n: 3
       cooldown_bars: 12
-  use_decision_point: true
+  use_decision_point: false
 contenders:
   min_hold_bars: 3
   min_hold_ref: DECISIONS.md#min-hold-5m

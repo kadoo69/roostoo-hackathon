@@ -1,0 +1,323 @@
+[
+ {
+  "book": "competition_rehearsal",
+  "rule": "competition",
+  "clock": "30m",
+  "bars": 23,
+  "replay_return_pct": 0.12,
+  "turnover": 1.95,
+  "actual": {
+   "return_pct": -0.3,
+   "cycles": 361
+  },
+  "offline_hours": 4.5,
+  "trades": [
+   {
+    "symbol": "TRXUSDT",
+    "entry": "2026-10-01 03:30:00+00:00",
+    "exit": "2026-10-01 04:30:00+00:00",
+    "ret_pct": -0.09,
+    "mfe_pct": 0.12,
+    "weight": 0.02,
+    "offline_entry": true
+   },
+   {
+    "symbol": "TRUMPUSDT",
+    "entry": "2026-10-01 04:30:00+00:00",
+    "exit": null,
+    "ret_pct": -0.97,
+    "mfe_pct": 0.0,
+    "weight": 0.47,
+    "offline_entry": true
+   },
+   {
+    "symbol": "XLMUSDT",
+    "entry": "2026-10-01 01:30:00+00:00",
+    "exit": null,
+    "ret_pct": -0.52,
+    "mfe_pct": 0.0,
+    "weight": 0.5,
+    "offline_entry": true
+   },
+   {
+    "symbol": "AAVEUSDT",
+    "entry": "2026-10-01 03:00:00+00:00",
+    "exit": null,
+    "ret_pct": 1.83,
+    "mfe_pct": 3.09,
+    "weight": 0.5,
+    "offline_entry": true
+   }
+  ]
+ },
+ {
+  "book": "momentum_top3_30m",
+  "rule": "momentum_top3_30m",
+  "clock": "30m",
+  "bars": 23,
+  "replay_return_pct": 0.12,
+  "turnover": 1.95,
+  "actual": {
+   "return_pct": -0.43,
+   "cycles": 371
+  },
+  "offline_hours": 3.3,
+  "trades": [
+   {
+    "symbol": "TRXUSDT",
+    "entry": "2026-10-01 03:30:00+00:00",
+    "exit": "2026-10-01 04:30:00+00:00",
+    "ret_pct": -0.09,
+    "mfe_pct": 0.12,
+    "weight": 0.02,
+    "offline_entry": true
+   },
+   {
+    "symbol": "TRUMPUSDT",
+    "entry": "2026-10-01 04:30:00+00:00",
+    "exit": null,
+    "ret_pct": -0.97,
+    "mfe_pct": 0.0,
+    "weight": 0.47,
+    "offline_entry": true
+   },
+   {
+    "symbol": "XLMUSDT",
+    "entry": "2026-10-01 01:30:00+00:00",
+    "exit": null,
+    "ret_pct": -0.52,
+    "mfe_pct": 0.0,
+    "weight": 0.5,
+    "offline_entry": false
+   },
+   {
+    "symbol": "AAVEUSDT",
+    "entry": "2026-10-01 03:00:00+00:00",
+    "exit": null,
+    "ret_pct": 1.83,
+    "mfe_pct": 3.09,
+    "weight": 0.5,
+    "offline_entry": true
+   }
+  ]
+ },
+ {
+  "book": "momentum_top3_15m",
+  "rule": "momentum_top3_15m",
+  "clock": "15m",
+  "bars": 47,
+  "replay_return_pct": 0.35,
+  "turnover": 6.54,
+  "actual": {
+   "return_pct": -2.04,
+   "cycles": 374
+  },
+  "offline_hours": 6.8,
+  "trades": [
+   {
+    "symbol": "BNBUSDT",
+    "entry": "2026-10-01 00:30:00+00:00",
+    "exit": "2026-10-01 02:00:00+00:00",
+    "ret_pct": 0.04,
+    "mfe_pct": 0.2,
+    "weight": 0.5,
+    "offline_entry": false
+   },
+   {
+    "symbol": "PUMPUSDT",
+    "entry": "2026-10-01 00:00:00+00:00",
+    "exit": "2026-10-01 00:15:00+00:00",
+    "ret_pct": -0.95,
+    "mfe_pct": 0.0,
+    "weight": 0.5,
+    "offline_entry": true
+   },
+   {
+    "symbol": "WLDUSDT",
+    "entry": "2026-10-01 00:30:00+00:00",
+    "exit": "2026-10-01 02:15:00+00:00",
+    "ret_pct": -0.07,
+    "mfe_pct": 1.21,
+    "weight": 0.5,
+    "offline_entry": false
+   },
+   {
+    "symbol": "AVAXUSDT",
+    "entry": "2026-10-01 03:00:00+00:00",
+    "exit": null,
+    "ret_pct": 0.52,
+    "mfe_pct": 0.58,
+    "weight": 0.16,
+    "offline_entry": true
+   },
+   {
+    "symbol": "LTCUSDT",
+    "entry": "2026-10-01 01:00:00+00:00",
+    "exit": "2026-10-01 02:00:00+00:00",
+    "ret_pct": -0.36,
+    "mfe_pct": 0.28,
+    "weight": 0.5,
+    "offline_entry": true
+   },
+   {
+    "symbol": "XLMUSDT",
+    "entry": "2026-09-30 20:30:00+00:00",
+    "exit": "2026-09-30 20:45:00+00:00",
+    "ret_pct": -0.48,
+    "mfe_pct": 0.0,
+    "weight": 0.5,
+    "offline_entry": false
+   },
+   {
+    "symbol": "XLMUSDT",
+    "entry": "2026-10-01 02:15:00+00:00",
+    "exit": null,
+    "ret_pct": 0.09,
+    "mfe_pct": 0.22,
+    "weight": 0.5,
+    "offline_entry": true
+   },
+   {
+    "symbol": "AAVEUSDT",
+    "entry": "2026-10-01 02:00:00+00:00",
+    "exit": null,
+    "ret_pct": 3.25,
+    "mfe_pct": 4.05,
+    "weight": 0.5,
+    "offline_entry": true
+   }
+  ]
+ },
+ {
+  "book": "momentum_top3_5m",
+  "rule": "momentum_top3_5m",
+  "clock": "5m",
+  "bars": 141,
+  "replay_return_pct": 1.07,
+  "turnover": 8.7,
+  "actual": {
+   "return_pct": -2.03,
+   "cycles": 388
+  },
+  "offline_hours": 8.6,
+  "trades": [
+   {
+    "symbol": "ETHUSDT",
+    "entry": "2026-10-01 01:50:00+00:00",
+    "exit": "2026-10-01 02:05:00+00:00",
+    "ret_pct": 0.02,
+    "mfe_pct": 0.05,
+    "weight": 0.13,
+    "offline_entry": true
+   },
+   {
+    "symbol": "ZECUSDT",
+    "entry": "2026-10-01 00:05:00+00:00",
+    "exit": "2026-10-01 00:20:00+00:00",
+    "ret_pct": -0.94,
+    "mfe_pct": 0.0,
+    "weight": 0.43,
+    "offline_entry": true
+   },
+   {
+    "symbol": "BNBUSDT",
+    "entry": "2026-09-30 23:55:00+00:00",
+    "exit": "2026-10-01 02:05:00+00:00",
+    "ret_pct": -0.07,
+    "mfe_pct": 0.32,
+    "weight": 0.32,
+    "offline_entry": true
+   },
+   {
+    "symbol": "DOGEUSDT",
+    "entry": "2026-10-01 01:55:00+00:00",
+    "exit": null,
+    "ret_pct": 1.21,
+    "mfe_pct": 1.28,
+    "weight": 0.37,
+    "offline_entry": true
+   },
+   {
+    "symbol": "LINKUSDT",
+    "entry": "2026-09-30 18:05:00+00:00",
+    "exit": "2026-09-30 19:15:00+00:00",
+    "ret_pct": -0.47,
+    "mfe_pct": 0.14,
+    "weight": 0.23,
+    "offline_entry": false
+   },
+   {
+    "symbol": "TRXUSDT",
+    "entry": "2026-10-01 02:25:00+00:00",
+    "exit": "2026-10-01 03:10:00+00:00",
+    "ret_pct": -0.18,
+    "mfe_pct": 0.03,
+    "weight": 0.08,
+    "offline_entry": true
+   },
+   {
+    "symbol": "WLDUSDT",
+    "entry": "2026-09-30 21:10:00+00:00",
+    "exit": "2026-09-30 23:45:00+00:00",
+    "ret_pct": 0.04,
+    "mfe_pct": 1.33,
+    "weight": 0.5,
+    "offline_entry": true
+   },
+   {
+    "symbol": "WLDUSDT",
+    "entry": "2026-10-01 00:20:00+00:00",
+    "exit": "2026-10-01 01:55:00+00:00",
+    "ret_pct": -0.19,
+    "mfe_pct": 1.38,
+    "weight": 0.47,
+    "offline_entry": true
+   },
+   {
+    "symbol": "TRUMPUSDT",
+    "entry": "2026-09-30 21:15:00+00:00",
+    "exit": "2026-10-01 00:05:00+00:00",
+    "ret_pct": 0.05,
+    "mfe_pct": 0.98,
+    "weight": 0.36,
+    "offline_entry": true
+   },
+   {
+    "symbol": "TRUMPUSDT",
+    "entry": "2026-10-01 02:15:00+00:00",
+    "exit": null,
+    "ret_pct": 3.98,
+    "mfe_pct": 8.97,
+    "weight": 0.21,
+    "offline_entry": true
+   },
+   {
+    "symbol": "LTCUSDT",
+    "entry": "2026-09-30 22:05:00+00:00",
+    "exit": "2026-10-01 01:50:00+00:00",
+    "ret_pct": 0.8,
+    "mfe_pct": 1.4,
+    "weight": 0.5,
+    "offline_entry": true
+   },
+   {
+    "symbol": "XLMUSDT",
+    "entry": "2026-09-30 19:55:00+00:00",
+    "exit": "2026-09-30 22:05:00+00:00",
+    "ret_pct": 0.04,
+    "mfe_pct": 1.69,
+    "weight": 0.5,
+    "offline_entry": false
+   },
+   {
+    "symbol": "AAVEUSDT",
+    "entry": "2026-10-01 02:00:00+00:00",
+    "exit": null,
+    "ret_pct": 3.25,
+    "mfe_pct": 4.05,
+    "weight": 0.5,
+    "offline_entry": true
+   }
+  ]
+ }
+]

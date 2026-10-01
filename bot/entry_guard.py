@@ -2,10 +2,10 @@
 
 The rule's sticky slots and minimum hold run on the simulated path; after downtime the book
 holds something else. Two guards act on the book's real positions instead.
-A: on a catch-up decision (a bar skipped, or the decision more than one bar after the close), and
-on the first decision after any process start, no new position opens whose simulated entry is
-older than the latest bar; a restart after a rule change otherwise bought names the new rule
-would have entered earlier (`#restart-stale-entry-2026-10-01`).
+A: on every decision, no new position opens whose simulated entry is older than the latest bar,
+except an entry the previous on-time decision wanted and did not fill (its retry). Guarding only
+catch-up and first decisions let a blocked name be bought one bar later
+(`#restart-stale-entry-2026-10-01`, `#stale-rebuy-2026-10-01`).
 B: the minimum hold counts from the bar the book really opened the position at, and keeps a
 young position at its current weight and side whatever the rule's target says.
 DECISIONS.md#catch-up-and-live-min-hold
@@ -99,14 +99,16 @@ class GuardedTarget:
         now = pd.Timestamp.now(tz="UTC")
         first = not getattr(self, "guard_seen_decision", False)
         self.guard_seen_decision = True
-        if (first or is_catch_up(getattr(self, "prev_processed", None), m.index, now, step)) and len(w) > 1:
-            prev_row = {s: float(v) for s, v in w.iloc[-2].items() if abs(v) > 1e-9}
+        late = first or is_catch_up(getattr(self, "prev_processed", None), m.index, now, step)
+        if len(w) > 1:
+            retry = set() if late else set(getattr(self, "pending_entries", {}) or {})
+            prev_row = {s: float(v) for s, v in w.iloc[-2].items() if abs(v) > 1e-9 and s not in retry}
             target, dropped = drop_stale_entries(target, current, prev_row)
             if dropped:
                 self.journal.write("signals", {"event": "stale_entry_blocked", "bar": str(bar),
                                                "prev_processed": str(getattr(self, "prev_processed", None)),
-                                               "symbols": dropped,
-                                               "ref": "DECISIONS.md#catch-up-and-live-min-hold"})
+                                               "symbols": dropped, "late": late,
+                                               "ref": "DECISIONS.md#stale-rebuy-2026-10-01"})
         if min_bars:
             target, kept = keep_young(target, current, self.opened, bar, step, min_bars)
             if kept:
