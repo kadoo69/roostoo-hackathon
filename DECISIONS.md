@@ -4499,3 +4499,14 @@ Book (`bot/regime_ls_run.py`): the competition contenders rule on 30m with the 4
 Prior evidence is against it: every short sleeve tested so far failed (`#lowtf-breadth-shorts-outcome`, `#topdown-ls-outcome`, `#crash-shorts-outcome`). It runs forward because the operator asked; it stops after 7 live days if it trails `momentum_top3_30m` or its shorts lose in total.
 First look after declaration (2026-10-01 08:25Z, live Binance bars 2026-09-19..10-01, flat start, information only): regime book +12.95% (max drawdown -12.2%) against the same long rule without the switch +10.38% and the competition rule +6.78%; regime shares NEUTRAL 62%, UP 24%, DOWN 14% (12 DOWN spells); 25 shorts, mean +0.21%, 32% won. One window of twelve days decides nothing; the forward paper book does. All three paper books started 08:28Z.
 Operator decision 2026-10-01 08:40Z: the dynamic bot's switch margin goes from 0.25 pp to 3.0 pp, the best setting of the recent-market test (fewest switches, +5.87% with fresh entries against -7.99% at 1 pp); paper only.
+
+## residual-spread-declaration
+
+Operator instruction 2026-10-01: find a way to profit in the current correlated sell-off, where the long books sit in cash; test the market-neutral residual spread. Declared in `config/residual_spread.yaml` before any number was computed. Long the 2 coins strongest against the equal-weight pool and short the 2 weakest, 0.25 each, held while they stay in the top or bottom 5, on 30m bars, residual over 4 h (RS8) or 24 h (RS48); shorts pay 0.10% a side. Primary gate is the unseen recent window on live Binance bars (positive return, drawdown better than -10%, beats 45 of 50 random spreads), plus a positive 2025-26 holdout median on history. A pass earns a paper book only.
+
+## residual-spread-outcome
+
+FAIL, both arms (`results/residual_spread.json`, `python3 -m gates.residual_spread`).
+Recent live window 2026-09-19 to 2026-10-01 09:30Z: 4 h residual -17.72% (max drawdown -19.5%; long leg +2.57%, short leg -20.27%), 24 h residual -17.56% (-18.0%; long -8.20%, short -10.88%). History median 14-day return fit / holdout / recent: 4 h -15.8% / -19.6% / -23.9% at about 200x turnover per 14 days; 24 h -3.7% / -2.4% / -1.3%.
+Both beat all 50 random spreads, but that control is weak: random scores reshuffle every bar and pay fees on enormous turnover (median -63%), so beating it says little.
+Reading: shorting the coins weakest against the pool loses because they rebound against it; the losers of the last 4-24 h are the next hours' relative winners, the same short-horizon reversal that killed acceleration (`#accel-outcome`). Only the strongest-coin long leg on 4 h was positive, which the long rules already capture. Market-neutral residual spreads are closed.

@@ -6033,3 +6033,13 @@ trials:
   config: strength_tilt:T_vol
   status: fail
   note: DECISIONS.md#strength-tilt-outcome
+- signal: residual_spread
+  gate: residual_spread
+  config: residual_spread:RS8
+  status: fail
+  note: DECISIONS.md#residual-spread-outcome
+- signal: residual_spread
+  gate: residual_spread
+  config: residual_spread:RS48
+  status: fail
+  note: DECISIONS.md#residual-spread-outcome

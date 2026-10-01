@@ -1,0 +1,32 @@
+meta:
+  name: residual_spread
+  frozen: true
+  declared_utc: '2026-10-01T09:40:00Z'
+  requested_by: 'operator 2026-10-01: profit in a correlated sell-off where the long books sit in cash; go ahead with the market-neutral residual spread'
+  declared_ref: DECISIONS.md#residual-spread-declaration
+  written_before_any_number: true
+mechanism: >
+  One factor drives about 60% of the pool's moves (#market-structure-2026-10-01), so a long-only book is mostly
+  a bet on that factor and sits in cash when it falls. Long the coins strongest against the pool and short the
+  weakest, in equal dollar amounts, and the factor cancels: what remains is the persistence of coin-specific
+  strength (residual momentum), which the best-signals study found in the winners (#best-signals-2026-10-01).
+failure_mode: >
+  Residual strength mean-reverts at this horizon (as raw acceleration did at 15m-1h, #accel-outcome), or the
+  spread is too small to pay four legs of fees (shorts 0.10% a side), or random long/short pairs do as well.
+rule: >
+  On 30m bars, each coin's residual = its log return minus the equal-weight pool's, summed over L bars.
+  Long the 2 highest, short the 2 lowest, 0.25 of equity each (gross 1.0, net 0). A held name keeps its slot
+  while it stays in the top (long) or bottom (short) 5, so turnover stays low. No ladder.
+arms:
+  RS8: L = 8 bars (4 h)
+  RS48: L = 48 bars (24 h)
+costs: longs 0.05% maker, shorts 0.10% each side (SHORT_FEE), each coin's tick
+windows:
+  recent_live: 'Binance bars 2026-09-19 to now, live code path, members = the current tradable pool (the primary gate, operator rule: history is not the bible)'
+  history: 'gates.stress PERIODS on the cached 30m panel with point-in-time pool membership'
+nonsense_control: 'random spread: the same rebalance rule with residuals replaced by random numbers per bar, 50 seeds'
+decision_rule: >
+  An arm PASSES only if on the recent live window its return is positive, its max drawdown is better than -10%,
+  and it beats at least 45 of 50 random spreads; AND its 2025-26 holdout median 14-day return on history is
+  positive. A pass earns a paper book only.
+trials: 2 (RS8, RS48)
