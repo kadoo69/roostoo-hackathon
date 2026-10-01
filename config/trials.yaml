@@ -5978,3 +5978,43 @@ trials:
   config: burst_drivers:tp5.0_stop1.5
   status: fail
   note: DECISIONS.md#burst-drivers-outcome
+- signal: crash_shorts
+  gate: crash_shorts
+  config: crash_shorts:S_only@30m
+  status: fail
+  note: DECISIONS.md#crash-shorts-outcome
+- signal: crash_shorts
+  gate: crash_shorts
+  config: crash_shorts:C_crash@30m
+  status: fail
+  note: DECISIONS.md#crash-shorts-outcome
+- signal: crash_shorts
+  gate: crash_shorts
+  config: crash_shorts:S_only@1h
+  status: fail
+  note: DECISIONS.md#crash-shorts-outcome
+- signal: crash_shorts
+  gate: crash_shorts
+  config: crash_shorts:C_crash@1h
+  status: fail
+  note: DECISIONS.md#crash-shorts-outcome
+- signal: crash_shorts
+  gate: crash_shorts
+  config: crash_shorts:S_only@30m
+  status: fail
+  note: rerun after the void first run, DECISIONS.md#crash-shorts-outcome
+- signal: crash_shorts
+  gate: crash_shorts
+  config: crash_shorts:C_crash@30m
+  status: fail
+  note: rerun after the void first run, DECISIONS.md#crash-shorts-outcome
+- signal: crash_shorts
+  gate: crash_shorts
+  config: crash_shorts:S_only@1h
+  status: fail
+  note: rerun after the void first run, DECISIONS.md#crash-shorts-outcome
+- signal: crash_shorts
+  gate: crash_shorts
+  config: crash_shorts:C_crash@1h
+  status: fail
+  note: rerun after the void first run, DECISIONS.md#crash-shorts-outcome

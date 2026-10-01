@@ -4406,3 +4406,11 @@ The operator's reading: about +1% overnight is far below a leaderboard pace. Agr
 
 Operator instruction 2026-10-01 05:30Z: the dynamic bot has not traded; do not be so stringent, ride the waves wherever we can and take the setups. `wf_live` had been in cash since 2026-09-30 19:13Z because the research decision point (`#decision-point-outcome-2026-10-01`) allowed only four styles, all below cash plus the 1 pp switch margin, while the momentum ride led the whole menu (+6.0% over 3 days at 20:15Z, +1.9% at 01:02Z).
 Change (paper only): `adaptive.use_decision_point` false and `switch_margin_pp` 1.0 -> 0.25 in `config/wf_live.yaml`. Takes effect on the bot's next restart. Caveat on record: the ride's history test was not adopted (`#burst-drivers-outcome`), so this is forward evidence on paper, judged by `gates.wf_report` like every pick.
+
+## crash-shorts-outcome
+
+FAIL on both clocks, every check (`results/crash_shorts.json`, `python3 -m gates.crash_shorts`). Crash days: 50 fit, 38 holdout, so the evidence floor was met.
+Short-only crash book, summed log P&L over crash-flag bars: 30m -86.7% fit / -25.5% holdout, 1h -64.4% / -45.3%; the same flag shifted to random dates lost far less (median -13.3% / -11.9% on 30m, -6.1% / -8.6% on 1h) and beat the real flag in 18-20 of 20 seeds. The timing is worse than random: a crash confirmed on a closed 4h bar is shorted near the low and squeezed on the rebound, the failure mode the declaration named.
+Combined book vs the competition rule (median / worst 14-day): 30m holdout +0.38% / -31.8% vs +1.13% / -22.3%; 1h holdout +1.95% / -27.4% vs +2.80% / -22.8%. Shorts stay off everywhere.
+The first run was void, not a result: the arms inherited the competition config's frozen short stretch filter and long-side confirmations, which blocked almost every short (zero short P&L, combined book identical to the baseline). The code was corrected to the declared rule before any number was read as a result; its four `config/trials.yaml` rows are void and the four later rows are the trials.
+Not a test, a lead only: the competition rule run unchanged on 1h bars scored holdout +2.80% and recent +6.05% median 14-day return against +1.13% and +0.19% on 30m, consistent with `#lowtf-long-only-clocks-outcome` (long-only passes only at 1h).
