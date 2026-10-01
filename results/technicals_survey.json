@@ -1,0 +1,303 @@
+{
+ "recent": {
+  "sma_20_50_trend": {
+   "15m": {
+    "total": -10.89,
+    "UP": -1.74,
+    "NEUTRAL": -7.82,
+    "DOWN": -1.62,
+    "invested": 0.92
+   },
+   "30m": {
+    "total": 3.62,
+    "UP": 8.38,
+    "NEUTRAL": 4.56,
+    "DOWN": -8.57,
+    "invested": 0.92
+   },
+   "1h": {
+    "total": 5.15,
+    "UP": -0.2,
+    "NEUTRAL": 11.32,
+    "DOWN": -5.36,
+    "invested": 0.95
+   }
+  },
+  "ema_12_26_cross": {
+   "15m": {
+    "total": 7.27,
+    "UP": 4.9,
+    "NEUTRAL": 5.32,
+    "DOWN": -2.9,
+    "invested": 0.97
+   },
+   "30m": {
+    "total": 14.06,
+    "UP": 5.53,
+    "NEUTRAL": 13.18,
+    "DOWN": -4.51,
+    "invested": 0.97
+   },
+   "1h": {
+    "total": 10.8,
+    "UP": 1.8,
+    "NEUTRAL": 21.49,
+    "DOWN": -10.41,
+    "invested": 0.98
+   }
+  },
+  "donchian_20_10": {
+   "15m": {
+    "total": -0.78,
+    "UP": 4.55,
+    "NEUTRAL": 3.26,
+    "DOWN": -8.1,
+    "invested": 0.93
+   },
+   "30m": {
+    "total": 5.79,
+    "UP": 5.16,
+    "NEUTRAL": 5.39,
+    "DOWN": -4.55,
+    "invested": 0.93
+   },
+   "1h": {
+    "total": 7.83,
+    "UP": 1.55,
+    "NEUTRAL": 9.17,
+    "DOWN": -2.74,
+    "invested": 0.95
+   }
+  },
+  "bollinger_revert": {
+   "15m": {
+    "total": 0.38,
+    "UP": -1.93,
+    "NEUTRAL": 7.22,
+    "DOWN": -4.54,
+    "invested": 0.82
+   },
+   "30m": {
+    "total": 6.94,
+    "UP": 2.51,
+    "NEUTRAL": 7.55,
+    "DOWN": -3.0,
+    "invested": 0.8
+   },
+   "1h": {
+    "total": 10.32,
+    "UP": 2.65,
+    "NEUTRAL": 9.08,
+    "DOWN": -1.48,
+    "invested": 0.84
+   }
+  },
+  "rsi_30_50_revert": {
+   "15m": {
+    "total": 6.85,
+    "UP": -0.44,
+    "NEUTRAL": 8.99,
+    "DOWN": -1.52,
+    "invested": 0.58
+   },
+   "30m": {
+    "total": -2.0,
+    "UP": -0.46,
+    "NEUTRAL": -0.55,
+    "DOWN": -1.0,
+    "invested": 0.61
+   },
+   "1h": {
+    "total": 3.75,
+    "UP": -2.87,
+    "NEUTRAL": 6.38,
+    "DOWN": 0.41,
+    "invested": 0.62
+   }
+  },
+  "vwap48_trend": {
+   "15m": {
+    "total": -8.94,
+    "UP": 2.75,
+    "NEUTRAL": -4.78,
+    "DOWN": -6.93,
+    "invested": 0.97
+   },
+   "30m": {
+    "total": 5.36,
+    "UP": 4.44,
+    "NEUTRAL": 9.61,
+    "DOWN": -7.96,
+    "invested": 0.97
+   },
+   "1h": {
+    "total": 5.65,
+    "UP": 0.65,
+    "NEUTRAL": 21.84,
+    "DOWN": -13.85,
+    "invested": 0.97
+   }
+  },
+  "vwap48_revert": {
+   "15m": {
+    "total": -4.2,
+    "UP": 0.05,
+    "NEUTRAL": 0.71,
+    "DOWN": -4.92,
+    "invested": 0.89
+   },
+   "30m": {
+    "total": 2.14,
+    "UP": 4.0,
+    "NEUTRAL": 2.37,
+    "DOWN": -4.06,
+    "invested": 0.93
+   },
+   "1h": {
+    "total": 15.42,
+    "UP": -0.06,
+    "NEUTRAL": 17.88,
+    "DOWN": -2.03,
+    "invested": 0.98
+   }
+  },
+  "buy_and_hold": {
+   "15m": {
+    "total": 13.69,
+    "UP": 5.17,
+    "NEUTRAL": 11.75,
+    "DOWN": -3.26,
+    "invested": 1.0
+   },
+   "30m": {
+    "total": 13.58,
+    "UP": 5.15,
+    "NEUTRAL": 11.65,
+    "DOWN": -3.25,
+    "invested": 1.0
+   },
+   "1h": {
+    "total": 13.77,
+    "UP": 0.29,
+    "NEUTRAL": 17.67,
+    "DOWN": -3.6,
+    "invested": 1.0
+   }
+  }
+ },
+ "regime_share": {
+  "15m": {
+   "NEUTRAL": 0.618,
+   "UP": 0.233,
+   "DOWN": 0.15
+  },
+  "30m": {
+   "NEUTRAL": 0.618,
+   "UP": 0.233,
+   "DOWN": 0.15
+  },
+  "1h": {
+   "NEUTRAL": 0.601,
+   "UP": 0.252,
+   "DOWN": 0.146
+  }
+ },
+ "holdout_30m": {
+  "sma_20_50_trend": {
+   "holdout": {
+    "median_pct": -8.912,
+    "worst_pct": -29.56,
+    "turnover_per_14d": 161.0
+   },
+   "recent": {
+    "median_pct": -9.76,
+    "worst_pct": -28.79,
+    "turnover_per_14d": 192.3
+   }
+  },
+  "ema_12_26_cross": {
+   "holdout": {
+    "median_pct": -3.999,
+    "worst_pct": -26.56,
+    "turnover_per_14d": 76.7
+   },
+   "recent": {
+    "median_pct": -2.433,
+    "worst_pct": -24.71,
+    "turnover_per_14d": 86.6
+   }
+  },
+  "donchian_20_10": {
+   "holdout": {
+    "median_pct": -4.5,
+    "worst_pct": -28.32,
+    "turnover_per_14d": 99.2
+   },
+   "recent": {
+    "median_pct": -5.722,
+    "worst_pct": -20.57,
+    "turnover_per_14d": 116.3
+   }
+  },
+  "bollinger_revert": {
+   "holdout": {
+    "median_pct": -4.248,
+    "worst_pct": -31.29,
+    "turnover_per_14d": 86.4
+   },
+   "recent": {
+    "median_pct": -2.588,
+    "worst_pct": -15.46,
+    "turnover_per_14d": 104.8
+   }
+  },
+  "rsi_30_50_revert": {
+   "holdout": {
+    "median_pct": -2.45,
+    "worst_pct": -23.95,
+    "turnover_per_14d": 34.1
+   },
+   "recent": {
+    "median_pct": -0.045,
+    "worst_pct": -23.95,
+    "turnover_per_14d": 41.6
+   }
+  },
+  "vwap48_trend": {
+   "holdout": {
+    "median_pct": -9.6,
+    "worst_pct": -37.66,
+    "turnover_per_14d": 159.1
+   },
+   "recent": {
+    "median_pct": -9.213,
+    "worst_pct": -26.44,
+    "turnover_per_14d": 179.9
+   }
+  },
+  "vwap48_revert": {
+   "holdout": {
+    "median_pct": -5.125,
+    "worst_pct": -34.96,
+    "turnover_per_14d": 68.4
+   },
+   "recent": {
+    "median_pct": -6.203,
+    "worst_pct": -23.64,
+    "turnover_per_14d": 75.9
+   }
+  },
+  "buy_and_hold": {
+   "holdout": {
+    "median_pct": 1.038,
+    "worst_pct": -29.37,
+    "turnover_per_14d": 1.0
+   },
+   "recent": {
+    "median_pct": 3.526,
+    "worst_pct": -12.28,
+    "turnover_per_14d": 1.0
+   }
+  }
+ }
+}
