@@ -98,30 +98,37 @@ def test_repro_ambiguous_submit_blocks_exits_for_the_life_of_the_process(tmp_pat
     assert ex.client.place_order.call_count == 1
 
 
-def test_repro_one_query_error_after_four_orders_halts_and_flattens(tmp_path):
+def test_one_query_error_after_four_orders_neither_halts_nor_flattens(tmp_path):
     ex = make_executor(tmp_path)
     for _ in range(4):
+        ex.refresh_pending()
         ex.send(buy_plan(ex))
     ex.client.query_order.side_effect = RoostooError("POST:/v3/query_order:timeout")
     ex.sweep_unfilled()
-    assert ex.error_rate() == pytest.approx(0.25)
+    assert ex.error_rate() < 0.25
     g = risk.gate([50_000.0, 50_100.0], ex.error_rate(), 0.2, 3.0, comp_settings())
-    assert g["halt"] and g["breaches"][0].startswith("error_rate")
-    orders = portfolio.deltas({}, {"BTCUSDT": 0.5}, 50_000.0, {"BTCUSDT": 100.0})
-    assert [o["side"] for o in orders] == ["SELL"]
-    assert portfolio.deltas({}, {}, 50_000.0, {"BTCUSDT": 100.0}) == []
+    assert not g["halt"] and not g["freeze"]
 
 
-def test_repro_stale_pending_set_after_query_failure_resubmits_a_resting_buy(tmp_path):
+def test_a_venue_outage_freezes_without_liquidating(tmp_path):
+    ex = make_executor(tmp_path)
+    ex.client.query_order.side_effect = RoostooError("POST:/v3/query_order:timeout")
+    for _ in range(6):
+        ex.refresh_pending()
+        ex.sweep_unfilled()
+    assert ex.error_rate() == 1.0
+    g = risk.gate([50_000.0, 50_100.0], ex.error_rate(), 0.2, 3.0, comp_settings())
+    assert g["freeze"] and not g["halt"]
+
+def test_a_failed_pending_query_does_not_resubmit_a_resting_buy(tmp_path):
     ex = make_executor(tmp_path)
     ex.refresh_pending()
     ex.send(buy_plan(ex))
     ex.client.query_order.side_effect = RoostooError("POST:/v3/query_order:timeout")
     ex.refresh_pending()
     rec = ex.send(buy_plan(ex))
-    assert rec["event"] == "placed"
-    assert ex.client.place_order.call_count == 2
-
+    assert rec["skipped"] == "order_already_pending"
+    assert ex.client.place_order.call_count == 1
 
 def test_repro_drawdown_halt_never_clears_once_flat():
     s = comp_settings()
@@ -131,25 +138,28 @@ def test_repro_drawdown_halt_never_clears_once_flat():
     assert not risk.gate(curve[-5000:], 0.0, 0.2, 3.0, s)["halt"]
 
 
-def test_repro_missing_quote_marks_a_held_coin_at_zero_and_trips_the_drawdown_halt(tmp_path):
+def test_a_missing_quote_keeps_the_last_mark_and_does_not_trip_the_halt(tmp_path):
     bot = object.__new__(Bot)
     bot.universe, bot.holdings, bot.shorts, bot.cash = ["BTCUSDT"], {"BTCUSDT": 250.0}, {}, 25_000.0
     bot.executor = make_executor(tmp_path)
+    bot.journal = Mock()
     full, _ = bot.mark({"BTC/USD": QUOTE})
     hole, prices = bot.mark({})
-    assert full == pytest.approx(50_000.0)
-    assert hole == pytest.approx(25_000.0) and "BTCUSDT" not in prices
-    assert risk.gate([full, hole], 0.0, 0.2, 3.0, comp_settings())["halt"]
+    zero, _ = bot.mark({"BTC/USD": {**QUOTE, "LastPrice": 0.0}})
+    assert full == pytest.approx(50_000.0) and hole == pytest.approx(50_000.0) and zero == pytest.approx(50_000.0)
+    assert prices["BTCUSDT"] == pytest.approx(100.0)
+    assert not risk.gate([full, hole], 0.0, 0.2, 3.0, comp_settings())["halt"]
 
-
-def test_repro_mirror_row_dropped_for_zero_last_price_means_an_incomplete_check(monkeypatch):
+def test_mirror_rows_drop_for_zero_last_price_and_an_unheld_gap_does_not_breach(monkeypatch):
     specs = {"BTC/USD": SPEC, "ETH/USD": PairSpec("ETH/USD", 2, 4, 1, "crypto", True)}
     monkeypatch.setattr(feed, "binance_prices", lambda syms: {"BTCUSDT": 100.0, "ETHUSDT": 10.0})
     quotes = {"BTC/USD": QUOTE, "ETH/USD": {**QUOTE, "LastPrice": 0.0}}
     rows = feed.mirror_check(quotes, specs, ["BTCUSDT", "ETHUSDT"])
-    assert len(rows) == 1
-    assert risk.gate([1.0, 1.0], 0.0, 0.2, float("inf"), comp_settings())["halt"]
-
+    assert [r["symbol"] for r in rows] == ["BTCUSDT"]
+    held = {"BTCUSDT": 1.0}
+    assert not (set(held) - {r["symbol"] for r in rows})
+    g = risk.gate([1.0, 1.0], 0.0, 0.2, float("inf"), comp_settings())
+    assert g["freeze"] and not g["halt"]
 
 class _Guarded(GuardedTarget):
     def __init__(self, matrix):
@@ -170,7 +180,7 @@ def test_second_decision_after_cold_start_does_not_buy_a_path_entry_one_bar_late
     assert g.guard({"TRXUSDT": 0.5}, w, {"TRXUSDT": 1.0}, 0) == {}
 
 
-def test_repro_universe_refresh_orphans_a_held_coin_and_trips_the_drawdown_halt(tmp_path):
+def test_universe_refresh_keeps_a_held_coin_so_the_rule_can_sell_it(tmp_path):
     bot = object.__new__(Bot)
     bot.s = comp_settings()
     bot.journal = Mock()
@@ -186,9 +196,22 @@ def test_repro_universe_refresh_orphans_a_held_coin_and_trips_the_drawdown_halt(
     before, _ = bot.mark(quotes)
     bot.universe = ["BTCUSDT"]
     bot.adopt_wallet()
-    after, _ = bot.mark(quotes)
-    assert before == pytest.approx(50_000.0)
-    assert bot.holdings == {} and after == pytest.approx(25_000.0)
-    assert risk.gate([before, after], 0.0, 0.2, 3.0, bot.s)["halt"]
-    assert portfolio.deltas({}, portfolio.current_weights(bot.holdings, {"ETHUSDT": 10.0}, after),
-                            after, {"ETHUSDT": 10.0}) == []
+    after, prices = bot.mark(quotes)
+    assert bot.holdings == {"ETHUSDT": 2_500.0} and after == pytest.approx(before)
+    orders = portfolio.deltas({}, portfolio.current_weights(bot.holdings, prices, after), after, prices)
+    assert [(o["symbol"], o["side"]) for o in orders] == [("ETHUSDT", "SELL")]
+
+
+def test_an_ambiguous_submission_is_lifted_once_reconciliation_settles(tmp_path, monkeypatch):
+    from bot import run
+    bot = object.__new__(Bot)
+    bot.executor = make_executor(tmp_path)
+    bot.executor.submission_blocked = True
+    bot.intents, bot.client, bot.journal, bot.blocked_cycles = Mock(), Mock(), Mock(), 0
+    monkeypatch.setattr(run, "reconcile_intents", lambda *a: {"clean": False, "settled": 0})
+    bot.settle_blocked_submission()
+    assert bot.executor.submission_blocked and bot.blocked_cycles == 1
+    monkeypatch.setattr(run, "reconcile_intents", lambda *a: {"clean": True, "settled": 1})
+    bot.settle_blocked_submission()
+    assert not bot.executor.submission_blocked and bot.blocked_cycles == 0
+

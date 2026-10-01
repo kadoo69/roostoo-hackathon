@@ -172,7 +172,7 @@ def main() -> int:
         "mirror_abs_median_bps": round(float(np.median([abs(m["deviation_bps"]) for m in mirror])), 3) if mirror else None,
         "mirror_material_count": len(material),
         "mirror_material_max_bps": round(max(material, default=0.0), 3),
-        "risk_gate_clear": not gate["halt"],
+        "risk_gate_clear": not (gate["halt"] or gate["freeze"]),
     }
     ok = all(b["pass"] for b in books) and market["ticker_fresh"] and market["risk_gate_clear"]
     report = {"written_utc": dt.datetime.now(dt.timezone.utc).isoformat(),

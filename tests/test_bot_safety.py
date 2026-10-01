@@ -39,10 +39,16 @@ def test_spread_limit_is_enforced(tmp_path):
     assert plan["skipped"] == "spread_exceeds_limit"
 
 
-def test_stale_ticker_halts():
+def test_stale_ticker_freezes_without_liquidating():
     result = risk.gate([100000.0], 0.0, 121.0, 0.0, settings())
-    assert result["halt"]
+    assert result["freeze"] and not result["halt"]
     assert result["breaches"] == ["stale_ticker:121s"]
+
+
+def test_drawdown_still_halts_and_outranks_a_freeze():
+    result = risk.gate([100000.0, 70000.0], 0.9, 121.0, 0.0, settings())
+    assert result["halt"] and not result["freeze"]
+    assert result["breaches"][0].startswith("drawdown")
 
 
 def test_gross_exposure_is_capped():

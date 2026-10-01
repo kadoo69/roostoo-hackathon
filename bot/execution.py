@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import math
 import time
+from collections import deque
 
 from bot.journal import Journal
 from bot.settings import Settings
@@ -12,6 +13,8 @@ NORMAL_SPREAD_TICKS = 2
 SPOT_SIDES = {"BUY", "SELL"}
 SHORT_SIDES = {"SHORT_OPEN", "SHORT_CLOSE"}
 SHORT_FEE = 0.001
+ERROR_WINDOW = 40
+ERROR_MIN_CALLS = 8
 
 
 class Executor:
@@ -27,6 +30,8 @@ class Executor:
         self.submission_blocked = False
         self.intents = None
         self.pending_pairs: set[str] = set()
+        self.calls: deque[bool] = deque(maxlen=ERROR_WINDOW)
+        self.sent_at: dict[str, float] = {}
 
     def spec(self, symbol: str) -> PairSpec | None:
         return self.by_symbol.get(symbol)
@@ -142,7 +147,12 @@ class Executor:
         try:
             resp = self.client.query_order(pending_only=True)
         except RoostooError:
+            self.calls.append(True)
+            now = time.time()
+            self.pending_pairs = self.pending_pairs | {p for p, t in self.sent_at.items()
+                                                       if now - t < self.settings.limit_timeout_s}
             return self.pending_pairs
+        self.calls.append(False)
         self.pending_pairs = {str(o.get("Pair") or "").replace("/", "")
                               for o in (resp.get("OrderDetails") or [])}
         return self.pending_pairs
@@ -176,16 +186,20 @@ class Executor:
                                                client_order_id=intent_id)
         except AmbiguousOrderError as exc:
             self.errors += 1
+            self.calls.append(True)
             self.submission_blocked = True
             self.journal.write("orders", {"event": "submission_unknown", "error": str(exc),
                                           "intent_id": intent_id, **plan})
             raise
         except RoostooError as exc:
             self.errors += 1
+            self.calls.append(True)
             if self.intents and intent_id:
                 self.intents.resolve(intent_id, "rejected", {"error": str(exc)})
             return self.journal.write("orders", {"event": "error", "error": str(exc),
                                                  "intent_id": intent_id, **plan})
+        self.calls.append(False)
+        self.sent_at[str(plan.get("pair") or "").replace("/", "")] = time.time()
         if plan["side"] in SHORT_SIDES:
             return self._record_short(plan, resp, intent_id)
         detail = resp.get("OrderDetail", resp)
@@ -227,8 +241,10 @@ class Executor:
             pending = self.client.query_order(pending_only=True)
         except RoostooError as exc:
             self.errors += 1
+            self.calls.append(True)
             return [self.journal.write("orders", {"event": "query_error",
                                                   "error": str(exc)})]
+        self.calls.append(False)
         for o in pending.get("OrderDetails", []) or []:
             age = time.time() - float(o.get("CreateTimestamp", 0)) / 1000.0
             if age < self.settings.limit_timeout_s:
@@ -240,15 +256,23 @@ class Executor:
                 # the error rate toward the kill switch.
                 # DECISIONS.md#testnet-live
                 self.client.cancel_order(order_id=o["OrderID"], pair=o.get("Pair"))
+                self.calls.append(False)
                 out.append(self.journal.write("orders", {
                     "event": "cancelled_stale", "order_id": o["OrderID"],
                     "pair": o.get("Pair"), "age_s": round(age, 1)}))
             except RoostooError as exc:
                 self.errors += 1
+                self.calls.append(True)
                 out.append(self.journal.write("orders", {
                     "event": "cancel_error", "error": str(exc),
                     "order_id": o.get("OrderID")}))
         return out
 
     def error_rate(self) -> float:
-        return self.errors / self.attempts if self.attempts else 0.0
+        """Failed share of the last ERROR_WINDOW venue calls (orders, queries and cancels alike), or
+        0 before ERROR_MIN_CALLS. A lifetime ratio of order errors to order attempts let one failed
+        query after a handful of orders halt a book, and never fell again once the book was flat.
+        DECISIONS.md#live-faults-2026-10-01"""
+        if len(self.calls) < ERROR_MIN_CALLS:
+            return 0.0
+        return sum(self.calls) / len(self.calls)

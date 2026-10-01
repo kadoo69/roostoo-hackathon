@@ -30,15 +30,19 @@ def drawdown(equity_curve: list[float]) -> float:
 
 def gate(equity_curve: list[float], error_rate: float, ticker_age_s: float,
          mirror_bps: float | None, settings: Settings) -> dict:
-    breaches = []
+    """`halt` (drawdown) empties the target; `freeze` (venue errors, a stale ticker, a mirror
+    breach) holds the book as it is and sends no new orders, because liquidating through a
+    failing venue or at prices that cannot be trusted turns a data fault into a loss.
+    DECISIONS.md#live-faults-2026-10-01"""
+    breaches, soft = [], []
     dd = drawdown(equity_curve)
     if dd <= -settings.kill_max_drawdown:
         breaches.append(f"drawdown:{dd:.4f}")
     if error_rate >= settings.kill_error_rate:
-        breaches.append(f"error_rate:{error_rate:.3f}")
+        soft.append(f"error_rate:{error_rate:.3f}")
     if ticker_age_s >= settings.kill_stale_ticker_s:
-        breaches.append(f"stale_ticker:{ticker_age_s:.0f}s")
+        soft.append(f"stale_ticker:{ticker_age_s:.0f}s")
     if mirror_bps is not None and abs(mirror_bps) >= settings.mirror_max_deviation_bps:
-        breaches.append(f"mirror_deviation:{mirror_bps:.2f}bps")
-    return {"halt": bool(breaches), "breaches": breaches,
-            "drawdown": round(dd, 5)}
+        soft.append(f"mirror_deviation:{mirror_bps:.2f}bps")
+    return {"halt": bool(breaches), "freeze": bool(soft) and not breaches,
+            "breaches": breaches + soft, "drawdown": round(dd, 5)}

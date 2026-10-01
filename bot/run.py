@@ -84,6 +84,7 @@ def next_pending(fresh: bool, halt: bool, target: dict[str, float], pending: dic
 
 
 MAX_DEFERRALS = 3
+BLOCK_EXIT_CYCLES = 10
 
 
 def incomplete_hold(gaps: dict, matrix: pd.DataFrame, state: dict) -> bool:
@@ -132,6 +133,7 @@ class Bot:
         else:
             self.intents = None
         self.mirror_breaches = 0
+        self.blocked_cycles = 0
         self.recent_symbols: dict[str, float] = {}
         self.store = Store(settings.name)
         saved = self.store.load()
@@ -151,6 +153,7 @@ class Bot:
         self.universe_at = (dt.datetime.fromisoformat(saved["universe_at"])
                             if saved.get("universe_at") else None)
         self.equity_curve = [float(x) for x in saved.get("equity_curve", [])]
+        self.last_marks = {k: float(v) for k, v in (saved.get("last_marks") or {}).items()}
         self.last_bar = (pd.Timestamp(saved["last_bar"])
                          if saved.get("last_bar") else None)
         # A process with no restored bar memory would otherwise treat the most
@@ -209,7 +212,8 @@ class Bot:
         if not self.universe:
             self.journal.write("errors", {"event": "adopt_skipped_no_universe"})
             return
-        live, cash = wallet_positions(wallet, quote=venue_quote(self.specs), universe=set(self.universe))
+        live, cash = wallet_positions(wallet, quote=venue_quote(self.specs),
+                                      universe=set(self.universe) | set(self.holdings))
         check = reconcile(self.holdings, live, tolerance=1e-6)
         from bot.state import holdings_ignored
         self.journal.write("reconcile", {"event": "startup", **check,
@@ -267,7 +271,8 @@ class Bot:
             "opened": self.opened,
             "last_decision_bar": self.last_decision_bar,
             "pending_entries": self.pending_entries,
-            "pending_bar": str(self.last_bar) if self.last_bar is not None else None})
+            "pending_bar": str(self.last_bar) if self.last_bar is not None else None,
+            "last_marks": {k: round(v, 12) for k, v in getattr(self, "last_marks", {}).items()}})
 
     def refresh_universe(self, now: dt.datetime) -> None:
         stale = (self.universe_at is None or
@@ -314,11 +319,25 @@ class Bot:
         return True
 
     def mark(self, quotes: dict) -> tuple[float, dict[str, float]]:
+        """Prices for the universe and every position. A held coin missing from the ticker, or
+        quoted at zero, keeps its last known mark instead of counting as worthless, which read as
+        a phantom drawdown and tripped the halt. DECISIONS.md#live-faults-2026-10-01"""
         prices = {}
         for sym in set(self.universe) | set(self.holdings) | set(self.shorts):
             spec = self.executor.spec(sym)
-            if spec and spec.pair in quotes:
+            if spec and spec.pair in quotes and float(quotes[spec.pair].get("LastPrice") or 0.0) > 0:
                 prices[sym] = float(quotes[spec.pair]["LastPrice"])
+        if not hasattr(self, "last_marks"):
+            self.last_marks = {}
+        stale = sorted(s for s in set(self.holdings) | set(self.shorts)
+                       if s not in prices and s in self.last_marks)
+        for s in stale:
+            prices[s] = self.last_marks[s]
+        if stale and getattr(self, "journal", None) is not None:
+            self.journal.write("errors", {"event": "mark_from_last_known", "symbols": stale,
+                                          "ref": "DECISIONS.md#live-faults-2026-10-01"})
+        self.last_marks.update({s: prices[s] for s in set(self.holdings) | set(self.shorts)
+                                if s in prices and s not in stale})
         equity = self.cash + sum(q * prices.get(s, 0.0)
                                  for s, q in self.holdings.items())
         equity += sum(portfolio.short_value(pos, prices[s]) if s in prices
@@ -454,6 +473,7 @@ class Bot:
         ticker_age_s = (float("inf") if ticker_time is None else
                         max(0.0, (self.client._timestamp() - ticker_time) / 1000.0))
         if not self.s.dry_run:
+            self.settle_blocked_submission()
             self.adopt_wallet()
             if not self.wallet_ok:
                 return self.journal.write("waiting", {
@@ -465,10 +485,11 @@ class Bot:
         if self.s.mirror_reference == "none":
             mirror, worst = [], None
         else:
-            mirror = feed.mirror_check(quotes, self.specs, self.universe)
+            mirror = feed.mirror_check(quotes, self.specs, sorted(set(self.universe) | set(self.holdings)))
             material = [m for m in mirror if m.get("material")]
-            raw_worst = (max((abs(m["deviation_bps"]) for m in material), default=0.0)
-                         if len(mirror) == len(self.universe) else float("inf"))
+            unchecked_held = set(self.holdings) - {m["symbol"] for m in mirror}
+            raw_worst = (float("inf") if unchecked_held else
+                         max((abs(m["deviation_bps"]) for m in material), default=0.0))
             if raw_worst >= self.s.mirror_max_deviation_bps:
                 self.mirror_breaches += 1
             else:
@@ -521,6 +542,8 @@ class Bot:
                     and cash_frac >= RETRY_MIN_CASH_FRAC)
         if guard["halt"]:
             target = {}
+        elif guard.get("freeze"):
+            target = dict(current_w)
         elif fresh or not self.target_from_channels():
             target = self.compute_target(channels, derisk, prices)
         elif not self.s.booking.get("enabled") and not retrying:
@@ -559,7 +582,8 @@ class Bot:
         current = current_w
         orders = (portfolio.deltas(target, current, equity, prices,
                                    force={e["symbol"] for e in skims} | lock_force)
-                  if fresh or guard["halt"] or self.trades_every_cycle() or retrying else [])
+                  if (fresh or guard["halt"] or self.trades_every_cycle() or retrying)
+                  and not guard.get("freeze") else [])
 
         suppressed = []
         if fresh and self.cold_start and not guard["halt"]:
@@ -627,7 +651,7 @@ class Bot:
                 self.last_decision_bar = saved_books["last_decision_bar"]
         elif self.target_from_channels():
             self.pending_entries = next_pending(
-                fresh, guard["halt"], target, self.pending_entries,
+                fresh, guard["halt"] or bool(guard.get("freeze")), target, self.pending_entries,
                 portfolio.current_weights(self.holdings, prices, equity),
                 {o["symbol"] for o in suppressed}, cash_frac)
 
@@ -658,7 +682,7 @@ class Bot:
             "ranking": ranking or None,
             "shorts": short_info,
             "n_universe": len(self.universe),
-            "derisk": derisk, "halt": guard["halt"], "breaches": guard["breaches"],
+            "derisk": derisk, "halt": guard["halt"], "freeze": guard.get("freeze"), "breaches": guard["breaches"],
             "drawdown": guard["drawdown"], "orders": len(placed),
             "cold_start_suppressed": len(suppressed) or None,
             "mirror_worst_bps": worst, "mirror_checked": len(mirror),
@@ -677,6 +701,31 @@ class Bot:
                 "channels": {s: c.as_dict() for s, c in channels.items()},
                 "target_weights": target})
         return snapshot
+
+    def settle_blocked_submission(self) -> None:
+        """Re-run intent reconciliation while an ambiguous submission blocks orders, and lift the
+        block once every intent is settled; after BLOCK_EXIT_CYCLES unsettled cycles exit so the
+        supervisor restarts the process and its startup reconciliation. One timed-out order used to
+        block every later order, exits included, for the life of the process.
+        DECISIONS.md#live-faults-2026-10-01"""
+        import os
+
+        ex = getattr(self, "executor", None)
+        if ex is None or not ex.submission_blocked or getattr(self, "intents", None) is None:
+            self.blocked_cycles = 0
+            return
+        report = reconcile_intents(self.intents, self.client, self.journal)
+        if report["clean"]:
+            self.executor.submission_blocked = False
+            self.blocked_cycles = 0
+            self.journal.write("lifecycle", {"event": "submission_unblocked", "settled": report["settled"],
+                                             "ref": "DECISIONS.md#live-faults-2026-10-01"})
+            return
+        self.blocked_cycles += 1
+        if self.blocked_cycles >= BLOCK_EXIT_CYCLES:
+            self.journal.write("lifecycle", {"event": "exit_unsettled_submission", "cycles": self.blocked_cycles,
+                                             "ref": "DECISIONS.md#live-faults-2026-10-01"})
+            os._exit(4)
 
     def start_watchdog(self, limit_s: float = WATCHDOG_S) -> None:
         """Exit the process when one cycle has run longer than `limit_s` (monotonic clock, so
