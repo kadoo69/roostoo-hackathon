@@ -4574,3 +4574,12 @@ Fix (paper books only): `signals.burst_rider.live_step` decides each bar from th
 Replay of the fixed rule on live bars from the `ride1_5m` start (12:15Z) to 14:40Z: mean gross 0.62, three entries (ENA, NEAR, ARB), return -1.36% against the book's actual +0.72%; the actual profit came from the artifact exit that freed a slot for AAVE.
 Two and a half hours is noise; the point is that the books now run the declared rule, so their 7-day comparisons measure the rule.
 Open, not changed: the contenders books show the same mechanism after a cold start (sticky slots keep a path entry until its channel exit; `competition_rehearsal` had a ghost on 9 of 23 decisions today, `resid_30m` on 30 of 30). The competition book places real orders, so a change there is an operator decision.
+
+## wide-pool-live-2026-10-01
+
+Operator instruction 2026-10-01 19:25Z: expand the pool and test the opportunity and signals on the wider pool in the live market.
+Declared before any live number: two paper books, each an exact copy of its control with only `strategy.universe_mode: venue_all` (every tradable Roostoo crypto pair still printing Binance bars, about 64, through `bot.universe.select`).
+`wide_30m` runs the competition rule (control `momentum_top3_30m`); `ride1_wide_5m` runs the 1% momentum ride (control `ride1_5m`, on the real-position slots of `#ride-ghost-slots-2026-10-01`).
+Mechanism: in a chop market the top-30 pool moves as one block (first factor 56%, about 3 effective bets), so the thinner names outside it may carry coin-specific jumps the pool does not.
+Failure mode, already seen twice in the rally: the extra names are thinner, wider-spread altcoin beta; the 09-23..26 replay lost return and doubled the drawdown on 15m and 5m (`#full-roostoo-pool-live-replay-2026-09-26`) and `momentum_top3_30m_wide` trailed its control by 3.1 points in 11 h (`#retired-2026-09-27`). Wide-spread names pay the far side under the paper fill rule (`max_spread_bps: 5`).
+Decision rule: after 7 live days (2026-10-08) each book stops if its return is below its control over the same days, or on the 25% drawdown kill. Paper only; nothing reaches the competition book from this test without an operator decision.
