@@ -4451,3 +4451,16 @@ Operator instruction 2026-10-01: apply the red-team fault fixes. Each restores i
 - Ambiguous submission (`bot/run.py`): reconciliation re-runs every live cycle and lifts the block when every intent is settled; after 10 unsettled cycles the process exits so the supervisor restarts it. One timed-out order used to block every later order, exits included, for the life of the process.
 Not changed (operator decisions in the red-team report): the drawdown halt stays permanent within a process, exits stay passive maker orders.
 Tests: `tests/test_stress_competition.py` (the former reproductions now assert the fixed behaviour), `tests/test_bot_safety.py`.
+
+## retired-2026-10-01
+
+Operator instruction 2026-10-01 07:55Z: retire the 15m and 5m paper books. Since the 2026-09-30 17:34Z reset `momentum_top3_15m` finished -3.96% (14 exits, 7% won, -2.96k of it on holds under 2 h) and `momentum_top3_5m` -3.12% (22 exits, 41% won, -2.97k on holds under 2 h); the red-team harness puts the 15m rule at a -7.9% median 14-day return after costs (`results/stress/m15_agent/REPORT.md`). Both stopped, removed from the default `run_bots.sh` CONFIGS, live data moved to `live/_archive/retired-2026-10-01/`. Their configs stay: the dynamic bot's 5m and 15m styles read them.
+
+## best-signals-2026-10-01
+
+Operator request 2026-10-01: check the best signals and learn from them. `python3 -m gates.best_signals` (`results/best_signals.json`) reads 14 entry features at each competition-rule trade's entry close (closed trades: 2,911 fit, 2,347 holdout, 582 recent) and relates them to the trade's net return, per period. Descriptive; the holdout and recent periods have been used before, so any rule drawn from this needs its own declaration.
+The top 10% of trades earn 78% / 82% / 86% of all gross gains (fit / holdout / recent): the result is a few big trends, and more so lately.
+The best trades entered coins already running hard and volatile. Top 10% vs the rest, holdout medians: prior 24 h +5.4% vs +2.7%, 40-bar momentum +5.7% vs +2.3%, own move against the pool over 4 h +1.9% vs +0.9%, 24 h realised volatility per bar 0.81% vs 0.53%, close above the 4h 20-bar high by 1.1% vs 0.35%; recent is the same.
+The same features lower the typical trade: their rank correlation with the trade's return is negative in every period (realised volatility -0.21 / -0.21 / -0.24, prior 4 h -0.17 / -0.18 / -0.22, momentum -0.17 / -0.17 / -0.17, residual -0.15 / -0.18 / -0.18), while their top quintile has the highest mean in holdout and recent (+1.1% to +2.7% per trade) but not in fit. Extended, volatile entries lose a little more often and carry the rare large winner: the payoff asymmetry, not a filter.
+No stable relation: entry volume multiple (beyond the 1.5x gate), BTC 24 h return, breadth, the number of coins breaking out together, hour of day.
+Reading: the rule's existing momentum sizing already leans toward these trades; a filter on them would cut trade count and keep the tails, and its mean benefit is absent in fit. Candidate for a declared test only: a stronger tilt of size toward high residual strength and volatility, judged on fit first.
