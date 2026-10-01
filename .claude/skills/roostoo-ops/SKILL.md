@@ -10,7 +10,7 @@ Run from the repo root. Read `HANDOVER.md` "CURRENT STATE" first and `docs/ANTIP
 ## Books (2026-10-01)
 
 - LIVE, real Roostoo orders: `competition` (COMP keys, the 30m contenders rule) and `competition_rehearsal` (same rule, TEST keys). Start/stop with `./run_bots.sh live | livestop`.
-- PAPER (default `CONFIGS`): `momentum_top3_30m` (control), `wf_live` (dynamic), `ride_5m`, `blend_30m_ride`, `regime_ls_30m`. Start/stop with `./run_bots.sh start | stop | restart`.
+- PAPER (default `CONFIGS`): `momentum_top3_30m` (control), `wf_live` (dynamic), `ride_5m`, `ride1_5m`, `blend_30m_ride`, `regime_ls_30m`, `resid_30m`, `htf0_30m`. Start/stop with `./run_bots.sh start | stop | restart`.
 - `./run_bots.sh status` proves processes exist; liveness is a `cycles` row under ~90 s old.
 
 ## Routine checks

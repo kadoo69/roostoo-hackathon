@@ -2,10 +2,10 @@
 
 Current state only. The full history of sessions to 2026-09-23 is archived at `docs/archive/HANDOVER_2026-09-23.md`; older section references in code and configs point there.
 
-## CURRENT STATE 2026-10-01 08:35Z (read this first; everything below is history)
+## CURRENT STATE 2026-10-01 14:00Z (read this first; everything below is history)
 
 ### Deadlines and blockers
-- **First competition trade due 2026-10-01 12:00 UTC.** The competition account is STILL NOT ACTIVE (`/v3/balance`: "not yet a member of this competition", last seen 08:3xZ). The `competition` book polls every 30 s and starts on the first good wallet read. The operator must message the organisers.
+- **The first-trade deadline (2026-10-01 12:00 UTC) has passed with the competition account STILL NOT ACTIVE** (`/v3/balance`: "not yet a member of this competition", last seen 13:53Z; waiting since 2026-09-30 14:22Z). The `competition` book polls every 30 s and starts on the first good wallet read. The operator must message the organisers.
 - **Uptime.** The Mac slept on battery 2026-09-30 ~20:40Z to 10-01 ~05:15Z and dropped to battery several times after; overnight sleep cost the 30m rule about 1 point and the fast books 2-3 (`DECISIONS.md#offline-replay-2026-10-01`). Keep it on mains with `sudo pmset -a disablesleep 1`, or deploy to AWS with `deploy/ec2_bootstrap.sh` when access works, then `./run_bots.sh livestop` on the Mac. NEVER run `competition` on two hosts.
 - No manual stop, override or trade on the competition account; every live change committed and pushed (public repo, `main`).
 
@@ -18,7 +18,10 @@ Current state only. The full history of sessions to 2026-09-23 is archived at `d
 | `wf_live` | dynamic bot (paper): 29 styles + cash, hourly 3-day leader, decision point OFF, switch margin 3.0 pp | 08:33Z |
 | `ride_5m` | paper: momentum ride alone (+2%/15m jump, hold for +5% up to 24 h) | 08:28Z |
 | `blend_30m_ride` | paper: fixed 50/50 competition rule + ride | 08:28Z |
-| `regime_ls_30m` | paper: regime switch, shorts and no new longs only in a confirmed DOWN regime (`signals/regime_ls.py`) | 08:28Z |
+| `regime_ls_30m` | paper: regime switch, shorts and no new longs only in a confirmed DOWN regime (`signals/regime_ls.py`); history says DOWN states rebound (`#technicals-survey-2026-10-01`) | 08:28Z |
+| `resid_30m` | paper: competition rule on market-neutral prices, 4h filter off | 12:15Z |
+| `htf0_30m` | paper: competition rule with the 4h filter off | 12:15Z |
+| `ride1_5m` | paper: momentum ride with a 1% trigger (control `ride_5m`) | 12:17Z |
 Retired today: `momentum_top3_15m`, `momentum_top3_5m` (`#retired-2026-10-01`; configs stay, wf_live uses them).
 
 ### Fixed today (all committed, all books restarted on them)
@@ -29,18 +32,20 @@ Retired today: `momentum_top3_15m`, `momentum_top3_5m` (`#retired-2026-10-01`; c
 ### Research today (all in DECISIONS.md, all nulls recorded)
 - Red-team harness `gates/stress.py` and three agent reports in `results/stress/` (`#stress-harness-declaration`): the 30m edge is thin and depends on maker fills and a few big trends; the 15m rule has no edge after costs.
 - Failed declared tests: crash-regime shorts (`#crash-shorts-outcome`), 1h clock for the competition book (better on history, -12.8% vs +9.9% on the unseen last 12 days, `#competition-1h-outcome`), strength/volatility sizing tilts (`#strength-tilt-outcome`), follow-the-leader style switching in the current market (`#adaptive-recent-2026-10-01`).
+- Afternoon, all recorded: residual long/short spread FAIL (`#residual-spread-outcome`); replay decomposition, all 13-19% styles earned in the trending 09-19..25 week (`#replay-decomposition-2026-10-01`); minute-level scan, moves revert 2-8 bps below the 10 bps fee (`#micro-scan-2026-10-01`); technicals survey, no textbook rule beats holding the pool, all negative on 2025-26 history (`#technicals-survey-2026-10-01`); sizing, 0.33 cap and vol targeting better on history but trail in the rally, none passes (`#sizing-competition-outcome`); ride trigger 1% vs 2% (`#ride-trigger-2026-10-01`).
 - Descriptive: overnight minute patterns (`#overnight-patterns-2026-10-01`), best-signal profile (`#best-signals-2026-10-01`), fill quality (all maker, buys under 10 s, one slow exit in six, `#fill-quality-2026-10-01`). HRT AI Labs post assessed: ignore (execution RL, no disclosed edge).
 
 ### Open operator decisions
 1. Exit escalation (a LIMIT exit unfilled after 300 s re-sent at MARKET): operator said yes 08:30Z, but the Claude Code auto-mode classifier blocked editing real-money execution; needs the operator out of auto mode or to apply it. Design: `Executor.sweep_unfilled` sells the unfilled rest at MARKET after cancelling a stale SELL, behind `execution.exit_escalation: true` on the competition configs.
 2. Drawdown halt stays permanent within a process (red-team item 7).
-3. Wiring the regime switch into the competition book: only if `regime_ls_30m` beats `momentum_top3_30m` with profitable shorts over its 7-day paper run.
+3. Sizing: keep the 0.5 cap (raw return, Screen 2) or move to the 0.33 cap (better on history and Screen 3, about -0.85 pt in the rally window); recommended after qualifying.
+4. Wiring the regime switch into the competition book: only if `regime_ls_30m` beats `momentum_top3_30m` with profitable shorts over its 7-day paper run.
 
 ### Next steps
 1. Account activation; first trades: check with `python3 -m gates.fill_quality --book competition` and the stale-entry journal events.
-2. Checkpoint 2026-10-03: compare competition, rehearsal, momentum_top3_30m, regime_ls_30m, ride_5m, blend_30m_ride, wf_live on forward results only.
+2. Checkpoint 2026-10-03: compare competition, rehearsal, momentum_top3_30m, regime_ls_30m, ride_5m, ride1_5m, blend_30m_ride, resid_30m, htf0_30m, wf_live on forward results only; switch the competition book only with the operator.
 3. 2026-10-08: apply the 7-day stop rules in each paper config.
-Tools added today: `gates.stress`, `gates.stress_competition`, `gates.stress_m15`, `gates.stress_wf`, `gates.missed_replay`, `gates.overnight_patterns`, `gates.crash_shorts`, `gates.competition_1h`, `gates.best_signals`, `gates.strength_tilt`, `gates.fill_quality`, `gates.adaptive_recent`.
+Tools added today: `gates.stress`, `gates.stress_competition`, `gates.stress_m15`, `gates.stress_wf`, `gates.missed_replay`, `gates.overnight_patterns`, `gates.crash_shorts`, `gates.competition_1h`, `gates.best_signals`, `gates.strength_tilt`, `gates.fill_quality`, `gates.adaptive_recent`, `gates.residual_spread`, `gates.micro_scan`, `gates.technicals_survey`, `gates.sizing_competition`. Skills: `roostoo-live-report`, `roostoo-incident`, `roostoo-ops`, `roostoo-research` (start sessions in the repo so they load).
 
 ## State at 2026-10-01 01:10 IST / 2026-09-30 19:40Z (history)
 
