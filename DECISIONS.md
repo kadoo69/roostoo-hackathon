@@ -4510,3 +4510,16 @@ FAIL, both arms (`results/residual_spread.json`, `python3 -m gates.residual_spre
 Recent live window 2026-09-19 to 2026-10-01 09:30Z: 4 h residual -17.72% (max drawdown -19.5%; long leg +2.57%, short leg -20.27%), 24 h residual -17.56% (-18.0%; long -8.20%, short -10.88%). History median 14-day return fit / holdout / recent: 4 h -15.8% / -19.6% / -23.9% at about 200x turnover per 14 days; 24 h -3.7% / -2.4% / -1.3%.
 Both beat all 50 random spreads, but that control is weak: random scores reshuffle every bar and pay fees on enormous turnover (median -63%), so beating it says little.
 Reading: shorting the coins weakest against the pool loses because they rebound against it; the losers of the last 4-24 h are the next hours' relative winners, the same short-horizon reversal that killed acceleration (`#accel-outcome`). Only the strongest-coin long leg on 4 h was positive, which the long rules already capture. Market-neutral residual spreads are closed.
+
+## replay-decomposition-2026-10-01
+
+Operator question 2026-10-01 12:05Z: the bots that made 13-17% in the replays, what were their strategies, and plug the insight into the current ones. Decomposition of the replay on live Binance bars 2026-09-19..10-01 12:00Z (flat start; first half to 2026-09-25 12:00Z, second half after; last 3 days):
+| style | total | first half | second half | last 3 d | trades | top-3 trades' share of P&L |
+|---|---|---|---|---|---|---|
+| momentum ride (5m) | +19.43% | +19.54% | -0.09% | -0.78% | 36 | 0.71 |
+| residual 30m | +11.70% | +6.79% | +4.60% | -4.03% | 124 | 0.99 |
+| regime long/short 30m | +12.88% | +15.61% | -2.37% | -10.80% | 125 | 0.75 |
+| 30m, 4h filter off, volume 1.5x | +10.55% | +11.99% | -1.28% | -5.79% | 100 | 0.96 |
+| 30m, no filters | +7.96% | +9.00% | -0.95% | -8.35% | 121 | 1.33 |
+| competition rule (30m, 4h filter on) | +6.72% | +11.92% | -4.64% | -7.80% | 75 | 2.04 |
+Reading: every style made its money in the trending first week (ENA, UNI, SUI, AVAX, AAVE legs) and was flat to negative since; the last three days lost for all. There is no style that earned in the current chop; the alpha the operator sees in the replays is the first week's trend. Two styles held up better in the second half than the competition rule: residual 30m (the only one positive in both halves) and 30m with the 4h filter off (less give-back, and it took the ADA and ARB legs the filter blocked this morning, `#best-signals-2026-10-01`). Both start as paper books (`config/resid_30m.yaml`, `config/htf0_30m.yaml`), chosen on this window and so forward evidence only; the ride already runs as `ride_5m`.

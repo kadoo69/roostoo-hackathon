@@ -14,7 +14,7 @@ GROUPS = (("live", "LIVE on Roostoo - real orders"), ("scalper", "PAPER - the dy
           ("momentum", "Short-term momentum"), ("burst", "Burst"), ("ab", "A/B tests"), ("short", "Short"))
 LIVE_BOOKS = {"competition", "competition_rehearsal"}
 SCALPER_BOOKS = {"wf_live", "momentum_top3_5m", "momentum_top3_15m", "momentum_top3_30m",
-                 "ride_5m", "blend_30m_ride", "regime_ls_30m"}
+                 "ride_5m", "blend_30m_ride", "regime_ls_30m", "resid_30m", "htf0_30m"}
 DESK_GROUPS = ("live", "scalper")
 TOTALS_GROUPS = ("live",)
 AB_ARMS = {"momentum_top3_15m_eq", "momentum_top3_15m_hold3h",
