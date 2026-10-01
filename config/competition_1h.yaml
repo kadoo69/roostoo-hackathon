@@ -1,0 +1,39 @@
+meta:
+  name: competition_1h
+  frozen: true
+  declared_utc: '2026-10-01T07:15:00Z'
+  requested_by: 'operator 2026-10-01: test the 1h rule for the competition book'
+  declared_ref: DECISIONS.md#competition-1h-declaration
+  written_before_any_number: false
+  contamination: >
+    Not clean. The 1h long-only rule already passed #lowtf-long-only-clocks-outcome on the same 2023-24
+    and 2025-26 periods, and its 1h fit/holdout/recent medians (+1.06 / +2.80 / +6.05) were printed by
+    gates/crash_shorts.py on 2026-10-01. Its forward paper book (momentum_top3_1h_long) finished
+    2026-09-24..30 at -9.8% against +7.9% for momentum_top3_30m, both online ~31%. The unseen evidence
+    in this test is the paired significance, the stress scenarios, the random-coin control and the
+    fully-online replay from 2026-09-19 (after the holdout) to now.
+mechanism: >
+  A 20-bar breakout on 1h bars (20 h) is a larger, slower move than on 30m (10 h): fewer false breakouts
+  in chop (whipsaw 4% on 1h vs 9% on 30m live, #decision-point-outcome-2026-10-01), lower turnover
+  (24 vs 43 per 14 days), so less fee drag on a thin edge, and the 10-bar exit (10 h) holds through
+  ordinary pullbacks.
+failure_mode: >
+  The slower clock enters later and exits later: it gives back more at trend ends and misses short
+  bursts like the 2026-10-01 overnight legs; the historical gap is selection on periods already used;
+  the forward week already disagreed.
+arms:
+  C30: config/competition.yaml contenders block exactly, 30m, entry 20 / exit 10, shorts off, ladder on (the live book)
+  C1h: the same contenders block on 1h bars, entry 20 / exit 10, shorts off, ladder on
+controls:
+  random_coin: C1h's own entry and exit times and weights, each spell moved to a random pool member at its entry bar, 20 seeds
+scenarios: the gates/stress.py set (fee_taker, slip_10bps, delay_1bar, outage, flash_wick, gap_shock) on both arms
+decision_rule: >
+  C1h is RECOMMENDED for the competition book (an operator decision either way) only if all hold:
+  (1) paired median 14-day return delta C1h - C30 > 0 on fit and holdout, block-bootstrap p < 0.10 on holdout;
+  (2) C1h holdout worst 14-day window no more than 3 pp worse than C30's and holdout P(>5%) at least C30's;
+  (3) median Screen 3 composite on holdout at least C30's;
+  (4) no stress scenario breaks C1h's holdout (harness break rule) that does not also break C30's;
+  (5) C1h holdout median beats the random-coin control in at least 18 of 20 seeds;
+  (6) fully-online forward replay 2026-09-19..now: C1h return not more than 2 pp below C30's.
+  Anything else: NOT RECOMMENDED. The forward paper week (-9.8% vs +7.9%) is reported beside the verdict.
+trials: 2 arms (C1h counted; C30 is the control)

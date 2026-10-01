@@ -1,0 +1,231 @@
+{
+ "describe": {
+  "C30": {
+   "fit": {
+    "n_windows": 719,
+    "median_pct": -0.759,
+    "mean_pct": 1.745,
+    "p_gt5": 0.267,
+    "p_gt10": 0.1502,
+    "p_gt20": 0.0668,
+    "worst_pct": -24.94,
+    "median_maxdd_pct": -6.99,
+    "median_screen3": -0.973,
+    "turnover_per_14d": 44.2
+   },
+   "holdout": {
+    "n_windows": 614,
+    "median_pct": 1.128,
+    "mean_pct": 2.396,
+    "p_gt5": 0.3485,
+    "p_gt10": 0.1906,
+    "p_gt20": 0.0619,
+    "worst_pct": -22.28,
+    "median_maxdd_pct": -7.85,
+    "median_screen3": 2.13,
+    "turnover_per_14d": 42.0
+   },
+   "recent": {
+    "n_windows": 101,
+    "median_pct": 0.189,
+    "mean_pct": 1.288,
+    "p_gt5": 0.3168,
+    "p_gt10": 0.1683,
+    "p_gt20": 0.0396,
+    "worst_pct": -17.79,
+    "median_maxdd_pct": -11.16,
+    "median_screen3": 0.597,
+    "turnover_per_14d": 55.4
+   }
+  },
+  "C1h": {
+   "fit": {
+    "n_windows": 719,
+    "median_pct": 1.061,
+    "mean_pct": 3.803,
+    "p_gt5": 0.3644,
+    "p_gt10": 0.2337,
+    "p_gt20": 0.0862,
+    "worst_pct": -32.06,
+    "median_maxdd_pct": -6.4,
+    "median_screen3": 2.431,
+    "turnover_per_14d": 25.0
+   },
+   "holdout": {
+    "n_windows": 614,
+    "median_pct": 2.799,
+    "mean_pct": 4.926,
+    "p_gt5": 0.4023,
+    "p_gt10": 0.2248,
+    "p_gt20": 0.0961,
+    "worst_pct": -22.75,
+    "median_maxdd_pct": -6.78,
+    "median_screen3": 3.295,
+    "turnover_per_14d": 23.5
+   },
+   "recent": {
+    "n_windows": 102,
+    "median_pct": 6.055,
+    "mean_pct": 8.507,
+    "p_gt5": 0.5294,
+    "p_gt10": 0.3137,
+    "p_gt20": 0.1471,
+    "worst_pct": -16.66,
+    "median_maxdd_pct": -7.08,
+    "median_screen3": 4.498,
+    "turnover_per_14d": 29.0
+   }
+  }
+ },
+ "paired_C1h_minus_C30": {
+  "fit": {
+   "median_delta_pp": 1.674,
+   "p_median": 0.149
+  },
+  "holdout": {
+   "median_delta_pp": 1.543,
+   "p_median": 0.027
+  },
+  "recent": {
+   "median_delta_pp": 3.914,
+   "p_median": 0.0015
+  }
+ },
+ "scenarios": {
+  "C30": {
+   "fee_taker": {
+    "holdout_median_pct": -0.795,
+    "breaks": [
+     "median<=0",
+     "lost>half",
+     "worst<-25"
+    ]
+   },
+   "slip_10bps": {
+    "holdout_median_pct": -2.673,
+    "breaks": [
+     "median<=0",
+     "lost>half",
+     "worst<-25"
+    ]
+   },
+   "delay_1bar": {
+    "holdout_median_pct": 0.685,
+    "breaks": [
+     "worst<-25"
+    ]
+   },
+   "outage": {
+    "holdout_median_pct": 0.776,
+    "breaks": []
+   },
+   "flash_wick": {
+    "holdout_median_pct": -2.164,
+    "breaks": [
+     "median<=0",
+     "lost>half",
+     "worst<-25"
+    ]
+   },
+   "gap_shock": {
+    "holdout_median_pct": -2.917,
+    "breaks": [
+     "median<=0",
+     "lost>half",
+     "worst<-25"
+    ]
+   }
+  },
+  "C1h": {
+   "fee_taker": {
+    "holdout_median_pct": 1.541,
+    "breaks": []
+   },
+   "slip_10bps": {
+    "holdout_median_pct": 0.434,
+    "breaks": [
+     "lost>half"
+    ]
+   },
+   "delay_1bar": {
+    "holdout_median_pct": 2.64,
+    "breaks": [
+     "worst<-25"
+    ]
+   },
+   "outage": {
+    "holdout_median_pct": 3.101,
+    "breaks": []
+   },
+   "flash_wick": {
+    "holdout_median_pct": 0.474,
+    "breaks": [
+     "lost>half",
+     "worst<-25"
+    ]
+   },
+   "gap_shock": {
+    "holdout_median_pct": -0.329,
+    "breaks": [
+     "median<=0",
+     "lost>half",
+     "worst<-25"
+    ]
+   }
+  }
+ },
+ "random_coin_holdout_medians": [
+  -1.14,
+  -1.81,
+  -1.34,
+  -0.56,
+  -1.92,
+  -1.09,
+  -2.23,
+  -0.28,
+  -1.47,
+  -1.24,
+  -0.69,
+  -1.36,
+  -0.48,
+  -2.37,
+  -2.75,
+  -1.73,
+  -0.33,
+  -1.15,
+  -1.53,
+  -2.19
+ ],
+ "forward_online_replay": {
+  "C30": {
+   "from": "2026-09-18 23:30:00+00:00",
+   "to": "2026-10-01 07:00:00+00:00",
+   "return_pct": 9.92,
+   "maxdd_pct": -11.37,
+   "trades": 75,
+   "turnover": 52.0
+  },
+  "C1h": {
+   "from": "2026-09-18 23:00:00+00:00",
+   "to": "2026-10-01 07:00:00+00:00",
+   "return_pct": -12.8,
+   "maxdd_pct": -17.47,
+   "trades": 47,
+   "turnover": 36.5
+  }
+ },
+ "forward_paper_2026_09_24_30": {
+  "momentum_top3_1h_long_pct": -9.8,
+  "momentum_top3_30m_pct": 7.9,
+  "online_share": 0.31
+ },
+ "checks": {
+  "1_paired_delta_positive_fit_and_holdout_p_lt_0.10": true,
+  "2_worst_within_3pp_and_p5_at_least": true,
+  "3_screen3_at_least": true,
+  "4_no_extra_scenario_breaks": true,
+  "5_beats_random_coin_18_of_20": true,
+  "6_forward_not_2pp_below": false
+ },
+ "verdict": "NOT RECOMMENDED"
+}

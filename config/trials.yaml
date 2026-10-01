@@ -6018,3 +6018,8 @@ trials:
   config: crash_shorts:C_crash@1h
   status: fail
   note: rerun after the void first run, DECISIONS.md#crash-shorts-outcome
+- signal: clock
+  gate: competition_1h
+  config: competition_1h:C1h
+  status: fail
+  note: DECISIONS.md#competition-1h-outcome
