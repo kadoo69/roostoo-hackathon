@@ -6023,3 +6023,13 @@ trials:
   config: competition_1h:C1h
   status: fail
   note: DECISIONS.md#competition-1h-outcome
+- signal: sizing_tilt
+  gate: strength_tilt
+  config: strength_tilt:T_res
+  status: fail
+  note: DECISIONS.md#strength-tilt-outcome
+- signal: sizing_tilt
+  gate: strength_tilt
+  config: strength_tilt:T_vol
+  status: fail
+  note: DECISIONS.md#strength-tilt-outcome

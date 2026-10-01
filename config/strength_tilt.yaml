@@ -1,0 +1,30 @@
+meta:
+  name: strength_tilt
+  frozen: true
+  declared_utc: '2026-10-01T08:05:00Z'
+  requested_by: 'operator 2026-10-01: next steps from the best-signals study; go ahead'
+  declared_ref: DECISIONS.md#strength-tilt-declaration
+  written_before_any_number: true
+motivation: >
+  #best-signals-2026-10-01: the competition rule's top 10% of trades (78-86% of gross gains) entered
+  coins that were strong against the pool and volatile; those features' top quintile has the highest mean
+  trade in holdout and recent but not in fit, and lowers the median trade everywhere.
+mechanism: >
+  The rule sizes its up-to-three names by 40-bar momentum. Tilting size further toward the name that is
+  strongest on its own (residual) or most volatile puts more capital on the trades that carry the
+  payoff asymmetry, without changing which names are entered or when.
+failure_mode: >
+  The tilt only concentrates risk: more weight on volatile names deepens drawdowns and the worst window
+  while the mean gain is absent in fit (as the study already showed), or any random reweighting of the
+  same names does as well.
+base: 'C0 = config/competition.yaml contenders block exactly, 30m, shorts off, ladder on (gates.stress.weights)'
+arms:
+  T_res: 'C0 weights times (1 + percentile rank of the coin''s 4h move against the pool among the names held that bar), renormalised to C0''s gross, capped at 0.5'
+  T_vol: 'C0 weights times (coin''s 24h realised volatility / median of the held names''), clipped to [0.5, 2], renormalised to C0''s gross, capped at 0.5'
+nonsense_control: 'random tilt: C0 weights times uniform [1, 2] multipliers drawn per bar and name, same renormalisation and cap, 20 seeds'
+decision_rule: >
+  An arm PASSES only if (1) its fit median 14-day return is at least 0.25 pp above C0's, (2) its holdout
+  median is at least C0's, (3) its worst 14-day window is no more than 2 pp worse than C0's in fit and in
+  holdout, and (4) its fit median beats at least 18 of the 20 random tilts. Recent (2026-06..09) is reported,
+  not judged. A pass earns a paper twin of momentum_top3_30m only; the competition book is untouched.
+trials: 2 (T_res, T_vol)

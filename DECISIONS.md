@@ -4464,3 +4464,18 @@ The best trades entered coins already running hard and volatile. Top 10% vs the 
 The same features lower the typical trade: their rank correlation with the trade's return is negative in every period (realised volatility -0.21 / -0.21 / -0.24, prior 4 h -0.17 / -0.18 / -0.22, momentum -0.17 / -0.17 / -0.17, residual -0.15 / -0.18 / -0.18), while their top quintile has the highest mean in holdout and recent (+1.1% to +2.7% per trade) but not in fit. Extended, volatile entries lose a little more often and carry the rare large winner: the payoff asymmetry, not a filter.
 No stable relation: entry volume multiple (beyond the 1.5x gate), BTC 24 h return, breadth, the number of coins breaking out together, hour of day.
 Reading: the rule's existing momentum sizing already leans toward these trades; a filter on them would cut trade count and keep the tails, and its mean benefit is absent in fit. Candidate for a declared test only: a stronger tilt of size toward high residual strength and volatility, judged on fit first.
+
+## strength-tilt-declaration
+
+Operator instruction 2026-10-01: proceed with the next steps from the best-signals study. Declared in `config/strength_tilt.yaml` before any number was computed. Two sizing tilts on the competition rule, same names and timing: toward the held name strongest against the pool over 4 h (T_res), and toward the most volatile held name (T_vol), each renormalised to the rule's gross and capped at 0.5; nonsense control: random [1, 2] tilts, 20 seeds. Judged on fit first because the study found no mean benefit there: an arm passes only with +0.25 pp on the fit median, no loss on the holdout median, worst windows within 2 pp, and a fit median above 18 of 20 random tilts. A pass earns a paper twin only.
+
+## fill-quality-2026-10-01
+
+Operator instruction 2026-10-01: measure execution quality before deciding on marketable exits (the one transferable point of the HRT AI Labs post, which studied execution; `#best-signals-2026-10-01` and the stress harness show the edge depends on maker fills). `python3 -m gates.fill_quality` reads the rehearsal account's own order history from Roostoo (one read-only call; `results/fill_quality_competition_rehearsal.json`).
+Strategy orders 2026-09-30 14:22Z to 2026-10-01 07:06Z (12, excluding the BTC smoke-test orders): every one filled as MAKER at 0.05%. Buys filled in 0.0-9.6 s; sells took 11-370 s (median about 25 s), one of six (ETH, 07:00Z) past the 300 s timeout, the order whose failed cancel tripped the halt (`#cancel-both-args-2026-10-01`). Fills were 0.0 to 2.3 bps better than the quoted mid on both sides.
+Reading: entries are fast and cheap; the only execution risk is a slow exit while a coin falls. Escalating an exit to a marketable order after one timeout would cost about 5 bps on roughly one exit in six; it remains an operator decision.
+
+## strength-tilt-outcome
+
+FAIL, both arms (`results/strength_tilt.json`, `python3 -m gates.strength_tilt`). Median 14-day return fit / holdout / recent: C0 -0.76% / +1.13% / +0.19%; residual tilt -0.67% / +1.02% / -0.20%; volatility tilt -0.83% / +1.03% / -0.16%. Neither lifts the fit median by 0.25 pp nor holds the holdout median; worst windows are within 2 pp; both beat most random tilts on fit (random medians -1.19% to -0.72%) only because random reweighting is slightly worse than the rule's own momentum sizing.
+Why the effect is tiny: the rule holds two or more names only about 30% of the time (flat 51%, one name 19%, `results/stress/competition_agent/REPORT.md` S4), so reweighting among held names rarely changes anything, and the asymmetry of `#best-signals-2026-10-01` lives in which trade becomes a big trend, not in the size given to it. Sizing tilts are closed for this rule.
