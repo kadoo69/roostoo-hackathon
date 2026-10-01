@@ -9,6 +9,7 @@ DECISIONS.md#topdown-ls-declaration
 """
 from __future__ import annotations
 
+import json
 import time
 
 import numpy as np
@@ -72,6 +73,18 @@ def live_books(now: pd.Timestamp | None = None) -> list[dict]:
     return out
 
 
+def traded_universe(names: list[str]) -> set[str]:
+    """Every symbol some running book may trade: the union of their saved universes, so the
+    whole-pool books widen the tradable pool. DECISIONS.md#wide-pool-live-2026-10-01"""
+    out: set[str] = set()
+    for name in names:
+        try:
+            out |= set(json.loads((ROOT / "live" / name / "state.json").read_text()).get("universe") or [])
+        except (OSError, ValueError):
+            continue
+    return out
+
+
 def build(config: str = "config/topdown_ls.yaml") -> dict:
     settings = load(ROOT / config)
     with (ROOT / config).open() as fh:
@@ -92,6 +105,7 @@ def build(config: str = "config/topdown_ls.yaml") -> dict:
     m5 = feed.close_matrix(feed.bar_frame(sorted(venue), "5m", 14))
     vol = np.log(m).diff().rolling(td["vol_bars"], min_periods=td["vol_bars"] // 2).std().iloc[-1]
     books = live_books()
+    pool = set(pool) | traded_universe([b["book"] for b in books])
     coins = []
     for sym in m.columns:
         if sym not in venue:
