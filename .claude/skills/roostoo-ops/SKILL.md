@@ -1,34 +1,44 @@
 ---
 name: roostoo-ops
-description: Operate the Roostoo bot fleet - start/stop/restart, keep-awake, live validation against the backtest, log review, dashboard, reading errors. Use when running, checking, restarting, resetting or diagnosing the bots.
+description: Operate the Roostoo bot fleet - start/stop/restart, the live competition pair, paper books, adding or retiring a book, dashboards, keep-awake and deploy, routine checks of fills and missed signals. Use when running, checking, restarting, adding, retiring or diagnosing the bots.
 ---
 
 # Operating the fleet
 
-Run everything from the repo root. Read `docs/ANTIPATTERNS.md` before editing `bot/run.py` or `run_bots.sh`.
+Run from the repo root. Read `HANDOVER.md` "CURRENT STATE" first and `docs/ANTIPATTERNS.md` before editing `bot/run.py` or `run_bots.sh`.
 
-## Commands
+## Books (2026-10-01)
 
-    ./run_bots.sh start | stop | restart | status     # the CONFIGS books (bot.run)
-    ./run_bots.sh alphaflow | alphaflowstop           # alpha_flow + alt-data collector
-    ./run_bots.sh scalper | scalperstop               # scalper_live
-    ./run_bots.sh testnet | testnetstop               # REAL orders on Binance testnet
-    ./run_bots.sh awake | awakestop                   # supervised caffeinate; needs mains power
-    ./run_bots.sh dashboard                           # http://127.0.0.1:8787, foreground
-    python3 -m gates.live_validation [book ...]       # every book vs the backtest on the live bar, no orders
-    python3 -m gates.log_review [journal_root]        # P&L, benchmarks, uptime, booking, attribution
+- LIVE, real Roostoo orders: `competition` (COMP keys, the 30m contenders rule) and `competition_rehearsal` (same rule, TEST keys). Start/stop with `./run_bots.sh live | livestop`.
+- PAPER (default `CONFIGS`): `momentum_top3_30m` (control), `wf_live` (dynamic), `ride_5m`, `blend_30m_ride`, `regime_ls_30m`. Start/stop with `./run_bots.sh start | stop | restart`.
+- `./run_bots.sh status` proves processes exist; liveness is a `cycles` row under ~90 s old.
 
-## Checks that mean something
+## Routine checks
 
-- **Liveness**: each book's last line in `live/<book>/cycles-*.jsonl` should be under ~90s old (`ts_utc`). `status` only proves the process exists.
-- **Errors**: the dashboard's grey "net" tag is a dropped connection retried next cycle, harmless. A red "err" tag is a non-network error: read `live/<book>/errors-*.jsonl`.
-- **Crash vs restart**: only `exited code=` in `live/<book>.out` is a crash; `resumed` in lifecycle is any restart or probe.
-- **Parity**: `gates.live_validation` must show 0 mismatches and rank `match`. Run it before any restart that matters.
-- **Uptime**: `pmset -g log` shows sleeps; every sleep is a missed bar close.
+    python3 -m gates.preflight                         # read-only checks before anything live
+    python3 -m gates.progress                          # per-book table (see roostoo-live-report)
+    python3 -m gates.fill_quality --book competition_rehearsal   # maker share, time to fill, vs mid (one read-only call)
+    python3 -m gates.missed_replay --start <utc>       # what the rules would have done had the books been online
+    python3 -m gates.market_structure                  # factor share, effective bets, blocks, residual leaders
+    python3 -m gates.signal_scan                       # breakouts per clock and what blocks them
+
+## Adding a book (all of these, then restart the dashboards)
+
+1. `config/<book>.yaml` with `meta.frozen: true`, `paper_only: true`, `declared_ref`, `falsification`.
+2. `run_bots.sh`: `CONFIGS`, `module_for` (its own case branch; tests match the existing branch strings), and the `workers`/`all_workers` module regex if it is a new module.
+3. `bot/dashboard.py` `BOTS`, `CONTROL_OF`, `EXPECTED_DRAG`; `gates/live_validation.py` `BOOKS`; `bot/desk.py` `SCALPER_BOOKS` for the paper group.
+4. `CONFIGS="config/<book>.yaml" ./run_bots.sh start`, then restart both dashboards (`pkill -f bot.dashboard`, `nohup python3 -m bot.dashboard &`, same with `--port 8789`); they read the book list only at start.
+
+## Retiring a book
+
+`CONFIGS="config/<book>.yaml" ./run_bots.sh stop`, remove it from default `CONFIGS`, move `live/<book>*` to `live/_archive/retired-<date>/`, keep its config if another book reads it (wf_live reads the 5m/15m configs), record `DECISIONS.md#retired-<date>`.
+
+## Uptime and deploy
+
+- Sleep is the largest measured loss (`#offline-replay-2026-10-01`). On the Mac: mains power and `sudo pmset -a disablesleep 1`.
+- AWS: `deploy/ec2_bootstrap.sh` (paste command in README.md), verify with `gates.preflight`, then `./run_bots.sh livestop` on the Mac.
 
 ## Rules
 
-- Restart the whole stack together, never one book mid-bar (cold start chases the bar).
-- A reset archives `live/<book>/` to `live/_archive/<tag>/`; never delete journals.
-- Journal keys: timestamps are `ts_utc`; orders use `event` in `dry_run|skipped|placed`, `skipped` carries the reason.
-- The terminal output filter can mangle piped `curl` JSON; save with `curl -o` before parsing.
+- Every live change committed and pushed; commit messages describe only what they contain, no co-author trailer.
+- Never delete journals; archive. Save `curl` JSON with `-o` before parsing (the terminal filter mangles pipes).

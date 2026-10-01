@@ -30,7 +30,7 @@ The only tested change that passed every period is the **target lock** (`bot/loc
 | current state and next steps | `HANDOVER.md` |
 | questions only the organisers can answer | `ORGANISER_QUESTIONS.md` |
 
-Skills: `roostoo-ops` (run, validate, review the fleet) and `roostoo-research` (declare, test, record a new idea).
+Skills: `roostoo-live-report` (the 30-minute report), `roostoo-incident` (live faults and restarts), `roostoo-ops` (run, add, retire, deploy books) and `roostoo-research` (declare, test on history and the recent window, record).
 
 ## Hard rules
 
