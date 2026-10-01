@@ -244,8 +244,12 @@ class RoostooClient:
         return {**payload, "OrderDetails": list(rows)}
 
     def cancel_order(self, order_id: int | None = None, pair: str | None = None) -> dict:
-        params = {k: v for k, v in (("order_id", order_id), ("pair", pair))
-                  if v is not None}
+        """One order by id, else every order on `pair`. The venue rejects both together ("only
+        allow none or one argument of order_id / pair"), and two such rejections tripped the
+        error-rate halt that liquidated the rehearsal book. DECISIONS.md#cancel-both-args-2026-10-01"""
+        if order_id is None and pair is None:
+            raise ValueError("cancel_order needs order_id or pair; neither would cancel every order")
+        params = {"order_id": order_id} if order_id is not None else {"pair": pair}
         return self._request("POST", "/v3/cancel_order", params, signed=True)
 
     def short_open(self, pair: str, collateral: float) -> dict:
