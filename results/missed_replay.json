@@ -3,15 +3,24 @@
   "book": "competition_rehearsal",
   "rule": "competition",
   "clock": "30m",
-  "bars": 23,
-  "replay_return_pct": 0.12,
-  "turnover": 1.95,
+  "bars": 22,
+  "replay_return_pct": 1.27,
+  "turnover": 2.19,
   "actual": {
-   "return_pct": -0.3,
-   "cycles": 361
+   "return_pct": 0.5,
+   "cycles": 278
   },
   "offline_hours": 4.5,
   "trades": [
+   {
+    "symbol": "ETHUSDT",
+    "entry": "2026-10-01 06:30:00+00:00",
+    "exit": null,
+    "ret_pct": 0.0,
+    "mfe_pct": 0.0,
+    "weight": 0.1,
+    "offline_entry": false
+   },
    {
     "symbol": "TRXUSDT",
     "entry": "2026-10-01 03:30:00+00:00",
@@ -25,16 +34,16 @@
     "symbol": "TRUMPUSDT",
     "entry": "2026-10-01 04:30:00+00:00",
     "exit": null,
-    "ret_pct": -0.97,
-    "mfe_pct": 0.0,
+    "ret_pct": 0.28,
+    "mfe_pct": 0.28,
     "weight": 0.47,
     "offline_entry": true
    },
    {
     "symbol": "XLMUSDT",
     "entry": "2026-10-01 01:30:00+00:00",
-    "exit": null,
-    "ret_pct": -0.52,
+    "exit": "2026-10-01 06:30:00+00:00",
+    "ret_pct": -1.13,
     "mfe_pct": 0.0,
     "weight": 0.5,
     "offline_entry": true
@@ -43,8 +52,8 @@
     "symbol": "AAVEUSDT",
     "entry": "2026-10-01 03:00:00+00:00",
     "exit": null,
-    "ret_pct": 1.83,
-    "mfe_pct": 3.09,
+    "ret_pct": 3.41,
+    "mfe_pct": 3.41,
     "weight": 0.5,
     "offline_entry": true
    }
@@ -54,15 +63,24 @@
   "book": "momentum_top3_30m",
   "rule": "momentum_top3_30m",
   "clock": "30m",
-  "bars": 23,
-  "replay_return_pct": 0.12,
-  "turnover": 1.95,
+  "bars": 22,
+  "replay_return_pct": 1.27,
+  "turnover": 2.19,
   "actual": {
-   "return_pct": -0.43,
-   "cycles": 371
+   "return_pct": 0.09,
+   "cycles": 286
   },
   "offline_hours": 3.3,
   "trades": [
+   {
+    "symbol": "ETHUSDT",
+    "entry": "2026-10-01 06:30:00+00:00",
+    "exit": null,
+    "ret_pct": 0.0,
+    "mfe_pct": 0.0,
+    "weight": 0.1,
+    "offline_entry": false
+   },
    {
     "symbol": "TRXUSDT",
     "entry": "2026-10-01 03:30:00+00:00",
@@ -76,16 +94,16 @@
     "symbol": "TRUMPUSDT",
     "entry": "2026-10-01 04:30:00+00:00",
     "exit": null,
-    "ret_pct": -0.97,
-    "mfe_pct": 0.0,
+    "ret_pct": 0.28,
+    "mfe_pct": 0.28,
     "weight": 0.47,
     "offline_entry": true
    },
    {
     "symbol": "XLMUSDT",
     "entry": "2026-10-01 01:30:00+00:00",
-    "exit": null,
-    "ret_pct": -0.52,
+    "exit": "2026-10-01 06:30:00+00:00",
+    "ret_pct": -1.13,
     "mfe_pct": 0.0,
     "weight": 0.5,
     "offline_entry": false
@@ -94,8 +112,8 @@
     "symbol": "AAVEUSDT",
     "entry": "2026-10-01 03:00:00+00:00",
     "exit": null,
-    "ret_pct": 1.83,
-    "mfe_pct": 3.09,
+    "ret_pct": 3.41,
+    "mfe_pct": 3.41,
     "weight": 0.5,
     "offline_entry": true
    }
@@ -105,12 +123,12 @@
   "book": "momentum_top3_15m",
   "rule": "momentum_top3_15m",
   "clock": "15m",
-  "bars": 47,
-  "replay_return_pct": 0.35,
-  "turnover": 6.54,
+  "bars": 44,
+  "replay_return_pct": -0.14,
+  "turnover": 7.47,
   "actual": {
-   "return_pct": -2.04,
-   "cycles": 374
+   "return_pct": -1.13,
+   "cycles": 287
   },
   "offline_hours": 6.8,
   "trades": [
@@ -121,6 +139,24 @@
     "ret_pct": 0.04,
     "mfe_pct": 0.2,
     "weight": 0.5,
+    "offline_entry": false
+   },
+   {
+    "symbol": "ENAUSDT",
+    "entry": "2026-10-01 06:30:00+00:00",
+    "exit": null,
+    "ret_pct": -1.33,
+    "mfe_pct": 0.0,
+    "weight": 0.41,
+    "offline_entry": false
+   },
+   {
+    "symbol": "TAOUSDT",
+    "entry": "2026-10-01 06:45:00+00:00",
+    "exit": null,
+    "ret_pct": 0.0,
+    "mfe_pct": 0.0,
+    "weight": 0.2,
     "offline_entry": false
    },
    {
@@ -144,9 +180,9 @@
    {
     "symbol": "AVAXUSDT",
     "entry": "2026-10-01 03:00:00+00:00",
-    "exit": null,
-    "ret_pct": 0.52,
-    "mfe_pct": 0.58,
+    "exit": "2026-10-01 06:45:00+00:00",
+    "ret_pct": 0.25,
+    "mfe_pct": 0.65,
     "weight": 0.16,
     "offline_entry": true
    },
@@ -171,8 +207,8 @@
    {
     "symbol": "XLMUSDT",
     "entry": "2026-10-01 02:15:00+00:00",
-    "exit": null,
-    "ret_pct": 0.09,
+    "exit": "2026-10-01 06:30:00+00:00",
+    "ret_pct": -0.53,
     "mfe_pct": 0.22,
     "weight": 0.5,
     "offline_entry": true
@@ -181,8 +217,8 @@
     "symbol": "AAVEUSDT",
     "entry": "2026-10-01 02:00:00+00:00",
     "exit": null,
-    "ret_pct": 3.25,
-    "mfe_pct": 4.05,
+    "ret_pct": 3.94,
+    "mfe_pct": 4.37,
     "weight": 0.5,
     "offline_entry": true
    }
@@ -192,12 +228,12 @@
   "book": "momentum_top3_5m",
   "rule": "momentum_top3_5m",
   "clock": "5m",
-  "bars": 141,
-  "replay_return_pct": 1.07,
-  "turnover": 8.7,
+  "bars": 132,
+  "replay_return_pct": 0.91,
+  "turnover": 7.83,
   "actual": {
-   "return_pct": -2.03,
-   "cycles": 388
+   "return_pct": -0.2,
+   "cycles": 300
   },
   "offline_hours": 8.6,
   "trades": [
@@ -229,22 +265,22 @@
     "offline_entry": true
    },
    {
+    "symbol": "NEARUSDT",
+    "entry": "2026-10-01 06:10:00+00:00",
+    "exit": null,
+    "ret_pct": -0.8,
+    "mfe_pct": 0.07,
+    "weight": 0.5,
+    "offline_entry": false
+   },
+   {
     "symbol": "DOGEUSDT",
     "entry": "2026-10-01 01:55:00+00:00",
     "exit": null,
-    "ret_pct": 1.21,
+    "ret_pct": 1.14,
     "mfe_pct": 1.28,
     "weight": 0.37,
     "offline_entry": true
-   },
-   {
-    "symbol": "LINKUSDT",
-    "entry": "2026-09-30 18:05:00+00:00",
-    "exit": "2026-09-30 19:15:00+00:00",
-    "ret_pct": -0.47,
-    "mfe_pct": 0.14,
-    "weight": 0.23,
-    "offline_entry": false
    },
    {
     "symbol": "TRXUSDT",
@@ -285,8 +321,8 @@
    {
     "symbol": "TRUMPUSDT",
     "entry": "2026-10-01 02:15:00+00:00",
-    "exit": null,
-    "ret_pct": 3.98,
+    "exit": "2026-10-01 06:10:00+00:00",
+    "ret_pct": 4.56,
     "mfe_pct": 8.97,
     "weight": 0.21,
     "offline_entry": true
@@ -301,20 +337,11 @@
     "offline_entry": true
    },
    {
-    "symbol": "XLMUSDT",
-    "entry": "2026-09-30 19:55:00+00:00",
-    "exit": "2026-09-30 22:05:00+00:00",
-    "ret_pct": 0.04,
-    "mfe_pct": 1.69,
-    "weight": 0.5,
-    "offline_entry": false
-   },
-   {
     "symbol": "AAVEUSDT",
     "entry": "2026-10-01 02:00:00+00:00",
     "exit": null,
-    "ret_pct": 3.25,
-    "mfe_pct": 4.05,
+    "ret_pct": 4.02,
+    "mfe_pct": 4.37,
     "weight": 0.5,
     "offline_entry": true
    }
