@@ -43,7 +43,7 @@ BOOKS = ("donchian_4h", "momentum_top3_full", "momentum_top3_lock", "testnet_liv
          "accel_15m", "burst_5m", "burst_15m", "burst_strong_15m", "momentum_top3_15m_eq", "short_accel_15m",
          "momentum_top3_15m_hold3h", "momentum_top3_5m_hold2h", "short_pullback_15m", "momentum_top3_15m_slowexit",
          "ride_5m", "blend_30m_ride", "regime_ls_30m", "resid_30m", "htf0_30m", "ride1_5m",
-         "wide_30m", "ride1_wide_5m")
+         "wide_30m", "ride1_wide_5m", "sleeves_5m")
 EQUITY = 100_000.0
 
 

@@ -9,7 +9,7 @@ User=roostoo
 WorkingDirectory=/opt/roostoo-hackathon
 Environment=ROOSTOO_DRY_RUN=1
 Environment=PYTHONUNBUFFERED=1
-ExecStart=/opt/roostoo-hackathon/.venv/bin/python -m bot.scalper_adaptive_run /opt/roostoo-hackathon/config/%i.yaml
+ExecStart=/opt/roostoo-hackathon/.venv/bin/python -m bot.paper_main /opt/roostoo-hackathon/config/%i.yaml
 Restart=always
 RestartSec=10
 CPUQuota=25%

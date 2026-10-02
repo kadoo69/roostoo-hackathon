@@ -16,7 +16,7 @@ set -euo pipefail
 BRANCH=${BRANCH:-main}
 DEST=/opt/roostoo-hackathon
 BOOKS=${BOOKS:-"competition competition_rehearsal"}
-PAPER_BOOKS=${PAPER_BOOKS:-"ride_5m"}
+PAPER_BOOKS=${PAPER_BOOKS:-"ride_5m sleeves_5m"}
 
 log() { printf '\n== %s\n' "$*"; }
 
