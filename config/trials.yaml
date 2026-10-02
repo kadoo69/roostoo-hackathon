@@ -6063,3 +6063,23 @@ trials:
   config: sizing_competition:N2
   status: fail
   note: DECISIONS.md#sizing-competition-outcome
+- signal: ride_exit
+  gate: ride_exits
+  config: ride_exits:T2
+  status: fail
+  note: DECISIONS.md#ride-exits-outcome
+- signal: ride_exit
+  gate: ride_exits
+  config: ride_exits:T3
+  status: fail
+  note: DECISIONS.md#ride-exits-outcome
+- signal: ride_exit
+  gate: ride_exits
+  config: ride_exits:P3
+  status: fail
+  note: DECISIONS.md#ride-exits-outcome
+- signal: ride_exit
+  gate: ride_exits
+  config: ride_exits:U
+  status: fail
+  note: DECISIONS.md#ride-exits-outcome

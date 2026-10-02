@@ -4656,3 +4656,15 @@ Operator instruction 2026-10-02 ~16:30Z ("go ahead with stage 2"), stage 2 of `#
 The units no longer name a runner: `bot.runner` picks it from the config (`sleeves` -> SleevesBot, `adaptive` -> AdaptiveScalperBot, else ContendersBot), so `competition` still runs ContendersBot unchanged and switching it later is a committed config change, not a unit edit. `bot.paper_main` forwards to it.
 Expected on the first decision: the account sells the rule holdings the fresh sleeves do not own (LTC, TRUMP at the switch) and each sleeve then enters only on its own fresh signals.
 Stage 3 (the `competition` book) is blocked unless, by 2026-10-03 11:00Z, no rehearsal order fails, no cycle faults, and the rehearsal trails the paper `sleeves_5m` by at most 1 point since the switch (fill cost); the operator decides.
+
+## ride-exits-outcome
+
+NULL, no arm recommended (`results/ride_exits.json`, `python3 -m gates.ride_exits`, 25 coins, 200 random entry sets). Total return / max drawdown, pre window 2026-08-01..09-19 then live 09-19..10-02 15:45Z:
+| arm | pre | live | live 2nd half | gain pre / live | beats random |
+|---|---|---|---|---|---|
+| R0 live ride (+5% cap) | +57.4% / -18.6% | +25.8% / -11.7% | +1.5% | - | - |
+| T2 trail 2% after +5% | +41.0% / -22.5% | +17.2% / -10.2% | -0.6% | -16.4 / -8.7 | 28 |
+| T3 trail 3% after +5% | +69.2% / -15.7% | +11.0% / -11.0% | -3.1% | +11.9 / -14.9 | 151 |
+| P3 half at +5%, trail rest 3% | +59.3% / -15.3% | +14.2% / -10.2% | -1.7% | +2.0 / -11.6 | 128 |
+| U no target, 24 h only | +23.7% / -19.9% | +39.2% / -8.0% | +10.4% | -33.7 / +13.4 | 2 |
+Every arm flips sign between the windows, which is the signature of `#live-excursion-outcome`: which winners keep running is not predictable from the +5% touch. T3 wins the pre window and loses 15 points live; U wins live and loses 34 points before. The cap stays; the ride and the ride sleeve are unchanged. Four trials recorded.

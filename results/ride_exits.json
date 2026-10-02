@@ -1,0 +1,141 @@
+{
+ "windows": {
+  "pre": [
+   "2026-08-01 00:00:00+00:00",
+   "2026-09-19 00:00:00+00:00"
+  ],
+  "live": [
+   "2026-09-19 00:00:00+00:00",
+   "2026-10-02 15:45:00+00:00"
+  ]
+ },
+ "symbols": 25,
+ "arms": {
+  "R0": {
+   "pre": {
+    "total_pct": 57.35,
+    "max_dd_pct": -18.56
+   },
+   "live": {
+    "total_pct": 25.84,
+    "max_dd_pct": -11.65
+   },
+   "live_first_half": {
+    "total_pct": 23.93,
+    "max_dd_pct": -11.65
+   },
+   "live_second_half": {
+    "total_pct": 1.54,
+    "max_dd_pct": -7.26
+   }
+  },
+  "T2": {
+   "pre": {
+    "total_pct": 40.96,
+    "max_dd_pct": -22.51
+   },
+   "live": {
+    "total_pct": 17.16,
+    "max_dd_pct": -10.24
+   },
+   "live_first_half": {
+    "total_pct": 17.82,
+    "max_dd_pct": -10.24
+   },
+   "live_second_half": {
+    "total_pct": -0.56,
+    "max_dd_pct": -9.55
+   }
+  },
+  "T3": {
+   "pre": {
+    "total_pct": 69.22,
+    "max_dd_pct": -15.72
+   },
+   "live": {
+    "total_pct": 10.97,
+    "max_dd_pct": -10.98
+   },
+   "live_first_half": {
+    "total_pct": 14.53,
+    "max_dd_pct": -10.98
+   },
+   "live_second_half": {
+    "total_pct": -3.11,
+    "max_dd_pct": -9.81
+   }
+  },
+  "P3": {
+   "pre": {
+    "total_pct": 59.32,
+    "max_dd_pct": -15.26
+   },
+   "live": {
+    "total_pct": 14.23,
+    "max_dd_pct": -10.22
+   },
+   "live_first_half": {
+    "total_pct": 16.19,
+    "max_dd_pct": -10.22
+   },
+   "live_second_half": {
+    "total_pct": -1.68,
+    "max_dd_pct": -9.16
+   }
+  },
+  "U": {
+   "pre": {
+    "total_pct": 23.68,
+    "max_dd_pct": -19.88
+   },
+   "live": {
+    "total_pct": 39.22,
+    "max_dd_pct": -8.02
+   },
+   "live_first_half": {
+    "total_pct": 26.08,
+    "max_dd_pct": -8.02
+   },
+   "live_second_half": {
+    "total_pct": 10.42,
+    "max_dd_pct": -7.89
+   }
+  }
+ },
+ "verdict": {
+  "T2": {
+   "gain_pre_pp": -16.39,
+   "gain_live_pp": -8.68,
+   "random_gain_median_pp": 1.57,
+   "beats_random": 28,
+   "dd_ok": false,
+   "recommended": false
+  },
+  "T3": {
+   "gain_pre_pp": 11.87,
+   "gain_live_pp": -14.87,
+   "random_gain_median_pp": -0.77,
+   "beats_random": 151,
+   "dd_ok": true,
+   "recommended": false
+  },
+  "P3": {
+   "gain_pre_pp": 1.97,
+   "gain_live_pp": -11.61,
+   "random_gain_median_pp": -3.87,
+   "beats_random": 128,
+   "dd_ok": true,
+   "recommended": false
+  },
+  "U": {
+   "gain_pre_pp": -33.67,
+   "gain_live_pp": 13.38,
+   "random_gain_median_pp": 6.12,
+   "beats_random": 2,
+   "dd_ok": true,
+   "recommended": false
+  }
+ },
+ "seeds": 200,
+ "ref": "DECISIONS.md#ride-exits-declaration"
+}
