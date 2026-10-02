@@ -19,22 +19,21 @@ def test_slow_clock_weight_reaches_the_5m_book_only_after_its_bar_closes():
     assert w5.loc["2026-09-30 10:55", "X"] == 0.5
 
 
-def test_scalper_is_paper_only_registered_and_its_clocks_exist():
+def test_dynamic_bot_is_paper_only_registered_and_its_clocks_exist():
     import yaml
 
     from bot import dashboard, desk
     from bot.settings import load
     from gates import live_validation
-    s = load("config/scalper_adaptive.yaml")
-    assert s.dry_run and not s.shorts_enabled and not s.target_lock.get("enabled") and s.keyset is None
-    ad = yaml.safe_load(open("config/scalper_adaptive.yaml"))["adaptive"]
-    for name in ad["clocks"].values():
+    s = load("config/wf_live.yaml")
+    assert s.dry_run and s.keyset is None
+    ad = yaml.safe_load(open("config/wf_live.yaml"))["adaptive"]
+    for name in (ad.get("clocks") or {}).values():
         assert load(f"config/{name}.yaml")
-    assert dashboard.BOTS["scalper_adaptive"] == "config/scalper_adaptive.yaml"
-    assert "scalper_adaptive" in live_validation.BOOKS and desk.group_of("wf_live", "5m") == "scalper"
+    assert dashboard.BOTS["wf_live"] == "config/wf_live.yaml"
+    assert "wf_live" in live_validation.BOOKS and desk.group_of("wf_live", "5m") == "scalper"
     run = open("run_bots.sh").read()
-    assert "config/wf_live.yaml" in run
-    assert "scalper_adaptive|wf_live) echo bot.scalper_adaptive_run" in run
+    assert "config/wf_live.yaml" in run and "wf_live|" in run and "echo bot.scalper_adaptive_run" in run
 
 
 def test_wf_live_grid_has_eighteen_variants_from_5m_to_4h_plus_cash_and_is_paper():

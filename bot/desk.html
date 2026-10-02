@@ -66,8 +66,6 @@ tr.row.sel td{background:rgba(124,196,255,.06)}
 .hold{display:flex;gap:4px}
 .coin{font-size:11px;padding:1px 6px;border-radius:5px;background:var(--panel2);border:1px solid var(--line)}
 .coin.u{border-color:rgba(62,207,142,.35)} .coin.d{border-color:rgba(255,107,107,.35)}
-.ab{font-size:11px;padding:1px 7px;border-radius:5px}
-.ab.u{background:var(--up-bg);color:var(--up)} .ab.d{background:var(--dn-bg);color:var(--dn)} .ab.z{background:var(--panel2);color:var(--dim)}
 .side{display:flex;flex-direction:column;gap:12px;min-height:0;overflow-y:auto;padding-right:2px}
 .side>.card{flex:none}
 #activity{max-height:260px}
@@ -214,7 +212,7 @@ function rows(){
   for(const b of bs){
    const stale=(b.age_s||0)>300||b.waiting_for_account||(b.equity==null&&!b.live);
    const hold=b.positions.slice(0,3).map(p=>`<span class="coin ${p.pnl>0?'u':p.pnl<0?'d':''}" title="${p.weight*100>0?'':'short '}${(Math.abs(p.weight)*100).toFixed(0)}% · ${pct(p.pnl_pct)}">${p.weight<0?'↓':''}${esc(p.symbol)}</span>`).join('')+(b.positions.length>3?`<span class="faint">+${b.positions.length-3}</span>`:'');
-   const ab=b.ab?`<span class="ab ${b.ab.delta_pts>0?'u':b.ab.delta_pts<0?'d':'z'}" title="since ${new Date(b.ab.since).toLocaleString()}: arm ${pct(b.ab.arm_pct)} vs ${esc(b.ab.control)} ${pct(b.ab.control_pct)}">${b.ab.delta_pts>0?'+':''}${b.ab.delta_pts.toFixed(2)} pts</span>`:(b.control?`<span class="faint" style="font-size:11px">vs ${esc(b.control.replace('momentum_top3_','m_'))}</span>`:'');
+   const ab=b.control?`<span class="faint" style="font-size:11px">vs ${esc(b.control.replace('momentum_top3_','m_'))}</span>`:'';
    h+=`<tr class="row ${sel===b.bot?'sel':''}" data-b="${esc(b.bot)}">
     <td><span class="dot ${stale?'stale':''}" style="display:inline-block;margin-right:8px;vertical-align:middle"></span><span class="name">${esc(b.bot)}</span><span class="clock">${esc(b.clock||'')}</span></td>
     <td class="hide-sm">${spark(b.spark)}</td>
@@ -293,7 +291,6 @@ function open(name){
    <div class="mini"><div class="k">Open</div><div class="v num ${cls(b.open)}">${sgn(b.open)}</div></div>
    <div class="mini"><div class="k">Invested</div><div class="v num">${((b.gross||0)*100).toFixed(0)}%</div></div>
   </div>
-  ${b.ab?`<div class="alert ${b.ab.delta_pts>=0?'':'warn'}" style="margin:0;background:var(--panel2);color:var(--dim)">A/B since ${new Date(b.ab.since).toLocaleString([], {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}: this book <b class="${cls(b.ab.arm_pct)}">${pct(b.ab.arm_pct)}</b> vs ${esc(b.ab.control)} <b class="${cls(b.ab.control_pct)}">${pct(b.ab.control_pct)}</b> → <b class="${cls(b.ab.delta_pts)}">${b.ab.delta_pts>0?'+':''}${b.ab.delta_pts.toFixed(2)} pts</b></div>`:''}
   <div><div class="sec">Equity</div>${curve(b.curve)}</div>
   <div><div class="sec">Open positions</div>${pos}</div>
   <div class="grid4">

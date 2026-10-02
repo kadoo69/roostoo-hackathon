@@ -1,4 +1,4 @@
-"""Desk page payload: grouping, A/B deltas from the arm's own start, positions, exposure and
+"""Desk page payload: grouping, positions, exposure and
 alerts. DECISIONS.md#desk-dashboard-2026-09-26"""
 from __future__ import annotations
 
@@ -15,22 +15,8 @@ def _bot(name, equity, start=100000.0, first="2026-09-26T16:00:00+00:00", curve=
 
 
 def test_groups_follow_the_book_role():
-    assert desk.group_of("short_accel_15m", "15m") == "short"
-    assert desk.group_of("burst_strong_15m", "15m") == "ab"
-    assert desk.group_of("burst_5m", "5m") == "burst"
-    assert desk.group_of("donchian_4h", "4h") == "core"
-    assert desk.group_of("momentum_top3_30m", "30m") == "scalper" and desk.group_of("momentum_top3_1h_long", "1h") == "momentum"
-
-
-def test_ab_delta_measures_the_control_from_the_arm_start_not_from_its_own():
-    ctl = _bot("momentum_top3_15m", 110000.0, first="2026-09-23T16:00:00+00:00",
-               curve=[{"t": "2026-09-23T16:00:00+00:00", "e": 100000.0},
-                      {"t": "2026-09-26T16:00:00+00:00", "e": 108000.0},
-                      {"t": "2026-09-26T18:00:00+00:00", "e": 110000.0}])
-    arm = _bot("momentum_top3_15m_eq", 101000.0, control="momentum_top3_15m")
-    d = desk.ab_delta(arm, ctl)
-    assert d["arm_pct"] == 1.0 and round(d["control_pct"], 2) == round((110000 / 108000 - 1) * 100, 2)
-    assert d["delta_pts"] == round(1.0 - (110000 / 108000 - 1) * 100, 2)
+    assert desk.group_of("competition", "30m") == "live" and desk.group_of("competition_rehearsal", "5m") == "live"
+    assert desk.group_of("momentum_top3_30m", "30m") == "scalper" and desk.group_of("sleeves_5m", "5m") == "scalper"
 
 
 def test_positions_carry_open_pnl_from_cost_basis_and_mark():
@@ -74,7 +60,7 @@ def test_closed_feed_is_newest_first_and_cut_where_a_truncated_book_stops():
     f = desk.closed_feed([busy, quiet])
     assert f["complete_since"] == "2026-09-27T09:00:00+00:00"
     assert [t["symbol"] for t in f["trades"]] == ["NEAR", "LTC", "WLD"]
-    assert f["trades"][0]["group"] == "scalper" and f["trades"][1]["group"] == "core"
+    assert f["trades"][0]["group"] == "scalper" and f["trades"][1]["group"] == "scalper"
     assert f["trades"][0]["notional"] == 200 and f["trades"][0]["net"] == 50.0
 
 
@@ -104,7 +90,7 @@ def test_live_books_lead_their_own_group_and_stay_out_of_paper_totals():
     from bot import desk
     assert desk.GROUPS[0][0] == "live"
     assert desk.group_of("competition", "30m") == "live"
-    assert desk.group_of("momentum_top3_30m", "30m") == "scalper" and desk.group_of("momentum_top3_1h_long", "1h") == "momentum"
+    assert desk.group_of("momentum_top3_30m", "30m") == "scalper"
     waiting = {"bot": "competition", "waiting_for_account": True, "last_poll": "2026-09-30T15:00:00",
                "age_s": None, "drawdown_pct": None}
     assert "not active yet" in desk.alerts([waiting])[0]["text"]

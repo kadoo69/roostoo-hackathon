@@ -3,7 +3,7 @@ import json
 import pytest
 
 from bot import analysis
-from bot.analysis import MIN_COMPARISON_DAYS, ab_spread, readiness, scanner_history, series
+from bot.analysis import MIN_COMPARISON_DAYS, ab_spread, readiness, series
 
 
 @pytest.fixture
@@ -11,24 +11,6 @@ def live(tmp_path, monkeypatch):
     monkeypatch.setattr(analysis, "ROOT", tmp_path)
     monkeypatch.setattr("bot.journal.ROOT", tmp_path, raising=False)
     return tmp_path
-
-
-def test_scanner_history_reads_flat_records(live):
-    """scans-*.jsonl is flat; state.json nests the same fields under "universe".
-    Reading the wrong shape gives a full-length series of Nones, which renders as
-    an empty panel instead of failing, so it is asserted rather than eyeballed."""
-    d = live / "live" / "scanner"
-    d.mkdir(parents=True)
-    with (d / "scans-2026-09-20.jsonl").open("w") as fh:
-        for i in range(3):
-            fh.write(json.dumps({"ts_utc": f"2026-09-20T0{i}:00:00+00:00",
-                                 "dispersion_pct": 3.2 + i, "pct_long": 50.0 - i,
-                                 "median_ret_pct": -1.0, "median_cushion_pct": 4.0,
-                                 "n_at_risk": i}) + "\n")
-    h = scanner_history()
-    assert len(h) == 3
-    assert [x["disp"] for x in h] == [3.2, 4.2, 5.2]
-    assert all(x["long"] is not None for x in h)
 
 
 def test_series_on_an_unknown_bot_is_empty_not_an_error(live):
@@ -69,35 +51,19 @@ def _seed(live, bot, pool, sel, positions, channels, targets, gross):
     (d / "signals-2026-09-20.jsonl").write_text(json.dumps(
         {"bar": "x", "ts_utc": "2026-09-20T12:00:00+00:00",
          "channels": channels, "target_weights": targets}) + "\n")
-    sd = live / "live" / "scanner"
-    sd.mkdir(parents=True, exist_ok=True)
-    (sd / "state.json").write_text(json.dumps({"coins": {
-        "AAA": {"state": "long"}, "BBB": {"state": "pending", "to_entry_pct": 1.4},
-        "CCC": {"state": "at_risk", "cushion_pct": 0.3}, "DDD": {"state": "flat"}}}))
 
 
 def test_selection_funnel_accounts_for_every_name(live):
     from bot.analysis import selection
     _seed(live, "b", ["AAA", "BBB", "CCC", "DDD", "EEE"], ["AAA", "BBB", "CCC", "DDD"],
-          {"AAA": 0.05}, {"AAA": {"action": "enter"}}, {"AAA": 0.05}, 0.05)
+          {"AAA": 0.05}, {"AAA": {"action": "enter", "close": 103.0, "floor": 100.0}}, {"AAA": 0.05}, 0.05)
     s = selection("b")
     assert len(s["names"]) == 5
     by = {r["symbol"]: r["status"] for r in s["names"]}
-    assert by == {"AAA": "HELD", "BBB": "PENDING", "CCC": "AT_RISK",
-                  "DDD": "FLAT", "EEE": "EXCLUDED"}
+    assert by == {"AAA": "HELD", "BBB": "FLAT", "CCC": "FLAT", "DDD": "FLAT", "EEE": "EXCLUDED"}
+    assert next(r for r in s["names"] if r["symbol"] == "AAA")["cushion_pct"] == 3.0
     assert s["stages"][-1]["n"] == 1
     assert s["cash_pct"] == 95.0
-
-
-def test_a_signal_outside_the_rank_cut_is_distinguished_from_no_signal(live):
-    """A ranked book must show 'above channel but outside the rank cut' rather than
-    'no channel break'. Collapsing the two hides whether the signal fired at all."""
-    from bot.analysis import selection
-    _seed(live, "r", ["AAA", "DDD"], ["AAA", "DDD"], {}, {}, {}, 0.0)
-    s = selection("r")
-    by = {r["symbol"]: r["status"] for r in s["names"]}
-    assert by["AAA"] == "SIGNAL_NOT_TAKEN"
-    assert by["DDD"] == "FLAT"
 
 
 def test_position_attribution_finds_the_one_red_name(live):

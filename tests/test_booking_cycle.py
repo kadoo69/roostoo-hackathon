@@ -37,11 +37,14 @@ def test_every_bot_books_on_the_same_declared_ladder():
 
 
 def test_a_book_that_computes_its_own_target_is_never_carried_forward():
-    """Carrying forward would silence bot/scalper_run.py's intrabar exits."""
+    """A subclass that computes its target every cycle opts out of carry-forward."""
     from bot.run import Bot
-    from bot.scalper_run import ScalperBot
+
+    class SelfTargeting(Bot):
+        def target_from_channels(self) -> bool:
+            return False
     assert Bot.target_from_channels(object()) is True
-    assert ScalperBot.target_from_channels(object()) is False
+    assert SelfTargeting.target_from_channels(object()) is False
 
 
 def test_carrying_the_book_forward_emits_no_orders_when_nothing_gained():

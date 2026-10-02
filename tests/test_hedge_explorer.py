@@ -30,14 +30,14 @@ def test_blend_weights_variant_targets_by_capital_share():
     assert out.iloc[-1].abs().sum() <= 1.0
 
 
-def test_hedge_explorer_is_paper_and_registered():
+def test_fixed_blend_is_paper_and_registered():
     from bot import dashboard, desk
     from bot.settings import load
     from gates import live_validation
-    assert load("config/hedge_explorer.yaml").dry_run
-    assert dashboard.BOTS["hedge_explorer"] == "config/hedge_explorer.yaml"
-    assert "hedge_explorer" in live_validation.BOOKS and desk.group_of("hedge_explorer", "5m") != "live"
-    assert "hedge_explorer) echo bot.hedge_explorer_run" in open("run_bots.sh").read()
+    assert load("config/blend_30m_ride.yaml").dry_run
+    assert dashboard.BOTS["blend_30m_ride"] == "config/blend_30m_ride.yaml"
+    assert "blend_30m_ride" in live_validation.BOOKS and desk.group_of("blend_30m_ride", "5m") != "live"
+    assert "blend_30m_ride) echo bot.hedge_explorer_run" in open("run_bots.sh").read()
 
 
 def test_burst_rider_enters_on_a_burst_books_at_target_and_times_out():

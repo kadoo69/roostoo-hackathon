@@ -36,14 +36,7 @@ from bot.strategy import (REGIME_SYMBOL, REPLAY_BARS, replay_book, replay_short_
 from gates.concentration import rank_score
 from venue.roostoo import RoostooClient
 
-BOOKS = ("donchian_4h", "momentum_top3_full", "momentum_top3_lock", "testnet_live",
-         "competition", "competition_rehearsal", "scalper_adaptive", "wf_live", "hedge_explorer",
-         "momentum_top3_30m", "momentum_top3_15m", "momentum_top3_5m",
-         "momentum_top3_1h_allcash", "momentum_top3_30m_allcash",
-         "accel_15m", "burst_5m", "burst_15m", "burst_strong_15m", "momentum_top3_15m_eq", "short_accel_15m",
-         "momentum_top3_15m_hold3h", "momentum_top3_5m_hold2h", "short_pullback_15m", "momentum_top3_15m_slowexit",
-         "ride_5m", "blend_30m_ride", "regime_ls_30m", "resid_30m", "htf0_30m", "ride1_5m",
-         "wide_30m", "ride1_wide_5m", "sleeves_5m", "sleeves_ivol_5m", "ride_z3_5m", "sleeves_z3_5m", "uni_donchian_15m")
+BOOKS = ("competition", "competition_rehearsal", "momentum_top3_30m", "wf_live", "blend_30m_ride", "resid_30m", "htf0_30m", "ride1_5m", "wide_30m", "ride1_wide_5m", "ride_5m", "regime_ls_30m", "sleeves_5m", "sleeves_ivol_5m", "ride_z3_5m", "sleeves_z3_5m", "uni_donchian_15m")
 EQUITY = 100_000.0
 
 

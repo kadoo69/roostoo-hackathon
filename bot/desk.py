@@ -6,55 +6,19 @@ stays on `/full`. DECISIONS.md#desk-competition-only-2026-09-30
 """
 from __future__ import annotations
 
-import pandas as pd
 
 from bot.blotter import DUST_NOTIONAL
 
-GROUPS = (("live", "LIVE on Roostoo - real orders"), ("scalper", "PAPER - the dynamic bot and fixed-clock baselines"), ("core", "Core 4h"),
-          ("momentum", "Short-term momentum"), ("burst", "Burst"), ("ab", "A/B tests"), ("short", "Short"))
+GROUPS = (("live", "LIVE on Roostoo - real orders"), ("scalper", "PAPER - the dynamic bot and fixed-clock baselines"))
 LIVE_BOOKS = {"competition", "competition_rehearsal"}
-SCALPER_BOOKS = {"wf_live", "momentum_top3_5m", "momentum_top3_15m", "momentum_top3_30m",
-                 "ride_5m", "blend_30m_ride", "regime_ls_30m", "resid_30m", "htf0_30m", "ride1_5m", "wide_30m", "ride1_wide_5m", "sleeves_5m", "sleeves_ivol_5m", "ride_z3_5m", "sleeves_z3_5m", "uni_donchian_15m"}
+SCALPER_BOOKS = {"momentum_top3_30m", "wf_live", "blend_30m_ride", "resid_30m", "htf0_30m", "ride1_5m", "wide_30m", "ride1_wide_5m", "ride_5m", "regime_ls_30m", "sleeves_5m", "sleeves_ivol_5m", "ride_z3_5m", "sleeves_z3_5m", "uni_donchian_15m"}
 DESK_GROUPS = ("live", "scalper")
 TOTALS_GROUPS = ("live",)
-AB_ARMS = {"momentum_top3_15m_eq", "momentum_top3_15m_hold3h",
-           "momentum_top3_5m_hold2h", "burst_strong_15m", "momentum_top3_15m_slowexit"}
 STALE_S = 300
 
 
 def group_of(name: str, interval: str | None) -> str:
-    if name in LIVE_BOOKS:
-        return "live"
-    if name in SCALPER_BOOKS:
-        return "scalper"
-    if name.startswith("short_"):
-        return "short"
-    if name in AB_ARMS:
-        return "ab"
-    if name.startswith("burst"):
-        return "burst"
-    if interval == "4h":
-        return "core"
-    return "momentum"
-
-
-def _equity_at(curve: list[dict], ts: pd.Timestamp) -> float | None:
-    before = [p["e"] for p in curve if pd.Timestamp(p["t"]) <= ts]
-    return before[-1] if before else (curve[0]["e"] if curve else None)
-
-
-def ab_delta(arm: dict, control: dict | None) -> dict | None:
-    """Arm return since its first cycle against the control's return over the same span."""
-    if not control or not arm.get("equity_curve") or not control.get("equity_curve"):
-        return None
-    start = pd.Timestamp(arm.get("first_cycle"))
-    c0 = _equity_at(control["equity_curve"], start)
-    if not c0:
-        return None
-    arm_ret = (arm["equity"] / arm["equity_start"] - 1) * 100
-    ctl_ret = (control["equity"] / c0 - 1) * 100
-    return {"control": control["bot"], "arm_pct": round(arm_ret, 2), "control_pct": round(ctl_ret, 2),
-            "delta_pts": round(arm_ret - ctl_ret, 2), "since": str(start)}
+    return "live" if name in LIVE_BOOKS else "scalper"
 
 
 def positions(b: dict) -> list[dict]:
@@ -158,7 +122,6 @@ def book(b: dict, by_name: dict) -> dict:
                         "ret_pct": round(float(t.get("net_return_pct") or 0.0), 2), "kind": t.get("exit_kind")}
                        for t in (b.get("closed") or [])[:8]],
             "control": b.get("control_of"),
-            "ab": ab_delta(b, by_name.get(b.get("control_of"))) if b["bot"] in AB_ARMS else None,
             "faults_last_hour": b.get("faults_last_hour", 0), "blips_last_hour": b.get("errors_last_hour", 0)}
 
 

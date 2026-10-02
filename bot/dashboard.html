@@ -86,7 +86,7 @@ tbody tr:hover{background:#151a20}
 @media(max-width:850px){.priority{grid-template-columns:1fr}.marketgrid{grid-template-columns:repeat(2,1fr)}}
 </style></head><body>
 <header>
- <div class="brand"><h1>Roostoo Trading Desk</h1><span id="mode">—</span><a href="#returns" style="color:#4493f8;text-decoration:none;font-size:11px">Returns</a><a href="#market-intelligence" style="color:#4493f8;text-decoration:none;font-size:11px">Market</a><a href="#data-sources" style="color:#4493f8;text-decoration:none;font-size:11px">Sources</a><a href="/heatmap" style="color:#4493f8;text-decoration:none;font-size:11px;border:1px solid #1e252e;padding:4px 10px;border-radius:5px;margin-left:8px">Heatmap →</a><a href="/analysis" style="color:#4493f8;text-decoration:none;font-size:11px;border:1px solid #1e252e;padding:4px 10px;border-radius:5px;margin-left:8px">Analysis →</a></div>
+ <div class="brand"><h1>Roostoo Trading Desk</h1><span id="mode">—</span><a href="#returns" style="color:#4493f8;text-decoration:none;font-size:11px">Returns</a><a href="/heatmap" style="color:#4493f8;text-decoration:none;font-size:11px;border:1px solid #1e252e;padding:4px 10px;border-radius:5px;margin-left:8px">Heatmap →</a><a href="/analysis" style="color:#4493f8;text-decoration:none;font-size:11px;border:1px solid #1e252e;padding:4px 10px;border-radius:5px;margin-left:8px">Analysis →</a></div>
  <div class="hstat" id="hstat"></div>
 </header>
 <main>
@@ -97,9 +97,6 @@ tbody tr:hover{background:#151a20}
  </div></section>
  <section class="panel" id="returns"><div class="ph"><div><div class="pt">Portfolio return leaderboard</div><div class="psub">sorted by net return · ratios are secondary and never replace missing history</div></div><div class="tags"><span class="tag warn">14 day objective</span></div></div><div class="scroll"><table class="lead"><thead><tr><th>#</th><th>portfolio</th><th>state</th><th class="r">return</th><th class="r">net p&amp;l</th><th class="r" title="closed trades and ladder skims, net of fees">realised</th><th class="r" title="mark-to-market on positions still held: net p&amp;l minus realised">open</th><th class="r">equity</th><th class="r">drawdown</th><th class="r">gross</th><th class="r">positions</th><th class="r">sharpe</th><th class="r">sortino</th><th class="r">calmar</th><th>evidence</th></tr></thead><tbody id="leaderboard"></tbody></table></div></section>
  <section class="panel"><div class="ph"><div><div class="pt">Strategy logic</div><div class="psub">what each bot trades, how it sizes, and which feeds may influence orders</div></div></div><div class="scroll"><table class="logic"><thead><tr><th>portfolio</th><th>signal</th><th>ranking</th><th>sizing</th><th>gate</th><th>control</th><th>decision data</th><th>research-only data</th></tr></thead><tbody id="logic"></tbody></table></div></section>
- <section class="panel" id="market-intelligence"><div class="ph"><div><div class="pt">Live market intelligence</div><div class="psub">Binance spot + derivatives + microstructure · observability until forward validation</div></div><div id="scanstate"></div></div><div id="scanner"></div></section>
- <section class="panel" id="data-sources"><div class="ph"><div><div class="pt">Data source stack</div><div class="psub">priority, cost, usefulness, integration and freshness</div></div></div><div class="scroll"><table><thead><tr><th>priority</th><th>dataset</th><th>cost</th><th>usefulness</th><th>method</th><th>status</th><th class="r">coverage</th><th>updated</th><th>role</th></tr></thead><tbody id="sources"></tbody></table></div><div class="source-note">Direct structured APIs are used for exchange, derivatives and on-chain feeds. Web extraction belongs only on webpage-only sources such as unlock calendars or social pages; it is not placed in the trading path.</div></section>
- <section class="panel"><div class="ph"><div><div class="pt">Cross-venue context</div><div class="psub">forward observations · no source below changes an order</div></div></div><div id="source-context"></div></section>
  <section><div class="sect">Market breadth · Donchian 20/10 on 4h</div><div id="breadth"></div></section>
  <section><div class="sect">Operator insights</div><div class="ins" id="ins"></div></section>
  <section><div class="sect">Bot detail · positions, trades and execution quality</div><div class="bots" id="bots"></div></section>
@@ -120,35 +117,6 @@ function leaderboardBlock(rows){
 function logicBlock(rows){
  if(!rows||!rows.length)return '<tr><td colspan="8" class="empty">no strategy configs loaded</td></tr>';
  return rows.map(r=>`<tr><td><b>${esc(r.bot)}</b></td><td>${esc(r.signal)}</td><td>${esc(r.ranking)}</td><td>${esc(r.sizing)}</td><td>${esc(r.gate)}</td><td>${r.control_of?esc(r.control_of):'<span class="faint">control</span>'}</td><td class="desc">${esc(r.decision_data)}</td><td class="desc">${esc(r.research_data)}</td></tr>`).join('');
-}
-
-function sourcesBlock(rows){
- return (rows||[]).map(r=>`<tr><td class="rank">${String(r.rank).padStart(2,'0')}</td><td><b>${esc(r.name)}</b></td><td>${esc(r.cost)}</td><td><span class="stars" aria-label="${r.usefulness} out of 5">${stars(r.usefulness)}</span></td><td class="faint">${esc(r.method)}</td><td><span class="status ${r.status}">${esc(r.status)}</span></td><td class="r">${r.coverage||'—'}</td><td class="faint" title="${esc(r.updated||'')}">${r.age_s==null?'—':age(r.age_s)}</td><td class="desc">${esc(r.purpose)}</td></tr>`).join('');
-}
-
-function sourceContextBlock(h){
- if(!h||!h.sources)return '<div class="empty">No source snapshot yet. Start the source collector to record cross-venue context.</div>';
- const s=h.sources,hl=s.Hyperliquid,der=s['Deribit options'],stable=s['Stablecoin data'];
- const good=r=>r&&r.status==='ok'&&Date.now()-Date.parse(r.fetched_at)<(r.max_age_s||0)*1000;
- const btc=good(der)?der.coins?.BTC:null,eth=good(der)?der.coins?.ETH:null;
- const cards=[
-  ['BTC options gamma',btc?.net_gex_usd_per_1pct==null?'—':N(btc.net_gex_usd_per_1pct/1e6,1)+'m USD / 1%',btc?.regime||'unavailable'],
-  ['ETH options gamma',eth?.net_gex_usd_per_1pct==null?'—':N(eth.net_gex_usd_per_1pct/1e6,1)+'m USD / 1%',eth?.regime||'unavailable'],
-  ['Stablecoin supply',good(stable)?N(stable.total_usd/1e9,1)+'bn USD':'—',good(stable)&&stable.change_7d_pct!=null?'7d '+N(stable.change_7d_pct,2)+'%':'unavailable']
- ].map(([k,v,n])=>`<div class="m"><div class="k">${esc(k)}</div><div class="v">${esc(v)}</div><div class="faint">${esc(n)}</div></div>`).join('');
- const coins=good(hl)?Object.entries(hl.coins||{}).sort((a,b)=>(b[1].volume_24h_usd||0)-(a[1].volume_24h_usd||0)):[];
- const table=coins.length?`<div class="scroll"><table><thead><tr><th>Hyperliquid perp</th><th class="r">mark</th><th class="r">funding / hour</th><th class="r">open interest</th><th class="r">24h volume</th></tr></thead><tbody>${coins.map(([name,x])=>`<tr><td><b>${esc(name)}</b></td><td class="r">${N(x.mark_usd,2)}</td><td class="r ${S(x.funding_hourly)}">${x.funding_hourly==null?'—':N(x.funding_hourly*100,4)+'%'}</td><td class="r">${x.open_interest_usd==null?'—':N(x.open_interest_usd/1e6,1)+'m'}</td><td class="r">${x.volume_24h_usd==null?'—':N(x.volume_24h_usd/1e6,1)+'m'}</td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">Hyperliquid is unavailable or stale.</div>';
- return `<div class="marketgrid">${cards}</div>${table}<div class="source-note">Snapshots are observations for forward validation. Gamma sign assumes dealers are short calls and long puts; funding is Hyperliquid’s hourly rate.</div>`;
-}
-
-function scannerBlock(s){
- const badge=document.getElementById('scanstate');
- if(!s){badge.innerHTML='<span class="status wired">no sample</span>';return '<div class="empty">Scanner is wired but no state file is available.</div>'}
- badge.innerHTML=`<span class="status ${s.live?'live':'stale'}">${s.live?'live':'stale'} · ${age(s.age_s)}</span>`;
- const u=s.universe||{}, cards=[['dispersion',u.dispersion_pct==null?'—':N(u.dispersion_pct,2)+'%'],['coins long',u.pct_long==null?'—':N(u.pct_long,1)+'%'],['median move',u.median_ret_pct==null?'—':N(u.median_ret_pct,2)+'%'],['at risk',u.n_at_risk??(s.by_state||{}).at_risk??0]].map(([k,v])=>`<div class="m"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('');
- const c=(s.crowding||[]).slice(0,10);
- const table=c.length?`<div class="scroll"><table><thead><tr><th>symbol</th><th class="r">funding ann.</th><th class="r">funding z</th><th class="r">OI 6 bars</th><th class="r">OI z</th><th class="r">taker B/S</th><th class="r">book imbalance</th><th class="r">10bp depth</th><th class="r">top 5% trade share</th></tr></thead><tbody>${c.map(x=>`<tr><td>${esc(x.symbol)}</td><td class="r ${S(-(x.funding_ann_pct||0))}">${x.funding_ann_pct==null?'—':N(x.funding_ann_pct,2)+'%'}</td><td class="r">${x.funding_z==null?'—':N(x.funding_z,2)}</td><td class="r ${S(x.oi_chg_6b_pct)}">${x.oi_chg_6b_pct==null?'—':N(x.oi_chg_6b_pct,2)+'%'}</td><td class="r">${x.oi_z==null?'—':N(x.oi_z,2)}</td><td class="r">${x.taker_buy_sell==null?'—':N(x.taker_buy_sell,2)}</td><td class="r ${S(x.book_imbalance)}">${x.book_imbalance==null?'—':N(x.book_imbalance,3)}</td><td class="r">${x.depth_10bps_usd==null?'—':N(x.depth_10bps_usd,0)}</td><td class="r">${x.top5pct_notional_share==null?'—':N(x.top5pct_notional_share*100,1)+'%'}</td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">No enriched futures/trade/book sample yet.</div>';
- return `<div class="marketgrid">${cards}</div>${table}`;
 }
 
 function eqChart(s){
@@ -246,9 +214,6 @@ async function tick(){
 	  ].map(([l,n])=>`<div class="hs"><div class="l">${l}</div><div class="n num">${n}</div></div>`).join('');
 	  document.getElementById('leaderboard').innerHTML=leaderboardBlock(d.leaderboard);
 	  document.getElementById('logic').innerHTML=logicBlock(d.strategy_logic);
-	  document.getElementById('sources').innerHTML=sourcesBlock(d.sources);
-	  document.getElementById('source-context').innerHTML=sourceContextBlock(d.source_hub);
-	  document.getElementById('scanner').innerHTML=scannerBlock(d.scanner);
 	  document.getElementById('breadth').innerHTML=breadthBlock(d.breadth,d.breadth_updated);
   const ins=[]; d.bots.forEach(b=>(b.insights||[]).forEach(i=>ins.push([b.bot,i])));
   const seen=new Set();

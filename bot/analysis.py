@@ -11,7 +11,6 @@ ignored that would undo it.
 from __future__ import annotations
 
 import datetime as dt
-import json
 
 import pandas as pd
 
@@ -119,32 +118,6 @@ def readiness(bots: list[dict]) -> list[dict]:
     return out
 
 
-def scanner_history(limit: int = 400) -> list[dict]:
-    rows = []
-    for f in sorted((ROOT / "live" / "scanner").glob("scans-*.jsonl")):
-        for line in f.open():
-            try:
-                d = json.loads(line)
-            except json.JSONDecodeError:
-                continue
-            # scans-*.jsonl is flat. live/scanner/state.json nests the same fields
-            # under "universe"; reading the wrong one yields a full-length series
-            # of nulls that charts as an empty panel rather than an error.
-            rows.append({"t": d.get("ts_utc"), "disp": d.get("dispersion_pct"),
-                         "long": d.get("pct_long"), "med": d.get("median_ret_pct"),
-                         "cushion": d.get("median_cushion_pct"),
-                         "at_risk": d.get("n_at_risk")})
-    return rows[-limit:]
-
-
-def _scanner_coins() -> dict:
-    try:
-        st = json.loads((ROOT / "live" / "scanner" / "state.json").read_text())
-        return st.get("coins") or {}
-    except Exception:
-        return {}
-
-
 def selection(name: str) -> dict:
     """Why each name in the pool is or is not held, as one funnel.
 
@@ -167,11 +140,9 @@ def selection(name: str) -> dict:
     held = dict((cycles[-1].get("positions") or {}))
     chans = (sigs[-1].get("channels") or {}) if sigs else {}
     targets = (sigs[-1].get("target_weights") or {}) if sigs else {}
-    coins = _scanner_coins()
 
     rows = []
     for sym in pool:
-        c = coins.get(sym) or {}
         ch = chans.get(sym) or {}
         if sym in held:
             status, why = "HELD", ch.get("action") or "held"
@@ -179,27 +150,21 @@ def selection(name: str) -> dict:
             status, why = "TARGET", "signalled but not yet filled"
         elif sym not in sel:
             status, why = "EXCLUDED", "not tradable on venue, spread gate, or short history"
-        elif c.get("state") == "long":
-            status, why = "SIGNAL_NOT_TAKEN", "above channel but outside the rank cut"
-        elif c.get("state") == "pending":
-            status, why = "PENDING", f"{c.get('to_entry_pct')}% below entry"
-        elif c.get("state") == "at_risk":
-            status, why = "AT_RISK", f"cushion {c.get('cushion_pct')}%"
         else:
-            status, why = "FLAT", "no channel break"
+            status, why = "FLAT", "not signalled at the last bar, or outside the rank cut"
         rows.append({"symbol": sym, "status": status, "why": why,
                      "weight": round(float(held.get(sym, 0.0)), 5),
-                     "close": c.get("close"), "upper": c.get("upper"),
-                     "floor": c.get("floor"),
-                     "cushion_pct": c.get("cushion_pct"),
-                     "to_entry_pct": c.get("to_entry_pct"),
+                     "close": ch.get("close"), "upper": ch.get("upper"),
+                     "floor": ch.get("floor"),
+                     "cushion_pct": (round((ch["close"] / ch["floor"] - 1) * 100, 2)
+                                     if ch.get("close") and ch.get("floor") else None),
+                     "to_entry_pct": None,
                      "in_universe": sym in sel})
-    order = {"HELD": 0, "TARGET": 1, "SIGNAL_NOT_TAKEN": 2, "AT_RISK": 3,
-             "PENDING": 4, "FLAT": 5, "EXCLUDED": 6}
+    order = {"HELD": 0, "TARGET": 1, "FLAT": 2, "EXCLUDED": 3}
     rows.sort(key=lambda r: (order.get(r["status"], 9),
                              -(r["weight"] or 0),
                              r["to_entry_pct"] if r["to_entry_pct"] is not None else 1e9))
-    n_sig = sum(1 for r in rows if r["status"] in ("HELD", "TARGET", "SIGNAL_NOT_TAKEN"))
+    n_sig = sum(1 for r in rows if r["status"] in ("HELD", "TARGET"))
     gross = float(cycles[-1].get("gross_exposure") or 0.0)
     stages = [
         {"stage": "listed on venue", "n": listed, "drop": None},
@@ -272,7 +237,6 @@ def payload(bots: list[dict], control_of: dict) -> dict:
         "positions": [positions(b["bot"]) for b in bots],
         "ab": [ab_spread(g, c) for g, c in control_of.items()],
         "readiness": readiness(bots),
-        "scanner": scanner_history(),
         "markout": {b["bot"]: (b.get("markout") or {}) for b in bots},
         "horizons": list(HORIZONS_S),
     }

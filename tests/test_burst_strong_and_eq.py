@@ -4,10 +4,8 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
-import yaml
 
 from bot import dashboard
-from bot.settings import load
 from gates import live_validation
 from signals import contenders
 
@@ -56,21 +54,6 @@ def test_equal_weight_splits_evenly_and_keeps_the_same_names():
         held = row[row > 0]
         if len(held):
             assert np.allclose(held, min(0.5, 1.0 / len(held)))
-
-
-def test_new_books_are_separate_registered_and_differ_from_their_controls_by_one_knob():
-    for book, control, knobs in (("burst_strong_15m", "burst_15m", {"prior_return_bars", "prior_return_min"}),
-                                 ("momentum_top3_15m_eq", "momentum_top3_15m", {"equal_weight", "sizing"})):
-        a = yaml.safe_load(open(f"config/{book}.yaml"))["contenders"]
-        b = yaml.safe_load(open(f"config/{control}.yaml"))["contenders"]
-        diff = {k for k in set(a) | set(b) if a.get(k) != b.get(k) and not k.endswith("_ref")}
-        assert diff == knobs, (book, diff)
-        s = load(f"config/{book}.yaml")
-        assert not s.shorts_enabled and not s.target_lock.get("enabled") and s.booking["enabled"]
-        assert dashboard.BOTS[book] == f"config/{book}.yaml" and dashboard.CONTROL_OF[book] == control
-        assert book in live_validation.BOOKS
-    run = open("run_bots.sh").read()
-    assert "config/burst_strong_15m.yaml" in run and "config/momentum_top3_15m_eq.yaml" in run
 
 
 def test_retired_books_are_off_the_dashboard_and_the_start_list():

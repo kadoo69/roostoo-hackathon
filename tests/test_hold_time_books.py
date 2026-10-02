@@ -6,32 +6,10 @@ import numpy as np
 import pandas as pd
 import yaml
 
-from bot import dashboard
-from bot.settings import load
-from gates import live_validation
 from signals import contenders
 
 TWINS = {"momentum_top3_15m_hold3h": ("momentum_top3_15m", 12),
          "momentum_top3_5m_hold2h": ("momentum_top3_5m", 24)}
-
-
-def test_twins_differ_only_in_the_minimum_hold_and_are_registered():
-    run = open("run_bots.sh").read()
-    for book, (control, bars) in TWINS.items():
-        a = yaml.safe_load(open(f"config/{book}.yaml"))
-        b = yaml.safe_load(open(f"config/{control}.yaml"))
-        diff = {k for k in set(a["contenders"]) | set(b["contenders"])
-                if a["contenders"].get(k) != b["contenders"].get(k) and not k.endswith("_ref")}
-        assert diff == {"min_hold_bars"} and a["contenders"]["min_hold_bars"] == bars
-        changed_later = {"exit_bars", "exit_bars_changed"} if control == "momentum_top3_5m" else set()
-        for sec in ("strategy", "booking", "execution", "risk"):
-            sa = {k: v for k, v in a[sec].items() if not (sec == "strategy" and k in changed_later)}
-            sb = {k: v for k, v in b[sec].items() if not (sec == "strategy" and k in changed_later)}
-            assert sa == sb, (book, sec)
-        s = load(f"config/{book}.yaml")
-        assert not s.shorts_enabled and not s.target_lock.get("enabled")
-        assert dashboard.BOTS[book] == f"config/{book}.yaml" and dashboard.CONTROL_OF[book] == control
-        assert book in live_validation.BOOKS and f"config/{book}.yaml" in run
 
 
 def test_a_position_is_kept_for_its_minimum_hold():
@@ -57,5 +35,3 @@ def test_slow_exit_twin_differs_only_in_exit_bars():
         assert a[sec] == b[sec], sec
     diff = {k for k in set(a["strategy"]) | set(b["strategy"]) if a["strategy"].get(k) != b["strategy"].get(k)}
     assert diff == {"exit_bars"} and a["strategy"]["exit_bars"] == 40
-    assert dashboard.CONTROL_OF["momentum_top3_15m_slowexit"] == "momentum_top3_15m"
-    assert "momentum_top3_15m_slowexit" in live_validation.BOOKS

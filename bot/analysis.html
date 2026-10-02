@@ -60,7 +60,6 @@ svg{display:block;width:100%}
  <section><div class="sect"><span>Per-strategy detail</span><span class="hint">equity · underwater · gross exposure</span></div><div class="grid2" id="cards"></div></section>
  <section><div class="sect"><span>Open positions · P&amp;L attribution and distance to exit</span><span class="hint">a red book can be carried by one red name</span></div><div id="pos"></div></section>
  <section><div class="sect"><span>Selection funnel · why each name is or is not held</span><span class="hint">the pool is 30 names; the book is not</span></div><div id="funnel"></div></section>
- <section><div class="sect"><span>Regime · dispersion is the conditioner that matters, breadth is not</span></div><div id="regime"></div></section>
  <section><div class="sect"><span>Decision log · bar closes only</span><span class="hint">these bots evaluate every 60s but act only on a new bar</span></div><div id="dec"></div></section>
 </main>
 <script>
@@ -174,7 +173,7 @@ function posBlock(ps){
   </div>`;
  }).join('');
 }
-const SCLS={HELD:'up',TARGET:'up',SIGNAL_NOT_TAKEN:'warn',AT_RISK:'dn',PENDING:'dim',FLAT:'faint',EXCLUDED:'faint'};
+const SCLS={HELD:'up',TARGET:'up',FLAT:'faint',EXCLUDED:'faint'};
 function funnelBlock(sels){
  if(!sels||!sels.length)return '<div class="empty">no selection data</div>';
  return sels.filter(s=>s.stages.length).map(s=>{
@@ -194,19 +193,6 @@ function funnelBlock(sels){
    ${rows?`<table><thead><tr><th>symbol</th><th>status</th><th>why</th><th class="r">weight</th><th class="r">cushion</th></tr></thead><tbody>${rows}</tbody></table>`:'<div class="empty">nothing signalling</div>'}
   </div>`;
  }).join('');
-}
-function regimeBlock(h){
- if(!h||!h.length)return '<div class="empty">scanner has not published yet</div>';
- const d=h.filter(x=>x.disp!=null).map(x=>x.disp), l=h.filter(x=>x.long!=null).map(x=>x.long);
- const last=h[h.length-1];
- return `<div class="kpi">
-   <div class="b"><div class="k">dispersion</div><div class="v">${N(last.disp,2)}%</div></div>
-   <div class="b"><div class="k">pct long</div><div class="v">${N(last.long,1)}%</div></div>
-   <div class="b"><div class="k">median ret</div><div class="v ${S(last.med)}">${N(last.med,2)}%</div></div>
-   <div class="b"><div class="k">scans</div><div class="v">${h.length}</div></div>
-  </div>
-  <div class="cs">dispersion % — the book is a coin flip in the low tercile and scores +3.72 in the top</div>${areaChart(d,70,'#a371f7')}
-  <div class="cs">pct long % — carries no information in any book, shown for context only</div>${areaChart(l,60,'#586472')}`;
 }
 function decBlock(series){
  const rows=[];
@@ -228,7 +214,6 @@ async function tick(){
  document.getElementById('cards').innerHTML=cards(ser,d.markout||{});
  document.getElementById('pos').innerHTML=posBlock(d.positions||[]);
  document.getElementById('funnel').innerHTML=funnelBlock(d.selection||[]);
- document.getElementById('regime').innerHTML=regimeBlock(d.scanner);
  document.getElementById('dec').innerHTML=decBlock(d.series||[]);
 }
 tick(); setInterval(tick,20000);
