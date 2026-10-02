@@ -58,6 +58,12 @@ tr.row.sel td{background:rgba(124,196,255,.06)}
 .side{display:grid;grid-template-rows:auto auto minmax(0,1fr) auto;gap:12px;min-height:0}
 .list{padding:6px 14px 10px}
 .exp{display:grid;grid-template-columns:52px 1fr 72px;align-items:center;gap:8px;padding:4px 0;font-size:12px}
+.lp{display:grid;grid-template-columns:52px 1fr 62px 58px 66px;align-items:center;gap:6px;padding:4px 0;font-size:12px;border-bottom:1px solid var(--line)}
+.lp:last-child{border-bottom:0}
+.lp .num{text-align:right}
+.lp .p{transition:background .5s;border-radius:4px;padding:0 3px}
+.lp .p.fu{background:var(--up-bg)}.lp .p.fd{background:var(--dn-bg)}
+.lph{font-size:10px;color:var(--faint);text-transform:uppercase;letter-spacing:.04em}
 .exp .b{height:6px;border-radius:3px;background:var(--acc);opacity:.7}
 .ev{display:grid;grid-template-columns:44px 1fr auto;gap:8px;padding:5px 0;border-bottom:1px solid var(--line);font-size:12px}
 .ev:last-child{border-bottom:none}
@@ -112,6 +118,9 @@ tr.fresh td{background:rgba(124,196,255,.05)}
     <tbody id="rows"></tbody></table></div>
   </div>
   <div class="side">
+   <div class="card"><div class="hd"><h3>Live prices</h3><span class="faint" id="lpStat" style="margin-left:auto;font-size:11px">connecting</span></div>
+    <div class="list"><div class="lp lph"><span>Coin</span><span class="num">Price</span><span class="num" title="move since the bots last marked it (they mark every ~30 s)">vs mark</span><span class="num">24h</span><span class="num" title="open P&amp;L of every book holding it, at the live price">Open P&amp;L</span></div><div id="lp"></div>
+    <div class="faint" style="font-size:10.5px;margin-top:6px">Binance public stream, tick by tick. Display only: the bots still mark every ~30 s and decide at bar closes.</div></div></div>
    <div class="card"><div class="hd"><h3>What the dynamic bot sees</h3><span class="faint" style="margin-left:auto;font-size:11px">live · hourly</span></div><div class="list" id="wf" style="max-height:230px;overflow:auto"></div></div>
    <div class="card"><div class="hd"><h3>Fleet exposure</h3><span class="faint" style="margin-left:auto;font-size:11px">USD · books · open P&amp;L</span></div><div class="list" id="exposure"></div></div>
    <div class="card"><div class="hd"><h3>Activity</h3><span class="faint" style="margin-left:auto;font-size:11px">your local time</span></div><div class="list scroll" id="activity"></div></div>
@@ -332,12 +341,51 @@ function render(){
  const t=D.totals, allOk=t.online===t.books;
  $('live').innerHTML=`<span class="dot ${allOk?'':'stale'}"></span>${t.online}/${t.books} live`;
  $('upd').textContent='updated '+tloc(D.generated);
- kpis(); tabs(); filters(); rows(); if(view==='closed') closedView(); side(); if(sel) open(sel);
+ kpis(); tabs(); filters(); rows(); if(view==='closed') closedView(); side(); if(sel) open(sel); lpConnect(); if(LP.syms===lpWanted().join(',')) lpRender();
 }
 async function load(){
  try{ D=await (await fetch('/api/desk',{cache:'no-store'})).json(); render(); }
  catch(e){ $('live').innerHTML='<span class="dot stale"></span>offline'; }
 }
+const LP={ws:null,syms:'',last:{},open24:{},ticks:0,at:0,hosts:['wss://data-stream.binance.vision/stream','wss://stream.binance.com:9443/stream'],h:0,retry:0};
+function lpWanted(){
+ const held=(D&&D.exposure||[]).map(e=>e.symbol);
+ return [...new Set([...held,'BTC','ETH'])];
+}
+function lpConnect(){
+ const syms=lpWanted(), key=syms.join(',');
+ if(LP.ws&&LP.syms===key&&LP.ws.readyState<=1) return;
+ if(LP.ws){LP.ws.onclose=null;LP.ws.close();}
+ LP.syms=key;
+ const url=LP.hosts[LP.h%LP.hosts.length]+'?streams='+syms.map(s=>s.toLowerCase()+'usdt@miniTicker').join('/');
+ let ws; try{ws=new WebSocket(url);}catch(e){LP.h++;return setTimeout(lpConnect,3000);}
+ LP.ws=ws;
+ ws.onopen=()=>{LP.retry=0;};
+ ws.onmessage=m=>{const d=JSON.parse(m.data).data; if(!d||!d.s) return;
+  const c=d.s.replace('USDT',''), p=+d.c, prev=LP.last[c];
+  LP.last[c]=p; LP.open24[c]=+d.o; LP.ticks++; LP.at=Date.now(); lpRow(c,prev);};
+ ws.onclose=()=>{LP.h++; LP.retry=Math.min(30000,1000*2**LP.retry++); setTimeout(lpConnect,LP.retry);};
+ lpRender();
+}
+function lpRow(c,prev){
+ const el=document.getElementById('lp-'+c); if(!el){lpRender();return;}
+ const e=(D.exposure||[]).find(x=>x.symbol===c)||{}, p=LP.last[c], o=LP.open24[c];
+ const pe=el.querySelector('.p'); pe.textContent=px(p);
+ if(prev!=null&&p!==prev){pe.classList.remove('fu','fd');void pe.offsetWidth;pe.classList.add(p>prev?'fu':'fd');}
+ const vm=e.mark?(p/e.mark-1)*100:null, d24=o?(p/o-1)*100:null;
+ el.querySelector('.vm').innerHTML=`<span class="${cls(vm)}">${pct(vm)}</span>`;
+ el.querySelector('.d24').innerHTML=`<span class="${cls(d24)}">${pct(d24)}</span>`;
+ const pnl=e.qty?e.qty*p-e.basis:null;
+ el.querySelector('.pl').innerHTML=pnl==null?'<span class="faint">-</span>':`<span class="${cls(pnl)}">${sgn(pnl)}</span>`;
+}
+function lpRender(){
+ const syms=lpWanted();
+ $('lp').innerHTML=syms.map(c=>`<div class="lp" id="lp-${esc(c)}"><b>${esc(c)}</b><span class="num p">${px(LP.last[c])}</span><span class="num vm">-</span><span class="num d24">-</span><span class="num pl">-</span></div>`).join('');
+ syms.forEach(c=>{if(LP.last[c]!=null) lpRow(c,null);});
+}
+setInterval(()=>{const a=LP.at?(Date.now()-LP.at)/1000:null;
+ $('lpStat').textContent=a==null?'connecting':a<5?`live · ${LP.ticks} ticks`:`stale ${Math.round(a)}s`;},1000);
+
 load(); setInterval(load,30000);
 </script>
 </body></html>

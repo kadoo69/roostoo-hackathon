@@ -73,7 +73,7 @@ def positions(b: dict) -> list[dict]:
         if lot and lot["qty"] > 0 and mark:
             entry = lot["cost"] / lot["qty"]
             sign = -1 if w < 0 else 1
-            row.update({"entry": round(entry, 8), "pnl": round(sign * (mark - entry) * lot["qty"], 2),
+            row.update({"entry": round(entry, 8), "qty": lot["qty"], "pnl": round(sign * (mark - entry) * lot["qty"], 2),
                         "pnl_pct": round(sign * (mark / entry - 1) * 100, 2), "since": lot["since"]})
         out.append(row)
     return out
@@ -166,12 +166,17 @@ def exposure(books: list[dict]) -> list[dict]:
     agg: dict[str, dict] = {}
     for bk in books:
         for p in bk["positions"]:
-            a = agg.setdefault(p["symbol"], {"symbol": p["symbol"], "usd": 0.0, "books": 0, "pnl": 0.0})
+            a = agg.setdefault(p["symbol"], {"symbol": p["symbol"], "usd": 0.0, "books": 0, "pnl": 0.0,
+                                             "qty": 0.0, "basis": 0.0, "mark": p.get("mark")})
             a["usd"] += p["weight"] * (bk["equity"] or 0.0)
             a["books"] += 1
             a["pnl"] += p.get("pnl") or 0.0
+            if p.get("qty") and p.get("entry"):
+                sign = -1 if p["weight"] < 0 else 1
+                a["qty"] += sign * p["qty"]
+                a["basis"] += sign * p["qty"] * p["entry"]
     rows = sorted(agg.values(), key=lambda r: -abs(r["usd"]))
-    return [{**r, "usd": round(r["usd"]), "pnl": round(r["pnl"])} for r in rows]
+    return [{**r, "usd": round(r["usd"]), "pnl": round(r["pnl"]), "basis": round(r["basis"], 4)} for r in rows]
 
 
 def activity(books: list[dict], limit: int = 14) -> list[dict]:
