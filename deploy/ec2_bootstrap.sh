@@ -87,7 +87,7 @@ done
 cp "$DEST/deploy/roostoo-paper@.service" /etc/systemd/system/
 systemctl daemon-reload
 for b in $PAPER_BOOKS; do
-  sudo -u roostoo "$DEST/.venv/bin/python" -c "from bot.settings import load; import sys; s=load('$DEST/config/$b.yaml'); sys.exit(0 if s.dry_run and not s.keyset else 1)" \
+  sudo -u roostoo bash -c "cd $DEST && .venv/bin/python -c \"from bot.settings import load; import sys; s=load('config/$b.yaml'); sys.exit(0 if s.dry_run and not s.keyset else 1)\"" \
     || { echo "refusing paper unit for $b: not a keyless paper config"; exit 1; }
   systemctl enable "roostoo-paper@$b" >/dev/null 2>&1
   systemctl restart "roostoo-paper@$b"
