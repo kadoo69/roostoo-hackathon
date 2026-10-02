@@ -45,3 +45,14 @@ def test_inverse_vol_scales_entries_toward_the_median_risk():
     cfg = _cfg("sleeves_ivol_5m")
     assert bot_class(cfg).__name__ == "SleevesBot" and cfg["sleeves"]["inverse_vol"]["lookback_bars"] == 288
     assert load("config/sleeves_ivol_5m.yaml").keyset is None
+
+
+def test_z3_books_are_keyless_paper_with_the_per_coin_trigger():
+    for name in ("ride_z3_5m", "sleeves_z3_5m"):
+        cfg = _cfg(name)
+        arm = next(iter(cfg["adaptive"]["burst_arms"].values()))
+        assert arm["sigma_k"] == 3.0 and arm["sigma_bars"] == 288 and "thresh_pct" not in arm
+        assert load(f"config/{name}.yaml").keyset is None
+    assert _cfg("sleeves_z3_5m")["sleeves"]["ride"]["sigma_k"] == 3.0
+    assert bot_class(_cfg("ride_z3_5m")).__name__ == "AdaptiveScalperBot"
+    assert bot_class(_cfg("sleeves_z3_5m")).__name__ == "SleevesBot"

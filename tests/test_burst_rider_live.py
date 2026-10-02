@@ -116,3 +116,26 @@ def test_ride_target_seeds_from_held_longs_and_a_style_switch_clears_the_state(t
     assert json.loads(path.read_text()) == {}
     unseeded = fake_bot(tmp_path / "u", monkeypatch, {"B": 0.33}, opened={"B": [str(idx[2]), 1]})
     assert unseeded.ride_target("ride", close.iloc[:4], high.iloc[:4], {}, seed=False).iloc[-1].abs().sum() == 0
+
+
+SIGMA = {**CFG, "sigma_k": 3.0, "sigma_bars": 60}
+
+
+def test_sigma_trigger_live_matches_the_path_with_a_bounded_window():
+    for seed in range(3):
+        close, high = panel(seed)
+        path = burst_rider.weights(close, high, SIGMA)
+        assert path.iloc[3:].sum().sum() > 20
+        for window in (None, SIGMA["sigma_bars"] + SIGMA["hold_bars"] + 10):
+            live = run_live(close, high, SIGMA, window=window)
+            pd.testing.assert_frame_equal(live.iloc[100:], path.iloc[103:], check_freq=False, check_names=False)
+
+
+def test_sigma_trigger_is_per_coin():
+    close, high = panel(1)
+    r3 = close / close.shift(3) - 1
+    lvl = burst_rider.trigger_level(r3, SIGMA)
+    exp = 3.0 * r3.rolling(60, min_periods=30).std().shift(1)
+    pd.testing.assert_frame_equal(lvl, exp)
+    flat = burst_rider.trigger_level(r3, CFG)
+    assert float(flat.iloc[-1, 0]) == 0.01

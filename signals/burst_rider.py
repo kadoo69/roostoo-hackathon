@@ -5,6 +5,9 @@ names at 1/n each, one entry per coin per `cooldown_bars`. It closes at the firs
 high reaches `tp_pct` above the entry close, or after `hold_bars`. The live book sells at that bar's
 close, not at the target, so live and simulated results understate the resting-limit fill the
 study assumed. Operator override of a failed test: DECISIONS.md#burst-rider-override-2026-09-30
+With `sigma_k` set, the trigger is per coin: the 3-bar return must reach `sigma_k` times the std of
+that coin's 3-bar returns over the previous `sigma_bars` bars, in place of `thresh_pct`.
+DECISIONS.md#ride-z3-declaration
 """
 from __future__ import annotations
 
@@ -12,15 +15,24 @@ import numpy as np
 import pandas as pd
 
 
+def trigger_level(r3: pd.DataFrame, cfg: dict) -> pd.DataFrame:
+    """Entry threshold per bar and coin on 3-bar returns `r3`. DECISIONS.md#ride-z3-declaration"""
+    if cfg.get("sigma_k"):
+        n = int(cfg.get("sigma_bars", 288))
+        return float(cfg["sigma_k"]) * r3.rolling(n, min_periods=n // 2).std().shift(1)
+    return pd.DataFrame(float(cfg.get("thresh_pct", 2.0)) / 100, index=r3.index, columns=r3.columns)
+
+
 def weights(close: pd.DataFrame, high: pd.DataFrame, cfg: dict) -> pd.DataFrame:
-    thresh = float(cfg.get("thresh_pct", 2.0)) / 100
     tp = float(cfg.get("tp_pct", 2.0)) / 100
     hold = int(cfg.get("hold_bars", 48))
     n = int(cfg.get("n", 3))
     cool = int(cfg.get("cooldown_bars", 12))
     c = close.to_numpy(dtype=float)
     h = high.reindex_like(close).to_numpy(dtype=float)
-    r3 = close.to_numpy(dtype=float) / close.shift(3).to_numpy(dtype=float) - 1.0
+    r3f = close / close.shift(3) - 1.0
+    r3 = r3f.to_numpy(dtype=float)
+    lvl = trigger_level(r3f, cfg).to_numpy(dtype=float)
     T, N = c.shape
     out = np.zeros((T, N))
     entry = np.full(N, np.nan)
@@ -36,7 +48,7 @@ def weights(close: pd.DataFrame, high: pd.DataFrame, cfg: dict) -> pd.DataFrame:
         free = n - int(held.sum())
         if free > 0:
             cand = [(r3[t, j], j) for j in range(N)
-                    if not held[j] and np.isfinite(r3[t, j]) and r3[t, j] >= thresh and t - last[j] >= cool]
+                    if not held[j] and np.isfinite(r3[t, j]) and np.isfinite(lvl[t, j]) and r3[t, j] >= lvl[t, j] and t - last[j] >= cool]
             for _, j in sorted(cand, reverse=True)[:free]:
                 entry[j], age[j], last[j] = c[t, j], 0, t
         out[t] = np.where(~np.isnan(entry), 1.0 / n, 0.0)
@@ -54,7 +66,6 @@ def live_step(close: pd.DataFrame, high: pd.DataFrame, cfg: dict, held: dict[str
     (cooldown). Ages count bars by time, so the exit after downtime uses every bar since the entry.
     Same rule as `weights()`, bar for bar (`tests/test_burst_rider_live.py`).
     """
-    thresh = float(cfg.get("thresh_pct", 2.0)) / 100
     tp = float(cfg.get("tp_pct", 2.0)) / 100
     hold = int(cfg.get("hold_bars", 48))
     n = int(cfg.get("n", 3))
@@ -72,10 +83,11 @@ def live_step(close: pd.DataFrame, high: pd.DataFrame, cfg: dict, held: dict[str
     new_last = dict(last)
     free = n - len(keep)
     if free > 0 and len(close) > 3:
-        r3 = close.iloc[-1] / close.iloc[-4] - 1.0
+        r3f = close / close.shift(3) - 1.0
+        r3, lvl = r3f.iloc[-1], trigger_level(r3f, cfg).iloc[-1]
         cand = []
         for s, r in r3.items():
-            if s in keep or not np.isfinite(r) or r < thresh:
+            if s in keep or not np.isfinite(r) or not np.isfinite(lvl[s]) or r < lvl[s]:
                 continue
             if s in last and round((t - pd.Timestamp(last[s])) / step) < cool:
                 continue
