@@ -40,7 +40,7 @@ Retired today: `momentum_top3_15m`, `momentum_top3_5m` (`#retired-2026-10-01`; c
 - Descriptive: overnight minute patterns (`#overnight-patterns-2026-10-01`), best-signal profile (`#best-signals-2026-10-01`), fill quality (all maker, buys under 10 s, one slow exit in six, `#fill-quality-2026-10-01`). HRT AI Labs post assessed: ignore (execution RL, no disclosed edge).
 
 ### Open operator decisions
-1. Exit escalation (a LIMIT exit unfilled after 300 s re-sent at MARKET): operator said yes 08:30Z, but the Claude Code auto-mode classifier blocked editing real-money execution; needs the operator out of auto mode or to apply it. Design: `Executor.sweep_unfilled` sells the unfilled rest at MARKET after cancelling a stale SELL, behind `execution.exit_escalation: true` on the competition configs.
+1. Exit escalation: DONE 2026-10-02 (commit e41b5b2, `#exit-escalation-2026-10-02`); live on EC2 only after the next bootstrap run (needs fresh AWS session credentials).
 2. Drawdown halt stays permanent within a process (red-team item 7).
 3. Sizing: keep the 0.5 cap (raw return, Screen 2) or move to the 0.33 cap (better on history and Screen 3, about -0.85 pt in the rally window); recommended after qualifying.
 4. Wiring the regime switch into the competition book: only if `regime_ls_30m` beats `momentum_top3_30m` with profitable shorts over its 7-day paper run.
