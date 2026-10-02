@@ -167,3 +167,11 @@ def test_a_paper_book_on_ec2_replaces_its_local_row_and_stays_out_of_live_totals
     ride = next(b for b in p["ec2"]["books"] if b["bot"] == "ride_5m")
     assert ride["paper"] and ride["ret_pct"] == 6.0
     assert p["totals"]["net"] == 1000 and p["totals"]["online"] == 2
+
+
+def test_ec2_card_counts_config_changes_as_notes_not_errors():
+    from bot.ec2_feed import error_counts
+    rows = [{"event": "config_changed_mid_run", "error": ""}, {"event": "config_changed_mid_run", "error": ""},
+            {"event": "cycle_error", "error": "ReadTimeout: HTTPSConnectionPool"}, {"event": "order_rejected", "error": "x"}]
+    assert error_counts({"errors_today_rows": rows}) == {"errors_today": 1, "notes_today": 3}
+    assert error_counts({"errors_today": 2}) == {"errors_today": 2, "notes_today": 0}

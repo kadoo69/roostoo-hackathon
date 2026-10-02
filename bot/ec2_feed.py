@@ -64,11 +64,23 @@ for b in BOOKS:
                 rows.append({k: r.get(k) for k in ("ts_utc", "event", "side", "pair", "status", "price", "quantity", "filled_quantity")})
     rec["orders"] = rows[-6:]
     errs = sorted(d.glob("errors-*.jsonl"))
-    rec["errors_today"] = len(errs[-1].read_text().splitlines()) if errs and day in errs[-1].name else 0
+    rows = [json.loads(x) for x in errs[-1].read_text().splitlines()] if errs and day in errs[-1].name else []
+    rec["errors_today_rows"] = [{"event": r.get("event"), "error": str(r.get("error", ""))[:160]} for r in rows[-200:]]
     out["books"][b] = rec
 print("EC2JSON " + json.dumps(out))
 PY
 '''.replace("BOOKS", repr(BOOKS)).replace("PAPER", repr(PAPER))
+
+
+def error_counts(b: dict) -> dict:
+    """Faults and notes from a book's error journal today: config changes, deferred data gaps and recovered
+    network blips are notes, not faults (`bot.dashboard.transient`). DECISIONS.md#live-audit-2026-09-24"""
+    from bot.dashboard import transient
+    rows = b.get("errors_today_rows")
+    if rows is None:
+        return {"errors_today": b.get("errors_today", 0), "notes_today": 0}
+    notes = sum(1 for r in rows if transient(r))
+    return {"errors_today": len(rows) - notes, "notes_today": notes}
 
 
 def fetch() -> dict:
@@ -133,6 +145,6 @@ def payload() -> dict | None:
                       "start_equity": start, "equity": eq, "net": round(eq - start, 2) if start and eq else None,
                       "ret_pct": round((eq / start - 1) * 100, 2) if start and eq else None,
                       "peak": b.get("peak"), "positions": b.get("positions") or {}, "curve": b.get("curve") or [],
-                      "orders": b.get("orders") or [], "errors_today": b.get("errors_today", 0)})
+                      "orders": b.get("orders") or [], **error_counts(b)})
     return {"host": MARKER.read_text().strip(), "commit": data.get("commit"), "fetched_age_s":
             round(time.time() - st["ts"]) if st["ts"] else None, "error": st["error"], "books": books}

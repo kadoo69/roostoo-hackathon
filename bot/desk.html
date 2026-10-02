@@ -395,7 +395,7 @@ function band(){
   const last=b.waiting?`last poll ${tloc(b.last_poll)}`:`last cycle ${tloc(b.last_cycle)}`;
   const ord=(b.orders||[]).slice(-1).map(o=>`last order ${tloc(o.ts_utc)} ${esc(o.side||'')} ${esc((o.pair||'').replace('/USD',''))} ${esc(o.event)}`).join('');
   return `<div class="lcard"><div><div class="t">${title} <span class="acct">${acct}</span> ${st}</div>${left}</div><div>${right}</div>
-   <div class="ft"><span>${last}</span><span>running since ${esc(String(b.since||'').replace(/^\w+ /,'').slice(0,16))}</span>${ord?`<span>${ord}</span>`:''}${b.errors_today&&!b.waiting?`<span class="dn">${b.errors_today} errors today</span>`:''}</div></div>`;
+   <div class="ft"><span>${last}</span><span>running since ${esc(String(b.since||'').replace(/^\w+ /,'').slice(0,16))}</span>${ord?`<span>${ord}</span>`:''}${b.errors_today&&!b.waiting?`<span class="dn">${b.errors_today} errors today</span>`:''}${b.notes_today&&!b.waiting?`<span class="faint" title="config changes, data gaps waited out, recovered network blips">${b.notes_today} notes</span>`:''}</div></div>`;
  };
  $('band').innerHTML=`<div class="bandh"><b>Live on Roostoo</b><span>AWS EC2 Sydney · ${esc((E.host||'').split(' ')[0])} · commit ${esc(E.commit||'-')} · ${pulled}</span></div>`+E.books.filter(b=>!b.paper).map(card).join('')+(E.books.some(b=>b.paper)?`<div class="bandh" style="margin-top:2px"><b>Paper on EC2</b><span>always-on twins for the 10-03 comparison</span></div>`+E.books.filter(b=>b.paper).map(card).join(''):'');
 }
