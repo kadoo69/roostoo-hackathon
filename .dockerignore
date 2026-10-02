@@ -1,0 +1,11 @@
+.env
+.git
+live
+run
+results
+logs
+.pytest_cache
+.ruff_cache
+__pycache__
+data/cache
+**/__pycache__

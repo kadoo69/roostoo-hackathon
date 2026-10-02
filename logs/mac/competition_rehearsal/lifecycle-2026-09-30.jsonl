@@ -1,0 +1,3 @@
+{"config_sha": "e07326dd37b19b48", "dry_run": false, "event": "cold_start", "last_bar": null, "mode": "continuous", "restored_cash": 100000.0, "restored_positions": 0, "restored_shorts": 0, "ts_utc": "2026-09-30T14:22:27.331591+00:00"}
+{"config_sha": "e07326dd37b19b48", "dry_run": false, "event": "resumed", "last_bar": "2026-09-30 14:00:00+00:00", "mode": "continuous", "restored_cash": 24994.28, "restored_positions": 1, "restored_shorts": 0, "ts_utc": "2026-09-30T14:54:58.619930+00:00"}
+{"config_sha": "e07326dd37b19b48", "dry_run": false, "event": "resumed", "last_bar": "2026-09-30 19:00:00+00:00", "mode": "continuous", "restored_cash": 49690.36, "restored_positions": 0, "restored_shorts": 0, "ts_utc": "2026-09-30T19:37:42.140541+00:00"}

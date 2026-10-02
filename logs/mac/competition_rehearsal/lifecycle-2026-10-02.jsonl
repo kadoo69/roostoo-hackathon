@@ -1,0 +1,2 @@
+{"cycle_seconds": 241.2, "event": "watchdog_exit", "ref": "DECISIONS.md#cycle-watchdog-2026-09-27", "ts_utc": "2026-10-02T05:08:45.412913+00:00"}
+{"config_sha": "e07326dd37b19b48", "dry_run": false, "event": "resumed", "last_bar": "2026-10-01 23:30:00+00:00", "mode": "continuous", "restored_cash": 113.85, "restored_positions": 2, "restored_shorts": 0, "ts_utc": "2026-10-02T05:08:57.098310+00:00"}

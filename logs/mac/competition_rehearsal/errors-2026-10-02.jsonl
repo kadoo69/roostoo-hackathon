@@ -1,0 +1,1 @@
+{"bar": "2026-10-02 06:30:00+00:00", "decision_deferred": true, "event": "data_incomplete", "missing": ["AAVEUSDT", "ARBUSDT", "AVAXUSDT", "LTCUSDT", "ONDOUSDT", "TRUMPUSDT", "TRXUSDT"], "ref": "DECISIONS.md#live-audit-2026-09-24", "stale": [], "ts_utc": "2026-10-02T07:04:43.267307+00:00"}

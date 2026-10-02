@@ -128,8 +128,40 @@ Updating the strategy means committing here and re-running the same command, so 
 
 ## Trade logs
 
-Every book writes JSON lines under `live/<book>/`: `orders-*.jsonl` (timestamp, pair, side, price, quantity, order ID, status, commission and the full API response fields), `signals-*.jsonl` (the target and why), `cycles-*.jsonl` (equity, positions, risk state), `reconcile-*.jsonl` and `errors-*.jsonl`.
-`./run_bots.sh trades` exports a FIFO trade blotter as CSV.
+Every book writes JSON lines under `live/<book>/`: `orders-*.jsonl` (timestamp, pair, side, price, quantity, order ID, status, commission and the API response fields), `signals-*.jsonl` (the target and why), `cycles-*.jsonl` (equity, positions, risk state), `reconcile-*.jsonl` and `errors-*.jsonl`.
+`./run_bots.sh trades` exports a FIFO trade blotter (`trades_closed.csv`, `trades_open.csv`) for the live books.
+
+The committed copy for evaluation is `logs/`: `logs/ec2/<book>/` holds the logs and trade CSVs from the EC2 instance (live since 2026-10-02 12:36Z) and `logs/mac/<book>/` the same books before the move.
+`python3 deploy/export_logs.py` refreshes it from the instance; the 30-second equity snapshots stay on the host.
+
+## Repository map
+
+| organisers' suggested folder | here |
+|---|---|
+| `bot/` (live loop) | `bot/run.py`, `bot/contenders_run.py`, `bot/scalper_adaptive_run.py` |
+| `strategy/` | `signals/` (`contenders.py` is the competition rule), `bot/strategy.py`, `bot/portfolio.py` |
+| `execution/` | `bot/execution.py`, `bot/intents.py`, `venue/roostoo.py` |
+| `data/` | `data/`, `bot/feed.py`, `bot/universe.py` |
+| `config/` | `config/` (`competition.yaml` is the submitted book) |
+| `logs/` | `logs/` (committed trade logs), `live/` on the host |
+| `tests/` | `tests/` (`python3 -m pytest tests -q`) |
+| deployment | `deploy/` (EC2 bootstrap, systemd unit, status and log export), `Dockerfile` |
+| research and evidence | `gates/` (every declared test), `results/`, `DECISIONS.md`, `FINDINGS.md` |
+
+## Docker
+
+```bash
+docker build -t roostoo-bot .
+docker run --rm --env-file .env roostoo-bot                                        # competition rule, paper
+docker run --rm --env-file .env -e ROOSTOO_DRY_RUN=0 roostoo-bot config/competition.yaml   # real orders
+```
+
+## Submission
+
+- Repository: https://github.com/kadoo69/roostoo-hackathon (public, MIT licence in `LICENSE`).
+- Submitted bot: `config/competition.yaml` run by `bot/contenders_run.py`, deployed with `deploy/ec2_bootstrap.sh` on the organisers' EC2 instance in ap-southeast-2.
+- Every strategy change is a commit on `main`; the reasoning for each is in `DECISIONS.md` under the anchor the commit cites.
+- Final version: tagged at submission (`git tag submission-final && git push origin submission-final`).
 
 ## Further reading
 

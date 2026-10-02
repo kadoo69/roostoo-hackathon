@@ -1,0 +1,5 @@
+{"cycle_seconds": 241.0, "event": "watchdog_exit", "ref": "DECISIONS.md#cycle-watchdog-2026-09-27", "ts_utc": "2026-10-01T02:52:52.937441+00:00"}
+{"config_sha": "e07326dd37b19b48", "dry_run": false, "event": "resumed", "last_bar": "2026-10-01 00:00:00+00:00", "mode": "continuous", "restored_cash": 49690.36, "restored_positions": 0, "restored_shorts": 0, "ts_utc": "2026-10-01T03:11:21.560014+00:00"}
+{"config_sha": "e07326dd37b19b48", "dry_run": false, "event": "resumed", "last_bar": "2026-10-01 05:00:00+00:00", "mode": "continuous", "restored_cash": 24.86, "restored_positions": 3, "restored_shorts": 0, "ts_utc": "2026-10-01T05:54:28.913520+00:00"}
+{"config_sha": "e07326dd37b19b48", "dry_run": false, "event": "resumed", "last_bar": "2026-10-01 06:30:00+00:00", "mode": "continuous", "restored_cash": 49980.19, "restored_positions": 0, "restored_shorts": 0, "ts_utc": "2026-10-01T07:24:05.493563+00:00"}
+{"config_sha": "e07326dd37b19b48", "dry_run": false, "event": "resumed", "last_bar": "2026-10-01 07:00:00+00:00", "mode": "continuous", "restored_cash": 49980.19, "restored_positions": 0, "restored_shorts": 0, "ts_utc": "2026-10-01T07:42:22.041058+00:00"}

@@ -9,6 +9,8 @@ import pandas as pd
 from bot.journal import Journal
 from bot.settings import ROOT
 
+LIVE_BOOKS = ("competition", "competition_rehearsal")
+
 FILLED_EVENTS = ("placed", "dry_run")
 SHORT_SIDES = ("SHORT_OPEN", "SHORT_CLOSE")
 OPENING = ("BUY", "SHORT_OPEN")
@@ -178,14 +180,11 @@ def build(bot: str) -> dict:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("bots", nargs="*",
-                    default=["donchian_4h", "donchian_4h_cushion", "donchian_1h",
-                             "momentum_top5_4h", "momentum_top5_cushion"])
+    ap.add_argument("bots", nargs="*", default=list(LIVE_BOOKS))
     ap.add_argument("--csv", action="store_true")
     a = ap.parse_args()
     out = []
-    for b in (a.bots or ["donchian_4h", "donchian_4h_cushion", "donchian_1h",
-                             "momentum_top5_4h", "momentum_top5_cushion"]):
+    for b in (a.bots or list(LIVE_BOOKS)):
         r = build(b)
         out.append(r)
         if a.csv:
