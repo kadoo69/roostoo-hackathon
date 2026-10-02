@@ -111,6 +111,10 @@ case "${1:-start}" in
     rm -f run/progress.pid; echo "  progress review stopped" ;;
   fleetstop) CONFIGS="$PAPER_FLEET" "$0" stop ;;
   live)
+    if [ -f "$ROOT/run/LIVE_HOST_EC2" ] && [ "${FORCE_LOCAL_LIVE:-0}" != 1 ]; then
+      echo "refusing: the live books run on EC2 ($(cat "$ROOT/run/LIVE_HOST_EC2")); two hosts would trade one account."
+      echo "stop them there first, then rm run/LIVE_HOST_EC2 (DECISIONS.md#ec2-cutover-2026-10-02)"; exit 1
+    fi
     echo "starting LIVE ORDER books:"; for c in $LIVE_CONFIGS; do start_one "$c" 0; done
     ;;
   livestop)

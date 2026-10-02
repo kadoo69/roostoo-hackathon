@@ -4583,3 +4583,12 @@ Declared before any live number: two paper books, each an exact copy of its cont
 Mechanism: in a chop market the top-30 pool moves as one block (first factor 56%, about 3 effective bets), so the thinner names outside it may carry coin-specific jumps the pool does not.
 Failure mode, already seen twice in the rally: the extra names are thinner, wider-spread altcoin beta; the 09-23..26 replay lost return and doubled the drawdown on 15m and 5m (`#full-roostoo-pool-live-replay-2026-09-26`) and `momentum_top3_30m_wide` trailed its control by 3.1 points in 11 h (`#retired-2026-09-27`). Wide-spread names pay the far side under the paper fill rule (`max_spread_bps: 5`).
 Decision rule: after 7 live days (2026-10-08) each book stops if its return is below its control over the same days, or on the 25% drawdown kill. Paper only; nothing reaches the competition book from this test without an operator decision.
+
+## ec2-cutover-2026-10-02
+
+Operator instruction 2026-10-02 12:25Z: set up the AWS instance per the organisers' guide and move the bot there.
+Instance `i-015fad70d34b0b83d` (Name `roostoo-bot`, tag Team Hackathon-Team118) launched from `Hackathon-Starter-Template` in ap-southeast-2: t3.medium, Amazon Linux 2023, 30 GB, instance profile `HackathonInstanceRole`; the account allows one instance and Session Manager only.
+The team role can start Session Manager sessions but not `ssm:SendCommand`, so `deploy/ssm_shell.py` drives an interactive session with the session-manager-plugin (unpacked without sudo in `~/.local/ssm`); the Homebrew AWS CLI fails on this Mac (pyexpat symbol), so it uses boto3 with the `hackathon` profile.
+`deploy/ec2_bootstrap.sh` ran with `SKIP_SYSTEMD=1` first: pre-flight PASS on every check (clock offset 6 ms, TEST wallet read, COMP wallet "not yet a member"), 759 tests passed on the instance.
+Cutover at 12:36Z: `./run_bots.sh livestop` on the Mac, both books' `state.json` copied to the instance, then `roostoo-live@competition` and `roostoo-live@competition_rehearsal` enabled under systemd (restart on failure and on boot, `ROOSTOO_DRY_RUN=0`); both active, the rehearsal resumed its AAVE and XRP holdings, the competition book polls the inactive account.
+Guard: `run/LIVE_HOST_EC2` on the Mac (git-ignored) makes `./run_bots.sh live` refuse unless `FORCE_LOCAL_LIVE=1`, so the live pair cannot run on two hosts. The paper books stay on the Mac.
