@@ -119,3 +119,27 @@ def test_desk_shows_only_the_competition_books():
     assert [b["bot"] for b in out["books"]] == ["competition", "momentum_top3_30m"]
     assert [g["key"] for g in out["groups"]] == ["live", "scalper"]
     assert out["totals"]["books"] == 0
+
+
+def test_ec2_mode_hides_local_live_books_and_takes_live_totals_from_ec2(tmp_path, monkeypatch):
+    import time
+
+    from bot import ec2_feed
+    marker = tmp_path / "LIVE_HOST_EC2"
+    marker.write_text("i-test ap-southeast-2")
+    monkeypatch.setattr(ec2_feed, "MARKER", marker)
+    monkeypatch.setitem(ec2_feed._STATE, "ts", time.time())
+    monkeypatch.setitem(ec2_feed._STATE, "error", None)
+    monkeypatch.setitem(ec2_feed._STATE, "data", {"commit": "abc", "books": {
+        "competition": {"active": "active", "last_waiting": {"ts_utc": "2026-10-02T12:00:00+00:00"}},
+        "competition_rehearsal": {"active": "active", "start_equity": 50000.0, "equity": 53000.0,
+                                  "last_cycles": {"ts_utc": "2026-10-02T12:00:00+00:00"}, "positions": {"AAVE": 0.4}}}})
+    snap = {"generated": "2026-10-02T12:00:00+00:00", "breadth": {},
+            "bots": [_bot("competition", 100000.0, interval="30m"), _bot("competition_rehearsal", 49000.0, start=50000.0, interval="30m"),
+                     _bot("momentum_top3_30m", 103000.0, interval="30m")]}
+    p = desk.payload(snap)
+    assert [b["bot"] for b in p["books"]] == ["momentum_top3_30m"]
+    reh = next(b for b in p["ec2"]["books"] if b["bot"] == "competition_rehearsal")
+    comp = next(b for b in p["ec2"]["books"] if b["bot"] == "competition")
+    assert reh["ret_pct"] == 6.0 and reh["net"] == 3000.0 and comp["waiting"] and comp["ret_pct"] is None
+    assert p["totals"]["net"] == 3000 and p["totals"]["online"] == 2 and p["totals"]["realised"] is None
