@@ -4,7 +4,7 @@ Lean on purpose: loaded into every agent session. Detail lives in the files it p
 
 ## What this is
 
-Trading bots for the Roostoo crypto competition. **The main round started 2026-09-30; first trade due 2026-10-01 12:00 UTC** (official FAQ; the event page's 10-04..17 is stale). Roostoo account = 50,000 USD, fees measured 0.10% taker / 0.05% maker.
+Trading bots for the Roostoo crypto competition. **Dates conflict:** the FAQ says main round from 2026-09-30, first trade by 10-01 12:00 UTC; the organisers' slides say live trading 2026-10-04 to 10-17 (14 days), repo link due before 10-14 (`DECISIONS.md#comp-key-bot-only-2026-10-02`). Competition account = 100k per the slides (TEST account 50k), fees measured 0.10% taker / 0.05% maker.
 **Screen 2** ranks raw 14-day return, top 20 per region advance. **Screen 3** ranks survivors on `0.4*Sortino + 0.3*Sharpe + 0.3*Calmar`. **Screen 1** is rule and trade-log compliance.
 Rules (FAQ): 30 API calls/min all endpoints, EC2 Sydney via Session Manager, public GitHub repo, every live change committed, **no manual stop, override or trade on the competition account**.
 

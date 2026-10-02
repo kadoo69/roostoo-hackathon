@@ -84,7 +84,14 @@ The competition book is `config/competition.yaml`, identical in every rule param
 - No trading without a readable wallet; no entries on a bar the bot saw late (sleep, outage); a cycle that stalls is aborted and the process respawned.
 - Orders are passive limit orders one basis point inside the touch (maker fee 0.05%), cancelled after 5 minutes if unfilled.
 
+**Directional, 1x, no leverage**
+- Directional only: no market making and no arbitrage.
+- Gross exposure is capped at 1.0 of equity (no leverage), each coin at 0.5.
+- The bot can go long, sell, short and close: `venue/roostoo.py` wraps `/v3/place_order` and `/v6/short_open` / `/v6/short_close`, and `gates/roostoo_smoke.py` opened and closed a real short on the Roostoo test account. The competition rule runs long-only because every short sleeve we tested lost money out of sample (`DECISIONS.md#crash-shorts-outcome`).
+
 **Assumptions**
+- The bot adopts whatever the Roostoo wallet holds at start (the organisers give each team 100k) and sizes every position as a fraction of equity, so the starting amount changes no decision.
+- Only the bot calls Roostoo with the competition key; the read-only pre-flight checks that key for presence without calling the API (`DECISIONS.md#comp-key-bot-only-2026-10-02`).
 - Roostoo prices mirror Binance (confirmed by the organisers and checked live).
 - Fees measured on the Roostoo test account on 2026-09-30: 0.10% taker, 0.05% maker (`DECISIONS.md#roostoo-keys-2026-09-30`).
 

@@ -2,11 +2,15 @@
 
 Exit code 0 only when every check a live book depends on passes; a competition key that is
 not yet active is reported but does not fail, because the book waits for it by design.
-DECISIONS.md#roostoo-keys-2026-09-30
+The competition key is only checked for presence: Screen 1 rejects any trace of a manually called
+API on the competition account, so only the bot itself calls Roostoo with it. Set PREFLIGHT_COMP=1
+to read its wallet anyway (before activation only). DECISIONS.md#roostoo-keys-2026-09-30,
+DECISIONS.md#comp-key-bot-only-2026-10-02
 """
 from __future__ import annotations
 
 import json
+import os
 import sys
 import time
 
@@ -40,6 +44,10 @@ def run() -> list[dict]:
     out.append(check("binance_failover_path", lambda: rest_get("/ping", timeout=10).status_code))
     for keyset in ("test", "comp"):
         key, secret = credentials(keyset)
+        if keyset == "comp" and os.environ.get("PREFLIGHT_COMP") != "1":
+            out.append({"check": "roostoo_keys_comp", "ok": bool(key and secret), "ms": 0,
+                        "detail": "present, not called (bot-only key)" if key and secret else "missing keys in .env"})
+            continue
 
         def wallet(key=key, secret=secret):
             if not key or not secret:
