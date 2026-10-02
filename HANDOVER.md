@@ -2,7 +2,36 @@
 
 Current state only. The full history of sessions to 2026-09-23 is archived at `docs/archive/HANDOVER_2026-09-23.md`; older section references in code and configs point there.
 
-## CURRENT STATE 2026-10-01 14:00Z (read this first; everything below is history)
+## CURRENT STATE 2026-10-02 15:30Z (read this first; everything below is history)
+
+### Deadlines and blockers
+- **Competition account still NOT ACTIVE** ("not yet a member", polled every 30 s). The organisers' slides put live trading at **2026-10-04 to 10-17** (14 days); the FAQ said 09-30 / first trade 10-01 12:00Z. Dates conflict; the operator should message the organisers (team Hackathon-Team118). The bot starts trading by itself on activation.
+- **Repo link due before 2026-10-14**; before submitting run `python3 deploy/export_logs.py` and commit `logs/`; at the end tag `submission-final`. Finalist deck by 10-27.
+- Competition account = 100k per slides (TEST account 50k); sizing is fractional so it does not matter (`#submission-deliverables-2026-10-02`).
+
+### Where things run
+- **EC2** `i-015fad70d34b0b83d` (ap-southeast-2, t3.medium, unlimited credits, ~3% CPU), repo at /opt/roostoo-hackathon, commit 1b8018c+:
+  - `roostoo-live@competition` (COMP keys, real orders, waiting) and `roostoo-live@competition_rehearsal` (TEST keys, real orders, +5.4% since 09-30, holds LTC/TRUMP). Both have **exit escalation** on (`#exit-escalation-2026-10-02`).
+  - `roostoo-paper@ride_5m` (paper, momentum ride, +4.9%) and `roostoo-paper@sleeves_5m` (paper, **50/50 rule + ride with separate ledgers**, started 14:45Z, first trade TRUMP). Paper unit runs `bot.paper_main`.
+- **Mac** (paper, sleeps on battery): wf_live, momentum_top3_30m (control), ride1_5m, blend_30m_ride, regime_ls_30m, resid_30m, htf0_30m, wide_30m, ride1_wide_5m. `run/LIVE_HOST_EC2` makes `./run_bots.sh live` refuse on the Mac (never two hosts on one account).
+- **AWS access**: `python3 deploy/aws_login.py` (browser device sign-in, botocore refreshes keys until the Identity Center session ends). Commands on EC2 go through `python3 deploy/ssm_shell.py <script>` (SendCommand is denied). Status: `deploy/ec2_status.sh`. Redeploy: run `deploy/ec2_bootstrap.sh` on the instance (pulls main, restarts live + paper units; never restart the competition book except for a committed change).
+- **Desk** http://127.0.0.1:8787/: "Live on Roostoo · EC2" band (pulls EC2 every 3 min), paper fleet below, live Binance price card.
+
+### Done 2026-10-02 (all committed, DECISIONS anchors)
+Ride ghost-slot fix (`#ride-ghost-slots-2026-10-01`); wide-pool paper books (`#wide-pool-live-2026-10-01`, nothing gained so far); EC2 cutover (`#ec2-cutover-2026-10-02`); COMP key used only by the bot (`#comp-key-bot-only-2026-10-02`); submission deliverables: MIT LICENSE, Dockerfile (835 MB), `logs/`, README sections (`#submission-deliverables-2026-10-02`); exit escalation; ride_5m on EC2 (`#ec2-paper-ride-2026-10-02`); blend test (`#blend-checkpoint-outcome`: one-book blend fails, ride beats rule on the live window); sleeves (`#sleeves-declaration`: ledger replay +23.7% vs rule +16.3%, max DD -10.9% vs -15.2%).
+
+### Operator decision taken, staged rollout in progress
+50/50 sleeves (rule + ride, separate ledgers) for the competition book. Stage 1 done (paper `sleeves_5m` on EC2). **Stage 2 next:** sleeves config for `competition_rehearsal` (keyset test, `exit_escalation: true`, `booking.enabled: false`), the live unit must run `bot.sleeves_run` (unit currently hardcodes `bot.contenders_run`); first decision sells the rehearsal's rule holdings the sleeves do not own. **Stage 3:** same for `competition` before 2026-10-04, only with operator OK and stages 1-2 clean. Stop rule: sleeves_5m trailing the rehearsal by >2 pts after 3 days.
+
+### Checkpoint 2026-10-03
+Compare on EC2 at equal uptime, forward only: competition_rehearsal (rule) vs ride_5m (ride) vs sleeves_5m (split). Retire wide_30m / ride1_wide_5m on 10-08 if still below controls. Target lock (Screen 3) is an operator decision around 10-12.
+
+### Lessons (do not repeat)
+- Never blend sleeves inside one book's weights (they interfere); use `bot/sleeves.py`.
+- In chop nothing beats holding; shorts, faster clocks, textbook technicals, wide pool all failed.
+- Check `&&` chains: a passing `tail` hid failing tests once; use the `case` guard on pytest output before committing.
+
+## Previous state 2026-10-01 14:00Z (history)
 
 ### Deadlines and blockers
 - **Sleeves 2026-10-02 14:45Z (`#sleeves-declaration`, commit 1b8018c):** operator chose a 50/50 split of the competition rule and the momentum ride with separate ledgers. Stage 1 done: `sleeves_5m` runs on EC2 as paper (`roostoo-paper@sleeves_5m`, via `bot.paper_main`). Stage 2 (next): a sleeves config for `competition_rehearsal` (TEST keys, real orders) - the live unit must run `bot.sleeves_run`, and its first decision sells the rehearsal's current rule holdings that the sleeves do not own. Stage 3: the same for `competition` before 2026-10-04, only if stages 1-2 run clean. Stop rule: `sleeves_5m` trailing `competition_rehearsal` by more than 2 points after 3 days.
