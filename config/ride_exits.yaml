@@ -1,0 +1,26 @@
+meta:
+  name: ride_exits
+  frozen: true
+  declared_utc: '2026-10-02T16:20:00Z'
+  requested_by: 'operator 2026-10-02: positions go 10% up, what alpha are we missing, how do we ride and book these optimally'
+  declared_ref: DECISIONS.md#ride-exits-declaration
+  written_before_any_number: true
+prior: 'booking peaks earlier lost twice on the rule books (#take-profit-outcome on 4h history, #live-excursion-outcome on live paths); runners kept 70% of their peaks (#unrealised-giveback-2026-09-27). The ride is the one book with a HARD cap: it sells every winner at +5% (tp_pct 5), so a coin that runs to +10% is sold at +5%. That cap has never been tested against letting the winner run.'
+mechanism: 'the ride buys a +2%/15m burst; in a trend leg (ENA, SUI, AAVE in the first live week) the burst is the start of a multi-day move and the +5% cap sells the start of it. Replacing the cap with a trail that arms at +5% keeps the cap''s protection on bursts that fade and lets the legs run.'
+failure_mode: 'in chop the move after +5% reverses fast; a trail gives back part of the +5% the cap would have banked, so the arms lose in the chop half.'
+base: 'R0 = the live ride (thresh 2%, 3 names at 1/3, cooldown 12 bars, sell the bar close after a high at +5% above entry, or after 288 bars), live sell-at-close, per-sleeve 3%/15% ladder, maker fees and ticks (gates.let_winners_run.simulate)'
+arms:
+  T2: 'no sale at +5%; once a bar high reaches +5% the position is armed and sold at the first close 2% below the highest close since entry; 288-bar limit unchanged'
+  T3: 'as T2 with a 3% trail'
+  P3: 'at +5% half the position is sold (as R0 does for all of it); the other half is armed with the 3% trail'
+  U: 'no target at all, exit only after 288 bars (extreme, shows what the cap costs at the limit)'
+nonsense_control: 'R0 and the best arm on 200 random entry sets (same count of entries per day, random coins and bars, same exits); the arm''s gain over R0 must not be equally present with random entries, or it is a market drift effect and not a ride effect'
+windows:
+  pre: '2026-08-01 to 2026-09-19, Binance 5m bars, the momentum_top3_30m pool; not used to choose the +5% cap'
+  live: '2026-09-19 to now; the window that chose the ride, so it is contaminated for R0 and fresh only for the arms'
+decision_rule: >
+  An arm is RECOMMENDED for the ride (and the ride sleeve) only if its total return beats R0 in BOTH windows,
+  its max drawdown in each window is no more than 2 pp worse than R0's, and its gain over R0 in the pre window
+  beats the gain of the same arm over R0 on at least 160 of the 200 random entry sets. Otherwise R0 stays.
+  Changing a live book stays an operator decision.
+trials: 4

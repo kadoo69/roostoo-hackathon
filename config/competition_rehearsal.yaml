@@ -1,18 +1,39 @@
 meta:
   name: competition_rehearsal
   frozen: true
-  declared_utc: '2026-09-30'
+  declared_utc: '2026-10-02T16:40:00Z'
   paper_only: false
   venue: roostoo
   keyset: test
-  requested_by: 'operator 2026-09-30: momentum_top3_30m is the competition book, target lock off, go all in'
-  rule_source: config/momentum_top3_30m.yaml, every signal, sizing, booking, short and lock parameter copied unchanged
-  changes_from_source: live orders on Roostoo (not paper); derisk ramp moved past the window because the round end
-    date is unconfirmed and the venue auto-liquidates
-  description: 'Identical rule on the Roostoo TEST account (ROOSTOO_KEYSET=test): measures real fills and exercises
-    the live path before and beside the competition book.'
-  decision_ref: DECISIONS.md#competition-book-2026-09-30
+  requested_by: 'operator 2026-10-02: go ahead with stage 2 of the 50/50 sleeves rollout (DECISIONS.md#sleeves-declaration)'
+  rule_source: config/sleeves_5m.yaml, every signal, sizing, sleeve and ladder parameter copied unchanged
+  changes_from_source: live orders on the Roostoo TEST account; exit escalation on; shorts off (spot account, as
+    before); derisk ramp past the window as before
+  description: 'Stage 2: the 50/50 rule + ride sleeves (bot/sleeves.py) on the Roostoo TEST account, real orders,
+    beside the paper sleeves_5m, so the split is exercised on the live path before the competition book.'
+  previous: until 2026-10-02 16:40Z the plain competition rule on 30m (git history of this file); its first sleeves
+    decision sells the rule holdings the sleeves do not own
+  decision_ref: DECISIONS.md#sleeves-rehearsal-2026-10-02
+  falsification: stage 3 is blocked if, before 2026-10-03 11:00Z, any order fails, a cycle faults, or the rehearsal
+    trails sleeves_5m by more than 1 point (fill cost) since the switch
+adaptive:
+  burst_arms:
+    ride|+5%|24h: &id001
+      clock: 5m
+      thresh_pct: 2.0
+      tp_pct: 5.0
+      hold_bars: 288
+      n: 3
+      cooldown_bars: 12
+  allow_cash: false
+  lookback_days: 3
+  reselect_minutes: 60
+  switch_margin_pp: 1.0
+  start_variant: ride|+5%|24h
+  use_decision_point: false
 contenders:
+  min_hold_bars: 3
+  min_hold_ref: DECISIONS.md#min-hold-5m
   n: 3
   momentum_bars: 40
   breadth_max: 0.4
@@ -21,7 +42,8 @@ contenders:
   declared_ref: DECISIONS.md#lowtf-contenders-declaration
   sticky: true
   sticky_ref: DECISIONS.md#let-winners-run-outcome
-  htf_confirm: true
+  htf_confirm: false
+  htf_ref: DECISIONS.md#no-htf-15m-5m
   volume_confirm: 1.5
   confirm_ref: DECISIONS.md#breakout-quality-outcome
   skip_short_z:
@@ -37,12 +59,14 @@ contenders:
     - -1
   - - -1
     - 1
-  - - 1
-    - 1.5
-  skip_long_z: []
-  skip_source: frozen from the 30m fit period, DECISIONS.md#lowtf-exhaustion-outcome
+  skip_long_z:
+  - - -2
+    - -1.5
+  - - 3
+    - null
+  skip_source: frozen from the 15m fit period, DECISIONS.md#lowtf-exhaustion-outcome
 strategy:
-  interval: 30m
+  interval: 5m
   entry_bars: 20
   exit_bars: 10
   top_n_pool: 30
@@ -61,9 +85,9 @@ execution:
   order_type: LIMIT
   limit_offset_bps: 1.0
   limit_timeout_s: 300
+  poll_seconds: 30
   exit_escalation: true
   exit_escalation_ref: DECISIONS.md#exit-escalation-2026-10-02
-  poll_seconds: 30
 risk:
   max_drawdown: 0.25
   max_error_rate: 0.25
@@ -72,7 +96,7 @@ risk:
   derisk_start_utc: '2026-12-31T00:00:00+00:00'
   derisk_end_utc: '2026-12-31T12:00:00+00:00'
 booking:
-  enabled: true
+  enabled: false
   step_pct: 0.03
   skim_fraction: 0.15
   recycle: false
@@ -88,6 +112,7 @@ booking:
   honest_status: Not a validated improvement. The holdout return gain is p=0.14 and the drawdown gain is reproduced
     by a random-timing nonsense control, so it is exposure reduction rather than timing.
   confound_warning: paper-only comparison book, nobody's control.
+  disabled_by: sleeves run the ladder per sleeve (bot/sleeves.py)
 short:
   enabled: false
   disabled_utc: '2026-09-26'
@@ -121,3 +146,8 @@ target_lock:
   lock_return: 0.05
   keep_gross: 0.3
   declared_ref: DECISIONS.md#lowtf-lock-declaration
+sleeves:
+  rule_clock: 30m
+  rule_config: competition
+  rule_share: 0.5
+  ride: *id001

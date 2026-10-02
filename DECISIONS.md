@@ -4639,3 +4639,20 @@ Operator decision 2026-10-02 15:00Z, chosen over keep / switch to the ride / wai
 Mechanism: `#blend-checkpoint-outcome` showed that blending the two weight frames inside one book interferes (both hold the same coins, a held name is never topped up). `bot/sleeves.py` gives each half its own cash and coin units, fixed at entry and kept while its rule holds, its own +3%/15% profit ladder, and rescales both to the real account equity every decision; the account trades the sum. `bot/sleeves_run.py` takes the rule's target from the 30m competition path (entries only on the bar the path opened them) and the ride's from `burst_rider.live_step` on the sleeve's own positions. The account-level ladder is off (the runner refuses a config that enables it).
 Evidence, measured once after the blend outcome (so not a pre-registered test): replaying the live window 2026-09-19 to 10-02 14:30Z through the ledger at 5m closes, sleeves +23.71% total (trend half +24.44%, chop half -0.58%), max drawdown -10.92%; the same ledger gives the rule alone +16.26% and the ride alone +31.17%. Against the rule alone it passes all three conditions declared for the blend (return at least the rule's, a better chop half, drawdown no more than 2 points worse). Failure mode: the ride's 2025-26 history test was not adopted (`#burst-drivers-outcome`), and 13 days are mostly one trend week.
 Stop rule for `sleeves_5m` (paper on EC2): after 3 live days, stop if it trails `competition_rehearsal` by more than 2 points.
+
+## ride-exits-declaration
+
+Operator question 2026-10-02: positions go 10% up, what alpha are we missing, how do we ride and book these optimally.
+Declared in `config/ride_exits.yaml` before any number was computed, `python3 -m gates.ride_exits`.
+Booking peaks earlier already lost twice on the rule books (`#take-profit-outcome`, `#live-excursion-outcome`), so those are not retested; the one untested cap is the ride's own: it sells every winner at the first bar whose high is +5% above entry, so a coin that runs to +10% is sold near +5%.
+Arms against the live ride R0: T2 and T3 arm at +5% and sell at the first close 2% or 3% below the highest close since entry; P3 sells half at +5% and trails the rest by 3%; U has no target (24 h limit only).
+Windows: 2026-08-01 to 09-19 (not used to choose the cap) and the live window from 09-19 (the one that chose the ride). Rule: an arm is recommended only if it beats R0 in both windows, its drawdown is at most 2 pp worse in each, and its pre-window gain over R0 beats the same arm's gain on at least 160 of 200 random entry sets.
+The pool is today's `momentum_top3_30m` universe, so the pre window carries its survivorship; R0 reproduces `signals.burst_rider.weights` exactly (maximum weight difference 0.0).
+
+## sleeves-rehearsal-2026-10-02
+
+Operator instruction 2026-10-02 ~16:30Z ("go ahead with stage 2"), stage 2 of `#sleeves-declaration`, the competition now confirmed to start 2026-10-03 12:00Z (20:00 HKT).
+`config/competition_rehearsal.yaml` is now the `sleeves_5m` split on the Roostoo TEST account (keyset test, real orders, exit escalation on, shorts off), every sleeve, signal and ladder parameter copied from `sleeves_5m`; the previous plain-rule config is in git history.
+The units no longer name a runner: `bot.runner` picks it from the config (`sleeves` -> SleevesBot, `adaptive` -> AdaptiveScalperBot, else ContendersBot), so `competition` still runs ContendersBot unchanged and switching it later is a committed config change, not a unit edit. `bot.paper_main` forwards to it.
+Expected on the first decision: the account sells the rule holdings the fresh sleeves do not own (LTC, TRUMP at the switch) and each sleeve then enters only on its own fresh signals.
+Stage 3 (the `competition` book) is blocked unless, by 2026-10-03 11:00Z, no rehearsal order fails, no cycle faults, and the rehearsal trails the paper `sleeves_5m` by at most 1 point since the switch (fill cost); the operator decides.
