@@ -260,6 +260,10 @@ class Executor:
                 out.append(self.journal.write("orders", {
                     "event": "cancelled_stale", "order_id": o["OrderID"],
                     "pair": o.get("Pair"), "age_s": round(age, 1)}))
+                if self.settings.exit_escalation and str(o.get("Side", "")).upper() == "SELL":
+                    esc = self.escalate_exit(o)
+                    if esc:
+                        out.append(esc)
             except RoostooError as exc:
                 self.errors += 1
                 self.calls.append(True)
@@ -267,6 +271,28 @@ class Executor:
                     "event": "cancel_error", "error": str(exc),
                     "order_id": o.get("OrderID")}))
         return out
+
+    def escalate_exit(self, o: dict) -> dict | None:
+        """Re-send the unfilled rest of a cancelled stale SELL at MARKET.
+
+        A LIMIT exit that rests past `limit_timeout_s` was cancelled and never re-sent, so the book
+        kept a position its rule had left (PEPE on the rehearsal, 2026-10-02 12:00Z). Exits must
+        complete; entries are never chased, so a stale BUY is only cancelled.
+        DECISIONS.md#exit-escalation-2026-10-02
+        """
+        pair = o.get("Pair")
+        spec = self.specs.get(pair)
+        if spec is None:
+            return None
+        rest = spec.round_qty(float(o.get("Quantity") or 0) - float(o.get("FilledQuantity") or 0))
+        price = float(o.get("Price") or 0)
+        if rest <= 0 or rest * price < spec.min_order:
+            return self.journal.write("orders", {"event": "escalation_skipped", "pair": pair,
+                                                 "order_id": o.get("OrderID"), "rest": rest})
+        self.pending_pairs.discard(pair.replace("/", ""))
+        self.pending_pairs.discard(spec.binance_symbol)
+        return self.send({"pair": pair, "symbol": spec.binance_symbol, "side": "SELL", "type": "MARKET",
+                          "quantity": rest, "reason": "exit_escalation", "escalated_from": o.get("OrderID")})
 
     def error_rate(self) -> float:
         """Failed share of the last ERROR_WINDOW venue calls (orders, queries and cancels alike), or

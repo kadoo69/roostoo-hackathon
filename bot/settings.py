@@ -52,6 +52,7 @@ class Settings:
     short: dict = field(default_factory=dict)
     universe_mode: str = "binance_top"
     keyset: str | None = None
+    exit_escalation: bool = False
 
     @property
     def shorts_enabled(self) -> bool:
@@ -98,6 +99,7 @@ def load(path: str | Path) -> Settings:
         dry_run=bool(cfg["meta"].get("paper_only")) or os.environ.get("ROOSTOO_DRY_RUN", "1") != "0",
         venue=os.environ.get("BOT_VENUE", cfg["meta"].get("venue", "roostoo")),
         keyset=cfg["meta"].get("keyset"),
+        exit_escalation=bool(e.get("exit_escalation", False)),
         ranking_rule=s.get("ranking_rule"),
         n_positions=(int(s["n_positions"]) if s.get("n_positions") else None),
         regime_gate=s.get("regime_gate", "always_on"),

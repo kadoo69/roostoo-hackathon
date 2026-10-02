@@ -61,6 +61,8 @@ execution:
   order_type: LIMIT
   limit_offset_bps: 1.0
   limit_timeout_s: 300
+  exit_escalation: true
+  exit_escalation_ref: DECISIONS.md#exit-escalation-2026-10-02
   poll_seconds: 30
 risk:
   max_drawdown: 0.25

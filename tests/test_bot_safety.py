@@ -308,3 +308,57 @@ def test_live_and_backtest_share_one_stablecoin_list_and_it_covers_rlusd():
     from data import universe as research
     assert live.STABLES is research.STABLES
     assert {"RLUSDUSDT", "USDSUSDT", "BFUSDUSDT", "EURIUSDT"} <= research.STABLES
+
+
+def _stale_client(side, qty, filled, seen):
+    class Client:
+        def query_order(self, pending_only=None, **kw):
+            return {"OrderDetails": [{"OrderID": 7, "Pair": "PEPE/USD", "Side": side, "Quantity": qty,
+                                      "FilledQuantity": filled, "Price": 0.00000443, "CreateTimestamp": 0,
+                                      "Status": "PENDING"}]}
+
+        def cancel_order(self, order_id=None, pair=None):
+            seen.setdefault("cancel", []).append(order_id)
+            return {}
+
+        def place_order(self, pair, side, quantity, price=None, client_order_id=None):
+            seen.setdefault("place", []).append((pair, side, quantity, price))
+            return {"OrderDetail": {"OrderID": 8, "Status": "FILLED", "FilledQuantity": quantity}}
+    return Client()
+
+
+def test_a_stale_exit_is_cancelled_and_its_rest_sold_at_market(tmp_path):
+    """DECISIONS.md#exit-escalation-2026-10-02: the PEPE exit that rested unfilled for 30 minutes."""
+    seen = {}
+    ex, spec = _wide_tick_executor(tmp_path)
+    ex.client = _stale_client("SELL", 3967877190.0, 967877190.0, seen)
+    ex.settings = replace(settings(), dry_run=False, exit_escalation=True)
+    ex.pending_pairs = {"PEPEUSD"}
+    out = ex.sweep_unfilled()
+    assert seen["cancel"] == [7]
+    assert seen["place"] == [("PEPE/USD", "SELL", 3000000000.0, None)]
+    assert out[-1]["event"] == "placed" and out[-1]["reason"] == "exit_escalation" and out[-1]["type"] == "MARKET"
+
+
+def test_a_stale_entry_is_only_cancelled_never_chased(tmp_path):
+    seen = {}
+    ex, _ = _wide_tick_executor(tmp_path)
+    ex.client = _stale_client("BUY", 1e9, 0.0, seen)
+    ex.settings = replace(settings(), dry_run=False, exit_escalation=True)
+    ex.sweep_unfilled()
+    assert seen["cancel"] == [7] and "place" not in seen
+
+
+def test_escalation_is_off_unless_the_config_turns_it_on(tmp_path):
+    seen = {}
+    ex, _ = _wide_tick_executor(tmp_path)
+    ex.client = _stale_client("SELL", 1e9, 0.0, seen)
+    ex.settings = replace(settings(), dry_run=False)
+    ex.sweep_unfilled()
+    assert "place" not in seen
+
+
+def test_only_the_live_pair_escalates_exits():
+    from bot.settings import load
+    assert load("config/competition.yaml").exit_escalation and load("config/competition_rehearsal.yaml").exit_escalation
+    assert not load("config/momentum_top3_30m.yaml").exit_escalation
