@@ -5,7 +5,7 @@ Current state only. The full history of sessions to 2026-09-23 is archived at `d
 ## CURRENT STATE 2026-10-02 15:30Z (read this first; everything below is history)
 
 ### Deadlines and blockers
-- **Competition account still NOT ACTIVE** ("not yet a member", polled every 30 s). The organisers' slides put live trading at **2026-10-04 to 10-17** (14 days); the FAQ said 09-30 / first trade 10-01 12:00Z. Dates conflict; the operator should message the organisers (team Hackathon-Team118). The bot starts trading by itself on activation.
+- **Competition starts 2026-10-03 12:00Z** (20:00 HKT / 17:30 IST), per the operator 2026-10-02; this settles the FAQ (09-30) vs slides (10-04) conflict. Account still NOT ACTIVE until then ("not yet a member", polled every 30 s); the bot starts trading by itself on the first good wallet read. If it is still inactive at 12:30Z on 10-03, the operator messages the organisers (team Hackathon-Team118).
 - **Repo link due before 2026-10-14**; before submitting run `python3 deploy/export_logs.py` and commit `logs/`; at the end tag `submission-final`. Finalist deck by 10-27.
 - Competition account = 100k per slides (TEST account 50k); sizing is fractional so it does not matter (`#submission-deliverables-2026-10-02`).
 
@@ -21,9 +21,9 @@ Current state only. The full history of sessions to 2026-09-23 is archived at `d
 Ride ghost-slot fix (`#ride-ghost-slots-2026-10-01`); wide-pool paper books (`#wide-pool-live-2026-10-01`, nothing gained so far); EC2 cutover (`#ec2-cutover-2026-10-02`); COMP key used only by the bot (`#comp-key-bot-only-2026-10-02`); submission deliverables: MIT LICENSE, Dockerfile (835 MB), `logs/`, README sections (`#submission-deliverables-2026-10-02`); exit escalation; ride_5m on EC2 (`#ec2-paper-ride-2026-10-02`); blend test (`#blend-checkpoint-outcome`: one-book blend fails, ride beats rule on the live window); sleeves (`#sleeves-declaration`: ledger replay +23.7% vs rule +16.3%, max DD -10.9% vs -15.2%).
 
 ### Operator decision taken, staged rollout in progress
-50/50 sleeves (rule + ride, separate ledgers) for the competition book. Stage 1 done (paper `sleeves_5m` on EC2). **Stage 2 next:** sleeves config for `competition_rehearsal` (keyset test, `exit_escalation: true`, `booking.enabled: false`), the live unit must run `bot.sleeves_run` (unit currently hardcodes `bot.contenders_run`); first decision sells the rehearsal's rule holdings the sleeves do not own. **Stage 3:** same for `competition` before 2026-10-04, only with operator OK and stages 1-2 clean. Stop rule: sleeves_5m trailing the rehearsal by >2 pts after 3 days.
+50/50 sleeves (rule + ride, separate ledgers) for the competition book. Stage 1 done (paper `sleeves_5m` on EC2). **Stage 2 next:** sleeves config for `competition_rehearsal` (keyset test, `exit_escalation: true`, `booking.enabled: false`), the live unit must run `bot.sleeves_run` (unit currently hardcodes `bot.contenders_run`); first decision sells the rehearsal's rule holdings the sleeves do not own. **Stage 3:** same for `competition`, deployed before **2026-10-03 ~11:00Z** (an hour before start, so the first wallet read already runs the sleeves runner), only with operator OK and stages 1-2 clean; otherwise the competition book starts on the rule as today. Stop rule: sleeves_5m trailing the rehearsal by >2 pts after 3 days.
 
-### Checkpoint 2026-10-03
+### Checkpoint 2026-10-03 (must finish before 11:00Z, ahead of the 12:00Z start)
 Compare on EC2 at equal uptime, forward only: competition_rehearsal (rule) vs ride_5m (ride) vs sleeves_5m (split). Retire wide_30m / ride1_wide_5m on 10-08 if still below controls. Target lock (Screen 3) is an operator decision around 10-12.
 
 ### Lessons (do not repeat)
