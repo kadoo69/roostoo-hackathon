@@ -118,6 +118,7 @@ tr.fresh td{background:rgba(124,196,255,.05)}
     <tbody id="rows"></tbody></table></div>
   </div>
   <div class="side">
+   <div class="card" id="ec2card" hidden><div class="hd"><h3>Live books · EC2</h3><span class="faint" id="ec2Stat" style="margin-left:auto;font-size:11px"></span></div><div class="list" id="ec2"></div></div>
    <div class="card"><div class="hd"><h3>Live prices</h3><span class="faint" id="lpStat" style="margin-left:auto;font-size:11px">connecting</span></div>
     <div class="list"><div class="lp lph"><span>Coin</span><span class="num">Price</span><span class="num" title="move since the bots last marked it (they mark every ~30 s)">vs mark</span><span class="num">24h</span><span class="num" title="open P&amp;L of every book holding it, at the live price">Open P&amp;L</span></div><div id="lp"></div>
     <div class="faint" style="font-size:10.5px;margin-top:6px">Binance public stream, tick by tick. Display only: the bots still mark every ~30 s and decide at bar closes.</div></div></div>
@@ -170,10 +171,10 @@ function kpis(){
  const r=Math.max(0,t.realised), o=Math.abs(t.open), s=r+o||1;
  $('kpis').innerHTML=`
  <div class="kpi"><div class="k">Live net P&amp;L</div><div class="v num ${cls(t.net)}">${sgn(t.net)}</div>
-  <div class="s"><span class="up">${sgn(t.realised)}</span> realised · <span class="${t.open>=0?'dim':'dn'}">${sgn(t.open)}</span> open</div>
+  <div class="s">${D.ec2?'on EC2 · since each book started':`<span class="up">${sgn(t.realised)}</span> realised · <span class="${t.open>=0?'dim':'dn'}">${sgn(t.open)}</span> open`}</div>
   <div class="split"><i class="r" style="width:${r/s*100}%"></i><i class="${t.open>=0?'o':'neg'}" style="width:${o/s*100}%"></i></div></div>
  <div class="kpi"><div class="k">Books</div><div class="v"><span class="up">${t.up}</span> <span class="faint">/</span> <span class="dn">${t.down}</span></div><div class="s">up / down of ${t.books}</div></div>
- <div class="kpi"><div class="k">Competition account</div>${(()=>{const c=D.books.find(x=>x.bot==='competition')||{};return c.waiting_for_account?`<div class="v dn" style="font-size:16px">Not active yet</div><div class="s">last poll ${esc(String(c.last_poll||'').slice(11,19))}Z · no orders possible</div>`:c.equity!=null?`<div class="v num">$${Math.round(c.equity).toLocaleString()}</div><div class="s num ${cls(c.ret_pct)}">${pct(c.ret_pct)}</div>`:'<div class="v faint" style="font-size:16px">no data</div><div class="s">book not cycling</div>'})()}</div>
+ <div class="kpi"><div class="k">Competition account</div>${(()=>{const e=D.ec2&&D.ec2.books.find(x=>x.bot==='competition'); const c=e?{waiting_for_account:e.waiting,last_poll:e.last_poll,equity:e.equity}:(D.books.find(x=>x.bot==='competition')||{});return c.waiting_for_account?`<div class="v dn" style="font-size:16px">Not active yet</div><div class="s">last poll ${esc(String(c.last_poll||'').slice(11,19))}Z · no orders possible</div>`:c.equity!=null?`<div class="v num">$${Math.round(c.equity).toLocaleString()}</div><div class="s num ${cls(c.ret_pct)}">${pct(c.ret_pct)}</div>`:'<div class="v faint" style="font-size:16px">no data</div><div class="s">book not cycling</div>'})()}</div>
  <div class="kpi"><div class="k">Market breadth</div><div class="v num">${b.pct_long_all!=null?b.pct_long_all.toFixed(0)+'%':'<span class="faint" style="font-size:14px">warming up</span>'}</div><div class="s">${b.pct_long_all!=null?`in a 4h uptrend · ${b.near_entry} near breakout`:'first read within 4 min of a restart'}</div></div>
  <div class="kpi"><div class="k">Health</div><div class="v" style="font-size:16px">${D.alerts.length?`<span class="${D.alerts.some(a=>a.level==='bad')?'dn':'dim'}">${D.alerts.length} alert${D.alerts.length>1?'s':''}</span>`:'<span class="up">All clear</span>'}</div><div class="s">${t.online}/${t.books} books cycling</div></div>`;
 }
@@ -341,11 +342,27 @@ function render(){
  const t=D.totals, allOk=t.online===t.books;
  $('live').innerHTML=`<span class="dot ${allOk?'':'stale'}"></span>${t.online}/${t.books} live`;
  $('upd').textContent='updated '+tloc(D.generated);
- kpis(); tabs(); filters(); rows(); if(view==='closed') closedView(); side(); if(sel) open(sel); lpConnect(); if(LP.syms===lpWanted().join(',')) lpRender();
+ kpis(); tabs(); filters(); rows(); ec2Card(); if(view==='closed') closedView(); side(); if(sel) open(sel); lpConnect(); if(LP.syms===lpWanted().join(',')) lpRender();
 }
 async function load(){
  try{ D=await (await fetch('/api/desk',{cache:'no-store'})).json(); render(); }
  catch(e){ $('live').innerHTML='<span class="dot stale"></span>offline'; }
+}
+function ec2Card(){
+ const E=D.ec2; $('ec2card').hidden=!E; if(!E) return;
+ $('ec2Stat').innerHTML=E.error?`<span class="dn">${esc(E.error)}</span>`:E.fetched_age_s==null?'first pull within 3 min':`pulled ${ago(E.fetched_age_s)} ago · ${esc(E.commit||'')}`;
+ $('ec2').innerHTML=E.books.map(b=>{
+  const ok=b.active==='active', name=b.bot==='competition'?'Competition':'Rehearsal (TEST)';
+  const st=!ok?`<span class="tag c" style="background:var(--dn-bg);color:var(--dn)">${esc(b.active||'unknown')}</span>`:b.halt?'<span class="tag c">halted</span>':b.freeze?'<span class="tag c">frozen</span>':b.waiting?'<span class="tag o">waiting for account</span>':'<span class="tag o">trading</span>';
+  const pos=Object.entries(b.positions||{}).map(([k,w])=>`<span class="coin">${esc(k)} ${(w*100).toFixed(0)}%</span>`).join(' ')||'<span class="faint">cash</span>';
+  const last=b.waiting?`last poll ${tloc(b.last_poll)}`:`last cycle ${tloc(b.last_cycle)}`;
+  const ord=(b.orders||[]).slice(-3).reverse().map(o=>`<div class="faint" style="font-size:11px">${tloc(o.ts_utc)} ${esc(o.event)} ${esc(o.side||'')} ${esc(o.pair||'')} ${o.price!=null?px(o.price):''}</div>`).join('');
+  return `<div style="padding:6px 0;border-bottom:1px solid var(--line)">
+   <div style="display:flex;align-items:center;gap:8px"><b>${name}</b>${st}<span class="num ${cls(b.ret_pct)}" style="margin-left:auto">${b.ret_pct!=null?pct(b.ret_pct):'-'}</span></div>
+   ${b.equity!=null?`<div class="faint" style="font-size:11px">$${usd(b.equity)} from $${usd(b.start_equity)} · <span class="${cls(b.net)}">${sgn(b.net)}</span></div>`:''}
+   ${b.curve&&b.curve.length>1?spark(b.curve,280,26):''}
+   <div style="font-size:11.5px;margin-top:3px">${pos}</div>
+   <div class="faint" style="font-size:11px">${last} · since ${esc(String(b.since||'').replace(/^\w+ /,'').slice(0,16))}${b.errors_today&&!b.waiting?` · <span class="dn">${b.errors_today} errors today</span>`:''}</div>${ord}</div>`;}).join('');
 }
 const LP={ws:null,syms:'',last:{},open24:{},ticks:0,at:0,hosts:['wss://data-stream.binance.vision/stream','wss://stream.binance.com:9443/stream'],h:0,retry:0};
 function lpWanted(){

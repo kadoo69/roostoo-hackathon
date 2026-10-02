@@ -13,4 +13,4 @@ sudo tail -n 1 live/competition_rehearsal/cycles-$(date -u +%F).jsonl | .venv/bi
 sudo tail -n 1 live/competition/waiting-$(date -u +%F).jsonl 2>/dev/null | cut -c1-140 || sudo tail -n 1 live/competition/cycles-$(date -u +%F).jsonl | cut -c1-300
 echo "commit $(sudo git -C /opt/roostoo-hackathon rev-parse --short HEAD)"
 REMOTE
-python3 "$ROOT/deploy/ssm_shell.py" "$JOB" 240 | sed -n '/^competition:/,/^END_/p' | grep -v '^END_'
+python3 "$ROOT/deploy/ssm_shell.py" "$JOB" 240 | sed -n '/^competition:/,$p'

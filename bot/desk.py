@@ -247,6 +247,10 @@ def payload(snap: dict) -> dict:
     by_name = {b["bot"]: b for b in snap["bots"]}
     shown = [b for b in snap["bots"] if group_of(b["bot"], (b.get("meta") or {}).get("interval")) in DESK_GROUPS]
     books = [book(b, by_name) for b in shown]
+    from bot import ec2_feed
+    ec2 = ec2_feed.payload()
+    if ec2:
+        books = [b for b in books if b["group"] != "live"]
     prog = progress_by_book()
     for b in books:
         b["risk"] = (prog.get(b["bot"]) or {}).get("ratios_total")
@@ -257,7 +261,12 @@ def payload(snap: dict) -> dict:
              "up": sum(1 for b in live if (b["net"] or 0) > 0), "down": sum(1 for b in live if (b["net"] or 0) < 0),
              "online": sum(1 for b in live if (b["age_s"] or 1e9) <= STALE_S),
              "best": max(live, key=lambda b: b["ret_pct"] or -1e9)["bot"] if live else None}
-    return {"generated": snap["generated"], "totals": total,
+    if ec2:
+        eb = [b for b in ec2["books"] if b["net"] is not None]
+        total.update({"net": round(sum(b["net"] for b in eb)), "realised": None, "open": None, "books": len(ec2["books"]),
+                      "up": sum(1 for b in eb if b["net"] > 0), "down": sum(1 for b in eb if b["net"] < 0),
+                      "online": sum(1 for b in ec2["books"] if b["active"] == "active")})
+    return {"generated": snap["generated"], "totals": total, "ec2": ec2,
             "groups": [{"key": k, "label": v} for k, v in GROUPS if k in DESK_GROUPS],
             "books": books, "exposure": exposure(books), "activity": activity(books), "alerts": alerts(books),
             "closed": closed_feed(shown), "walkforward": walkforward(),

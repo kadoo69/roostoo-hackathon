@@ -488,6 +488,9 @@ def main() -> int:
     threading.Thread(target=_breadth_loop, daemon=True).start()
     from bot.heatmap import refresh_loop
     threading.Thread(target=refresh_loop, daemon=True).start()
+    if a.port == 8787:
+        from bot.ec2_feed import refresh_loop as ec2_loop
+        threading.Thread(target=ec2_loop, daemon=True).start()
     srv = ThreadingHTTPServer((a.host, a.port), Handler)
     print(f"dashboard: http://{a.host}:{a.port}")
     srv.serve_forever()
