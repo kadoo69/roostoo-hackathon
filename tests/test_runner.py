@@ -28,3 +28,20 @@ def test_units_start_the_config_driven_runner():
     for unit in ("roostoo-live@.service", "roostoo-paper@.service"):
         with open(f"deploy/{unit}") as fh:
             assert "-m bot.runner " in fh.read()
+
+
+def test_inverse_vol_scales_entries_toward_the_median_risk():
+    import numpy as np
+    import pandas as pd
+
+    from bot import sleeves
+    rng = np.random.default_rng(0)
+    n = 300
+    close = pd.DataFrame({"LOW": np.exp(np.cumsum(rng.normal(0, 0.001, n))),
+                          "MID": np.exp(np.cumsum(rng.normal(0, 0.002, n))),
+                          "HIGH": np.exp(np.cumsum(rng.normal(0, 0.008, n)))})
+    k = sleeves.vol_scale(close, {"lookback_bars": 288, "min": 0.5, "max": 1.5})
+    assert k["LOW"] == 1.5 and k["HIGH"] == 0.5 and abs(k["MID"] - 1.0) < 1e-9
+    cfg = _cfg("sleeves_ivol_5m")
+    assert bot_class(cfg).__name__ == "SleevesBot" and cfg["sleeves"]["inverse_vol"]["lookback_bars"] == 288
+    assert load("config/sleeves_ivol_5m.yaml").keyset is None

@@ -68,6 +68,11 @@ class SleevesBot(AdaptiveScalperBot):
         held = {s: v for s, v in before["ride"]["held"].items() if s in sl[1].units}
         held, last, ride_t = burst_rider.live_step(d5["close"].loc[closed], d5["high"].loc[closed], self.ride_cfg,
                                                    held, dict(before["ride"]["last"]))
+        scale = {}
+        if self.sc.get("inverse_vol"):
+            scale = sleeves.vol_scale(d5["close"].loc[closed], self.sc["inverse_vol"])
+            rule_t = {s: v * scale.get(s, 1.0) for s, v in rule_t.items()}
+            ride_t = {s: v * scale.get(s, 1.0) for s, v in ride_t.items()}
         sleeves.step(sl[0], rule_t, px)
         sleeves.step(sl[1], ride_t, px)
         sleeves.rescale(sl, px, equity)
@@ -78,6 +83,7 @@ class SleevesBot(AdaptiveScalperBot):
         self.journal.write("signals", {"event": "sleeves", "bar": bar, "rule_target": rule_t, "ride_target": ride_t,
                                        "sleeve_equity": {s.name: round(s.equity(px), 2) for s in sl},
                                        "target": {s: round(v, 5) for s, v in target.items()},
+                                       "entry_scale": {s: round(scale[s], 3) for s in {**rule_t, **ride_t} if s in scale},
                                        "ref": "DECISIONS.md#sleeves-declaration"})
         target = {s: v * derisk for s, v in target.items() if v > 1e-6}
         self.opened = getattr(self, "opened", {})

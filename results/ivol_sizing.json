@@ -1,0 +1,94 @@
+{
+ "inverse_vol": {
+  "lookback_bars": 288,
+  "min": 0.5,
+  "max": 1.5
+ },
+ "results": {
+  "base": {
+   "W1": {
+    "rule": {
+     "total_pct": 22.58,
+     "max_dd_pct": -14.19
+    },
+    "ride": {
+     "total_pct": 13.02,
+     "max_dd_pct": -15.78
+    },
+    "sleeves": {
+     "total_pct": 18.04,
+     "max_dd_pct": -14.09
+    },
+    "sleeves_ann_vol_pct": 67.3,
+    "sleeves_sharpe": 6.75,
+    "mean_gross": {
+     "rule": 0.625,
+     "ride": 0.767
+    }
+   },
+   "W2": {
+    "rule": {
+     "total_pct": 10.97,
+     "max_dd_pct": -15.85
+    },
+    "ride": {
+     "total_pct": 36.54,
+     "max_dd_pct": -10.35
+    },
+    "sleeves": {
+     "total_pct": 23.52,
+     "max_dd_pct": -11.31
+    },
+    "sleeves_ann_vol_pct": 88.7,
+    "sleeves_sharpe": 6.77,
+    "mean_gross": {
+     "rule": 0.716,
+     "ride": 0.929
+    }
+   }
+  },
+  "ivol": {
+   "W1": {
+    "rule": {
+     "total_pct": 12.96,
+     "max_dd_pct": -10.2
+    },
+    "ride": {
+     "total_pct": 7.32,
+     "max_dd_pct": -9.74
+    },
+    "sleeves": {
+     "total_pct": 10.22,
+     "max_dd_pct": -9.06
+    },
+    "sleeves_ann_vol_pct": 41.4,
+    "sleeves_sharpe": 6.32,
+    "mean_gross": {
+     "rule": 0.534,
+     "ride": 0.474
+    }
+   },
+   "W2": {
+    "rule": {
+     "total_pct": 5.18,
+     "max_dd_pct": -9.81
+    },
+    "ride": {
+     "total_pct": 24.7,
+     "max_dd_pct": -8.59
+    },
+    "sleeves": {
+     "total_pct": 14.73,
+     "max_dd_pct": -8.61
+    },
+    "sleeves_ann_vol_pct": 61.4,
+    "sleeves_sharpe": 6.26,
+    "mean_gross": {
+     "rule": 0.546,
+     "ride": 0.709
+    }
+   }
+  }
+ },
+ "ref": "DECISIONS.md#sleeves-ivol-declaration"
+}

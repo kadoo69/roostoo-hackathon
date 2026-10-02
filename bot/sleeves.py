@@ -12,6 +12,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+import numpy as np
+import pandas as pd
+
 
 @dataclass
 class Sleeve:
@@ -78,3 +81,15 @@ def account_weights(sleeves: list[Sleeve], px: dict[str, float], account_equity:
 
 def init(names: list[str], shares: list[float], equity: float) -> list[Sleeve]:
     return [Sleeve(n, equity * f) for n, f in zip(names, shares)]
+
+
+def vol_scale(close: pd.DataFrame, cfg: dict) -> dict[str, float]:
+    """Entry size multiplier per coin: median pool volatility over the coin's, clipped to [min, max];
+    volatility is the std of log returns over the last `lookback_bars`. DECISIONS.md#sleeves-ivol-declaration"""
+    lr = np.log(close).diff().iloc[-int(cfg["lookback_bars"]):]
+    v = lr.std()
+    v = v[np.isfinite(v) & (v > 0)]
+    if v.empty:
+        return {}
+    ref = float(v.median())
+    return {s: float(np.clip(ref / x, float(cfg["min"]), float(cfg["max"]))) for s, x in v.items()}

@@ -53,7 +53,8 @@ BOTS = {"donchian_4h": "config/donchian_4h.yaml",
         "htf0_30m": "config/htf0_30m.yaml",
         "ride1_5m": "config/ride1_5m.yaml",
         "wide_30m": "config/wide_30m.yaml", "ride1_wide_5m": "config/ride1_wide_5m.yaml",
-        "sleeves_5m": "config/sleeves_5m.yaml"}
+        "sleeves_5m": "config/sleeves_5m.yaml",
+        "sleeves_ivol_5m": "config/sleeves_ivol_5m.yaml"}
 CONTROL_OF = {"momentum_top3_lock": "momentum_top3_full",
               "scalper_adaptive": "momentum_top3_15m",
               "wf_live": "momentum_top3_30m",
@@ -75,14 +76,14 @@ CONTROL_OF = {"momentum_top3_lock": "momentum_top3_full",
               "htf0_30m": "momentum_top3_30m",
               "ride1_5m": "ride_5m",
               "wide_30m": "momentum_top3_30m", "ride1_wide_5m": "ride1_5m",
-              "sleeves_5m": "competition_rehearsal"}
+              "sleeves_5m": "competition_rehearsal", "sleeves_ivol_5m": "sleeves_5m"}
 SCANNER = ROOT / "live" / "scanner" / "state.json"
 EXPECTED_DRAG = {"donchian_5m": 1.3, "momentum_top3_5m": 7.4, "burst_5m": 7.4, "donchian_4h": 0.051, "donchian_1h": 0.193, "momentum_top5_4h": 0.075,
                  "donchian_4h_cushion": 0.051, "momentum_top5_cushion": 0.075,
                  "momentum_top3_4h": 0.075, "momentum_top3_full": 0.085,
                  "competition": 2.452, "competition_rehearsal": 2.452,
                  "scalper_adaptive": 7.4, "wf_live": 7.4, "hedge_explorer": 7.4,
-                 "ride_5m": 7.4, "blend_30m_ride": 4.9, "regime_ls_30m": 2.452, "resid_30m": 2.452, "htf0_30m": 2.452, "ride1_5m": 7.4, "wide_30m": 2.452, "ride1_wide_5m": 7.4, "sleeves_5m": 4.9,
+                 "ride_5m": 7.4, "blend_30m_ride": 4.9, "regime_ls_30m": 2.452, "resid_30m": 2.452, "htf0_30m": 2.452, "ride1_5m": 7.4, "wide_30m": 2.452, "ride1_wide_5m": 7.4, "sleeves_5m": 4.9, "sleeves_ivol_5m": 4.9,
                  "alpha_flow": 0.072,
                  "scalper_live": 0.50,
                  "donchian_30m": 0.339,
