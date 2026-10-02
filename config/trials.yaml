@@ -6108,3 +6108,18 @@ trials:
   config: ride_threshold:1.5
   status: fail
   note: DECISIONS.md#ride-threshold-recheck-outcome
+- signal: ride_threshold
+  gate: ride_dynamic_trigger
+  config: ride_dynamic_trigger:D1
+  status: fail
+  note: DECISIONS.md#ride-dynamic-trigger-outcome
+- signal: ride_threshold
+  gate: ride_dynamic_trigger
+  config: ride_dynamic_trigger:D2
+  status: fail
+  note: DECISIONS.md#ride-dynamic-trigger-outcome
+- signal: ride_threshold
+  gate: ride_dynamic_trigger
+  config: ride_dynamic_trigger:D3
+  status: fail
+  note: DECISIONS.md#ride-dynamic-trigger-outcome

@@ -1,0 +1,88 @@
+{
+ "p99_trigger_pct": {
+  "W1": 1.42,
+  "W2": 1.77,
+  "last_3d": 1.6
+ },
+ "D3_pick_share": {
+  "2.0": 0.36,
+  "1.0": 0.32,
+  "0.75": 0.25,
+  "1.5": 0.07
+ },
+ "results": {
+  "fixed2.0": {
+   "W1": {
+    "total_pct": 12.49,
+    "max_dd_pct": -15.78,
+    "triggers_per_day": 37.6
+   },
+   "W2": {
+    "total_pct": 25.48,
+    "max_dd_pct": -11.65,
+    "triggers_per_day": 46.3
+   },
+   "last_3d": {
+    "total_pct": -0.13,
+    "max_dd_pct": -7.7,
+    "triggers_per_day": 33.0
+   }
+  },
+  "D1": {
+   "W1": {
+    "total_pct": 26.48,
+    "max_dd_pct": -17.7,
+    "triggers_per_day": 83.2
+   },
+   "W2": {
+    "total_pct": 4.06,
+    "max_dd_pct": -17.04,
+    "triggers_per_day": 74.9
+   },
+   "last_3d": {
+    "total_pct": 7.73,
+    "max_dd_pct": -5.29,
+    "triggers_per_day": 80.0
+   }
+  },
+  "D2": {
+   "W1": {
+    "total_pct": 23.87,
+    "max_dd_pct": -10.6,
+    "triggers_per_day": 75.6
+   },
+   "W2": {
+    "total_pct": 23.18,
+    "max_dd_pct": -8.16,
+    "triggers_per_day": 57.8
+   },
+   "last_3d": {
+    "total_pct": 5.1,
+    "max_dd_pct": -3.88,
+    "triggers_per_day": 60.7
+   }
+  },
+  "D3": {
+   "W1": {
+    "total_pct": 8.27,
+    "max_dd_pct": -27.0,
+    "triggers_per_day": 168.0
+   },
+   "W2": {
+    "total_pct": 30.43,
+    "max_dd_pct": -12.46,
+    "triggers_per_day": 242.3
+   },
+   "last_3d": {
+    "total_pct": 2.13,
+    "max_dd_pct": -6.38,
+    "triggers_per_day": 276.0
+   }
+  }
+ },
+ "verdict": {
+  "D1": false,
+  "D2": false,
+  "D3": false
+ }
+}

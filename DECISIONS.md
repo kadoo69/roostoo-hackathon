@@ -4722,3 +4722,18 @@ NULL, 2.0% stays (`results/ride_threshold_recheck.json`). 15-minute moves in the
 | 1.5% | +0.3% / -28.2% | +22.4% / -15.4% | +1.7% / -8.5% |
 | 2.0% (live) | +12.5% / -15.8% | +25.5% / -11.7% | -0.1% / -7.7% |
 No lower threshold beats 2.0% in all three; each wins one window and loses another, and 2.0% has the shallowest drawdown in every window. A quiet hour with no trigger is the normal tail (the last-hour pool moves were within 1%), not a mis-set threshold. Three trials recorded.
+
+## ride-dynamic-trigger-declaration
+
+Operator question 2026-10-02: what if the ride's trigger adjusts to market conditions. Written before any number, three rules, everything else as the live ride (+5% cap, 24 h, 3 slots, ladder, maker fees): D1 market-level, trigger = the pool's trailing 288-bar (24 h) 99th percentile of 3-bar 5m returns, recomputed every bar; D2 coin-level, trigger = 3 x the coin's own trailing 288-bar std of 3-bar returns; D3 performance-level, each UTC day use whichever of 0.75/1.0/1.5/2.0% earned most over the previous 3 days (replayed from 2026-09-01). Same rule as `#ride-threshold-recheck-declaration`: recommended only if it beats fixed 2.0% in W1, W2 and the last 3 days with drawdown no more than 2 pp worse in each. 3 trials.
+
+## ride-dynamic-trigger-outcome
+
+FAIL by the declared rule, all three (`results/ride_dynamic_trigger.json`); D2 is the strongest risk-adjusted rule tested on the ride so far. Total return / max DD / triggers a day, W1 (09-05..09-19) / W2 (09-19..now) / last 3 days:
+| rule | W1 | W2 | last 3 days |
+|---|---|---|---|
+| fixed 2.0% (live) | +12.5% / -15.8% / 38 | +25.5% / -11.7% / 46 | -0.1% / -7.7% / 33 |
+| D1 pool 99th pct (median trigger 1.42 / 1.77 / 1.60%) | +26.5% / -17.7% / 83 | +4.1% / -17.0% / 75 | +7.7% / -5.3% / 80 |
+| D2 3x coin's own 24 h std | +23.9% / **-10.6%** / 76 | +23.2% / **-8.2%** / 58 | +5.1% / **-3.9%** / 61 |
+| D3 best of 4 fixed over 3 days | +8.3% / -27.0% / 168 | +30.4% / -12.5% / 242 | +2.1% / -6.4% / 276 |
+D2 beats fixed 2.0% in W1 (+11.4 pp) and the last 3 days (+5.2 pp) and trails it in W2 by 2.3 pp, so it fails the return condition; its drawdown is 3.5-5.2 pp shallower in every window and its return over drawdown is higher in all three (2.25 / 2.84 / 1.31 against 0.79 / 2.19 / -0.02). Mechanism consistent with `#coin-eda-outcome`: a fixed 2% is a big move for BTC and a small one for PUMP, so it over-triggers the high-volatility coins; a per-coin threshold spreads entries by each coin's own scale. D1 swings by window and D3 (switching) has the deepest drawdown, as switching did in `#adaptive-recent-2026-10-01`. Not adopted; a forward paper test of D2 is the operator's call. Three trials recorded.
