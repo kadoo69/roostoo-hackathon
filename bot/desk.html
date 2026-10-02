@@ -11,12 +11,12 @@
  --up:#3ecf8e; --up-bg:rgba(62,207,142,.12); --dn:#ff6b6b; --dn-bg:rgba(255,107,107,.12); --warn:#f2c94c;
  --sans:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
 }
-*{box-sizing:border-box} html,body{height:100%}
-body{margin:0;background:var(--bg);color:var(--fg);font:13px/1.45 var(--sans);-webkit-font-smoothing:antialiased;overflow:hidden}
+*{box-sizing:border-box} html,body{min-height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:13px/1.45 var(--sans);-webkit-font-smoothing:antialiased;overflow-y:auto}
 .num{font-family:var(--mono);font-variant-numeric:tabular-nums}
 .up{color:var(--up)} .dn{color:var(--dn)} .dim{color:var(--dim)} .faint{color:var(--faint)}
 a{color:var(--dim);text-decoration:none} a:hover{color:var(--fg)}
-.app{display:grid;grid-template-rows:auto auto auto 1fr;height:100vh;padding:12px 18px;gap:10px}
+.app{display:grid;grid-template-rows:auto auto auto auto;min-height:100vh;padding:12px 18px;gap:10px}
 header{display:flex;align-items:center;gap:14px}
 .brand{font-weight:700;letter-spacing:.2px;font-size:15px}
 .brand span{color:var(--faint);font-weight:500}
@@ -44,7 +44,7 @@ header .sp{flex:1} header nav{display:flex;gap:14px;font-size:12px}
 .bandh{grid-column:1/-1;display:flex;align-items:baseline;gap:10px;font-size:11px;color:var(--faint);text-transform:uppercase;letter-spacing:.6px;margin-bottom:-4px}
 .bandh b{color:var(--fg);font-size:12px}
 @media (max-width:1100px){.band{grid-template-columns:1fr}.lcard{grid-template-columns:1fr}}
-.main{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:12px;min-height:0}
+.main{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:12px;min-height:0;align-items:start}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;min-height:0;display:flex;flex-direction:column}
 .card h3{margin:0;font-size:12px;font-weight:600;color:var(--dim);text-transform:uppercase;letter-spacing:.6px}
 .card .hd{display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--line)}
