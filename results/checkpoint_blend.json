@@ -1,0 +1,45 @@
+{
+ "window": [
+  "2026-09-19 00:00:00+00:00",
+  "2026-10-02 14:30:00+00:00"
+ ],
+ "coins": 25,
+ "A_rule": {
+  "total_pct": 13.51,
+  "trend_half_pct": 16.42,
+  "chop_half_pct": -2.5,
+  "last_3d_pct": -5.96,
+  "max_dd_pct": -15.17,
+  "invested_pct": 82.4,
+  "sharpe": 4.04,
+  "sortino": 4.02,
+  "calmar": 191.0,
+  "screen3": 60.12
+ },
+ "B_ride": {
+  "total_pct": 30.11,
+  "trend_half_pct": 29.57,
+  "chop_half_pct": 0.42,
+  "last_3d_pct": -1.85,
+  "max_dd_pct": -10.35,
+  "invested_pct": 99.6,
+  "sharpe": 7.66,
+  "sortino": 8.4,
+  "calmar": 11265.18,
+  "screen3": 3385.21
+ },
+ "C_blend": {
+  "total_pct": 13.08,
+  "trend_half_pct": 14.71,
+  "chop_half_pct": -1.42,
+  "last_3d_pct": -4.17,
+  "max_dd_pct": -8.97,
+  "invested_pct": 99.7,
+  "sharpe": 5.47,
+  "sortino": 5.73,
+  "calmar": 290.11,
+  "screen3": 90.97
+ },
+ "recommend_C_over_A": false,
+ "recommend_B_over_C": true
+}
