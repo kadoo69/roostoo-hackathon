@@ -4668,3 +4668,18 @@ NULL, no arm recommended (`results/ride_exits.json`, `python3 -m gates.ride_exit
 | P3 half at +5%, trail rest 3% | +59.3% / -15.3% | +14.2% / -10.2% | -1.7% | +2.0 / -11.6 | 128 |
 | U no target, 24 h only | +23.7% / -19.9% | +39.2% / -8.0% | +10.4% | -33.7 / +13.4 | 2 |
 Every arm flips sign between the windows, which is the signature of `#live-excursion-outcome`: which winners keep running is not predictable from the +5% touch. T3 wins the pre window and loses 15 points live; U wins live and loses 34 points before. The cap stays; the ride and the ride sleeve are unchanged. Four trials recorded.
+
+## bstocks-pool-declaration
+
+Operator 2026-10-02: no rule forbids bStocks, they are part of the platform; judge on short-term evidence for a 14-day round, not history. Declared in `config/bstocks_pool.yaml` before any number, `python3 -m gates.bstocks_pool`.
+Arms: A0 the live 25-coin pool; A1 the pool rule without the stock exclusion (A0 + SNDKB + CRCLB, the two bStocks it already ranks in the top 30); A2 A0 + all 21 Roostoo bStocks. Books: the competition rule (30m), the ride (5m), and the 50/50 sleeves approximated as half each of their 30-minute returns. Windows: 2026-09-05..09-19 and 09-19..now. An arm is recommended only if the sleeves beat A0 in both windows with drawdown no more than 2 pp worse.
+
+## bstocks-pool-outcome
+
+FAIL, both arms (`results/bstocks_pool.json`). Total return, W1 (09-05..09-19) / W2 (09-19..10-02 17:30Z):
+| arm | rule | ride | sleeves | sleeves vs A0 | stock share of weight (rule / ride) |
+|---|---|---|---|---|---|
+| A0 crypto pool | +22.6% / +11.0% | +13.0% / +36.5% | +18.0% / +23.5% | - | 0 |
+| A1 + SNDK, CRCL | +22.0% / +9.1% | +16.0% / +23.4% | +19.3% / +16.5% | +1.3 / -7.1 pp | 5% / 14% then 2% / 2% |
+| A2 + all 21 | +14.2% / -9.6% | -0.4% / +27.1% | +6.9% / +7.5% | -11.1 / -16.0 pp | 31% / 37% then 34% / 19% |
+Drawdowns stayed within 2 pp in every case, so the return is what fails. Reading: the bStocks that break out on Binance do not follow through like the crypto leaders, and when they take a top-3 slot they displace a crypto runner (the W2 ride loses 13 points with only 2% of its weight in SNDK/CRCL, because the slots they took were the slots the crypto legs needed). The pool stays crypto-only; `#tokenized-stocks` keeps the exclusion, now on short-term evidence too. Two trials recorded.

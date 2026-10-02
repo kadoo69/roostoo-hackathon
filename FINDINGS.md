@@ -36,6 +36,7 @@ Concentration, the derisk ramp, the weight path, the deployment rule and the boo
 | exit clock | 12 | dead | `#exit-clock-outcome` |
 | take-profit targets | 26 | dead, then re-killed on live data | `#take-profit-outcome`, `#live-excursion-outcome` |
 | ride exits: trail or half-book after +5%, or no cap | 4 | null; every arm flips sign between Aug-Sep and the live window | `#ride-exits-outcome` |
+| bStocks in the pool (SNDK+CRCL, or all 21) | 2 | fail on both recent 14-day windows; all 21 cost the sleeves 11-16 points | `#bstocks-pool-outcome` |
 | RSI 50/70 band, 15m/1h/4h | 6 | dead, negative BEFORE costs at 15m and 1h | `#rsi-band-outcome` |
 | order flow / volume / trade size as rankers | 9 | dead at 4h to 3d | `#alpha-flow-declaration` |
 | funding-rate crowding | 15 | strongest fit signal in the repo, does not replicate; re-tested on corrected data, still null | `#alpha-flow-declaration`, `#positioning-edges-outcome` |

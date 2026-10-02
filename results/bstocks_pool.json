@@ -1,0 +1,163 @@
+{
+ "windows": {
+  "W1": [
+   "2026-09-05 00:00:00+00:00",
+   "2026-09-19 00:00:00+00:00"
+  ],
+  "W2": [
+   "2026-09-19 00:00:00+00:00",
+   "2026-10-02 17:12:43.102853+00:00"
+  ]
+ },
+ "arms": {
+  "A0": 25,
+  "A1": 27,
+  "A2": 46
+ },
+ "stocks_with_bars": [
+  "AMDBUSDT",
+  "CBRSBUSDT",
+  "COINBUSDT",
+  "CRCLBUSDT",
+  "GLWBUSDT",
+  "GOOGLBUSDT",
+  "INTCBUSDT",
+  "LITEBUSDT",
+  "METABUSDT",
+  "MSFTBUSDT",
+  "MSTRBUSDT",
+  "MUBUSDT",
+  "NBISBUSDT",
+  "NVDABUSDT",
+  "PLTRBUSDT",
+  "QCOMBUSDT",
+  "SKHYBUSDT",
+  "SNDKBUSDT",
+  "SPCXBUSDT",
+  "TSLABUSDT",
+  "WDCBUSDT"
+ ],
+ "results": {
+  "A0": {
+   "W1": {
+    "rule": {
+     "total_pct": 22.58,
+     "max_dd_pct": -14.19
+    },
+    "ride": {
+     "total_pct": 13.02,
+     "max_dd_pct": -15.78
+    },
+    "sleeves": {
+     "total_pct": 18.04,
+     "max_dd_pct": -14.09
+    },
+    "rule_stock_weight_share": 0.0,
+    "ride_stock_weight_share": 0.0
+   },
+   "W2": {
+    "rule": {
+     "total_pct": 10.97,
+     "max_dd_pct": -15.85
+    },
+    "ride": {
+     "total_pct": 36.54,
+     "max_dd_pct": -10.35
+    },
+    "sleeves": {
+     "total_pct": 23.51,
+     "max_dd_pct": -11.31
+    },
+    "rule_stock_weight_share": 0.0,
+    "ride_stock_weight_share": 0.0
+   }
+  },
+  "A1": {
+   "W1": {
+    "rule": {
+     "total_pct": 22.0,
+     "max_dd_pct": -13.84
+    },
+    "ride": {
+     "total_pct": 16.04,
+     "max_dd_pct": -12.53
+    },
+    "sleeves": {
+     "total_pct": 19.31,
+     "max_dd_pct": -12.26
+    },
+    "rule_stock_weight_share": 0.047,
+    "ride_stock_weight_share": 0.138
+   },
+   "W2": {
+    "rule": {
+     "total_pct": 9.14,
+     "max_dd_pct": -16.29
+    },
+    "ride": {
+     "total_pct": 23.42,
+     "max_dd_pct": -11.2
+    },
+    "sleeves": {
+     "total_pct": 16.46,
+     "max_dd_pct": -10.76
+    },
+    "rule_stock_weight_share": 0.024,
+    "ride_stock_weight_share": 0.015
+   }
+  },
+  "A2": {
+   "W1": {
+    "rule": {
+     "total_pct": 14.16,
+     "max_dd_pct": -13.83
+    },
+    "ride": {
+     "total_pct": -0.43,
+     "max_dd_pct": -16.0
+    },
+    "sleeves": {
+     "total_pct": 6.94,
+     "max_dd_pct": -13.68
+    },
+    "rule_stock_weight_share": 0.31,
+    "ride_stock_weight_share": 0.368
+   },
+   "W2": {
+    "rule": {
+     "total_pct": -9.64,
+     "max_dd_pct": -20.49
+    },
+    "ride": {
+     "total_pct": 27.07,
+     "max_dd_pct": -9.32
+    },
+    "sleeves": {
+     "total_pct": 7.47,
+     "max_dd_pct": -10.79
+    },
+    "rule_stock_weight_share": 0.34,
+    "ride_stock_weight_share": 0.187
+   }
+  }
+ },
+ "ref": "DECISIONS.md#bstocks-pool-declaration",
+ "verdict": {
+  "A1": {
+   "sleeves_gain_pp": {
+    "W1": 1.27,
+    "W2": -7.05
+   },
+   "dd_ok": true,
+   "recommended": false
+  },
+  "A2": {
+   "sleeves_gain_pp": {
+    "W1": -11.1,
+    "W2": -16.04
+   },
+   "dd_ok": true,
+   "recommended": false
+  }
+ }
+}

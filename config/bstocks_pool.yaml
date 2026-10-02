@@ -1,0 +1,24 @@
+meta:
+  name: bstocks_pool
+  frozen: true
+  declared_utc: '2026-10-02T17:30:00Z'
+  requested_by: 'operator 2026-10-02: there is no rule against bStocks, they are part of the platform; conditions change, for a 14-day round judge on short-term evidence, not history'
+  declared_ref: DECISIONS.md#bstocks-pool-declaration
+  written_before_any_number: true
+prior: 'stocks were excluded only for short history (#tokenized-stocks), not by any organiser rule. The pool rule (top 30 by 30-day median Binance dollar volume) already ranks SNDKB and CRCLB inside the top 30 (results/universe_coverage.json); most other bStocks trade 0.1-5 M USD a day, below the pool cutoff (~13 M).'
+mechanism: 'bStocks move on a different factor (US equities, AI/semis news) than the crypto block, whose first factor explains ~59% of moves (results/market_structure.json); adding names that break out when crypto chops gives the breakout rule and the ride more independent legs to take.'
+failure_mode: 'thin Binance books and equity-style gaps on news make breakouts fake or slip; the extra names displace crypto winners in the top-3 slots and lose.'
+arms:
+  A0: the live pool (25 Roostoo crypto names)
+  A1: 'the pool rule applied without the stock exclusion: A0 + SNDKB + CRCLB (the two the rule already ranks)'
+  A2: 'A0 + all 21 Roostoo bStocks (wide; the honest upper bound of adding them)'
+books: 'competition rule (30m contenders, competition.yaml), the ride (ride_5m), and the 50/50 sleeves as half each of their per-bar returns; maker fees, ticks and the 3%/15% ladder per book (gates.let_winners_run.simulate)'
+windows:
+  W1: '2026-09-05 to 2026-09-19 (14 days)'
+  W2: '2026-09-19 to now (the latest 14 days)'
+decision_rule: >
+  An arm is RECOMMENDED for the sleeves book only if the sleeves return beats A0 in BOTH 14-day windows and its
+  max drawdown in each is no more than 2 pp worse than A0's. Rule and ride are reported per arm. Stock trades are
+  counted and their P&L shown so a pass that comes from crypto reshuffling is visible. Changing a live book stays
+  an operator decision.
+trials: 2

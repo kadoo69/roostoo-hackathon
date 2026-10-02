@@ -6083,3 +6083,13 @@ trials:
   config: ride_exits:U
   status: fail
   note: DECISIONS.md#ride-exits-outcome
+- signal: universe
+  gate: bstocks_pool
+  config: bstocks_pool:A1
+  status: fail
+  note: DECISIONS.md#bstocks-pool-outcome
+- signal: universe
+  gate: bstocks_pool
+  config: bstocks_pool:A2
+  status: fail
+  note: DECISIONS.md#bstocks-pool-outcome
