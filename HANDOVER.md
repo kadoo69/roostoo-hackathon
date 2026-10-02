@@ -12,6 +12,7 @@ Current state only. The full history of sessions to 2026-09-23 is archived at `d
 ### Where things run
 - **EC2** `i-015fad70d34b0b83d` (ap-southeast-2, t3.medium, unlimited credits, ~3% CPU), repo at /opt/roostoo-hackathon, commit 1b8018c+:
   - `roostoo-live@competition` (COMP keys, real orders, waiting, the plain 30m rule via ContendersBot) and `roostoo-live@competition_rehearsal` (TEST keys, real orders; **since 16:00Z the 50/50 sleeves**, sold LTC/TRUMP on its first decision, equity 52,730). Both have **exit escalation** on (`#exit-escalation-2026-10-02`). All EC2 units start `bot.runner`, which picks the class from the config (`#sleeves-rehearsal-2026-10-02`).
+  - `roostoo-paper@sleeves_ivol_5m` (paper since 2026-10-02 18:55Z, sleeves with inverse-vol entry sizing; replay says it de-levers and fails its return condition, `#sleeves-ivol-declaration`; judge 10-05).
   - `roostoo-paper@ride_5m` (paper, momentum ride, +4.9%) and `roostoo-paper@sleeves_5m` (paper, **50/50 rule + ride with separate ledgers**, started 14:45Z, first trade TRUMP). Paper unit runs `bot.paper_main`.
 - **Mac** (paper, sleeps on battery): wf_live, momentum_top3_30m (control), ride1_5m, blend_30m_ride, regime_ls_30m, resid_30m, htf0_30m, wide_30m, ride1_wide_5m. `run/LIVE_HOST_EC2` makes `./run_bots.sh live` refuse on the Mac (never two hosts on one account).
 - **AWS access**: `python3 deploy/aws_login.py` (browser device sign-in, botocore refreshes keys until the Identity Center session ends). Commands on EC2 go through `python3 deploy/ssm_shell.py <script>` (SendCommand is denied). Status: `deploy/ec2_status.sh`. Redeploy: run `deploy/ec2_bootstrap.sh` on the instance (pulls main, restarts live + paper units; never restart the competition book except for a committed change).
@@ -25,6 +26,9 @@ Ride ghost-slot fix (`#ride-ghost-slots-2026-10-01`); wide-pool paper books (`#w
 
 ### Checkpoint 2026-10-03 (must finish before 11:00Z, ahead of the 12:00Z start)
 Compare on EC2 at equal uptime, forward only: competition_rehearsal (rule) vs ride_5m (ride) vs sleeves_5m (split). Retire wide_30m / ride1_wide_5m on 10-08 if still below controls. Target lock (Screen 3) is an operator decision around 10-12.
+
+### Research 2026-10-02 evening (all null, nothing live changed)
+Ride exits (`#ride-exits-outcome`), bStocks in the pool (`#bstocks-pool-outcome`), coin EDA (`#coin-eda-outcome`: no return edge; vol forecastable and unrewarded pool-wide), inverse-vol sizing replay (`#sleeves-ivol-declaration`).
 
 ### Lessons (do not repeat)
 - Never blend sleeves inside one book's weights (they interfere); use `bot/sleeves.py`.
