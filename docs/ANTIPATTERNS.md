@@ -6,7 +6,7 @@ Each entry links to the `DECISIONS.md` anchor that carries its evidence.
 
 **Do not optimise on a short sample.** 413 trials say it reverses. Two live trades is not a sample and a 100% win rate on them is noise.
 
-**Do not let a test harness reimplement the logic it tests.** A hand-rolled limit price inside `gates/order_lifecycle.py` produced a marketable order and led to a false claim that the bot was crossing the spread. It was not. The harness now calls `Executor.limit_price`.
+**Do not let a test harness reimplement the logic it tests.** A hand-rolled limit price inside `archive/gates/order_lifecycle.py` produced a marketable order and led to a false claim that the bot was crossing the spread. It was not. The harness now calls `Executor.limit_price`.
 
 **Check a new metric against a series whose answer you already know.** `bot/report.py` shipped a Sortino that omitted the annualisation of downside deviation, inflating it by sqrt(365). It was caught because BTC buy-and-hold returned 34.22 where its known value is 1.7913.
 
@@ -29,7 +29,7 @@ Each entry links to the `DECISIONS.md` anchor that carries its evidence.
 **Binance bars are labelled by OPEN time, so a 4h row labelled 04:00 holds a close from 08:00.**
 Any code that combines two bar frequencies must align on CLOSE times, never on labels.
 A label-matched `reindex(method="ffill")` from a slow panel onto a fast index leaks up to one slow bar of future price.
-This bit twice in one sweep: once in the position function (holdout Sharpe 7.29) and again, after that fix, in the ranking carried into `gates/exit_clock.py` (Sharpe 3.72, 114x).
+This bit twice in one sweep: once in the position function (holdout Sharpe 7.29) and again, after that fix, in the ranking carried into `archive/gates/exit_clock.py` (Sharpe 3.72, 114x).
 The second was invisible to inspection because the slow-clock arms are immune - the reindex is a no-op there - so only the fast arms were inflated, which reads as a real effect of the fast clock.
 Use `signals.exit_clock.to_fast`, and assert that a fast==slow run reproduces the single-clock function exactly.
 
@@ -62,7 +62,7 @@ A pidfile alone is not enough: the supervisor dies with the worker and leaves th
 Backtest turnover is `|w_t - w_{t-1}|` on TARGET weights; the live book rebalances target against the DRIFTED ACTUAL weight.
 A target that never changes contributes zero backtest turnover and still emits a live order every cycle as the mark moves.
 Five of `donchian_1h`'s eleven closed trades on 2026-09-20 were exactly this, at 3 to 19 dollars, paying full fees nothing had charged for.
-The fix needed no new parameter: `portfolio.no_trade_band: 0.25` was already pre-registered and unfitted, implemented in `portfolio/construct.py`, applied in several gates, and used nowhere in `bot/`.
+The fix needed no new parameter: `portfolio.no_trade_band: 0.25` was already pre-registered and unfitted, implemented in `archive/portfolio/construct.py`, applied in several gates, and used nowhere in `bot/`.
 Applying the same band INSIDE the backtest is a null and is bit-identical on the momentum books, because there is no drift there to suppress. A backtest could never have found this.
 
 **A count-weighted statistic gives a rounding residue the same vote as a real position.**

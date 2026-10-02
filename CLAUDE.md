@@ -8,7 +8,7 @@ Trading bots for the Roostoo crypto competition. **The competition starts 2026-1
 **Screen 2** ranks raw 14-day return, top 20 per region advance. **Screen 3** ranks survivors on `0.4*Sortino + 0.3*Sharpe + 0.3*Calmar`. **Screen 1** is rule and trade-log compliance.
 Rules (FAQ): 30 API calls/min all endpoints, EC2 Sydney via Session Manager, public GitHub repo, every live change committed, **no manual stop, override or trade on the competition account**.
 
-**Live since 2026-09-30, on EC2 `i-015fad70d34b0b83d` since 2026-10-02 12:36Z:** `competition` (the `momentum_top3_30m` rule, lock off, COMP keys; waiting for Roostoo to activate the account) and `competition_rehearsal` (since 2026-10-02 16:40Z the 50/50 rule + ride sleeves of `sleeves_5m`, TEST keys, `#sleeves-rehearsal-2026-10-02`) place REAL Roostoo orders via `./run_bots.sh live`; keys in `.env` as `ROOSTOO_{TEST,COMP}_*`, picked by each config's `meta.keyset`. Units start `bot.runner`, which picks the bot class from the config. Paper: `wf_live` (dynamic bot, 3 pp margin), `momentum_top3_30m` (control), `ride_5m`, `ride1_5m`, `blend_30m_ride`, `regime_ls_30m`, `resid_30m`, `htf0_30m`, `wide_30m`, `ride1_wide_5m` (whole Roostoo pool). Deploy: `deploy/ec2_bootstrap.sh`; checks: `python3 -m gates.preflight`, `gates.progress`. **Read HANDOVER.md "CURRENT STATE" first.**
+**Live since 2026-09-30, on EC2 `i-015fad70d34b0b83d` since 2026-10-02 12:36Z:** `competition` (the `momentum_top3_30m` rule, lock off, COMP keys; waiting for Roostoo to activate the account) and `competition_rehearsal` (since 2026-10-02 16:40Z the 50/50 rule + ride sleeves of `sleeves_5m`, TEST keys, `#sleeves-rehearsal-2026-10-02`) place REAL Roostoo orders via `./run_bots.sh live`; keys in `.env` as `ROOSTOO_{TEST,COMP}_*`, picked by each config's `meta.keyset`. Units start `bot.runner`, which picks the bot class from the config. Paper books on EC2 and on the Mac: `BOTS.md`. Deploy: `deploy/ec2_bootstrap.sh`; checks: `python3 -m gates.preflight`, `gates.progress`. **Read HANDOVER.md "CURRENT STATE" first.**
 Never run the `competition` book on two hosts at once (Mac and EC2 would both trade one account). Never buy a stale path entry after a restart (`bot/entry_guard.py`).
 
 ## The strategy
@@ -29,6 +29,7 @@ The only tested change that passed every period is the **target lock** (`bot/loc
 | editing the live cycle, a join, a harness or `run_bots.sh` | `docs/ANTIPATTERNS.md` |
 | current state and next steps | `HANDOVER.md` |
 | questions only the organisers can answer | `ORGANISER_QUESTIONS.md` |
+| re-running a finished study | `archive/README.md` (`python3 -m archive.gates.<name>`) |
 
 Skills: `roostoo-live-report` (the 30-minute report), `roostoo-incident` (live faults and restarts), `roostoo-ops` (run, add, retire, deploy books) and `roostoo-research` (declare, test on history and the recent window, record).
 
@@ -38,7 +39,8 @@ Skills: `roostoo-live-report` (the 30-minute report), `roostoo-incident` (live f
 - **Declare before you test**: a `config/<family>.yaml` with mechanism, failure mode, decision rule and nonsense control, written before any number is computed. Every configuration is a trial in `config/trials.yaml` (`core.config.record_trials`), nulls included.
 - **Pre-registered thresholds are never moved** to make something pass.
 - **Nothing is promoted on a backtest alone**: survivors paper-trade on the live feed first.
-- **Registering a bot takes three places**: `run_bots.sh` CONFIGS, `bot/dashboard.py` BOTS (and EXPECTED_DRAG), `gates/live_validation.py` BOOKS.
+- **Registering a bot**: see `BOTS.md` "Registering a book" (host list, `bot/dashboard.py` BOTS/CONTROL_OF/EXPECTED_DRAG, `gates/live_validation.py` BOOKS, `bot/desk.py`).
 - **Binance bars are labelled by OPEN time.** Join on close times (`signals.exit_clock.to_fast`), never on labels.
 - Markdown: one sentence per line, never the em dash. Commits describe only what they contain, no co-author trailer.
-- Checks before done: `python3 -m pytest tests -q` and `python3 -m ruff check bot/ signals/ gates/ data/ core/ tests/`.
+- Checks before done: `python3 -m pytest tests -q` and `python3 -m ruff check bot/ signals/ gates/ data/ core/ tests/ archive/`.
+- **Nothing live imports `archive/`.** A one-off study moves to `archive/gates/` once its outcome is in `DECISIONS.md`.

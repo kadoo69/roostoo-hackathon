@@ -15,7 +15,7 @@ It lets winners run while their channel holds, books a slice of profit at every 
 **Key features**
 - Deterministic rule, no discretion and no machine-learned parameters in the trading path.
 - Research first: 1,000+ configurations were declared before testing and recorded with their results, failures included (`config/trials.yaml`, `DECISIONS.md`, `FINDINGS.md`).
-- Forward-tested on a live paper fleet of 19 books against the same market feed before any book was chosen (`gates/fleet_review.py`).
+- Forward-tested on a live paper fleet of 19 books against the same market feed before any book was chosen (`archive/gates/fleet_review.py`).
 - Crash-safe execution: every order intent is written and fsynced before it is sent and reconciled against the venue on restart.
 - Kill switches for drawdown, API error rate, stale prices and a Roostoo-versus-Binance price mirror check.
 - Stays under the 30 calls per minute limit with a rolling call budget.
@@ -87,7 +87,7 @@ The competition book is `config/competition.yaml`, identical in every rule param
 **Directional, 1x, no leverage**
 - Directional only: no market making and no arbitrage.
 - Gross exposure is capped at 1.0 of equity (no leverage), each coin at 0.5.
-- The bot can go long, sell, short and close: `venue/roostoo.py` wraps `/v3/place_order` and `/v6/short_open` / `/v6/short_close`, and `gates/roostoo_smoke.py` opened and closed a real short on the Roostoo test account. The competition rule runs long-only because every short sleeve we tested lost money out of sample (`DECISIONS.md#crash-shorts-outcome`).
+- The bot can go long, sell, short and close: `venue/roostoo.py` wraps `/v3/place_order` and `/v6/short_open` / `/v6/short_close`, and `archive/gates/roostoo_smoke.py` opened and closed a real short on the Roostoo test account. The competition rule runs long-only because every short sleeve we tested lost money out of sample (`DECISIONS.md#crash-shorts-outcome`).
 
 **Assumptions**
 - The bot adopts whatever the Roostoo wallet holds at start (the organisers give each team 100k) and sizes every position as a fraction of equity, so the starting amount changes no decision.

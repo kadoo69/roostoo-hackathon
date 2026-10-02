@@ -7,11 +7,10 @@ description: Operate the Roostoo bot fleet - start/stop/restart, the live compet
 
 Run from the repo root. Read `HANDOVER.md` "CURRENT STATE" first and `docs/ANTIPATTERNS.md` before editing `bot/run.py` or `run_bots.sh`.
 
-## Books (2026-10-01)
+## Books
 
-- LIVE, real Roostoo orders: `competition` (COMP keys, the 30m contenders rule) and `competition_rehearsal` (the 50/50 sleeves split, TEST keys, since 2026-10-02). On EC2 both units run `bot.runner`, which picks the class from the config. Start/stop with `./run_bots.sh live | livestop`.
-- PAPER (default `CONFIGS`): `momentum_top3_30m` (control), `wf_live` (dynamic), `ride_5m`, `ride1_5m`, `blend_30m_ride`, `regime_ls_30m`, `resid_30m`, `htf0_30m`. Start/stop with `./run_bots.sh start | stop | restart`.
-- `./run_bots.sh status` proves processes exist; liveness is a `cycles` row under ~90 s old.
+- The fleet, hosts and runners are in `BOTS.md`. LIVE (real orders, EC2 systemd): `competition`, `competition_rehearsal`. Paper on EC2: `roostoo-paper@<book>`. Paper on the Mac: `./run_bots.sh start | stop | restart` (`CONFIGS`).
+- `./run_bots.sh status` proves Mac processes exist; `deploy/ec2_status.sh` for EC2; liveness is a `cycles` row under ~90 s old.
 
 ## Routine checks
 
@@ -22,12 +21,9 @@ Run from the repo root. Read `HANDOVER.md` "CURRENT STATE" first and `docs/ANTIP
     python3 -m gates.market_structure                  # factor share, effective bets, blocks, residual leaders
     python3 -m gates.signal_scan                       # breakouts per clock and what blocks them
 
-## Adding a book (all of these, then restart the dashboards)
+## Adding a book
 
-1. `config/<book>.yaml` with `meta.frozen: true`, `paper_only: true`, `declared_ref`, `falsification`.
-2. `run_bots.sh`: `CONFIGS`, `module_for` (its own case branch; tests match the existing branch strings), and the `workers`/`all_workers` module regex if it is a new module.
-3. `bot/dashboard.py` `BOTS`, `CONTROL_OF`, `EXPECTED_DRAG`; `gates/live_validation.py` `BOOKS`; `bot/desk.py` `SCALPER_BOOKS` for the paper group.
-4. `CONFIGS="config/<book>.yaml" ./run_bots.sh start`, then restart both dashboards (`pkill -f bot.dashboard`, `nohup python3 -m bot.dashboard &`, same with `--port 8789`); they read the book list only at start.
+Follow `BOTS.md` "Registering a book" (config, host list, dashboard and validation registries), then restart both dashboards (`pkill -f bot.dashboard`, `nohup python3 -m bot.dashboard &`, same with `--port 8789`); they read the book list only at start.
 
 ## Retiring a book
 

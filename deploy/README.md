@@ -1,200 +1,59 @@
-# Deploying the bot
+# Deploying and operating the books
 
-## Local (macOS or Linux)
+## Where things run
 
-    ./run_bots.sh start     # start both bots under a respawning supervisor
-    ./run_bots.sh status    # supervisor and worker process state
-    ./run_bots.sh report    # cycles, uptime, restarts, positions, live performance
-    ./run_bots.sh stop
+The live books and the checkpoint paper twins run on the EC2 instance `i-015fad70d34b0b83d` (ap-southeast-2) under systemd.
+The other paper books run on the Mac under `./run_bots.sh`.
+A book never runs on two hosts: two processes on one account would both trade it, and `run/LIVE_HOST_EC2` on the Mac makes `./run_bots.sh live` refuse (`DECISIONS.md#ec2-cutover-2026-10-02`).
 
-Configs default to bot A and bot B.
-Override with `CONFIGS="config/bot_a_4h.yaml" ./run_bots.sh start`.
+## EC2
 
-Dry run is the default.
-Set `ROOSTOO_DRY_RUN=0` with credentials in `.env` to place real orders.
+Two systemd templates, both starting `bot.runner`, which picks the bot class from the config (`DECISIONS.md#sleeves-rehearsal-2026-10-02`):
 
-## EC2 (the competition requirement)
+- `roostoo-live@<book>.service`: real Roostoo orders, `ROOSTOO_DRY_RUN=0`, keys from `.env` chosen by the config's `meta.keyset`.
+- `roostoo-paper@<book>.service`: paper, `ROOSTOO_DRY_RUN=1`, `CPUQuota=25%`; the bootstrap refuses a paper unit whose config is not keyless paper.
 
-Section 7 of the plan requires unattended operation on the provided instance with
-zero manual API calls.
-`systemd` is the mechanism, because it restarts on failure and on reboot and it
-records start and stop times that match the journal.
+Access from the Mac:
 
-    sudo cp deploy/roostoo-bot@.service /etc/systemd/system/
-    sudo systemctl daemon-reload
-    sudo systemctl enable --now roostoo-bot@bot_a_4h
-    systemctl status roostoo-bot@bot_a_4h
-    journalctl -u roostoo-bot@bot_a_4h -f
+    python3 deploy/aws_login.py            # browser sign-in for the `hackathon` profile
+    deploy/ec2_status.sh                   # units, gates.progress, last rehearsal cycle, competition wait
+    python3 deploy/ssm_shell.py <script>   # run a shell script on the instance (SendCommand is denied)
 
-The unit name carries the config, so `roostoo-bot@bot_a_4h` runs
-`config/bot_a_4h.yaml`.
+Deploy or redeploy: run `deploy/ec2_bootstrap.sh` on the instance (through `ssm_shell.py`).
+It pulls `main`, installs requirements, runs the read-only pre-flight and the test suite, then restarts every unit in `BOOKS` and `PAPER_BOOKS`.
+To start one new paper book without touching the others, pull, check the config is keyless paper, and `systemctl enable --now roostoo-paper@<book>`.
+Never restart the competition book except for a committed change.
 
-## Verifying it is actually autonomous
+## Mac
 
-    ./run_bots.sh report
+    ./run_bots.sh start | stop | restart | status   # the paper books in CONFIGS
+    ./run_bots.sh progress | progressstop           # 30-minute review -> results/progress/latest.json
+    ./run_bots.sh awake | awakestop                 # caffeinate while on mains power
+    ./run_bots.sh report | trades | compare | dashboard
 
-`restarts` counts resume events, `halts` counts kill-switch trips, `errors`
-counts logged failures, and `max_cycle_gap_s` shows the longest interruption.
-A gap materially larger than the configured `poll_seconds` means the process
-died and was respawned.
+Each book runs under a respawning supervisor whose process pattern is scoped to this repo's absolute path.
+A sleeping Mac stops every Mac book; uptime is the largest measured loss (`DECISIONS.md#offline-replay-2026-10-01`).
+`deploy/com.roostoo.dashboard.plist` keeps the dashboard up across logins.
 
-    python3 -m gates.gate10_shadow --bot bot_a_4h
+## Dashboard
 
-This evaluates the pre-registered shadow conditions: three distinct days of
-operation, live-versus-backtest signal agreement at or above 0.95, median fill
-deviation within 5 bps, no unexplained halts and no errors.
+    ./run_bots.sh dashboard          # http://127.0.0.1:8787 (desk), /analysis, /heatmap, /full
+
+The desk pulls the EC2 books every 3 minutes (`bot/ec2_feed.py`) and reads the Mac books from their own journals.
+It reads the book list only at start: restart it after adding a book.
 
 ## Trade tracking
 
     ./run_bots.sh trades
 
-Reconstructs round-trip trades from the order journal by FIFO lot matching and
-reports realised P&L, fees, win rate, payoff ratio, profit factor, expectancy
-and holding period, alongside the lots still open.
-`--csv` also writes `live/<bot>/trades_closed.csv` and `trades_open.csv`, which
-are the structured trade logs Section 7 requires as the Screen 1 audit trail.
-
-Two accounting identities are checkable at any time and should always hold:
-quantity bought equals quantity closed plus quantity still open, and quantity
-sold equals quantity closed. A breach means the blotter and the venue disagree.
-
-Fees are taken from the venue's reported `CommissionPercent` where a real fill
-supplied one, and fall back to the configured schedule only for dry-run fills.
+Reconstructs round-trip trades from the order journal by FIFO lot matching and reports realised P&L, fees, win rate, payoff ratio, profit factor, expectancy and holding period, with the lots still open.
+`--csv` also writes `live/<bot>/trades_closed.csv` and `trades_open.csv`, the structured trade logs of the Screen 1 audit trail.
+Quantity bought equals quantity closed plus quantity still open, and quantity sold equals quantity closed; a breach means the blotter and the venue disagree.
+Fees come from the venue's `CommissionPercent` on real fills and from the configured schedule on paper fills.
+Before submitting, `python3 deploy/export_logs.py` copies the journals into `logs/`.
 
 ## State and restart safety
 
-Position state, cash, universe and last processed bar persist to
-`live/<bot>/state.json` after every cycle, written atomically.
-On restart the bot restores that state, and outside dry run it reads the venue
-wallet and adopts it as authoritative where the two disagree.
-A config change between runs is journalled as `config_changed_mid_run`.
-
-## macOS overnight persistence
-
-The supervisor detaches to PPID 1 and survives a terminal or agent session
-ending, but it does not survive a reboot, and a sleeping Mac stops the network.
-
-For an unattended overnight run:
-
-    caffeinate -i ./run_bots.sh start
-
-`caffeinate -i` prevents idle sleep for as long as it runs. Closing the lid
-still sleeps the machine unless the Mac is on power with lid-sleep disabled.
-
-To survive reboot and logout as well:
-
-    cp deploy/com.roostoo.bot.plist ~/Library/LaunchAgents/
-    launchctl load -w ~/Library/LaunchAgents/com.roostoo.bot.plist
-    launchctl list | grep roostoo
-
-Unload with `launchctl unload -w ~/Library/LaunchAgents/com.roostoo.bot.plist`.
-
-None of this is needed for the competition itself, where the bot runs on the
-EC2 instance under systemd. It matters only for accumulating the Gate 10
-shadow days beforehand.
-
-## Dashboard
-
-    ./run_bots.sh dashboard          # http://127.0.0.1:8787
-    ./run_bots.sh dashboard --port 9000 --host 0.0.0.0
-
-The local dashboard, Binance scanner and observational source collector also have
-launchd units at `deploy/com.roostoo.dashboard.plist`,
-`deploy/com.roostoo.scanner.plist` and `deploy/com.roostoo.source-hub.plist`.
-Install each in `~/Library/LaunchAgents/`
-and run `launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/<name>.plist`.
-The launchd data dashboard listens at `http://127.0.0.1:8789/`; port 8787 is
-left for other local services.
-The scanner polls every five minutes and writes `live/scanner/state.json`.
-The collector polls every 15 minutes, writes `live/source_hub/state.json` and
-appends each poll to daily JSONL. It never sends orders. Use
-`launchctl bootout gui/$(id -u)/<label>` to stop an installed unit; killing its
-process only causes launchd to restart it.
-
-The separate research units are `deploy/com.roostoo.source-features.plist`
-(feature materialisation every 15 minutes) and
-`deploy/com.roostoo.source-forward-validation.plist` (daily closed-price
-collection and matured outcome labels). Their outputs are under `results/`;
-neither unit imports or changes a trading bot. Inspect them with
-`launchctl print gui/$(id -u)/com.roostoo.source-features` and
-`launchctl print gui/$(id -u)/com.roostoo.source-forward-validation`.
-
-The 1-hour confirmed long-only candidate runs as an isolated paper bot under
-`deploy/com.roostoo.momentum-top3-1h-long.plist`. Its label is
-`com.roostoo.momentum-top3-1h-long`; inspect it with
-`launchctl print gui/$(id -u)/com.roostoo.momentum-top3-1h-long` and compare it
-with the unchanged `momentum_top3_1h` in `./run_bots.sh compare` or on the
-dashboard. `paper_only: true` forces dry run in the settings loader. The
-current historical evidence and limitations are in
-`results/LOWTF_EDGE_REVIEW.md`.
-
-Reads the journals directly, so it reflects whatever the bots have actually
-written rather than a separate copy of the state.
-It serves the desk at `/`, deeper diagnostics at `/analysis`, and JSON at
-`/api/state` and `/api/analysis`. The desk refreshes every five seconds.
-
-The desk follows the competition objective in explicit order. First is a
-return-sorted leaderboard for every live portfolio. Sharpe, Sortino and Calmar
-appear beside return only when enough complete daily marks exist. Next comes a
-strategy-logic matrix showing signal, ranking, sizing, gate, control and the
-exact distinction between decision data and research-only data. The market
-panel publishes scanner dispersion plus funding, open interest, futures taker
-ratio, order-book imbalance/depth and aggregate-trade concentration. A source
-inventory ranks all requested feeds by cost and usefulness and marks each one
-`LIVE`, `STALE`, `WIRED` or `PLANNED`; catalog membership alone never earns a
-green badge.
-
-Below those portfolio-level panels it shows, per bot: equity and an equity
-sparkline, P&L and return, drawdown from peak, gross exposure, open positions
-with weights, closed trades with realised return and holding period, realised
-net P&L, fees, win rate and profit factor, plus Sharpe, Sortino, Calmar and the
-Screen 3 composite once three daily marks exist.
-
-Read the badges first.
-`live` means a cycle landed within five minutes, `stale` means the bot stopped.
-`paper` means dry run; it reads `LIVE ORDERS` when `ROOSTOO_DRY_RUN=0`.
-`restarts` and `halts` appear only when non-zero, and either one is a reason to
-open `live/<bot>.out`.
-
-Binding to `0.0.0.0` exposes the dashboard to the network. On EC2 keep it on
-`127.0.0.1` and reach it through an SSH tunnel rather than opening a port.
-
-## Dashboard insights
-
-The dashboard derives interpretation rather than only displaying numbers.
-Each insight card states a value, the reference it is being judged against, and
-a tone, so a reading is actionable without recalling the backtest.
-
-- **Exposure vs norm** compares live gross exposure against the 18% historical
-  mean on 3.7 names. A reading of 50% is 2.8 times normal and means the market
-  is in a broad breakout, not that the strategy has changed.
-- **Realised fee drag** annualises fees actually paid and compares them to the
-  5.1% a year the backtest expects for bot A and 19.3% for bot B. A sustained
-  reading above expectation means fills are worse than modelled.
-- **Drawdown headroom** and **mirror headroom** show distance to the two kill
-  switches rather than the raw level, because distance is what decides whether
-  to act.
-- **Shadow gate** counts distinct live days against the three Gate 10 requires.
-- **Process integrity** surfaces supervisor restarts, which is the number that
-  says whether an unattended run was genuinely continuous.
-- **Trade sample** states plainly that win rate and payoff mean nothing below
-  roughly 30 closed trades, so an early 100% win rate is not read as skill.
-
-Market breadth scans all 66 venue names every four minutes on a background
-thread, so page loads never block on it. It reports how many coins are long,
-how many sit within 2% of an entry or a stop, the median cushion above the stop
-for held names, and names within 3% of being stopped out.
-# Prospective paper lab
-
-The independent six-portfolio experiment runs with `/opt/anaconda3/bin/python3 -m bot.paper_lab` from the repository root.
-It uses public data only and never submits exchange orders.
-On this Mac its service definition is `deploy/com.roostoo.paper-lab.plist`, loaded as `gui/501/com.roostoo.paper-lab`.
-Inspect it with `launchctl print gui/501/com.roostoo.paper-lab`.
-Stop it with `launchctl bootout gui/501/com.roostoo.paper-lab`.
-Load it with `launchctl bootstrap gui/501 /Users/aaravmahajan/roostoo-hackathon/deploy/com.roostoo.paper-lab.plist`.
-The service persists after the agent session, restarts after process failure, and inhibits idle sleep while running; it does not survive logout or reboot without being loaded again.
-Read current results with `/opt/anaconda3/bin/python3 -m bot.paper_lab --report`.
-State and accounting events are in `live/paper_lab_v1/state.json`; the latest comparison is `live/paper_lab_v1/comparison.json`.
-Diagnostics are in `live/paper-lab.out`, `live/paper-lab.err`, and dated error streams under `live/paper_lab_v1/`.
-Code or configuration changes invalidate the experiment fingerprint; use a new declared experiment root rather than overwriting the old state.
-The paper lab uses later observed quote crosses and cannot verify real venue queue position or fill capacity.
+Holdings, cash, universe and last processed bar persist to `live/<bot>/state.json` after every cycle, written atomically.
+On restart a book restores that state, and outside dry run it reads the venue wallet and adopts it where the two disagree.
+A config change between runs is journalled as `config_changed_mid_run`, which the desk counts as a note, not an error.

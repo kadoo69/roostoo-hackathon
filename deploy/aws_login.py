@@ -2,7 +2,7 @@
 
 Run: python3 deploy/aws_login.py  -> open the printed link, approve, done. botocore then refreshes the
 short-lived role keys by itself until the Identity Center session ends (its length is set by the
-organisers, typically 8-12 h); run it again after that. Replaces the copied keys of deploy/aws_creds.py.
+organisers, typically 8-12 h); run it again after that.
 DECISIONS.md#ec2-cutover-2026-10-02
 """
 import configparser

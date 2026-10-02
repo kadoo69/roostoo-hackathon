@@ -23,7 +23,7 @@ QUALIFIED = re.compile(r"DECISIONS\.md#([a-z0-9][a-z0-9-]*)")
 BACKTICKED = re.compile(r"`#([a-z0-9][a-z0-9-]*)`")
 
 SEARCH = ("*.md", "config/*.yaml", "gates/*.py", "bot/*.py", "signals/*.py",
-          "data/*.py", "portfolio/*.py", "venue/*.py", "core/*.py")
+          "data/*.py", "portfolio/*.py", "venue/*.py", "core/*.py", "archive/*.md", "archive/*/*.py")
 
 # Eight frozen configs cite declaration anchors that were never written. They are
 # NOT being written retroactively - a declaration invented after its test is the

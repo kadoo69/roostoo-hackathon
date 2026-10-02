@@ -1,58 +1,55 @@
 # The bot fleet
 
-**2026-09-24 18:08Z: four `momentum_top3_*_allcash` books added** (new entries absorb idle cash, `DECISIONS.md#idle-cash-new-entry-declaration`), each compared on the dashboard with its plain twin. The accel books were briefly retired and restored at the operator's request with their state intact. `momentum_top3_1h_long` is run by another session.
+Current as of 2026-10-02 (the books that run; retired books are in git history and `live/_archive/`).
+`HANDOVER.md` "CURRENT STATE" has the live numbers and next steps.
 
-**2026-09-25 09:05Z: `accel_5m` retired** (operator; -3.3% live, fee-bound, `DECISIONS.md#accel-5m-retired-2026-09-25`). `accel_15m` continues.
+## Live on Roostoo (EC2, real orders)
 
-**2026-09-24 16:00Z: nine paper books.** Added `accel_15m` and `accel_5m` (`bot.accel_run`): the contenders rule plus an acceleration guard (refuse blow-off entries, exit on sharp deceleration), paper only, failed backtest (`DECISIONS.md#accel-guard-outcome`).
+| book | clock | runner | what it is |
+|---|---|---|---|
+| `competition` | 30m | ContendersBot | the competition account (COMP keys): the `momentum_top3_30m` contenders rule, lock off, exit escalation on; waits for the account to activate (`#competition-book-2026-09-30`) |
+| `competition_rehearsal` | 5m | SleevesBot | the TEST account: 50/50 rule + ride sleeves with separate ledgers, the stage-2 copy of `sleeves_5m` (`#sleeves-rehearsal-2026-10-02`) |
 
-**2026-09-23 18:20Z: seven Roostoo paper books.** The four short-term books (`momentum_top3_1h/30m/15m/5m`) now run the top-3 contenders rule on both sides (`bot.contenders_run`, `DECISIONS.md#lowtf-contenders-outcome`); the short-term Donchian books are retired. Earlier: **2026-09-23 17:00Z: eleven Roostoo paper books.** Competition candidates: `donchian_4h`, `momentum_top3_full`, `momentum_top3_lock`. Short-term paper books on operator instruction (all failed or untested by backtest, `DECISIONS.md#lowtf-paper-bots`, `DECISIONS.md#lowtf-5m-paper-bots`): `donchian_1h/30m/15m/5m`, `momentum_top3_1h/30m/15m/5m`. The 4h books are long-only; the eight short-term books also short (S1 sleeve on their own clock, laddered, `DECISIONS.md#lowtf-shorts`).
+## Paper on EC2 (full uptime, the checkpoint comparisons)
 
-**2026-09-23: cut to three Roostoo books plus `testnet_live`**: `donchian_4h`, `momentum_top3_full`, `momentum_top3_lock`; `topdown_ls` (top-down long/short) failed its backtest and is stopped, `DECISIONS.md#topdown-ls-outcome`. Retired books' live data is in `live/_archive/retired-2026-09-23/`. Market heatmap: `http://127.0.0.1:8787/heatmap`. The other books below are retired (configs kept, not started, not on the dashboard). Why: `DECISIONS.md#book-diagnosis-2026-09-23`.
+| book | clock | runner | what it is |
+|---|---|---|---|
+| `ride_5m` | 5m | AdaptiveScalperBot | the momentum ride: +2% in 15 minutes, hold to +5% or 24 h (`#ride-and-blend-declaration`) |
+| `sleeves_5m` | 5m | SleevesBot | 50/50 rule + ride, separate ledgers (`#sleeves-declaration`) |
+| `sleeves_ivol_5m` | 5m | SleevesBot | `sleeves_5m` with inverse-volatility entry sizing (`#sleeves-ivol-declaration`) |
+| `ride_z3_5m` | 5m | AdaptiveScalperBot | the ride with a per-coin 3-sigma trigger (`#ride-z3-declaration`) |
+| `sleeves_z3_5m` | 5m | SleevesBot | `sleeves_5m` with that ride half (`#ride-z3-declaration`) |
+| `regime_ls_30m` | 30m | RegimeLSBot | the 30m rule that shorts breakdowns in a DOWN regime (`#regime-ls-declaration`, `#regime-ls-to-ec2-2026-10-02`) |
+| `uni_donchian_15m` | 15m | Bot | UNI only, Donchian 20/10, failed its validation rule (`#single-coin-outcome`) |
 
-Sixteen books. Fifteen are paper on Roostoo in dry run; one places real orders on Binance testnet.
+## Paper on the Mac (`./run_bots.sh`)
 
-**The three books were reset to 100,000 again at 2026-09-23T16:08Z** (previous state in `live/_archive/reset3-20260923T1608Z/`). `python3 -m gates.universe_coverage` accounts for every Roostoo pair and why it is or is not traded. Before that, **the whole fleet was reset to 100,000 and restarted together at 2026-09-22T20:48Z**, on the replayed channel state, the one-tick spread rule and cash-capped buys. Everything before that is archived under `live/_archive/`. No reading may span the reset.
+| book | clock | module | what it is |
+|---|---|---|---|
+| `momentum_top3_30m` | 30m | contenders_run | the competition rule's paper control |
+| `wf_live` | 5m | scalper_adaptive_run | the dynamic bot: picks the best style of the last 3 days every hour, 3 pp switch margin (`#walkforward-live-declaration`) |
+| `blend_30m_ride` | 5m | hedge_explorer_run | fixed 50/50 blend of the 30m rule and the ride in one book (`#ride-and-blend-declaration`) |
+| `resid_30m`, `htf0_30m` | 5m | scalper_adaptive_run | residual-price rule, and the 30m rule without the 4h filter (`#replay-decomposition-2026-10-01`) |
+| `ride1_5m` | 5m | scalper_adaptive_run | the ride with a 1% trigger (`#ride-trigger-2026-10-01`) |
+| `wide_30m`, `ride1_wide_5m` | 30m, 5m | contenders_run, scalper_adaptive_run | the rule and the ride on the whole Roostoo pool (`#wide-pool-live-2026-10-01`) |
 
-**Read this first: a gated arm's number means nothing without its control, and as of 2026-09-22 every control is gone.** The operator enabled booking on every book including the four that were controls, so each pair now measures its own treatment ON TOP OF booking rather than against a no-booking baseline. No reading carries across that boundary. `DECISIONS.md#booking-on-every-bot`.
+## Registering a book
 
----
+A book that is not registered trades invisibly. Every one of these, then restart the dashboards:
 
-## The fleet
+1. `config/<book>.yaml` with `meta.frozen: true`, `paper_only`, `declared_ref`, `falsification`.
+2. Where it runs: Mac `run_bots.sh` `CONFIGS` and `module_for`; EC2 `deploy/ec2_bootstrap.sh` `PAPER_BOOKS` (or `BOOKS`) and `bot/ec2_feed.py` `PAPER`. On EC2 `bot.runner` picks the class from the config (`sleeves`, `regime`, `adaptive`, `contenders`, else the plain `Bot`).
+3. `bot/dashboard.py` `BOTS`, `CONTROL_OF`, `EXPECTED_DRAG`; `gates/live_validation.py` `BOOKS`; `bot/desk.py` `SCALPER_BOOKS` for a paper book.
 
-| bot | interval | channel | rank | positions | pool | deployment | venue | booking |
-|---|---|---|---|---|---|---|---|---|
-| `donchian_4h` | 4h | 20/10 | none | 1/20 each | 30 | fixed | roostoo | ON |
-| `donchian_4h_cushion` | 4h | 20/10 | none | 1/20 each | 30 | fixed + cushion | roostoo | ON |
-| `donchian_1h` | 1h | 20/10 | none | 1/20 each | 30 | fixed | roostoo | ON |
-| `momentum_top5_4h` | 4h | 20/10 | momentum 40 | top 5 | 30 | fixed | roostoo | ON |
-| `momentum_top5_cushion` | 4h | 20/10 | momentum 40 | top 5 | 30 | fixed + cushion | roostoo | ON |
-| `momentum_top3_4h` | 4h | 20/10 | momentum 40 | top 3 | 30 | fixed | roostoo | ON |
-| `momentum_top3_full` | 4h | 20/10 | momentum 40 | top 3 | 30 | **full** | roostoo | ON |
-| `alpha_flow` | 4h | 20/10 | momentum 40 | top 3 | 30 | full | roostoo | ON |
-| `scalper_live` | 30m | own rule | none | 10% per trade | 30 | own | roostoo | ON |
-| `testnet_live` | 1h | 20/10 | none | 1/20 each | **12** | fixed | **binance testnet** | ON |
-| `donchian_30m` | 30m | 20/10 | none | 1/20 each | 30 | fixed | roostoo | ON |
-| `donchian_15m` | 15m | 20/10 | none | 1/20 each | 30 | fixed | roostoo | ON |
-| `momentum_top3_1h` | 1h | 20/10 | momentum 40 | top 3 | 30 | full | roostoo | ON |
-| `momentum_top3_30m` | 30m | 20/10 | momentum 40 | top 3 | 30 | full | roostoo | ON |
-| `momentum_top3_15m` | 15m | 20/10 | momentum 40 | top 3 | 30 | full | roostoo | ON |
-| `momentum_top3_lock` | 4h | 20/10 | momentum 40 | top 3 | 30 | full + **target lock** | roostoo | ON |
+## Architecture in one paragraph
 
-All fifteen Roostoo books run in **dry run**. `./run_bots.sh awake` keeps the Mac from sleeping while they run. Only `testnet_live` places real orders.
+`bot/run.py` is the cycle: refresh universe if stale, fetch bars, evaluate channels, compute target, apply the booking ladder, diff against holdings, place orders.
+A book with a different signal subclasses `Bot` and overrides `compute_target`, inheriting cold-start suppression, the drift band, kill switches, mirror checks, markout instrumentation and atomic state.
+The subclasses in use are `ContendersBot` (`bot/contenders_run.py`), `AdaptiveScalperBot` (`bot/scalper_adaptive_run.py`), `SleevesBot` (`bot/sleeves_run.py`), `RegimeLSBot` (`bot/regime_ls_run.py`) and the blend in `bot/hedge_explorer_run.py`.
 
-## What each one is for
-
-- **`donchian_4h`** is the selected configuration and the reference book. `#bot-selection`.
-- **`donchian_1h`** is the same rule at 1h, a comparison and never a candidate. It trades most often, which makes it the fastest source of order-lifecycle evidence.
-- **`momentum_top5_4h` / `momentum_top3_4h`** rank the fired names by 40-bar momentum and hold the top N. The ranking, not the exposure, is what produces the right tail. `#competition-book-selection`.
-- **`*_cushion`** arms add a cash cushion to their control.
-- **`momentum_top3_full`** spreads across whatever signalled instead of leaving cash in unfilled slots. The only change that improved the right tail on BOTH windows. `#full-deployment-outcome`.
-- **`alpha_flow`** was the booking arm; booking is now everywhere, so its remaining job is the **alternate-data collector**: dealer GEX, plus every positioning feature and market input in the exact definition `gates/positioning_edges.py` scored (OI change, funding, premium, top-trader vs retail, taker ratio, aggregate OI and funding, DVOL, Coinbase premium), every 15 minutes, for up to 12 held names. It never trades on them: all failed their test. `#alpha-flow-declaration`, `#positioning-edges-outcome`.
-- **`scalper_live`** runs on explicit operator instruction after failing its own backtest, paper only, to accumulate forward evidence. `#scalper-v1-outcome`.
-- **`donchian_30m`, `donchian_15m`, `momentum_top3_1h`, `momentum_top3_30m`, `momentum_top3_15m`** are the deployed rules on faster clocks, added on operator instruction as paper forward evidence. **All five fail their backtest**, the ranked ones by cost: `momentum_top3_15m` holdout median is -21.3% per fortnight at 384x turnover. Never candidates. `#lowtf-paper-bots`.
-- **`momentum_top3_lock`** is `momentum_top3_full` plus the target lock (once the 14-day window is up 5%, hold at most 0.3 gross), the only arm of `config/competition_wf.yaml` to pass on every period: P(fortnight > +2%) 0.53 -> 0.68 on 2025-26, but P(> +15%) 0.22 -> 0.06. It rehearses the mechanics on a window from 2026-09-23T08:00Z; compare it with `momentum_top3_full` from that moment. `#competition-wf-outcome`.
-- **`testnet_live`** exists to test what a backtest cannot: wire format, rounding, minimum notional, partial fills, cancel semantics, real fill rates. `#testnet-live`.
+**Two hooks decide how a subclass behaves and both have drawn blood:**
+- `trades_every_cycle()` - true lets orders fire between bar closes. Turning it on for booking made `deltas` run where `channels` is empty, which reads as "sell everything". It flattened three books. `#booking-flattened-the-book`.
+- `target_from_channels()` - false for a book that computes its target every cycle, because carrying holdings forward between bar closes would silence its intrabar exits.
 
 ## Profit booking: the skim ladder
 
@@ -65,26 +62,6 @@ Each position carries a reference price. When the mark reaches reference x 1.03,
 **Honest status: not a validated improvement.** The holdout return gain is p=0.14 and the drawdown gain is reproduced by a random-timing nonsense control, so it is exposure reduction rather than timing. Deployed on operator instruction as forward evidence.
 
 **Why 3% and 15% and not something tighter.** Tightening the step ALONE is the only statistically significant effect in the whole ladder grid and it is harmful: holdout P(>20%) falls from 0.168 to 0.070 at a 1% step, p=0.004. Cutting the slice at the same time removes that cost. **Step and slice move together or not at all.**
-
-## Running them
-
-    ./run_bots.sh start | stop | restart | status | report | trades | dashboard
-    ./run_bots.sh alphaflow | alphaflowstop
-    ./run_bots.sh scalper | scalperstop | scalpreport
-    ./run_bots.sh testnet | testnetstop        # LIVE ORDERS on Binance testnet
-    ./run_bots.sh compare                      # gated arm vs its control
-
-Dashboard at `http://127.0.0.1:8787/`, analysis tab at `/analysis`.
-
-**Registering a new bot takes two places, and forgetting the second makes it trade invisibly.** `run_bots.sh` starts it; `bot/dashboard.py` `BOTS` is the only registry the dashboard and `bot/compare.py` read. This stale-list defect has now bitten three times.
-
-## Architecture in one paragraph
-
-`bot/run.py` is the cycle: refresh universe if stale, fetch bars, evaluate channels, compute target, apply the booking ladder, diff against holdings, place orders. A bot with a different signal subclasses `Bot` and overrides `compute_target`, inheriting cold-start suppression, the drift band, kill switches, mirror checks, markout instrumentation and atomic state. `bot/scalper_run.py` and `bot/alpha_flow_run.py` are the two subclasses.
-
-**Two hooks decide how a subclass behaves and both have drawn blood:**
-- `trades_every_cycle()` - true lets orders fire between bar closes. Turning it on for booking made `deltas` run where `channels` is empty, which reads as "sell everything". It flattened three books. `#booking-flattened-the-book`.
-- `target_from_channels()` - false for the scalper, because carrying holdings forward between bar closes would silence every intrabar stop and target it has.
 
 ## What the live test on 2026-09-23 changed
 
