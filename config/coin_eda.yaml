@@ -1,0 +1,23 @@
+meta:
+  name: coin_eda
+  frozen: true
+  declared_utc: '2026-10-02T18:10:00Z'
+  requested_by: 'operator 2026-10-02: EDA and factor analysis of the coins, where the edge lies; teams that optimise position sizing and take profits benefit most'
+  declared_ref: DECISIONS.md#coin-eda-declaration
+  written_before_any_number: true
+data: 'live Binance bars for the 25-coin pool (universe of momentum_top3_30m): 1h for factors, signals and volatility, 5m for take-profit events; recent only'
+windows:
+  W1: '2026-09-05 to 2026-09-19'
+  W2: '2026-09-19 to now'
+questions:
+  factors: 'PCA of 1h log returns per window: first-factor share, effective bets (exp of eigen-entropy), per-coin beta to the equal-weight pool, R2, residual volatility'
+  cross_section: 'rank IC (Spearman across coins) of features known at hour t against the next 4h and 24h return, raw and residual (minus beta x pool): momentum 1h/4h/24h/72h, residual momentum 24h, 24h volatility, volume ratio (24h vs prior 7d), distance from the 24h high. Sampled every horizon (no overlap)'
+  market_timing: 'time-series correlation of the pool''s past 4h/24h return and breadth (share of coins up over 24h) with the pool''s next 4h/24h return, non-overlapping'
+  sizing: 'persistence of volatility (rank corr of past-24h vol with next-24h vol across coins, and per-coin time series), and whether return per unit of risk differs by volatility tercile'
+  take_profit: 'every 5m ride entry (3-bar return >= 2%) that later touches +5%: does it reach +10% before falling back to +2% (continuation)? Features at the touch: residual share of the move, pool breadth, volume ratio, BTC 1h return, bars since entry; continuation rate in the top vs bottom half of each feature'
+decision_rule: >
+  A finding is called an EDGE only if its sign is the same in W1 and W2 and |t| >= 2 in both (for ICs the t of the mean
+  IC across non-overlapping samples; for take-profit splits a two-proportion z). Everything else is descriptive.
+  An edge earns a declared paper test, never a direct change to a live book.
+nonsense_control: 'the same IC computation on features shifted forward by one horizon (features that see the future must show |t| >> 2; a lagged-by-a-week copy of each feature must show |t| < 2)'
+trials: 'one per feature x target x question that is called an edge'
