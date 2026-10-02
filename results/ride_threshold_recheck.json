@@ -1,0 +1,123 @@
+{
+ "describe": {
+  "last_24h": {
+   "median_abs_15m_pct": 0.232,
+   "p95": 1.0,
+   "p99": 1.6,
+   "up_moves_per_day": {
+    "0.75": 418.0,
+    "1.0": 222.0,
+    "1.5": 74.0,
+    "2.0": 35.0
+   }
+  },
+  "last_3d": {
+   "median_abs_15m_pct": 0.233,
+   "p95": 1.06,
+   "p99": 1.82,
+   "up_moves_per_day": {
+    "0.75": 417.7,
+    "1.0": 220.7,
+    "1.5": 78.3,
+    "2.0": 33.0
+   }
+  },
+  "W1": {
+   "median_abs_15m_pct": 0.201,
+   "p95": 1.0,
+   "p99": 1.85,
+   "up_moves_per_day": {
+    "0.75": 354.1,
+    "1.0": 199.3,
+    "1.5": 76.6,
+    "2.0": 37.6
+   }
+  },
+  "W2": {
+   "median_abs_15m_pct": 0.262,
+   "p95": 1.22,
+   "p99": 2.07,
+   "up_moves_per_day": {
+    "0.75": 547.3,
+    "1.0": 312.7,
+    "1.5": 111.9,
+    "2.0": 46.3
+   }
+  }
+ },
+ "replay": {
+  "0.75": {
+   "last_3d": {
+    "total_pct": -3.11,
+    "max_dd_pct": -10.11,
+    "mean_gross": 0.98
+   },
+   "W1": {
+    "total_pct": 3.22,
+    "max_dd_pct": -23.9,
+    "mean_gross": 0.99
+   },
+   "W2": {
+    "total_pct": 27.52,
+    "max_dd_pct": -12.34,
+    "mean_gross": 0.99
+   }
+  },
+  "1.0": {
+   "last_3d": {
+    "total_pct": -4.58,
+    "max_dd_pct": -10.7,
+    "mean_gross": 0.97
+   },
+   "W1": {
+    "total_pct": 32.32,
+    "max_dd_pct": -18.19,
+    "mean_gross": 0.98
+   },
+   "W2": {
+    "total_pct": 19.36,
+    "max_dd_pct": -13.94,
+    "mean_gross": 0.99
+   }
+  },
+  "1.5": {
+   "last_3d": {
+    "total_pct": 1.67,
+    "max_dd_pct": -8.51,
+    "mean_gross": 0.9
+   },
+   "W1": {
+    "total_pct": 0.25,
+    "max_dd_pct": -28.24,
+    "mean_gross": 0.94
+   },
+   "W2": {
+    "total_pct": 22.39,
+    "max_dd_pct": -15.42,
+    "mean_gross": 0.98
+   }
+  },
+  "2.0": {
+   "last_3d": {
+    "total_pct": -0.13,
+    "max_dd_pct": -7.7,
+    "mean_gross": 0.89
+   },
+   "W1": {
+    "total_pct": 12.49,
+    "max_dd_pct": -15.78,
+    "mean_gross": 0.76
+   },
+   "W2": {
+    "total_pct": 25.48,
+    "max_dd_pct": -11.65,
+    "mean_gross": 0.94
+   }
+  }
+ },
+ "verdict": {
+  "0.75": false,
+  "1.0": false,
+  "1.5": false
+ }
+}

@@ -6093,3 +6093,18 @@ trials:
   config: bstocks_pool:A2
   status: fail
   note: DECISIONS.md#bstocks-pool-outcome
+- signal: ride_threshold
+  gate: ride_threshold_recheck
+  config: ride_threshold:0.75
+  status: fail
+  note: DECISIONS.md#ride-threshold-recheck-outcome
+- signal: ride_threshold
+  gate: ride_threshold_recheck
+  config: ride_threshold:1.0
+  status: fail
+  note: DECISIONS.md#ride-threshold-recheck-outcome
+- signal: ride_threshold
+  gate: ride_threshold_recheck
+  config: ride_threshold:1.5
+  status: fail
+  note: DECISIONS.md#ride-threshold-recheck-outcome

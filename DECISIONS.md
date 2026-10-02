@@ -4707,3 +4707,18 @@ Replay measured after the declaration (`python3 -m gates.ivol_sizing`, `results/
 | base | +22.6% / +11.0% | +13.0% / +36.5% | +18.0% / +23.5% | -14.1% / -11.3% | 6.75 / 6.77 | 0.63 / 0.77, 0.72 / 0.93 |
 | inverse vol | +13.0% / +5.2% | +7.3% / +24.7% | +10.2% / +14.7% | -9.1% / -8.6% | 6.32 / 6.26 | 0.53 / 0.47, 0.55 / 0.71 |
 Reading: the books enter the coins that are moving, which are the high-volatility ones, so the multiplier is mostly below 1 and the change is a de-leveraging (ride gross 0.77 to 0.47), not a reallocation of risk. Return falls 8-9 points a window, drawdown is 3-5 points shallower, Sharpe and return over drawdown are slightly worse. The pool-wide finding (volatility unrewarded) does not carry over to the coins these rules select. Expected forward outcome: fails the return condition. It runs as declared because the operator asked; no live book changes.
+
+## ride-threshold-recheck-declaration
+
+Operator question 2026-10-02 ~17:30Z: is the ride's +2%-in-15-minutes trigger too high for current conditions (no trigger fired in the last hour). Written before any number: describe the size of 15-minute moves in the pool (median and 95th/99th percentile of |3-bar 5m return|, triggers per day at 0.75/1.0/1.5/2.0%) over the last 24 h, 3 days and the two 14-day windows; replay the ride (`gates.ride_exits.weights`, +5% cap, 24 h, ladder, maker fees) at the same four thresholds. A lower threshold is recommended only if it beats 2.0% on total return in W1 (09-05..09-19), W2 (09-19..now) AND the last 3 days, with max drawdown no more than 2 pp worse in each. Re-test of `#ride-trigger-2026-10-01` on fresher data; 3 trials.
+
+## ride-threshold-recheck-outcome
+
+NULL, 2.0% stays (`results/ride_threshold_recheck.json`). 15-minute moves in the pool: median |move| 0.23% (last 24 h and 3 days; 0.20% W1, 0.26% W2), 99th percentile 1.6-2.1%; up-moves of at least 2.0% happen 33-46 times a day across the pool (1.5%: 74-112, 1.0%: 199-313), so 2.0% is a tail event but not a rare one, and with 3 slots and a 24 h hold the ride is still 76-94% invested. Ride replay total return / max DD, W1 / W2 / last 3 days:
+| trigger | W1 | W2 | last 3 days |
+|---|---|---|---|
+| 0.75% | +3.2% / -23.9% | +27.5% / -12.3% | -3.1% / -10.1% |
+| 1.0% | +32.3% / -18.2% | +19.4% / -13.9% | -4.6% / -10.7% |
+| 1.5% | +0.3% / -28.2% | +22.4% / -15.4% | +1.7% / -8.5% |
+| 2.0% (live) | +12.5% / -15.8% | +25.5% / -11.7% | -0.1% / -7.7% |
+No lower threshold beats 2.0% in all three; each wins one window and loses another, and 2.0% has the shallowest drawdown in every window. A quiet hour with no trigger is the normal tail (the last-hour pool moves were within 1%), not a mis-set threshold. Three trials recorded.
