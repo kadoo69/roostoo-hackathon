@@ -91,7 +91,7 @@ def refresh_once() -> None:
         msg = repr(exc)
         if any(k in msg for k in ("ExpiredToken", "RequestExpired", "UnrecognizedClient", "Forbidden", "(403)",
                                   "InvalidClientTokenId", "NoCredentials", "ProfileNotFound")) or "credentials" in msg.lower():
-            msg = "AWS credentials expired: copy 'Option 2' from the AWS portal, then run python3 deploy/aws_creds.py"
+            msg = "AWS sign-in expired: run python3 deploy/aws_login.py and approve in the browser"
         with _LOCK:
             _STATE.update({"error": msg[:300]})
 
