@@ -67,3 +67,8 @@ def test_single_coin_book_is_pinned_to_uni_on_the_plain_engine():
     assert s.universe_mode == "fixed" and s.symbols == ("UNIUSDT",) and s.keyset is None
     assert s.n_positions == 1 and s.full_deployment and not s.shorts_enabled and not s.booking.get("enabled")
     assert universe.select(s, ru.roostoo_specs())["selected"] == ["UNIUSDT"]
+
+
+def test_regime_book_runs_its_own_class_on_ec2():
+    assert bot_class(_cfg("regime_ls_30m")).__name__ == "RegimeLSBot"
+    assert load("config/regime_ls_30m.yaml").keyset is None

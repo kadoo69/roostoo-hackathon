@@ -1,6 +1,6 @@
 """Entry point for the EC2 units (`deploy/roostoo-live@.service`, `deploy/roostoo-paper@.service`):
 the bot class comes from the config, so a book's runner changes with a committed config and never
-with a unit edit. `sleeves` -> SleevesBot, `adaptive` -> AdaptiveScalperBot, `contenders` -> ContendersBot, else the plain Donchian Bot.
+with a unit edit. `sleeves` -> SleevesBot, `adaptive` -> AdaptiveScalperBot, `regime` -> RegimeLSBot, `contenders` -> ContendersBot, else the plain Donchian Bot.
 DECISIONS.md#sleeves-rehearsal-2026-10-02
 """
 from __future__ import annotations
@@ -20,6 +20,9 @@ def bot_class(cfg: dict) -> type:
     if "adaptive" in cfg:
         from bot.scalper_adaptive_run import AdaptiveScalperBot
         return AdaptiveScalperBot
+    if "regime" in cfg:
+        from bot.regime_ls_run import RegimeLSBot
+        return RegimeLSBot
     if "contenders" in cfg:
         from bot.contenders_run import ContendersBot
         return ContendersBot
