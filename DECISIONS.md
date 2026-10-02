@@ -4746,3 +4746,23 @@ The change is at 2026-09-23, not in the last 3 days: 09-17..09-23 was a broad tr
 ## ride-z3-declaration
 
 Operator 2026-10-02 ~17:55Z: set up the per-coin trigger (D2 of `#ride-dynamic-trigger-outcome`) as paper and compare tomorrow, judged on the present market, not history. `signals.burst_rider.trigger_level`: with `sigma_k` set, a coin triggers when its 3-bar return reaches `sigma_k` x the std of its own 3-bar returns over the previous `sigma_bars` bars; `weights()` and `live_step()` share it (`tests/test_burst_rider_live.py`), fixed-threshold books are unchanged. Paper on EC2 from 2026-10-02 ~18:00Z: `ride_z3_5m` (against `ride_5m`) and `sleeves_z3_5m` (the 50/50 split with that ride half, against `sleeves_5m` and the rehearsal). Read at the 2026-10-03 checkpoint before 11:00Z; about 17 hours decides little, so the comparison also reports the replay of the same rules over those hours. Any move of the competition book is the operator's.
+
+## single-coin-declaration
+
+Operator 2026-10-02: by statistical methods find the ONE coin with the clearest patterns, test strategies on it, build a bot that trades only it. Declared in `config/single_coin.yaml` before any number, `python3 -m gates.single_coin`: coin and strategy chosen on discovery 2026-09-11..09-25 only, judged on validation 09-25..now; screen = Lo-MacKinlay variance ratio (q 4, 16), Ljung-Box, BTC lead-lag and residual 1h autocorrelation on 15m returns; strategies MOM, REV, DON, RSI, LEAD against HOLD; pass = positive validation return, beats HOLD on return or return over drawdown, beats 180 of 200 random-entry books.
+
+## single-coin-outcome
+
+FAIL (`results/single_coin.json`). A bug in the variance-ratio z (variance term missing its 1/n, every z about 36x too small) was found on the first run by checking synthetic AR(1) data and fixed before the reading below (iid z sd 0.93, AR +0.3 z 11.0, AR -0.3 z -6.7); the coin pick did not change.
+- **Predictability is not a stable property of a coin.** Discovery scores against validation scores across the 25 coins: Spearman 0.33. THE coin, UNI (residual 1h autocorrelation -0.22, t -4.1, Ljung-Box p 0.0001), fell to 13th of 25 in validation (t -1.7). Only LTC and PEPE were near the top in both windows.
+- **Strategies on UNI**, return / max DD / entries, discovery then validation:
+| strategy | discovery | validation |
+|---|---|---|
+| MOM | +1.11% / -28.3% / 92 | -13.58% / -17.8% / 49 |
+| REV | +3.86% / -14.4% / 19 | -0.43% / -9.9% / 18 |
+| DON | +9.04% / -24.5% / 29 | +3.07% / -7.1% / 11 |
+| RSI | +8.46% / -8.2% / 8 | +3.07% / -5.6% / 5 |
+| LEAD | +2.55% / -0.5% / 5 | +0.00% / 0.0% / 0 |
+| HOLD | +52.38% / -18.6% / 1 | -3.03% / -16.4% / 1 |
+- The declared pick (best discovery Sharpe) chose LEAD on 5 trades, which made no trade in validation: a flaw in the declaration, which had no minimum trade count. Among strategies that traded, DON and RSI made +3.07% in validation against HOLD -3.03% but beat only 165 and 171 of 200 random-entry books (needed 180), on 11 and 5 trades. REV, the strategy that matches UNI's measured mean reversion, lost (-0.43%).
+- Built anyway as declared, PAPER only: `uni_donchian_15m` (UNI, Donchian 20/10 on 15m, long or flat, fully invested while long, no ladder). The strategy was switched from LEAD to DON AFTER seeing validation, by the rule "best discovery Sharpe with at least 15 discovery entries"; that rule is post-hoc and labelled so in the config. `strategy.universe_mode: fixed` with `strategy.symbols` pins a book to named coins; `bot.runner` now sends a config with no `contenders` block to the plain Donchian `bot.run.Bot`.

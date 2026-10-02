@@ -6123,3 +6123,33 @@ trials:
   config: ride_dynamic_trigger:D3
   status: fail
   note: DECISIONS.md#ride-dynamic-trigger-outcome
+- signal: single_coin
+  gate: single_coin
+  config: single_coin:UNI:MOM
+  status: fail
+  note: DECISIONS.md#single-coin-outcome
+- signal: single_coin
+  gate: single_coin
+  config: single_coin:UNI:REV
+  status: fail
+  note: DECISIONS.md#single-coin-outcome
+- signal: single_coin
+  gate: single_coin
+  config: single_coin:UNI:DON
+  status: fail
+  note: DECISIONS.md#single-coin-outcome
+- signal: single_coin
+  gate: single_coin
+  config: single_coin:UNI:RSI
+  status: fail
+  note: DECISIONS.md#single-coin-outcome
+- signal: single_coin
+  gate: single_coin
+  config: single_coin:UNI:LEAD
+  status: fail
+  note: DECISIONS.md#single-coin-outcome
+- signal: single_coin
+  gate: single_coin
+  config: single_coin:UNI:HOLD
+  status: fail
+  note: DECISIONS.md#single-coin-outcome

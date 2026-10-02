@@ -51,6 +51,7 @@ class Settings:
     target_lock: dict = field(default_factory=dict)
     short: dict = field(default_factory=dict)
     universe_mode: str = "binance_top"
+    symbols: tuple = ()
     keyset: str | None = None
     exit_escalation: bool = False
 
@@ -104,6 +105,7 @@ def load(path: str | Path) -> Settings:
         n_positions=(int(s["n_positions"]) if s.get("n_positions") else None),
         regime_gate=s.get("regime_gate", "always_on"),
         universe_mode=s.get("universe_mode", "binance_top"),
+        symbols=tuple(s.get("symbols") or ()),
         min_cushion_pct=float(s.get("min_cushion_pct", 1.0)),
         full_deployment=bool(s.get("full_deployment", False)),
         booking=dict(cfg.get("booking") or {}),

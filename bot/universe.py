@@ -48,8 +48,13 @@ def median_dollar_volume(symbols: list[str], days: int = 30, max_stale_days: int
 def select(settings: Settings, specs: dict[str, PairSpec]) -> dict:
     """`binance_top` (default): the top `top_n_pool` of Binance by 30-day median dollar volume,
     intersected with Roostoo. `venue_all`: every tradable Roostoo crypto pair still printing
-    Binance bars, the whole venue pool. DECISIONS.md#wide-pool-book-declaration"""
+    Binance bars, the whole venue pool. DECISIONS.md#wide-pool-book-declaration
+    `fixed`: exactly `strategy.symbols` that Roostoo lists. DECISIONS.md#single-coin-outcome"""
     venue = venue_symbols(specs)
+    if getattr(settings, "universe_mode", "binance_top") == "fixed":
+        sel = [s for s in settings.symbols if s in venue]
+        return {"pool_size": len(sel), "pool": sel, "venue_listed": len(venue), "selected": sel,
+                "n_selected": len(sel), "mode": "fixed", "adv_usd": {}}
     if getattr(settings, "universe_mode", "binance_top") == "venue_all":
         adv = median_dollar_volume(venue)
         tradable = list(adv.index)

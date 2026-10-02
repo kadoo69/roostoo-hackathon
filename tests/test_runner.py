@@ -56,3 +56,14 @@ def test_z3_books_are_keyless_paper_with_the_per_coin_trigger():
     assert _cfg("sleeves_z3_5m")["sleeves"]["ride"]["sigma_k"] == 3.0
     assert bot_class(_cfg("ride_z3_5m")).__name__ == "AdaptiveScalperBot"
     assert bot_class(_cfg("sleeves_z3_5m")).__name__ == "SleevesBot"
+
+
+def test_single_coin_book_is_pinned_to_uni_on_the_plain_engine():
+    from bot import universe
+    from data import universe as ru
+    cfg = _cfg("uni_donchian_15m")
+    assert bot_class(cfg).__name__ == "Bot"
+    s = load("config/uni_donchian_15m.yaml")
+    assert s.universe_mode == "fixed" and s.symbols == ("UNIUSDT",) and s.keyset is None
+    assert s.n_positions == 1 and s.full_deployment and not s.shorts_enabled and not s.booking.get("enabled")
+    assert universe.select(s, ru.roostoo_specs())["selected"] == ["UNIUSDT"]

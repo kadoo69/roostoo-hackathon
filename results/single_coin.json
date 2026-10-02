@@ -1,0 +1,413 @@
+{
+ "windows": {
+  "discovery": [
+   "2026-09-11 00:00:00+00:00",
+   "2026-09-25 00:00:00+00:00"
+  ],
+  "validation": [
+   "2026-09-25 00:00:00+00:00",
+   "2026-10-02 17:45:00+00:00"
+  ]
+ },
+ "screen_discovery": {
+  "UNIUSDT": {
+   "vr_z_1h": 0.1,
+   "vr_z_4h": -0.56,
+   "ljung_box_p": 0.0001,
+   "btc_lead_t": -1.07,
+   "resid_ac1": -0.223,
+   "resid_ac_t": -4.09,
+   "score": 4.09
+  },
+  "LINKUSDT": {
+   "vr_z_1h": -1.99,
+   "vr_z_4h": -0.66,
+   "ljung_box_p": 0.0003,
+   "btc_lead_t": -0.05,
+   "resid_ac1": -0.197,
+   "resid_ac_t": -3.61,
+   "score": 3.61
+  },
+  "PEPEUSDT": {
+   "vr_z_1h": -0.31,
+   "vr_z_4h": 0.4,
+   "ljung_box_p": 0.435,
+   "btc_lead_t": -0.6,
+   "resid_ac1": 0.194,
+   "resid_ac_t": 3.55,
+   "score": 3.55
+  },
+  "LTCUSDT": {
+   "vr_z_1h": 0.32,
+   "vr_z_4h": 0.97,
+   "ljung_box_p": 0.0041,
+   "btc_lead_t": -0.52,
+   "resid_ac1": 0.178,
+   "resid_ac_t": 3.26,
+   "score": 3.26
+  },
+  "PUMPUSDT": {
+   "vr_z_1h": -2.96,
+   "vr_z_4h": -2.18,
+   "ljung_box_p": 0.0042,
+   "btc_lead_t": -1.71,
+   "resid_ac1": 0.016,
+   "resid_ac_t": 0.3,
+   "score": 2.96
+  },
+  "ONDOUSDT": {
+   "vr_z_1h": -0.98,
+   "vr_z_4h": 0.81,
+   "ljung_box_p": 0.0018,
+   "btc_lead_t": -2.3,
+   "resid_ac1": 0.155,
+   "resid_ac_t": 2.84,
+   "score": 2.84
+  },
+  "BNBUSDT": {
+   "vr_z_1h": -2.22,
+   "vr_z_4h": -1.13,
+   "ljung_box_p": 0.0007,
+   "btc_lead_t": -1.08,
+   "resid_ac1": -0.146,
+   "resid_ac_t": -2.67,
+   "score": 2.67
+  },
+  "TRXUSDT": {
+   "vr_z_1h": 2.08,
+   "vr_z_4h": 2.15,
+   "ljung_box_p": 0.0897,
+   "btc_lead_t": -1.59,
+   "resid_ac1": -0.008,
+   "resid_ac_t": -0.15,
+   "score": 2.15
+  },
+  "WLDUSDT": {
+   "vr_z_1h": -0.58,
+   "vr_z_4h": -0.25,
+   "ljung_box_p": 0.0529,
+   "btc_lead_t": -1.29,
+   "resid_ac1": -0.104,
+   "resid_ac_t": -1.91,
+   "score": 1.91
+  },
+  "AAVEUSDT": {
+   "vr_z_1h": -0.76,
+   "vr_z_4h": -0.74,
+   "ljung_box_p": 0.0009,
+   "btc_lead_t": -0.6,
+   "resid_ac1": -0.096,
+   "resid_ac_t": -1.76,
+   "score": 1.76
+  },
+  "TRUMPUSDT": {
+   "vr_z_1h": -1.69,
+   "vr_z_4h": -1.19,
+   "ljung_box_p": 0.0086,
+   "btc_lead_t": -1.02,
+   "resid_ac1": -0.056,
+   "resid_ac_t": -1.03,
+   "score": 1.69
+  },
+  "ADAUSDT": {
+   "vr_z_1h": -1.66,
+   "vr_z_4h": -0.88,
+   "ljung_box_p": 0.0075,
+   "btc_lead_t": -0.58,
+   "resid_ac1": -0.033,
+   "resid_ac_t": -0.6,
+   "score": 1.66
+  },
+  "ENAUSDT": {
+   "vr_z_1h": -0.47,
+   "vr_z_4h": -1.5,
+   "ljung_box_p": 0.0724,
+   "btc_lead_t": -1.02,
+   "resid_ac1": -0.034,
+   "resid_ac_t": -0.63,
+   "score": 1.5
+  },
+  "TAOUSDT": {
+   "vr_z_1h": -1.33,
+   "vr_z_4h": -1.28,
+   "ljung_box_p": 0.0423,
+   "btc_lead_t": -0.39,
+   "resid_ac1": -0.082,
+   "resid_ac_t": -1.5,
+   "score": 1.5
+  },
+  "SUIUSDT": {
+   "vr_z_1h": -1.39,
+   "vr_z_4h": -0.75,
+   "ljung_box_p": 0.0013,
+   "btc_lead_t": -0.66,
+   "resid_ac1": -0.021,
+   "resid_ac_t": -0.39,
+   "score": 1.39
+  },
+  "XLMUSDT": {
+   "vr_z_1h": -1.31,
+   "vr_z_4h": -0.25,
+   "ljung_box_p": 0.0011,
+   "btc_lead_t": 0.22,
+   "resid_ac1": -0.02,
+   "resid_ac_t": -0.37,
+   "score": 1.31
+  },
+  "ZECUSDT": {
+   "vr_z_1h": -0.8,
+   "vr_z_4h": -0.67,
+   "ljung_box_p": 0.0114,
+   "btc_lead_t": -0.65,
+   "resid_ac1": -0.066,
+   "resid_ac_t": -1.22,
+   "score": 1.22
+  },
+  "SOLUSDT": {
+   "vr_z_1h": -1.21,
+   "vr_z_4h": 0.03,
+   "ljung_box_p": 0.0006,
+   "btc_lead_t": 0.41,
+   "resid_ac1": 0.0,
+   "resid_ac_t": 0.01,
+   "score": 1.21
+  },
+  "NEARUSDT": {
+   "vr_z_1h": -0.53,
+   "vr_z_4h": -1.14,
+   "ljung_box_p": 0.6045,
+   "btc_lead_t": -0.66,
+   "resid_ac1": -0.063,
+   "resid_ac_t": -1.16,
+   "score": 1.16
+  },
+  "ETHUSDT": {
+   "vr_z_1h": -1.03,
+   "vr_z_4h": -0.45,
+   "ljung_box_p": 0.0033,
+   "btc_lead_t": 0.11,
+   "resid_ac1": 0.023,
+   "resid_ac_t": 0.42,
+   "score": 1.03
+  },
+  "XRPUSDT": {
+   "vr_z_1h": -0.19,
+   "vr_z_4h": 0.21,
+   "ljung_box_p": 0.0081,
+   "btc_lead_t": 0.82,
+   "resid_ac1": 0.019,
+   "resid_ac_t": 0.34,
+   "score": 0.82
+  },
+  "DOGEUSDT": {
+   "vr_z_1h": -0.65,
+   "vr_z_4h": -0.43,
+   "ljung_box_p": 0.0113,
+   "btc_lead_t": 0.02,
+   "resid_ac1": -0.022,
+   "resid_ac_t": -0.4,
+   "score": 0.65
+  },
+  "BTCUSDT": {
+   "vr_z_1h": 0.04,
+   "vr_z_4h": 0.2,
+   "ljung_box_p": 0.1374,
+   "btc_lead_t": 0.0,
+   "resid_ac1": -0.027,
+   "resid_ac_t": -0.5,
+   "score": 0.5
+  },
+  "AVAXUSDT": {
+   "vr_z_1h": -0.04,
+   "vr_z_4h": 0.08,
+   "ljung_box_p": 0.3588,
+   "btc_lead_t": -0.46,
+   "resid_ac1": -0.016,
+   "resid_ac_t": -0.3,
+   "score": 0.46
+  },
+  "ARBUSDT": {
+   "vr_z_1h": 0.27,
+   "vr_z_4h": 0.21,
+   "ljung_box_p": 0.6654,
+   "btc_lead_t": -0.14,
+   "resid_ac1": -0.012,
+   "resid_ac_t": -0.23,
+   "score": 0.27
+  }
+ },
+ "screen_validation_top": {
+  "LTCUSDT": {
+   "vr_z_1h": -1.86,
+   "vr_z_4h": -2.23,
+   "ljung_box_p": 0.0898,
+   "btc_lead_t": -1.24,
+   "resid_ac1": -0.229,
+   "resid_ac_t": -3.13,
+   "score": 3.13
+  },
+  "TRUMPUSDT": {
+   "vr_z_1h": -0.21,
+   "vr_z_4h": -1.14,
+   "ljung_box_p": 0.3225,
+   "btc_lead_t": -0.31,
+   "resid_ac1": -0.203,
+   "resid_ac_t": -2.78,
+   "score": 2.78
+  },
+  "PEPEUSDT": {
+   "vr_z_1h": -2.18,
+   "vr_z_4h": -2.64,
+   "ljung_box_p": 0.0266,
+   "btc_lead_t": -0.66,
+   "resid_ac1": -0.09,
+   "resid_ac_t": -1.22,
+   "score": 2.64
+  },
+  "TAOUSDT": {
+   "vr_z_1h": -2.07,
+   "vr_z_4h": -2.0,
+   "ljung_box_p": 0.0083,
+   "btc_lead_t": -1.07,
+   "resid_ac1": 0.008,
+   "resid_ac_t": 0.11,
+   "score": 2.07
+  },
+  "PUMPUSDT": {
+   "vr_z_1h": -0.23,
+   "vr_z_4h": -0.55,
+   "ljung_box_p": 0.0109,
+   "btc_lead_t": -0.89,
+   "resid_ac1": 0.145,
+   "resid_ac_t": 1.98,
+   "score": 1.98
+  }
+ },
+ "score_persistence_spearman": 0.326,
+ "coin": "UNIUSDT",
+ "coin_validation_screen": {
+  "vr_z_1h": -0.82,
+  "vr_z_4h": -1.19,
+  "ljung_box_p": 0.0724,
+  "btc_lead_t": -1.13,
+  "resid_ac1": -0.124,
+  "resid_ac_t": -1.69,
+  "score": 1.69
+ },
+ "coin_validation_rank": 13,
+ "strategies": {
+  "MOM": {
+   "discovery": {
+    "ret_pct": 1.11,
+    "max_dd_pct": -28.34,
+    "sharpe": 0.82,
+    "ret_over_dd": 0.04,
+    "entries": 92,
+    "exposure": 0.55
+   },
+   "validation": {
+    "ret_pct": -13.58,
+    "max_dd_pct": -17.82,
+    "sharpe": -9.33,
+    "ret_over_dd": -0.76,
+    "entries": 49,
+    "exposure": 0.47
+   }
+  },
+  "REV": {
+   "discovery": {
+    "ret_pct": 3.86,
+    "max_dd_pct": -14.38,
+    "sharpe": 1.85,
+    "ret_over_dd": 0.27,
+    "entries": 19,
+    "exposure": 0.19
+   },
+   "validation": {
+    "ret_pct": -0.43,
+    "max_dd_pct": -9.86,
+    "sharpe": -0.18,
+    "ret_over_dd": -0.04,
+    "entries": 18,
+    "exposure": 0.25
+   }
+  },
+  "DON": {
+   "discovery": {
+    "ret_pct": 9.04,
+    "max_dd_pct": -24.47,
+    "sharpe": 2.65,
+    "ret_over_dd": 0.37,
+    "entries": 29,
+    "exposure": 0.44
+   },
+   "validation": {
+    "ret_pct": 3.07,
+    "max_dd_pct": -7.09,
+    "sharpe": 2.71,
+    "ret_over_dd": 0.43,
+    "entries": 11,
+    "exposure": 0.24
+   }
+  },
+  "RSI": {
+   "discovery": {
+    "ret_pct": 8.46,
+    "max_dd_pct": -8.19,
+    "sharpe": 5.58,
+    "ret_over_dd": 1.03,
+    "entries": 8,
+    "exposure": 0.11
+   },
+   "validation": {
+    "ret_pct": 3.07,
+    "max_dd_pct": -5.64,
+    "sharpe": 4.71,
+    "ret_over_dd": 0.55,
+    "entries": 5,
+    "exposure": 0.1
+   }
+  },
+  "LEAD": {
+   "discovery": {
+    "ret_pct": 2.55,
+    "max_dd_pct": -0.47,
+    "sharpe": 6.54,
+    "ret_over_dd": 5.44,
+    "entries": 5,
+    "exposure": 0.0
+   },
+   "validation": {
+    "ret_pct": 0.0,
+    "max_dd_pct": 0.0,
+    "sharpe": 0.0,
+    "ret_over_dd": null,
+    "entries": 0,
+    "exposure": 0.0
+   }
+  },
+  "HOLD": {
+   "discovery": {
+    "ret_pct": 52.38,
+    "max_dd_pct": -18.6,
+    "sharpe": 8.25,
+    "ret_over_dd": 2.82,
+    "entries": 1,
+    "exposure": 1.0
+   },
+   "validation": {
+    "ret_pct": -3.03,
+    "max_dd_pct": -16.42,
+    "sharpe": -1.01,
+    "ret_over_dd": -0.18,
+    "entries": 1,
+    "exposure": 1.0
+   }
+  }
+ },
+ "strategy": "LEAD",
+ "random_median_pct": 0.0,
+ "beats_random": 0,
+ "passed": false,
+ "ref": "DECISIONS.md#single-coin-declaration"
+}

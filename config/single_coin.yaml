@@ -1,0 +1,31 @@
+meta:
+  name: single_coin
+  frozen: true
+  declared_utc: '2026-10-02T18:05:00Z'
+  requested_by: 'operator 2026-10-02: find by statistical methods the ONE coin with the clearest technical and statistical patterns, test strategies on it, make a bot that trades only that coin'
+  declared_ref: DECISIONS.md#single-coin-declaration
+  written_before_any_number: true
+data: 'live Binance 5m bars for the 25-coin pool, aggregated to 15m and 1h; recent market only'
+windows:
+  discovery: '2026-09-11 to 2026-09-25 (14 days): the coin AND the strategy are chosen here only'
+  validation: '2026-09-25 to now (~7.5 days): never used for any choice'
+selection_bias: 'picking the best of 25 coins and then the best of the strategy set inflates the discovery result; the validation window is the only evidence, and the cross-coin persistence check says whether predictability is a property of a coin at all'
+screen:
+  tests_per_coin: 'on the coin''s own 15m log returns, discovery window: (1) Lo-MacKinlay variance ratio z (heteroskedasticity-robust) at q = 4 (1h) and 16 (4h); (2) Ljung-Box Q on 15m returns, 8 lags; (3) lead-lag: corr of the previous 15m BTC return with the coin''s next 15m return; (4) residual (coin minus beta x pool) lag-1 autocorrelation of 1h returns'
+  score: 'predictability = max of |VR z(q=4)|, |VR z(q=16)|, |lead-lag t|, |residual ac t|; the coin with the highest score in discovery is THE coin'
+  persistence: 'Spearman rank correlation of the 25 coins'' scores, discovery vs validation; reported, not a gate'
+strategies:
+  note: 'long or flat, one coin, 15m bars, signals on closes, fills next close, maker 0.05% a side plus the venue tick (gates.let_winners_run.simulate, no ladder); fixed parameters, no grid'
+  MOM: 'long while the 4h (16-bar) return > 0'
+  REV: 'long when the close is 2 std below its 16-bar mean (z <= -2), exit when z >= 0'
+  DON: 'long on a close above the prior 20-bar high, exit on a close below the prior 10-bar low'
+  RSI: 'long when RSI(14) < 30, exit when RSI > 50'
+  LEAD: 'long for 1 bar after a 15m BTC return >= +0.5% while the coin rose less than BTC in that bar'
+  HOLD: 'buy and hold (control)'
+pick: 'the strategy with the highest discovery Sharpe on THE coin (HOLD excluded) is THE strategy'
+decision_rule: >
+  THE strategy passes only if, on the validation window, its return is positive, it beats HOLD on return or on
+  return over drawdown, and it beats at least 180 of 200 random-entry books with the same number of entries and the
+  same average holding time. A bot is built as a PAPER book on EC2 in either case (the operator asked for one); a
+  fail is stated with it and it is never promoted to a live account on this evidence.
+trials: 6
