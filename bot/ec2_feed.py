@@ -89,8 +89,9 @@ def refresh_once() -> None:
         CACHE.write_text(json.dumps({"fetched": time.time(), "data": data}))
     except Exception as exc:                                  # noqa: BLE001
         msg = repr(exc)
-        if "ExpiredToken" in msg or "UnrecognizedClient" in msg or "SSO" in msg or "credentials" in msg.lower():
-            msg = "AWS session credentials expired: paste fresh ones from the portal into the hackathon profile"
+        if any(k in msg for k in ("ExpiredToken", "RequestExpired", "UnrecognizedClient", "Forbidden", "(403)",
+                                  "InvalidClientTokenId", "NoCredentials", "ProfileNotFound")) or "credentials" in msg.lower():
+            msg = "AWS credentials expired: copy 'Option 2' from the AWS portal, then run python3 deploy/aws_creds.py"
         with _LOCK:
             _STATE.update({"error": msg[:300]})
 

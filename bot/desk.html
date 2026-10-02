@@ -383,7 +383,7 @@ function bigSpark(v,h=46){
 }
 function band(){
  const E=D.ec2; $('band').hidden=!E; if(!E) return;
- const pulled=E.error?`<span class="dn">${esc(E.error)}</span>`:E.fetched_age_s==null?'first pull within 3 min':`updated ${ago(E.fetched_age_s)} ago`;
+ const pulled=E.error?`<span class="dn">${esc(E.error)}</span>${E.fetched_age_s!=null?` · showing data from ${ago(E.fetched_age_s)} ago (the bots keep running)`:''}`:E.fetched_age_s==null?'first pull within 3 min':`updated ${ago(E.fetched_age_s)} ago`;
  const card=b=>{
   const comp=b.bot==='competition', ok=b.active==='active', title=comp?'Competition':b.paper?esc(b.bot):'Rehearsal', acct=comp?'real competition account':b.paper?'paper on EC2 · no orders':'Roostoo test account';
   const st=!ok?`<span class="st bad">${esc(b.active||'down')}</span>`:b.paper&&!b.halt&&!b.freeze?'<span class="st wait">paper</span>':b.halt?'<span class="st bad">halted</span>':b.freeze?'<span class="st bad">frozen</span>':b.waiting?'<span class="st wait">waiting for Roostoo</span>':'<span class="st ok">trading</span>';
