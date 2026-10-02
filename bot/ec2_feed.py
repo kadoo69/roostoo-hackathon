@@ -17,7 +17,9 @@ from bot.settings import ROOT
 MARKER = ROOT / "run" / "LIVE_HOST_EC2"
 CACHE = ROOT / "run" / "ec2_state.json"
 REFRESH_S = 180
-BOOKS = ("competition", "competition_rehearsal")
+LIVE = ("competition", "competition_rehearsal")
+PAPER = ("ride_5m",)
+BOOKS = LIVE + PAPER
 _LOCK = threading.Lock()
 _STATE: dict = {"ts": 0.0, "data": None, "error": None}
 
@@ -31,7 +33,7 @@ out = {"books": {}, "commit": subprocess.run(["git", "-C", ".", "rev-parse", "--
 day = dt.datetime.now(dt.UTC).strftime("%Y-%m-%d")
 for b in BOOKS:
     d = Path("live") / b
-    unit = "roostoo-live@" + b
+    unit = ("roostoo-paper@" if b in PAPER else "roostoo-live@") + b
     rec = {"active": subprocess.run(["systemctl", "is-active", unit], capture_output=True, text=True).stdout.strip(),
            "since": subprocess.run(["systemctl", "show", "-p", "ActiveEnterTimestamp", "--value", unit], capture_output=True, text=True).stdout.strip()}
     try:
@@ -66,7 +68,7 @@ for b in BOOKS:
     out["books"][b] = rec
 print("EC2JSON " + json.dumps(out))
 PY
-'''.replace("BOOKS", repr(BOOKS))
+'''.replace("BOOKS", repr(BOOKS)).replace("PAPER", repr(PAPER))
 
 
 def fetch() -> dict:
@@ -121,7 +123,9 @@ def payload() -> dict | None:
         b = (data.get("books") or {}).get(name) or {}
         start, eq = b.get("start_equity"), b.get("equity")
         waiting = bool(b.get("last_waiting")) and not b.get("last_cycles")
-        books.append({"bot": name, "active": b.get("active"), "since": b.get("since"), "waiting": waiting,
+        if not b and name in PAPER:
+            continue
+        books.append({"bot": name, "paper": name in PAPER, "active": b.get("active"), "since": b.get("since"), "waiting": waiting,
                       "last_poll": (b.get("last_waiting") or {}).get("ts_utc"),
                       "last_cycle": (b.get("last_cycles") or {}).get("ts_utc"),
                       "halt": (b.get("last_cycles") or {}).get("halt"), "freeze": (b.get("last_cycles") or {}).get("freeze"),

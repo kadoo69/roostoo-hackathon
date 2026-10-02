@@ -250,7 +250,8 @@ def payload(snap: dict) -> dict:
     from bot import ec2_feed
     ec2 = ec2_feed.payload()
     if ec2:
-        books = [b for b in books if b["group"] != "live"]
+        on_ec2 = {b["bot"] for b in ec2["books"]}
+        books = [b for b in books if b["group"] != "live" and b["bot"] not in on_ec2]
     prog = progress_by_book()
     for b in books:
         b["risk"] = (prog.get(b["bot"]) or {}).get("ratios_total")
@@ -268,10 +269,10 @@ def payload(snap: dict) -> dict:
                  "best": max(paper, key=lambda b: b["ret_pct"] or -1e9)["bot"] if paper else None,
                  "best_pct": max((b["ret_pct"] or -1e9) for b in paper) if paper else None}
     if ec2:
-        eb = [b for b in ec2["books"] if b["net"] is not None]
+        eb = [b for b in ec2["books"] if b["net"] is not None and not b.get("paper")]
         total.update({"net": round(sum(b["net"] for b in eb)), "realised": None, "open": None, "books": len(ec2["books"]),
                       "up": sum(1 for b in eb if b["net"] > 0), "down": sum(1 for b in eb if b["net"] < 0),
-                      "online": sum(1 for b in ec2["books"] if b["active"] == "active")})
+                      "online": sum(1 for b in ec2["books"] if b["active"] == "active" and not b.get("paper"))})
     return {"generated": snap["generated"], "totals": total, "ec2": ec2, "paper": paper_tot,
             "groups": [{"key": k, "label": v} for k, v in GROUPS if k in DESK_GROUPS],
             "books": books, "exposure": exposure(books), "activity": activity(books), "alerts": alerts(books),

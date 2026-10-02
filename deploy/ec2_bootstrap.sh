@@ -7,7 +7,8 @@
 #   curl -fsSL https://raw.githubusercontent.com/kadoo69/roostoo-hackathon/main/deploy/ec2_bootstrap.sh | sudo -E bash
 #
 # Idempotent: re-running pulls the latest commit and restarts the books.
-# BOOKS defaults to the competition book and its test-account rehearsal.
+# BOOKS defaults to the competition book and its test-account rehearsal; PAPER_BOOKS (default ride_5m)
+# run keyless paper books under roostoo-paper@ (DECISIONS.md#ec2-paper-ride-2026-10-02).
 # DECISIONS.md#competition-book-2026-09-30
 set -euo pipefail
 
@@ -15,6 +16,7 @@ set -euo pipefail
 BRANCH=${BRANCH:-main}
 DEST=/opt/roostoo-hackathon
 BOOKS=${BOOKS:-"competition competition_rehearsal"}
+PAPER_BOOKS=${PAPER_BOOKS:-"ride_5m"}
 
 log() { printf '\n== %s\n' "$*"; }
 
@@ -82,7 +84,16 @@ for b in $BOOKS; do
   systemctl enable "roostoo-live@$b" >/dev/null 2>&1
   systemctl restart "roostoo-live@$b"
 done
+cp "$DEST/deploy/roostoo-paper@.service" /etc/systemd/system/
+systemctl daemon-reload
+for b in $PAPER_BOOKS; do
+  sudo -u roostoo "$DEST/.venv/bin/python" -c "from bot.settings import load; import sys; s=load('$DEST/config/$b.yaml'); sys.exit(0 if s.dry_run and not s.keyset else 1)" \
+    || { echo "refusing paper unit for $b: not a keyless paper config"; exit 1; }
+  systemctl enable "roostoo-paper@$b" >/dev/null 2>&1
+  systemctl restart "roostoo-paper@$b"
+done
 sleep 20
+for b in $PAPER_BOOKS; do printf '%-24s %s (paper)\n' "$b" "$(systemctl is-active "roostoo-paper@$b")"; done
 for b in $BOOKS; do
   printf '%-24s %s\n' "$b" "$(systemctl is-active "roostoo-live@$b")"
   tail -n 1 "$DEST/live/$b/cycles-$(date -u +%F).jsonl" 2>/dev/null | cut -c1-220 || true

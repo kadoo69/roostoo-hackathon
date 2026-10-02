@@ -385,8 +385,8 @@ function band(){
  const E=D.ec2; $('band').hidden=!E; if(!E) return;
  const pulled=E.error?`<span class="dn">${esc(E.error)}</span>`:E.fetched_age_s==null?'first pull within 3 min':`updated ${ago(E.fetched_age_s)} ago`;
  const card=b=>{
-  const comp=b.bot==='competition', ok=b.active==='active';
-  const st=!ok?`<span class="st bad">${esc(b.active||'down')}</span>`:b.halt?'<span class="st bad">halted</span>':b.freeze?'<span class="st bad">frozen</span>':b.waiting?'<span class="st wait">waiting for Roostoo</span>':'<span class="st ok">trading</span>';
+  const comp=b.bot==='competition', ok=b.active==='active', title=comp?'Competition':b.paper?esc(b.bot):'Rehearsal', acct=comp?'real competition account':b.paper?'paper on EC2 · no orders':'Roostoo test account';
+  const st=!ok?`<span class="st bad">${esc(b.active||'down')}</span>`:b.paper&&!b.halt&&!b.freeze?'<span class="st wait">paper</span>':b.halt?'<span class="st bad">halted</span>':b.freeze?'<span class="st bad">frozen</span>':b.waiting?'<span class="st wait">waiting for Roostoo</span>':'<span class="st ok">trading</span>';
   const pos=Object.entries(b.positions||{}).map(([k,w])=>`<span class="coin">${esc(k)} ${(w*100).toFixed(0)}%</span>`).join(' ')||'<span class="faint">all cash</span>';
   const left=b.waiting
    ?`<div class="big" style="font-size:17px;font-family:var(--sans)">Account not active yet</div><div class="sub">polls every 30 s and starts trading by itself on activation</div>`
@@ -394,10 +394,10 @@ function band(){
   const right=b.waiting?'<div class="faint" style="font-size:12px">No chart until the first trade.</div>':`${bigSpark(b.curve)}<div style="margin-top:4px">${pos}</div>`;
   const last=b.waiting?`last poll ${tloc(b.last_poll)}`:`last cycle ${tloc(b.last_cycle)}`;
   const ord=(b.orders||[]).slice(-1).map(o=>`last order ${tloc(o.ts_utc)} ${esc(o.side||'')} ${esc((o.pair||'').replace('/USD',''))} ${esc(o.event)}`).join('');
-  return `<div class="lcard"><div><div class="t">${comp?'Competition':'Rehearsal'} <span class="acct">${comp?'real competition account':'Roostoo test account'}</span> ${st}</div>${left}</div><div>${right}</div>
+  return `<div class="lcard"><div><div class="t">${title} <span class="acct">${acct}</span> ${st}</div>${left}</div><div>${right}</div>
    <div class="ft"><span>${last}</span><span>running since ${esc(String(b.since||'').replace(/^\w+ /,'').slice(0,16))}</span>${ord?`<span>${ord}</span>`:''}${b.errors_today&&!b.waiting?`<span class="dn">${b.errors_today} errors today</span>`:''}</div></div>`;
  };
- $('band').innerHTML=`<div class="bandh"><b>Live on Roostoo</b><span>AWS EC2 Sydney · ${esc((E.host||'').split(' ')[0])} · commit ${esc(E.commit||'-')} · ${pulled}</span></div>`+E.books.map(card).join('');
+ $('band').innerHTML=`<div class="bandh"><b>Live on Roostoo</b><span>AWS EC2 Sydney · ${esc((E.host||'').split(' ')[0])} · commit ${esc(E.commit||'-')} · ${pulled}</span></div>`+E.books.filter(b=>!b.paper).map(card).join('')+(E.books.some(b=>b.paper)?`<div class="bandh" style="margin-top:2px"><b>Paper on EC2</b><span>always-on twins for the 10-03 comparison</span></div>`+E.books.filter(b=>b.paper).map(card).join(''):'');
 }
 const LP={ws:null,syms:'',last:{},open24:{},ticks:0,at:0,hosts:['wss://data-stream.binance.vision/stream','wss://stream.binance.com:9443/stream'],h:0,retry:0};
 function lpWanted(){

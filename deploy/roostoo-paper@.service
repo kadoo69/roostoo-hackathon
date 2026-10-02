@@ -1,0 +1,20 @@
+[Unit]
+Description=Roostoo paper book %i (no orders, no keys)
+After=network-online.target time-sync.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=roostoo
+WorkingDirectory=/opt/roostoo-hackathon
+Environment=ROOSTOO_DRY_RUN=1
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/opt/roostoo-hackathon/.venv/bin/python -m bot.scalper_adaptive_run /opt/roostoo-hackathon/config/%i.yaml
+Restart=always
+RestartSec=10
+CPUQuota=25%
+StandardOutput=append:/opt/roostoo-hackathon/live/%i.out
+StandardError=append:/opt/roostoo-hackathon/live/%i.out
+
+[Install]
+WantedBy=multi-user.target
