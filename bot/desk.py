@@ -261,12 +261,18 @@ def payload(snap: dict) -> dict:
              "up": sum(1 for b in live if (b["net"] or 0) > 0), "down": sum(1 for b in live if (b["net"] or 0) < 0),
              "online": sum(1 for b in live if (b["age_s"] or 1e9) <= STALE_S),
              "best": max(live, key=lambda b: b["ret_pct"] or -1e9)["bot"] if live else None}
+    paper = [b for b in books if b["equity"] is not None]
+    paper_tot = {"net": round(sum(b["net"] or 0.0 for b in paper)), "books": len(paper),
+                 "up": sum(1 for b in paper if (b["net"] or 0) > 0), "down": sum(1 for b in paper if (b["net"] or 0) < 0),
+                 "online": sum(1 for b in paper if (b["age_s"] or 1e9) <= STALE_S),
+                 "best": max(paper, key=lambda b: b["ret_pct"] or -1e9)["bot"] if paper else None,
+                 "best_pct": max((b["ret_pct"] or -1e9) for b in paper) if paper else None}
     if ec2:
         eb = [b for b in ec2["books"] if b["net"] is not None]
         total.update({"net": round(sum(b["net"] for b in eb)), "realised": None, "open": None, "books": len(ec2["books"]),
                       "up": sum(1 for b in eb if b["net"] > 0), "down": sum(1 for b in eb if b["net"] < 0),
                       "online": sum(1 for b in ec2["books"] if b["active"] == "active")})
-    return {"generated": snap["generated"], "totals": total, "ec2": ec2,
+    return {"generated": snap["generated"], "totals": total, "ec2": ec2, "paper": paper_tot,
             "groups": [{"key": k, "label": v} for k, v in GROUPS if k in DESK_GROUPS],
             "books": books, "exposure": exposure(books), "activity": activity(books), "alerts": alerts(books),
             "closed": closed_feed(shown), "walkforward": walkforward(),

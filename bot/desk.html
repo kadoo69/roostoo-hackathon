@@ -16,7 +16,7 @@ body{margin:0;background:var(--bg);color:var(--fg);font:13px/1.45 var(--sans);-w
 .num{font-family:var(--mono);font-variant-numeric:tabular-nums}
 .up{color:var(--up)} .dn{color:var(--dn)} .dim{color:var(--dim)} .faint{color:var(--faint)}
 a{color:var(--dim);text-decoration:none} a:hover{color:var(--fg)}
-.app{display:grid;grid-template-rows:auto auto 1fr;height:100vh;padding:12px 18px;gap:10px}
+.app{display:grid;grid-template-rows:auto auto auto 1fr;height:100vh;padding:12px 18px;gap:10px}
 header{display:flex;align-items:center;gap:14px}
 .brand{font-weight:700;letter-spacing:.2px;font-size:15px}
 .brand span{color:var(--faint);font-weight:500}
@@ -31,6 +31,19 @@ header .sp{flex:1} header nav{display:flex;gap:14px;font-size:12px}
 .kpi .s{font-size:12px;color:var(--dim);margin-top:2px}
 .split{display:flex;height:6px;border-radius:4px;overflow:hidden;background:var(--line);margin-top:8px}
 .split i{display:block;height:100%} .split .r{background:var(--up)} .split .o{background:var(--acc);opacity:.75} .split .neg{background:var(--dn)}
+.band{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.band[hidden]{display:none}
+.lcard{background:var(--panel);border:1px solid var(--line2);border-radius:12px;padding:12px 16px;min-width:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:4px 18px;align-items:center}
+.lcard .t{display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px;font-weight:600;font-size:13px}
+.lcard .acct{white-space:nowrap;font-size:10.5px;color:var(--faint);text-transform:uppercase;letter-spacing:.6px;font-weight:500}
+.lcard .big{font-size:24px;font-weight:600;font-family:var(--mono);margin-top:2px}
+.lcard .sub{font-size:12px;color:var(--dim)}
+.lcard .ft{grid-column:1/-1;font-size:11px;color:var(--faint);border-top:1px solid var(--line);padding-top:6px;margin-top:4px;display:flex;gap:14px;flex-wrap:wrap}
+.st{white-space:nowrap;font-size:10.5px;padding:2px 7px;border-radius:999px;text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+.st.ok{background:var(--up-bg);color:var(--up)} .st.wait{background:rgba(124,196,255,.12);color:var(--acc)} .st.bad{background:var(--dn-bg);color:var(--dn)}
+.bandh{grid-column:1/-1;display:flex;align-items:baseline;gap:10px;font-size:11px;color:var(--faint);text-transform:uppercase;letter-spacing:.6px;margin-bottom:-4px}
+.bandh b{color:var(--fg);font-size:12px}
+@media (max-width:1100px){.band{grid-template-columns:1fr}.lcard{grid-template-columns:1fr}}
 .main{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:12px;min-height:0}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;min-height:0;display:flex;flex-direction:column}
 .card h3{margin:0;font-size:12px;font-weight:600;color:var(--dim);text-transform:uppercase;letter-spacing:.6px}
@@ -55,7 +68,9 @@ tr.row.sel td{background:rgba(124,196,255,.06)}
 .coin.u{border-color:rgba(62,207,142,.35)} .coin.d{border-color:rgba(255,107,107,.35)}
 .ab{font-size:11px;padding:1px 7px;border-radius:5px}
 .ab.u{background:var(--up-bg);color:var(--up)} .ab.d{background:var(--dn-bg);color:var(--dn)} .ab.z{background:var(--panel2);color:var(--dim)}
-.side{display:grid;grid-template-rows:auto auto minmax(0,1fr) auto;gap:12px;min-height:0}
+.side{display:flex;flex-direction:column;gap:12px;min-height:0;overflow-y:auto;padding-right:2px}
+.side>.card{flex:none}
+#activity{max-height:260px}
 .list{padding:6px 14px 10px}
 .exp{display:grid;grid-template-columns:52px 1fr 72px;align-items:center;gap:8px;padding:4px 0;font-size:12px}
 .lp{display:grid;grid-template-columns:52px 1fr 62px 58px 66px;align-items:center;gap:6px;padding:4px 0;font-size:12px;border-bottom:1px solid var(--line)}
@@ -105,6 +120,7 @@ tr.fresh td{background:rgba(124,196,255,.05)}
   <div class="sp"></div>
   <nav><a href="/heatmap">Heatmap</a><a href="/analysis">Analysis</a><a href="/full">Full view</a></nav>
  </header>
+ <section class="band" id="band" hidden></section>
  <section class="kpis" id="kpis"></section>
  <section class="main">
   <div class="card">
@@ -118,7 +134,6 @@ tr.fresh td{background:rgba(124,196,255,.05)}
     <tbody id="rows"></tbody></table></div>
   </div>
   <div class="side">
-   <div class="card" id="ec2card" hidden><div class="hd"><h3>Live books · EC2</h3><span class="faint" id="ec2Stat" style="margin-left:auto;font-size:11px"></span></div><div class="list" id="ec2"></div></div>
    <div class="card"><div class="hd"><h3>Live prices</h3><span class="faint" id="lpStat" style="margin-left:auto;font-size:11px">connecting</span></div>
     <div class="list"><div class="lp lph"><span>Coin</span><span class="num">Price</span><span class="num" title="move since the bots last marked it (they mark every ~30 s)">vs mark</span><span class="num">24h</span><span class="num" title="open P&amp;L of every book holding it, at the live price">Open P&amp;L</span></div><div id="lp"></div>
     <div class="faint" style="font-size:10.5px;margin-top:6px">Binance public stream, tick by tick. Display only: the bots still mark every ~30 s and decide at bar closes.</div></div></div>
@@ -166,7 +181,18 @@ function splitBar(r,o){
  const a=Math.abs(r||0),b=Math.abs(o||0),t=a+b||1;
  return `<div class="bar" title="realised ${sgn(r)} · open ${sgn(o)}"><i style="width:${a/t*100}%;background:${r>=0?'var(--up)':'var(--dn)'}"></i><i style="width:${b/t*100}%;background:${o>=0?'var(--acc)':'#b86b6b'};opacity:.75"></i></div>`;
 }
+function paperKpis(){
+ const p=D.paper||{}, b=D.breadth||{}, e=D.ec2, eOn=e.books.filter(x=>x.active==='active').length;
+ const best=(D.books.find(x=>x.bot===p.best)||{});
+ $('kpis').innerHTML=`
+ <div class="kpi"><div class="k">Paper fleet net P&amp;L <span style="text-transform:none;letter-spacing:0">· experiments, not the competition</span></div><div class="v num ${cls(p.net)}">${sgn(p.net)}</div><div class="s">${p.books} paper books on this Mac, each from its own start</div></div>
+ <div class="kpi"><div class="k">Paper books</div><div class="v"><span class="up">${p.up}</span> <span class="faint">/</span> <span class="dn">${p.down}</span></div><div class="s">up / down of ${p.books}</div></div>
+ <div class="kpi"><div class="k">Best paper book</div><div class="v" style="font-size:16px">${esc(p.best||'-')}</div><div class="s ${cls(p.best_pct)}">${p.best_pct!=null?pct(p.best_pct):''}</div></div>
+ <div class="kpi"><div class="k">Market breadth</div><div class="v num">${b.pct_long_all!=null?b.pct_long_all.toFixed(0)+'%':'<span class="faint" style="font-size:14px">warming up</span>'}</div><div class="s">${b.pct_long_all!=null?`in a 4h uptrend · ${b.near_entry} near breakout`:'first read within 4 min of a restart'}</div></div>
+ <div class="kpi"><div class="k">Health</div><div class="v" style="font-size:16px">${D.alerts.length||eOn<e.books.length||e.error?`<span class="dn">${(D.alerts.length)+(e.books.length-eOn)+(e.error?1:0)} alert${D.alerts.length+(e.books.length-eOn)+(e.error?1:0)>1?'s':''}</span>`:'<span class="up">All clear</span>'}</div><div class="s">EC2 ${eOn}/${e.books.length} · paper ${p.online}/${p.books} cycling</div></div>`;
+}
 function kpis(){
+ if(D.ec2) return paperKpis();
  const t=D.totals, b=D.breadth||{};
  const r=Math.max(0,t.realised), o=Math.abs(t.open), s=r+o||1;
  $('kpis').innerHTML=`
@@ -340,29 +366,38 @@ function filters(){
 }
 function render(){
  const t=D.totals, allOk=t.online===t.books;
- $('live').innerHTML=`<span class="dot ${allOk?'':'stale'}"></span>${t.online}/${t.books} live`;
+ $('live').innerHTML=D.ec2?`<span class="dot ${D.ec2.books.every(x=>x.active==='active')&&!D.ec2.error?'':'stale'}"></span>EC2 live ${D.ec2.books.filter(x=>x.active==='active').length}/${D.ec2.books.length} · paper ${(D.paper||{}).online}/${(D.paper||{}).books}`:`<span class="dot ${allOk?'':'stale'}"></span>${t.online}/${t.books} live`;
  $('upd').textContent='updated '+tloc(D.generated);
- kpis(); tabs(); filters(); rows(); ec2Card(); if(view==='closed') closedView(); side(); if(sel) open(sel); lpConnect(); if(LP.syms===lpWanted().join(',')) lpRender();
+ band(); kpis(); tabs(); filters(); rows(); if(view==='closed') closedView(); side(); if(sel) open(sel); lpConnect(); if(LP.syms===lpWanted().join(',')) lpRender();
 }
 async function load(){
  try{ D=await (await fetch('/api/desk',{cache:'no-store'})).json(); render(); }
  catch(e){ $('live').innerHTML='<span class="dot stale"></span>offline'; }
 }
-function ec2Card(){
- const E=D.ec2; $('ec2card').hidden=!E; if(!E) return;
- $('ec2Stat').innerHTML=E.error?`<span class="dn">${esc(E.error)}</span>`:E.fetched_age_s==null?'first pull within 3 min':`pulled ${ago(E.fetched_age_s)} ago · ${esc(E.commit||'')}`;
- $('ec2').innerHTML=E.books.map(b=>{
-  const ok=b.active==='active', name=b.bot==='competition'?'Competition':'Rehearsal (TEST)';
-  const st=!ok?`<span class="tag c" style="background:var(--dn-bg);color:var(--dn)">${esc(b.active||'unknown')}</span>`:b.halt?'<span class="tag c">halted</span>':b.freeze?'<span class="tag c">frozen</span>':b.waiting?'<span class="tag o">waiting for account</span>':'<span class="tag o">trading</span>';
-  const pos=Object.entries(b.positions||{}).map(([k,w])=>`<span class="coin">${esc(k)} ${(w*100).toFixed(0)}%</span>`).join(' ')||'<span class="faint">cash</span>';
+function bigSpark(v,h=46){
+ if(!v||v.length<2) return '';
+ const w=600, lo=Math.min(...v), hi=Math.max(...v), r=hi-lo||1;
+ const p=v.map((y,i)=>`${(i/(v.length-1)*w).toFixed(1)},${(h-3-(y-lo)/r*(h-6)).toFixed(1)}`).join(' ');
+ const c=v[v.length-1]>=v[0]?'var(--up)':'var(--dn)';
+ return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" width="100%" height="${h}"><polygon fill="${c}" opacity=".08" points="0,${h} ${p} ${w},${h}"/><polyline fill="none" stroke="${c}" stroke-width="1.6" vector-effect="non-scaling-stroke" points="${p}"/></svg>`;
+}
+function band(){
+ const E=D.ec2; $('band').hidden=!E; if(!E) return;
+ const pulled=E.error?`<span class="dn">${esc(E.error)}</span>`:E.fetched_age_s==null?'first pull within 3 min':`updated ${ago(E.fetched_age_s)} ago`;
+ const card=b=>{
+  const comp=b.bot==='competition', ok=b.active==='active';
+  const st=!ok?`<span class="st bad">${esc(b.active||'down')}</span>`:b.halt?'<span class="st bad">halted</span>':b.freeze?'<span class="st bad">frozen</span>':b.waiting?'<span class="st wait">waiting for Roostoo</span>':'<span class="st ok">trading</span>';
+  const pos=Object.entries(b.positions||{}).map(([k,w])=>`<span class="coin">${esc(k)} ${(w*100).toFixed(0)}%</span>`).join(' ')||'<span class="faint">all cash</span>';
+  const left=b.waiting
+   ?`<div class="big" style="font-size:17px;font-family:var(--sans)">Account not active yet</div><div class="sub">polls every 30 s and starts trading by itself on activation</div>`
+   :`<div class="big ${cls(b.ret_pct)}">${b.ret_pct!=null?pct(b.ret_pct):'-'}</div><div class="sub">$${usd(b.equity)} <span class="faint">from $${usd(b.start_equity)}</span> · <span class="${cls(b.net)}">${sgn(b.net)}</span></div>`;
+  const right=b.waiting?'<div class="faint" style="font-size:12px">No chart until the first trade.</div>':`${bigSpark(b.curve)}<div style="margin-top:4px">${pos}</div>`;
   const last=b.waiting?`last poll ${tloc(b.last_poll)}`:`last cycle ${tloc(b.last_cycle)}`;
-  const ord=(b.orders||[]).slice(-3).reverse().map(o=>`<div class="faint" style="font-size:11px">${tloc(o.ts_utc)} ${esc(o.event)} ${esc(o.side||'')} ${esc(o.pair||'')} ${o.price!=null?px(o.price):''}</div>`).join('');
-  return `<div style="padding:6px 0;border-bottom:1px solid var(--line)">
-   <div style="display:flex;align-items:center;gap:8px"><b>${name}</b>${st}<span class="num ${cls(b.ret_pct)}" style="margin-left:auto">${b.ret_pct!=null?pct(b.ret_pct):'-'}</span></div>
-   ${b.equity!=null?`<div class="faint" style="font-size:11px">$${usd(b.equity)} from $${usd(b.start_equity)} · <span class="${cls(b.net)}">${sgn(b.net)}</span></div>`:''}
-   ${b.curve&&b.curve.length>1?spark(b.curve,280,26):''}
-   <div style="font-size:11.5px;margin-top:3px">${pos}</div>
-   <div class="faint" style="font-size:11px">${last} · since ${esc(String(b.since||'').replace(/^\w+ /,'').slice(0,16))}${b.errors_today&&!b.waiting?` · <span class="dn">${b.errors_today} errors today</span>`:''}</div>${ord}</div>`;}).join('');
+  const ord=(b.orders||[]).slice(-1).map(o=>`last order ${tloc(o.ts_utc)} ${esc(o.side||'')} ${esc((o.pair||'').replace('/USD',''))} ${esc(o.event)}`).join('');
+  return `<div class="lcard"><div><div class="t">${comp?'Competition':'Rehearsal'} <span class="acct">${comp?'real competition account':'Roostoo test account'}</span> ${st}</div>${left}</div><div>${right}</div>
+   <div class="ft"><span>${last}</span><span>running since ${esc(String(b.since||'').replace(/^\w+ /,'').slice(0,16))}</span>${ord?`<span>${ord}</span>`:''}${b.errors_today&&!b.waiting?`<span class="dn">${b.errors_today} errors today</span>`:''}</div></div>`;
+ };
+ $('band').innerHTML=`<div class="bandh"><b>Live on Roostoo</b><span>AWS EC2 Sydney · ${esc((E.host||'').split(' ')[0])} · commit ${esc(E.commit||'-')} · ${pulled}</span></div>`+E.books.map(card).join('');
 }
 const LP={ws:null,syms:'',last:{},open24:{},ticks:0,at:0,hosts:['wss://data-stream.binance.vision/stream','wss://stream.binance.com:9443/stream'],h:0,retry:0};
 function lpWanted(){
