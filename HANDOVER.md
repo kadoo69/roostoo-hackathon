@@ -33,6 +33,9 @@ Compare on EC2 at equal uptime, forward only: competition_rehearsal (rule) vs ri
 ### Research 2026-10-02 evening (all null, nothing live changed)
 Ride exits (`#ride-exits-outcome`), bStocks in the pool (`#bstocks-pool-outcome`), coin EDA (`#coin-eda-outcome`: no return edge; vol forecastable and unrewarded pool-wide), inverse-vol sizing replay (`#sleeves-ivol-declaration`), ride trigger recheck and dynamic triggers (`#ride-threshold-recheck-outcome`, `#ride-dynamic-trigger-outcome`: per-coin 3-sigma best risk-adjusted), regime blocks (`#regime-blocks-2026-10-02`: trend to chop at 09-23). Operator: judge on the present market, not history.
 
+### Competition split bot staged 2026-10-03 06:20Z (`#competition-split-staged-2026-10-03`)
+`config/competition_split.yaml` = the rehearsed 50/50 split on the COMP keys, NOT running (one account, one unit). The stage-3 in-place switch was blocked by the session permission check; `competition` starts at 12:00Z on the plain rule unless the operator runs the switch in that anchor. Stage-3 gate was clean at 05:53Z; stress test favours the split (`#stress-split-vs-rule-2026-10-03`).
+
 ### Cleanup 2026-10-02 ~19:30Z (`#dead-code-cleanup-2026-10-02`)
 Retired runtime deleted, 113 finished research modules moved to `archive/` (`python3 -m archive.gates.<name>`), registries pruned to the 17 running books, `BOTS.md` and `deploy/README.md` rewritten. EC2 code untouched. Two EC2-code findings to fix with the operator after the start: `bot.runner` would run `blend_30m_ride` with the wrong class if it ever moved to EC2; `bot/regime.py` reads the dead scanner state for an unused regime gate.
 

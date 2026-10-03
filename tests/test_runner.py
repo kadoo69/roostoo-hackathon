@@ -72,3 +72,14 @@ def test_single_coin_book_is_pinned_to_uni_on_the_plain_engine():
 def test_regime_book_runs_its_own_class_on_ec2():
     assert bot_class(_cfg("regime_ls_30m")).__name__ == "RegimeLSBot"
     assert load("config/regime_ls_30m.yaml").keyset is None
+
+
+def test_competition_split_is_the_rehearsed_split_on_the_comp_keys():
+    split, reh = _cfg("competition_split"), _cfg("competition_rehearsal")
+    for sec in ("sleeves", "adaptive", "contenders", "strategy", "execution", "booking", "short", "target_lock"):
+        assert split[sec] == reh[sec], sec
+    s = load("config/competition_split.yaml")
+    assert s.keyset == "comp" and s.exit_escalation and not s.shorts_enabled and not s.booking.get("enabled")
+    assert bot_class(split).__name__ == "SleevesBot"
+    with open("deploy/ec2_bootstrap.sh") as fh:
+        assert "competition_split" not in fh.read()
