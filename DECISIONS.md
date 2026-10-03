@@ -4871,3 +4871,7 @@ Operator 2026-10-03: find and exploit gaps in the market structure, the best mov
 Structure: Roostoo copies Binance ticks; PEPE's tick is 23.5 bps of its price (ARB, TRUMP, ENA, XLM, ADA 4-5 bps, the rest under 3.5 bps), and Roostoo quotes it one tick wide. Rehearsal orders show a limit at the bid fills at once as TAKER (0.10%) when LastPrice sits there (PUMP 10-02 16:10Z, UNI 10-03 04:00Z) and rests as MAKER otherwise; a 07:12-07:14Z sample has PEPE's LastPrice flipping between bid and ask every 30-60 s.
 Test: forward paper on the live ticker, PEPE against four 4-5 bps controls, touch and trade-through fill rules; worth a paper book only if PEPE nets positive under both rules and the controls do not under the touch rule. Any competition use needs a real-order micro-test elsewhere and the organisers asked first.
 
+## tick-capture-closed
+
+CLOSED, not allowed: the organisers' slides permit directional strategies only, "no market making or arbitrage" (`#comp-key-bot-only-2026-10-02`). Resting a buy at the bid and a sell at the ask to earn PEPE's 23.5 bps tick is market making, so the forward paper test was stopped after about 15 minutes with no result recorded and nothing will be built. The structural observation stands as a fact about the venue: Roostoo copies Binance ticks (PEPE 23.5 bps, five coins 4-5 bps), quotes one tick wide, fills a limit at LastPrice at once as taker and a resting limit as maker when LastPrice reaches it; the directional books already benefit from the maker side of this.
+
