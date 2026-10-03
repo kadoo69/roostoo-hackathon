@@ -79,6 +79,27 @@ def account_weights(sleeves: list[Sleeve], px: dict[str, float], account_equity:
     return out
 
 
+def cap_entries(target: dict[str, float], sleeve: Sleeve, sleeves: list[Sleeve], px: dict[str, float],
+                cap: float) -> dict[str, float]:
+    """`target` with every NEW entry trimmed so the coin's weight across all sleeves stays at or under
+    `cap` of the account; held names and exits pass unchanged. Both sleeves picking the same leader put
+    42% of the rehearsal book in one coin. DECISIONS.md#split-r4-amendment"""
+    account = sum(s.equity(px) for s in sleeves)
+    own = sleeve.equity(px)
+    if account <= 0 or own <= 0:
+        return dict(target)
+    out = {}
+    for s, w in target.items():
+        if w <= 0 or s in sleeve.units or not px.get(s):
+            out[s] = w
+            continue
+        other = sum(o.units.get(s, 0.0) for o in sleeves if o is not sleeve) * px[s] / account
+        room = max(0.0, cap - other) * account / own
+        if min(w, room) > 1e-9:
+            out[s] = min(w, room)
+    return out
+
+
 def init(names: list[str], shares: list[float], equity: float) -> list[Sleeve]:
     return [Sleeve(n, equity * f) for n, f in zip(names, shares)]
 

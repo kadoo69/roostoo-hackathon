@@ -1,6 +1,6 @@
-S0    full {'total': 60.0, 'maxDD': -12.7, 'tot_dd': 4.73} pre 42.0/-12.7 live 12.9/-9.8 x2 48.3 maxcoin 0.417 gross 0.673
-S4    full {'total': 62.0, 'maxDD': -12.4, 'tot_dd': 4.98} pre 42.2/-12.4 live 14.1/-7.5 x2 48.1 maxcoin 0.417 gross 0.739
-S4c   full {'total': 61.5, 'maxDD': -12.4, 'tot_dd': 4.94} pre 42.2/-12.4 live 13.7/-7.5 x2 47.7 maxcoin 0.35 gross 0.721
-S4t   full {'total': 65.1, 'maxDD': -13.6, 'tot_dd': 4.8} pre 41.4/-13.6 live 16.9/-7.4 x2 52.5 maxcoin 0.4 gross 0.731
-S4ct  full {'total': 64.9, 'maxDD': -13.6, 'tot_dd': 4.78} pre 41.4/-13.6 live 16.8/-7.4 x2 52.3 maxcoin 0.35 gross 0.718
-{"s0_gap": -25.5, "controls": [56.4, 46.2, 56.8, 46.0, 46.1, 52.1, 68.4, 53.0, 54.6, 66.8, 49.3, 50.7, 67.2, 68.4, 59.0, 44.4, 69.8, 59.3, 47.4, 54.4], "checks": {"S0_within_15pp_of_stress": false, "S4_beats_S0": true, "fees_x2_keeps_choice_over_S0": true, "beats_16_of_20_random": false}, "choice": "S0"}
+S0    full {'total': 89.5, 'maxDD': -16.9, 'tot_dd': 5.31} pre 51.7/-16.9 live 25.1/-10.9 x2 72.9 maxcoin 0.419
+S4    full {'total': 92.5, 'maxDD': -16.2, 'tot_dd': 5.72} pre 52.3/-16.2 live 26.5/-11.7 x2 74.0 maxcoin 0.424
+S4c   full {'total': 86.5, 'maxDD': -15.6, 'tot_dd': 5.53} pre 49.6/-15.6 live 24.8/-10.8 x2 69.0 maxcoin 0.357
+S4t   full {'total': 97.6, 'maxDD': -15.1, 'tot_dd': 6.47} pre 54.1/-15.1 live 28.4/-11.1 x2 80.1 maxcoin 0.408
+S4ct  full {'total': 93.0, 'maxDD': -15.2, 'tot_dd': 6.13} pre 52.0/-15.2 live 27.2/-10.4 x2 76.3 maxcoin 0.357
+{"s0_gap": 4.0, "controls": [60.9, 50.2, 56.7, 48.0, 46.6, 51.5, 63.0, 54.9, 50.9, 69.2, 55.0, 52.6, 64.9, 70.4, 65.1, 45.1, 73.0, 53.1, 48.1, 56.8], "checks": {"S0_within_15pp_of_stress": true, "S4_beats_S0": false, "fees_x2_keeps_choice_over_S0": true, "beats_16_of_20_random": true}, "choice": "S0"}

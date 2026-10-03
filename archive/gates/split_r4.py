@@ -1,5 +1,5 @@
 """The improved split: the staged 50/50 split against the R4 rule half with the ride, a combined per-coin cap
-and a heavier ride share, replayed on combined weights at the 5m clock.
+and a heavier ride share, replayed with two separately accounted sleeves per 5m bar (DECISIONS.md#split-r4-amendment).
 
 Declared in config/split_r4.yaml.
 DECISIONS.md#split-r4-declaration
@@ -15,11 +15,10 @@ import yaml
 
 from archive.gates.ride_exits import random_signal
 from archive.gates.ride_exits import weights as ride_weights
-from bot import feed
+from bot import feed, sleeves
 from bot.settings import ROOT
 from core.config import RESULTS
 from data import universe as ru
-from gates import let_winners_run as lwr
 from gates.missed_replay import universe
 from gates.regime_competition import weights as rule_weights
 from signals.exit_clock import to_fast
@@ -43,9 +42,39 @@ def windows(net: pd.Series) -> dict:
     return {"full": stats(net), "pre": stats(net.loc[:SPLIT]), "live": stats(net.loc[SPLIT:])}
 
 
-def combine(rule5: pd.DataFrame, ride5: pd.DataFrame, rule_share: float, cap: float | None) -> pd.DataFrame:
-    w = rule_share * rule5 + (1 - rule_share) * ride5
-    return w.clip(upper=cap) if cap else w
+def ledger(c5: pd.DataFrame, rule5: pd.DataFrame, ride5: pd.DataFrame, rule_share: float, cap: float | None,
+           tick: pd.Series, fee: float = 0.0005) -> tuple[pd.Series, float]:
+    """Two separately accounted sleeves stepped per 5m bar with the live `bot.sleeves.step`; the rule
+    half enters only names that are new on the bar, as `SleevesBot.compute_target` does; tick cost is
+    charged on each traded notional. Returns per-bar net returns and the largest combined coin weight."""
+    cols = list(c5.columns)
+    P, R, D = c5.to_numpy(dtype=float), rule5.reindex_like(c5).fillna(0.0).to_numpy(), ride5.reindex_like(c5).fillna(0.0).to_numpy()
+    tk = tick.reindex(cols).fillna(0.0).to_numpy()
+    i0 = int(np.searchsorted(c5.index, START))
+    sl = sleeves.init(["rule", "ride"], [rule_share, 1 - rule_share], 1.0)
+    eq = np.full(len(P), np.nan)
+    top = 0.0
+    for t in range(i0, len(P)):
+        px = {cols[j]: P[t, j] for j in range(len(cols)) if np.isfinite(P[t, j]) and P[t, j] > 0}
+        tick_px = {cols[j]: tk[j] / P[t, j] for j in range(len(cols)) if cols[j] in px}
+        rule_t = {cols[j]: R[t, j] for j in np.flatnonzero(R[t] > 0)
+                  if cols[j] in sl[0].units or R[t - 1, j] <= 0}
+        ride_t = {cols[j]: D[t, j] for j in np.flatnonzero(D[t] > 0)}
+        for k, tgt in ((0, rule_t), (1, ride_t)):
+            if cap:
+                tgt = sleeves.cap_entries(tgt, sl[k], sl, px, cap)
+            before = dict(sl[k].units)
+            sleeves.step(sl[k], tgt, px, fee=fee)
+            traded = sum(abs(sl[k].units.get(s, 0.0) - before.get(s, 0.0)) * px.get(s, 0.0) * tick_px.get(s, 0.0)
+                         for s in set(before) | set(sl[k].units))
+            sl[k].cash -= traded
+        total = sum(x.equity(px) for x in sl)
+        eq[t] = total
+        if total > 0:
+            w = sleeves.account_weights(sl, px, total)
+            top = max(top, max(w.values(), default=0.0))
+    e = pd.Series(eq, index=c5.index).iloc[i0:]
+    return (e / e.shift(1).fillna(1.0) - 1.0), round(top, 3)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -75,19 +104,10 @@ def main(argv: list[str] | None = None) -> int:
     ride5 = ride_weights(c5, h5, sig, cfg, "cap", 0.0)
     out: dict = {"ref": "DECISIONS.md#split-r4-declaration", "bars_end": str(c5.index[-1]), "coins": len(cols),
                  "reference_stress_S0": {"total": 85.5, "maxDD": -14.8}}
-    nets = {}
     for arm, (rule, share, cap) in ARMS.items():
-        w = combine(rules5[rule], ride5, share, cap)
-        net, turn = lwr.simulate(c5, w, tick, True)
-        net = net.loc[START:]
-        nets[arm] = net
-        lwr.FEE, lwr.SHORT_FEE = 0.001, 0.002
-        n2, _ = lwr.simulate(c5, w, tick, True)
-        lwr.FEE, lwr.SHORT_FEE = 0.0005, 0.0010
-        out[arm] = {**windows(net), "fees_x2": stats(n2.loc[START:]),
-                    "max_coin_weight": round(float(w.loc[START:].max().max()), 3),
-                    "mean_gross": round(float(w.loc[START:].abs().sum(axis=1).mean()), 3),
-                    "turnover_per_day": round(float(turn.loc[START:].sum() / max(1, (now - START).days)), 2)}
+        net, top = ledger(c5, rules5[rule], ride5, share, cap, tick)
+        n2, _ = ledger(c5, rules5[rule], ride5, share, cap, tick, fee=0.001)
+        out[arm] = {**windows(net), "fees_x2": stats(n2), "max_coin_weight": top}
     r = {k: out[k] for k in ARMS}
 
     def better(x: dict, y: dict) -> bool:
@@ -117,15 +137,14 @@ def main(argv: list[str] | None = None) -> int:
     ctrl = []
     for _ in range(a.seeds):
         rs = random_signal(sig, c5.index, rng)
-        w = combine(rules5[rule], ride_weights(c5, h5, rs, cfg, "cap", 0.0), share, cap)
-        ctrl.append(stats(lwr.simulate(c5, w, tick, True)[0].loc[START:])["total"])
+        ctrl.append(stats(ledger(c5, rules5[rule], ride_weights(c5, h5, rs, cfg, "cap", 0.0), share, cap, tick)[0])["total"])
     checks["beats_16_of_20_random"] = sum(r[choice]["full"]["total"] > c for c in ctrl) >= 16
     out.update({"s0_gap_vs_stress_pp": s0_gap, "control_random_totals": ctrl, "checks": checks, "choice": choice})
     (RESULTS / "split_r4.json").write_text(json.dumps(out, indent=1, default=str))
     for k in ARMS:
         x = r[k]
         print(f"{k:5s} full {x['full']} pre {x['pre']['total']}/{x['pre']['maxDD']} live {x['live']['total']}/{x['live']['maxDD']} "
-              f"x2 {x['fees_x2']['total']} maxcoin {x['max_coin_weight']} gross {x['mean_gross']}")
+              f"x2 {x['fees_x2']['total']} maxcoin {x['max_coin_weight']}")
     print(json.dumps({"s0_gap": s0_gap, "controls": ctrl, "checks": checks, "choice": choice}))
     return 0
 

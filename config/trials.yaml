@@ -6358,3 +6358,23 @@ trials:
   config: adaptive_loop:never|W14|stop0
   status: fail
   note: DECISIONS.md#adaptive-loop-outcome
+- signal: split_r4
+  gate: split_r4
+  config: split_r4:S4
+  status: fail
+  note: DECISIONS.md#split-r4-outcome
+- signal: split_r4
+  gate: split_r4
+  config: split_r4:S4c
+  status: fail
+  note: DECISIONS.md#split-r4-outcome
+- signal: split_r4
+  gate: split_r4
+  config: split_r4:S4t
+  status: fail
+  note: DECISIONS.md#split-r4-outcome
+- signal: split_r4
+  gate: split_r4
+  config: split_r4:S4ct
+  status: fail
+  note: DECISIONS.md#split-r4-outcome

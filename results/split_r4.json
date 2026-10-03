@@ -1,0 +1,154 @@
+{
+ "ref": "DECISIONS.md#split-r4-declaration",
+ "bars_end": "2026-10-03 17:45:00+00:00",
+ "coins": 25,
+ "reference_stress_S0": {
+  "total": 85.5,
+  "maxDD": -14.8
+ },
+ "S0": {
+  "full": {
+   "total": 89.5,
+   "maxDD": -16.9,
+   "tot_dd": 5.31
+  },
+  "pre": {
+   "total": 51.7,
+   "maxDD": -16.9,
+   "tot_dd": 3.07
+  },
+  "live": {
+   "total": 25.1,
+   "maxDD": -10.9,
+   "tot_dd": 2.31
+  },
+  "fees_x2": {
+   "total": 72.9,
+   "maxDD": -18.3,
+   "tot_dd": 3.98
+  },
+  "max_coin_weight": 0.419
+ },
+ "S4": {
+  "full": {
+   "total": 92.5,
+   "maxDD": -16.2,
+   "tot_dd": 5.72
+  },
+  "pre": {
+   "total": 52.3,
+   "maxDD": -16.2,
+   "tot_dd": 3.24
+  },
+  "live": {
+   "total": 26.5,
+   "maxDD": -11.7,
+   "tot_dd": 2.26
+  },
+  "fees_x2": {
+   "total": 74.0,
+   "maxDD": -17.7,
+   "tot_dd": 4.18
+  },
+  "max_coin_weight": 0.424
+ },
+ "S4c": {
+  "full": {
+   "total": 86.5,
+   "maxDD": -15.6,
+   "tot_dd": 5.53
+  },
+  "pre": {
+   "total": 49.6,
+   "maxDD": -15.6,
+   "tot_dd": 3.17
+  },
+  "live": {
+   "total": 24.8,
+   "maxDD": -10.8,
+   "tot_dd": 2.29
+  },
+  "fees_x2": {
+   "total": 69.0,
+   "maxDD": -18.2,
+   "tot_dd": 3.78
+  },
+  "max_coin_weight": 0.357
+ },
+ "S4t": {
+  "full": {
+   "total": 97.6,
+   "maxDD": -15.1,
+   "tot_dd": 6.47
+  },
+  "pre": {
+   "total": 54.1,
+   "maxDD": -15.1,
+   "tot_dd": 3.59
+  },
+  "live": {
+   "total": 28.4,
+   "maxDD": -11.1,
+   "tot_dd": 2.56
+  },
+  "fees_x2": {
+   "total": 80.1,
+   "maxDD": -17.7,
+   "tot_dd": 4.51
+  },
+  "max_coin_weight": 0.408
+ },
+ "S4ct": {
+  "full": {
+   "total": 93.0,
+   "maxDD": -15.2,
+   "tot_dd": 6.13
+  },
+  "pre": {
+   "total": 52.0,
+   "maxDD": -15.2,
+   "tot_dd": 3.43
+  },
+  "live": {
+   "total": 27.2,
+   "maxDD": -10.4,
+   "tot_dd": 2.6
+  },
+  "fees_x2": {
+   "total": 76.3,
+   "maxDD": -18.1,
+   "tot_dd": 4.21
+  },
+  "max_coin_weight": 0.357
+ },
+ "s0_gap_vs_stress_pp": 4.0,
+ "control_random_totals": [
+  60.9,
+  50.2,
+  56.7,
+  48.0,
+  46.6,
+  51.5,
+  63.0,
+  54.9,
+  50.9,
+  69.2,
+  55.0,
+  52.6,
+  64.9,
+  70.4,
+  65.1,
+  45.1,
+  73.0,
+  53.1,
+  48.1,
+  56.8
+ ],
+ "checks": {
+  "S0_within_15pp_of_stress": true,
+  "S4_beats_S0": false,
+  "fees_x2_keeps_choice_over_S0": true,
+  "beats_16_of_20_random": true
+ },
+ "choice": "S0"
+}

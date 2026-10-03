@@ -4922,3 +4922,19 @@ Rule: S4 replaces S0 only by beating it on total and total over drawdown in both
 VOID, first run (`results/split_r4.log`): the combined-weight replay put S0 at +60.0% / -12.7% against the reference +85.5% / -14.8%, a -25.5 pp gap, outside the declared 15 pp, so no arm is read. Cause: one weight book for both halves makes them interfere (a coin both halves hold cannot be topped up, one ladder for both), the defect `#blend-checkpoint-outcome` already found and the reason the live bot keeps separate ledgers.
 Amendment before any ledger number: the same arms, windows, rules and controls, replayed with two separate ledgers per 5m bar using the live `bot/sleeves.step` (entries, exits and the per-sleeve ladder), tick cost charged on each traded notional, the rule half entering only new names as `SleevesBot.compute_target` does; the cap is applied at entry by a new `bot/sleeves.cap_entries` that the live runner will share.
 
+## split-r4-outcome
+
+NO CHANGE: the staged split (S0) stays the candidate (`results/split_r4.json`, `python3 -m archive.gates.split_r4`, two separate ledgers per 5m bar, 2026-08-01..10-03 18:20Z). The ledger replay reproduces the stress reference (S0 +89.5% vs +85.5%, gap 4 pp, inside 15).
+| arm | total / max DD / total:DD | pre total / DD | live total / DD | doubled fees | largest coin weight |
+|---|---|---|---|---|---|
+| S0 staged split | +89.5% / -16.9% / 5.31 | +51.7% / -16.9% | +25.1% / -10.9% | +72.9% | 0.42 |
+| S4 R4 rule + ride | +92.5% / -16.2% / 5.72 | +52.3% / -16.2% | +26.5% / -11.7% | +74.0% | 0.42 |
+| S4c with 0.35 coin cap | +86.5% / -15.6% / 5.53 | +49.6% / -15.6% | +24.8% / -10.8% | +69.0% | 0.36 |
+| S4t rule 40 / ride 60 | +97.6% / -15.1% / 6.47 | +54.1% / -15.1% | +28.4% / -11.1% | +80.1% | 0.41 |
+| S4ct both | +93.0% / -15.2% / 6.13 | +52.0% / -15.2% | +27.2% / -10.4% | +76.3% | 0.36 |
+- **S4 fails by a hair:** more total in both windows, but live total:DD 2.26 against S0's 2.30, so the declared rule keeps S0; the cap and tilt arms are not read as choices. Random ride triggers: +45% to +73%, S0 beats 18 of 20.
+- **Inside a split the R4 rule half adds little:** +3 points over the plain rule, against +38 points when each rule trades a whole book (`#regime-competition-outcome`); the ride already holds the coins the regime block would have saved.
+- **The cap costs return** (3-6 points) for a shallower drawdown of under 1 point: not worth it.
+- **The one consistent signal is more ride:** S4t beats S4 on total and total:DD in both windows (+1.8 and +1.9 points, total:DD 3.58 vs 3.23 pre and 2.56 vs 2.26 live), matching the forward lesson from `ride_5m` and `wf_live`. A 40/60 tilt was declared only on the R4 base, so it is a candidate for its own declared test on the staged split, not a result.
+- `bot/sleeves.cap_entries` stays as a tested helper; no live book uses it.
+
