@@ -1,0 +1,20 @@
+meta:
+  name: session_timing
+  frozen: true
+  declared_utc: '2026-10-03T07:58:00Z'
+  requested_by: 'operator 2026-10-03: which time frames have the highest volatility and potential; the India session seems not to make money, overnight (New York) seems to'
+  declared_ref: DECISIONS.md#session-timing-declaration
+  written_before_any_number: false
+  contamination: '#price-action-outcome already reported session means (EU strong in W2 only, no sign holding) before this declaration'
+data: 'live Binance 1h bars 2026-08-01..now and 5m bars 2026-08-29..now for the 25-coin pool; the 30m net returns of the replayed books (#adaptive-loop-outcome cache)'
+sessions_utc: {india: '03:30-10:00 (09:00-15:30 IST)', london: '07:00-13:30', new_york: '13:30-20:00', late_us: '20:00-24:00', asia_early: '00:00-03:30'}
+measures:
+  volatility: 'per UTC hour: mean absolute 1h return per coin, pool 1h return std, share of daily quote volume'
+  direction: 'per UTC hour and session: mean pool return with t'
+  ride_triggers: 'per hour: count of ride triggers (5m 3-bar return >= 2%) and the share that touch +5% within 24 h'
+  books: 'per hour and session: mean 30m net return of R0 (plain rule), ride2, S0, S4'
+windows: {A: '2026-08-01 to 2026-09-05', B: '2026-09-05 to 2026-09-19', C: '2026-09-19 to now'}
+decision_rule: >
+  A session effect counts only if it has the same sign and |t| >= 2 in all three windows (volatility ranks: Spearman of hourly
+  vol profiles between windows >= 0.7). A trading-hours filter for a book is worth a paper test only if excluding the session
+  improves that book in all three windows; the current books trade around the clock.

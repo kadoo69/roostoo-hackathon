@@ -4875,3 +4875,7 @@ Test: forward paper on the live ticker, PEPE against four 4-5 bps controls, touc
 
 CLOSED, not allowed: the organisers' slides permit directional strategies only, "no market making or arbitrage" (`#comp-key-bot-only-2026-10-02`). Resting a buy at the bid and a sell at the ask to earn PEPE's 23.5 bps tick is market making, so the forward paper test was stopped after about 15 minutes with no result recorded and nothing will be built. The structural observation stands as a fact about the venue: Roostoo copies Binance ticks (PEPE 23.5 bps, five coins 4-5 bps), quotes one tick wide, fills a limit at LastPrice at once as taker and a resting limit as maker when LastPrice reaches it; the directional books already benefit from the maker side of this.
 
+## session-timing-declaration
+
+Operator 2026-10-03 ~07:55Z: which hours have the highest volatility and potential; the India session seems flat, New York overnight seems to make the money. Declared in `config/session_timing.yaml` (not before every number: `#price-action-outcome` already had session means). Three windows (08-01..09-05, 09-05..09-19, 09-19..now); an effect counts only with the same sign and |t| >= 2 in all three, and an hours filter for a book earns a paper test only if it improves the book in all three.
+
