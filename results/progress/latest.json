@@ -1,151 +1,151 @@
 {
- "generated": "2026-09-30T19:08:53.293699+00:00",
+ "generated": "2026-10-03T06:52:53.376255+00:00",
  "books": [
   {
-   "book": "momentum_top3_30m",
+   "book": "wf_live",
    "live_orders": false,
-   "equity": 99839.86,
-   "return_total_pct": -0.16,
-   "return_24h_pct": -0.16,
+   "equity": 104171.72,
+   "return_total_pct": 4.172,
+   "return_24h_pct": 1.864,
    "ratios_total": {
-    "sharpe": null,
-    "sortino": null,
-    "calmar": null,
-    "max_dd_pct": -0.87
+    "sharpe": 10.9,
+    "sortino": 20.09,
+    "calmar": 1.27,
+    "max_dd_pct": -3.28
    },
    "ratios_24h": {
-    "sharpe": null,
-    "sortino": null,
-    "calmar": null,
-    "max_dd_pct": -0.87
-   },
-   "orders_24h": 2,
-   "order_failures_24h": 0,
-   "stale_cancels_24h": 0,
-   "fill_rate_24h": 1.0,
-   "closed_24h": 1,
-   "win_rate_24h": 0.0,
-   "realised_24h": -160.14,
-   "booked_skims_24h": 0,
-   "booked_skim_pnl_24h": 0,
-   "fees_24h": 49.94,
-   "uptime_24h": 1.0,
-   "faults_24h": 0,
-   "network_blips_24h": 1
-  },
-  {
-   "book": "competition_rehearsal",
-   "live_orders": true,
-   "equity": 49690.36,
-   "return_total_pct": -0.617,
-   "return_24h_pct": -0.617,
-   "ratios_total": {
-    "sharpe": null,
-    "sortino": null,
-    "calmar": null,
-    "max_dd_pct": -1.21
-   },
-   "ratios_24h": {
-    "sharpe": null,
-    "sortino": null,
-    "calmar": null,
-    "max_dd_pct": -1.21
-   },
-   "orders_24h": 4,
-   "order_failures_24h": 0,
-   "stale_cancels_24h": 0,
-   "fill_rate_24h": 1.0,
-   "closed_24h": 2,
-   "win_rate_24h": 0.0,
-   "realised_24h": -308.45,
-   "booked_skims_24h": 0,
-   "booked_skim_pnl_24h": 0,
-   "fees_24h": 49.8,
-   "uptime_24h": 1.0,
-   "faults_24h": 0,
-   "network_blips_24h": 2
-  },
-  {
-   "book": "momentum_top3_5m",
-   "live_orders": false,
-   "equity": 99171.06,
-   "return_total_pct": -0.829,
-   "return_24h_pct": -0.829,
-   "ratios_total": {
-    "sharpe": null,
-    "sortino": null,
-    "calmar": null,
-    "max_dd_pct": -1.61
-   },
-   "ratios_24h": {
-    "sharpe": null,
-    "sortino": null,
-    "calmar": null,
-    "max_dd_pct": -1.61
-   },
-   "orders_24h": 8,
-   "order_failures_24h": 0,
-   "stale_cancels_24h": 0,
-   "fill_rate_24h": 1.0,
-   "closed_24h": 3,
-   "win_rate_24h": 0.333,
-   "realised_24h": -503.46,
-   "booked_skims_24h": 0,
-   "booked_skim_pnl_24h": 0,
-   "fees_24h": 149.44,
-   "uptime_24h": 1.0,
-   "faults_24h": 0,
-   "network_blips_24h": 1
-  },
-  {
-   "book": "momentum_top3_15m",
-   "live_orders": false,
-   "equity": 99046.25,
-   "return_total_pct": -0.954,
-   "return_24h_pct": -0.954,
-   "ratios_total": {
-    "sharpe": null,
-    "sortino": null,
-    "calmar": null,
-    "max_dd_pct": -1.98
-   },
-   "ratios_24h": {
-    "sharpe": null,
-    "sortino": null,
-    "calmar": null,
-    "max_dd_pct": -1.98
+    "sharpe": 12.55,
+    "sortino": 22.04,
+    "calmar": 0.57,
+    "max_dd_pct": -3.28
    },
    "orders_24h": 5,
    "order_failures_24h": 0,
    "stale_cancels_24h": 0,
    "fill_rate_24h": 1.0,
-   "closed_24h": 2,
-   "win_rate_24h": 0.0,
-   "realised_24h": -762.55,
+   "closed_24h": 4,
+   "win_rate_24h": 1.0,
+   "realised_24h": 2449.73,
+   "booked_skims_24h": 2,
+   "booked_skim_pnl_24h": 316.57,
+   "fees_24h": 68.34,
+   "uptime_24h": 0.635,
+   "faults_24h": 0,
+   "network_blips_24h": 3
+  },
+  {
+   "book": "resid_30m",
+   "live_orders": false,
+   "equity": 100479.35,
+   "return_total_pct": 0.479,
+   "return_24h_pct": -0.456,
+   "ratios_total": {
+    "sharpe": 4.51,
+    "sortino": 7.9,
+    "calmar": 0.41,
+    "max_dd_pct": -1.17
+   },
+   "ratios_24h": {
+    "sharpe": -14.13,
+    "sortino": -15.82,
+    "calmar": -0.76,
+    "max_dd_pct": -0.6
+   },
+   "orders_24h": 10,
+   "order_failures_24h": 0,
+   "stale_cancels_24h": 0,
+   "fill_rate_24h": 1.0,
+   "closed_24h": 7,
+   "win_rate_24h": 0.286,
+   "realised_24h": 792.58,
    "booked_skims_24h": 0,
    "booked_skim_pnl_24h": 0,
-   "fees_24h": 59.24,
-   "uptime_24h": 1.0,
+   "fees_24h": 64.38,
+   "uptime_24h": 0.628,
+   "faults_24h": 0,
+   "network_blips_24h": 1
+  },
+  {
+   "book": "wide_30m",
+   "live_orders": false,
+   "equity": 99483.02,
+   "return_total_pct": -0.517,
+   "return_24h_pct": -0.517,
+   "ratios_total": {
+    "sharpe": -7.97,
+    "sortino": -11.74,
+    "calmar": -0.37,
+    "max_dd_pct": -1.4
+   },
+   "ratios_24h": {
+    "sharpe": -9.58,
+    "sortino": -14.18,
+    "calmar": -0.37,
+    "max_dd_pct": -1.4
+   },
+   "orders_24h": 8,
+   "order_failures_24h": 0,
+   "stale_cancels_24h": 0,
+   "fill_rate_24h": 1.0,
+   "closed_24h": 4,
+   "win_rate_24h": 0.25,
+   "realised_24h": -382.46,
+   "booked_skims_24h": 1,
+   "booked_skim_pnl_24h": 140.18,
+   "fees_24h": 83.94,
+   "uptime_24h": 0.646,
    "faults_24h": 0,
    "network_blips_24h": 0
   },
   {
-   "book": "wf_live",
+   "book": "htf0_30m",
    "live_orders": false,
-   "equity": 100000.0,
-   "return_total_pct": 0.0,
-   "return_24h_pct": 0.0,
+   "equity": 103027.86,
+   "return_total_pct": 3.028,
+   "return_24h_pct": -1.674,
    "ratios_total": {
-    "sharpe": null,
-    "sortino": null,
-    "calmar": null,
-    "max_dd_pct": 0.0
+    "sharpe": 8.1,
+    "sortino": 17.48,
+    "calmar": 1.1,
+    "max_dd_pct": -2.74
    },
    "ratios_24h": {
-    "sharpe": null,
-    "sortino": null,
-    "calmar": null,
-    "max_dd_pct": 0.0
+    "sharpe": -14.46,
+    "sortino": -18.93,
+    "calmar": -0.69,
+    "max_dd_pct": -2.43
+   },
+   "orders_24h": 12,
+   "order_failures_24h": 0,
+   "stale_cancels_24h": 0,
+   "fill_rate_24h": 1.0,
+   "closed_24h": 6,
+   "win_rate_24h": 0.167,
+   "realised_24h": 2084.85,
+   "booked_skims_24h": 0,
+   "booked_skim_pnl_24h": 0,
+   "fees_24h": 157.07,
+   "uptime_24h": 0.639,
+   "faults_24h": 0,
+   "network_blips_24h": 2
+  },
+  {
+   "book": "blend_30m_ride",
+   "live_orders": false,
+   "equity": 100176.67,
+   "return_total_pct": 0.177,
+   "return_24h_pct": -1.825,
+   "ratios_total": {
+    "sharpe": 1.07,
+    "sortino": 1.56,
+    "calmar": 0.05,
+    "max_dd_pct": -3.31
+   },
+   "ratios_24h": {
+    "sharpe": -17.71,
+    "sortino": -19.09,
+    "calmar": -0.55,
+    "max_dd_pct": -3.31
    },
    "orders_24h": 0,
    "order_failures_24h": 0,
@@ -157,10 +157,117 @@
    "booked_skims_24h": 0,
    "booked_skim_pnl_24h": 0,
    "fees_24h": 0,
-   "uptime_24h": 1.0,
+   "uptime_24h": 0.649,
    "faults_24h": 0,
+   "network_blips_24h": 2
+  },
+  {
+   "book": "momentum_top3_30m",
+   "live_orders": false,
+   "equity": 100754.79,
+   "return_total_pct": 0.755,
+   "return_24h_pct": -2.365,
+   "ratios_total": {
+    "sharpe": 1.88,
+    "sortino": 2.84,
+    "calmar": 0.13,
+    "max_dd_pct": -5.8
+   },
+   "ratios_24h": {
+    "sharpe": -27.43,
+    "sortino": -29.38,
+    "calmar": -0.72,
+    "max_dd_pct": -3.27
+   },
+   "orders_24h": 10,
+   "order_failures_24h": 0,
+   "stale_cancels_24h": 0,
+   "fill_rate_24h": 1.0,
+   "closed_24h": 5,
+   "win_rate_24h": 0.2,
+   "realised_24h": 1482.61,
+   "booked_skims_24h": 0,
+   "booked_skim_pnl_24h": 0,
+   "fees_24h": 190.85,
+   "uptime_24h": 0.646,
+   "faults_24h": 1,
+   "network_blips_24h": 3
+  },
+  {
+   "book": "ride1_wide_5m",
+   "live_orders": false,
+   "equity": 100266.67,
+   "return_total_pct": 0.267,
+   "return_24h_pct": -2.753,
+   "ratios_total": {
+    "sharpe": -1.34,
+    "sortino": -1.74,
+    "calmar": 0.04,
+    "max_dd_pct": -7.4
+   },
+   "ratios_24h": {
+    "sharpe": -9.99,
+    "sortino": -11.37,
+    "calmar": -0.37,
+    "max_dd_pct": -7.4
+   },
+   "orders_24h": 4,
+   "order_failures_24h": 0,
+   "stale_cancels_24h": 0,
+   "fill_rate_24h": 1.0,
+   "closed_24h": 4,
+   "win_rate_24h": 0.5,
+   "realised_24h": -1315.39,
+   "booked_skims_24h": 2,
+   "booked_skim_pnl_24h": 416.87,
+   "fees_24h": 77.58,
+   "uptime_24h": 0.628,
+   "faults_24h": 1,
    "network_blips_24h": 0
+  },
+  {
+   "book": "ride1_5m",
+   "live_orders": false,
+   "equity": 100415.65,
+   "return_total_pct": 0.416,
+   "return_24h_pct": -4.471,
+   "ratios_total": {
+    "sharpe": 1.41,
+    "sortino": 1.86,
+    "calmar": 0.06,
+    "max_dd_pct": -7.37
+   },
+   "ratios_24h": {
+    "sharpe": -17.08,
+    "sortino": -18.88,
+    "calmar": -0.61,
+    "max_dd_pct": -7.37
+   },
+   "orders_24h": 4,
+   "order_failures_24h": 0,
+   "stale_cancels_24h": 0,
+   "fill_rate_24h": 1.0,
+   "closed_24h": 3,
+   "win_rate_24h": 0.667,
+   "realised_24h": 1431.35,
+   "booked_skims_24h": 1,
+   "booked_skim_pnl_24h": 263.13,
+   "fees_24h": 63.86,
+   "uptime_24h": 0.635,
+   "faults_24h": 0,
+   "network_blips_24h": 2
   }
  ],
- "alerts": []
+ "alerts": [
+  "wf_live: online 64% of the last 24 h",
+  "resid_30m: online 63% of the last 24 h",
+  "wide_30m: online 65% of the last 24 h",
+  "htf0_30m: online 64% of the last 24 h",
+  "blend_30m_ride: online 65% of the last 24 h",
+  "momentum_top3_30m: online 65% of the last 24 h",
+  "ride1_wide_5m: online 63% of the last 24 h",
+  "ride1_wide_5m: 24 h drawdown -7.4%",
+  "ride1_5m: online 64% of the last 24 h",
+  "ride1_5m: 24 h drawdown -7.4%"
+ ]
 }
