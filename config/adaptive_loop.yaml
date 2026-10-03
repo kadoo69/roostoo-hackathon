@@ -1,0 +1,42 @@
+meta:
+  name: adaptive_loop
+  frozen: true
+  declared_utc: '2026-10-03T07:15:00Z'
+  requested_by: 'operator 2026-10-03: study the loop "agent executes -> market dynamics change -> stop the agent -> fine tune -> repeat"'
+  declared_ref: DECISIONS.md#adaptive-loop-declaration
+  written_before_any_number: true
+  prior_evidence: 'follow-the-leader style switching failed (#adaptive-recent-2026-10-01); wf_live''s hourly re-pick adds nothing forward (#wf-live-forward-2026-10-03); drawdown brake null (#drawdown-brake-outcome); regime overlays have reversed out of sample repeatedly'
+  competition_note: 'no manual stop or override is allowed on the competition account, so any loop must be automated, committed code'
+mechanism: 'if the market changes regime, the parameters that fit the last regime stop working; detecting the change, standing aside and re-selecting on the newest data should beat holding one fixed configuration'
+failure_mode: 'detectors fire on noise and after the damage is done, re-selection on a few days chases the last winner (which reverses), and switching costs and missed rebounds eat the rest'
+data: 'live Binance bars, today''s 25-coin pool: 30m for the rule arms, 5m for the ride arms (aggregated to 30m net returns); arm returns from 2026-07-15 so the loop can start on 2026-08-01'
+pool:
+  rule: 'R0 plain competition rule, R1 regime_ls_30m, R3 R0 without 4h confirm, R4 regime long-block without shorts (#regime-competition-declaration)'
+  ride: 'ride with trigger 1%, 2%, 3% (cap +5%, 24 h, 3 slots)'
+  split: 'S0 = half R0 + half ride 2% (the staged competition_split plan), S4 = half R4 + half ride 2%'
+  cash: true
+loop:
+  decide_every: '30m bar'
+  fine_tune: 'adopt the pool member with the highest return over the trailing W days'
+  detectors:
+    dd5: 'loop equity falls 5% from its peak since the last adoption'
+    dd10: 'the same at 10%'
+    regime: 'regime_ls state enters or leaves DOWN, or pool 24h realised vol crosses 1.5x its 7-day level (either direction)'
+    cal1d: 'every 24 h, no detection (calendar retune)'
+    cal3d: 'every 72 h'
+    never: 'pick once on the first W days, never retune'
+  W_days: [3, 7, 14]
+  stop_bars: [0, 12]
+  costs: 'switching arms 0.10%, stopping 0.05%, resuming 0.05% of the book'
+primary: 'detector dd5, W 7 days, stop 12 bars (6 h)'
+benchmark: 'static S0, the staged split'
+windows:
+  pre: '2026-08-01 to 2026-09-19'
+  live: '2026-09-19 to now'
+nonsense_control: '20 seeds: the primary loop with its detector replaced by random firing at the same number of fires per window'
+decision_rule: >
+  The primary loop is recommended only if it beats static S0 on total return AND on total / |max drawdown| in BOTH pre and
+  live, beats at least 16 of 20 random-firing controls on full-period total, and the median of all 27 loop configurations
+  also beats static S0 on full-period total (so a single lucky cell cannot pass). Otherwise null; the grid is reported whole.
+approximation: 'switching is between arms'' return streams (an arm''s positions are assumed enterable at the switch bar), as wf_live does; costs above stand in for the turnover'
+trials: 'the 27 loop configurations, one each'

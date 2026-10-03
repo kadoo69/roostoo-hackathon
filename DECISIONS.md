@@ -4848,3 +4848,10 @@ Operator 2026-10-03: learn from the forward books, do not discard them on histor
 - **About a third of the gain is downtime luck:** AAVE first touched +5% at 10-02 01:35Z while the Mac was asleep (no cycle 00:44-02:27Z), so the +5% cap never fired and the position was sold at +9.4% at 05:09Z; at the cap it would have made about 1,450 less. It was also frozen through the night of 10-03 and so skipped the PUMP entry that `ride_5m` took at 00:35Z and lost on. Holding past +5% is not a rule (`#price-action-outcome`: continuation 29-40% now).
 - **Fault:** frozen since 2026-10-03 00:19Z on a fixed `stale_ticker:464s` (and `blend_30m_ride` on 1166s): `RoostooClient.time_offset_ms` is synced once at start (`bot/run.py` init), and after the Mac slept the offset is wrong, so every cycle reads the ticker as stale. A restart clears it; the lasting fix is a resync when the ticker looks stale, which touches code the EC2 live units import, so it waits for the operator.
 
+## adaptive-loop-declaration
+
+Operator 2026-10-03 ~07:10Z: study the loop "agent executes, market dynamics change, stop the agent, fine tune, repeat". Declared in `config/adaptive_loop.yaml` before any number, `python3 -m gates.adaptive_loop`.
+Pool: four rule variants, the ride at 1/2/3% triggers, two 50/50 splits, cash; the loop adopts the best trailing-W-day member and re-selects when a detector fires (5% or 10% drawdown since adoption, a regime or volatility break, a 1- or 3-day calendar, or never), optionally standing in cash 6 h first; 27 configurations with switching costs.
+Rule: the primary (5% drawdown, W 7 days, 6 h stop) must beat the static staged split on total and on total over drawdown in both 08-01..09-19 and 09-19..now, beat 16 of 20 random-firing controls, and the grid median must beat the static split too.
+Any loop on the competition account must be automated committed code: the rules forbid a manual stop.
+
