@@ -2,7 +2,38 @@
 
 Current state only. The full history of sessions to 2026-09-23 is archived at `docs/archive/HANDOVER_2026-09-23.md`; older section references in code and configs point there.
 
-## CURRENT STATE 2026-10-02 16:10Z (read this first; everything below is history)
+## CURRENT STATE 2026-10-03 06:30Z (read this first; everything below is history)
+
+### Deadlines and blockers
+- **Competition starts 2026-10-03 12:00Z (20:00 HKT / 17:30 IST)**, runs to 10-17; repo link before 10-14 (`python3 deploy/export_logs.py`, commit `logs/`, tag `submission-final` at the end).
+- `competition` (COMP keys) is the **plain 30m rule** and waits for the account; it starts trading by itself on the first good wallet read.
+- **The split bot is staged, not running:** `config/competition_split.yaml` = the rehearsed 50/50 rule + ride sleeves on the COMP keys (`#competition-split-staged-2026-10-03`). Switch (operator only, the session permission check blocks the agent): on EC2 `systemctl disable --now roostoo-live@competition` then `systemctl enable --now roostoo-live@competition_split`, then put it in `BOOKS` of `deploy/ec2_bootstrap.sh` and the desk/validation registries. Never both units at once. Its rule half reads `config/competition.yaml`, which must stay the plain rule.
+- Evidence for the switch: stage-3 gate clean at 05:53Z (no failed orders, no faults, rehearsal -1.90% vs paper `sleeves_5m` -2.02% since 10-02 16:00Z); stress test Aug-Oct (`#stress-split-vs-rule-2026-10-03`): split +85.5% / max DD -14.8% / Calmar 5.76 vs plain rule +58.6% / -24.1% / 2.43, better under doubled fees and in the worst 3- and 14-day windows.
+
+### Where things run
+- **EC2** `i-015fad70d34b0b83d`, all units start `bot.runner` (class from config). Live: `roostoo-live@competition` (plain rule, waiting), `roostoo-live@competition_rehearsal` (50/50 split, TEST keys). Paper: `ride_5m`, `sleeves_5m`, `sleeves_ivol_5m`, `ride_z3_5m`, `sleeves_z3_5m`, `uni_donchian_15m`, `regime_ls_30m`. Fleet table and registration steps: `BOTS.md`.
+- **Mac** paper (sleeps unless `sudo pmset -a disablesleep 1` and mains power; it slept most of the night of 10-02): `momentum_top3_30m`, `wf_live`, `blend_30m_ride`, `resid_30m`, `htf0_30m`, `ride1_5m`, `wide_30m`, `ride1_wide_5m`.
+- **AWS access**: `python3 deploy/aws_login.py` (browser device approval; the token expired overnight and blocked EC2 monitoring until the operator re-ran it at ~05:50Z). Status: `deploy/ec2_status.sh`; scripts on EC2: `python3 deploy/ssm_shell.py <script>`.
+
+### Book snapshot 2026-10-03 05:53Z (EC2, since each book's start)
+uni_donchian_15m +2.77% (UNI), regime_ls_30m +3.79% (shorts closed, TRX), ride_z3_5m -0.14%, sleeves_ivol_5m -0.25%, sleeves_z3_5m -0.28%, ride_5m -0.55% since its EC2 restart, sleeves_5m -2.00%, competition_rehearsal -2.61% since 10-02 14:22Z (52,729 -> 51,729 since its split switch). Overnight the pool fell 1.4% with 3 of 25 coins up (UNI, WLD, TRUMP); the only ride trigger was a PUMP bounce that then fell 5.5%.
+
+### Done 2026-10-02/03 (all committed, DECISIONS anchors)
+Stage 2 split on the rehearsal (`#sleeves-rehearsal-2026-10-02`); research nulls: ride exits, bStocks, coin EDA, inverse-vol sizing, ride trigger recheck, dynamic triggers (per-coin 3-sigma best risk-adjusted, paper as `ride_z3_5m`), single coin (UNI, failed validation, paper as `uni_donchian_15m`), regime blocks (trend to chop at 09-23); `regime_ls_30m` moved to EC2; Swolecharts/free-data review (no integration; unlock data now paid); dead-code cleanup (`#dead-code-cleanup-2026-10-02`: retired runtime deleted, 113 research modules in `archive/`, run as `python3 -m archive.gates.<name>`); desk fixes (scrolling, notes vs errors); stress test; split bot staged.
+
+### Open items
+1. Operator: switch `competition` to `competition_split` (above), ideally before 12:00Z.
+2. EC2-code fixes left for after the start: `bot.runner` does not know the `hedge_explorer` blend config; `bot/regime.py` reads the dead scanner state for an unused regime gate.
+3. Checkpoint 10-05: `sleeves_ivol_5m`, `ride_z3_5m`/`sleeves_z3_5m`, `uni_donchian_15m`, `regime_ls_30m` against their declared falsification rules.
+4. **Next research (operator 2026-10-03): in-depth price action and technical factors.** Spec to run in a fresh session, declared first in `config/price_action.yaml`, recent windows only (W1 09-05..09-19, W2 09-19..now, last 3 days), 25-coin pool, 5m/15m/1h live Binance bars, cross-sectional rank IC and event studies with |t| >= 2 same-sign in both windows to count: candle structure (body/range, wicks, gaps, inside/outside bars), volatility compression then expansion (BB width, ATR ratio, NR7), trend quality (ADX, MA slope and alignment, distance from VWAP/MAs), oscillators (RSI, Stochastic, MACD histogram turns), volume (relative volume, OBV slope, volume on up vs down bars, climax bars), support/resistance (distance to 24h/72h high-low, prior-day high-low, round numbers), time of day and session (Asia/EU/US open), and BTC/ETH lead conditioning; report what predicts next 1h/4h/24h return and what predicts a +5% position continuing. Dead families in `FINDINGS.md` are not re-tested as rules, only reported as features.
+
+### Lessons (do not repeat)
+- The session's permission check blocks changes to the competition config; plan operator-run steps for anything touching the COMP account.
+- Keep the Mac on mains with sleep disabled, and re-run `aws_login.py` before it expires, or both the paper fleet and EC2 monitoring go dark.
+- Never blend sleeves inside one book's weights; use `bot/sleeves.py`. In chop nothing beats holding.
+
+## Previous state 2026-10-02 16:10Z (history)
+
 
 ### Deadlines and blockers
 - **Competition starts 2026-10-03 12:00Z** (20:00 HKT / 17:30 IST), per the operator 2026-10-02; this settles the FAQ (09-30) vs slides (10-04) conflict. Account still NOT ACTIVE until then ("not yet a member", polled every 30 s); the bot starts trading by itself on the first good wallet read. If it is still inactive at 12:30Z on 10-03, the operator messages the organisers (team Hackathon-Team118).
