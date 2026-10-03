@@ -4855,3 +4855,13 @@ Pool: four rule variants, the ride at 1/2/3% triggers, two 50/50 splits, cash; t
 Rule: the primary (5% drawdown, W 7 days, 6 h stop) must beat the static staged split on total and on total over drawdown in both 08-01..09-19 and 09-19..now, beat 16 of 20 random-firing controls, and the grid median must beat the static split too.
 Any loop on the competition account must be automated committed code: the rules forbid a manual stop.
 
+## adaptive-loop-outcome
+
+FAIL, every check (`results/adaptive_loop.json`, `python3 -m archive.gates.adaptive_loop`, 30m net returns 2026-08-01..10-03 07:00Z). Static arms reproduce `#regime-competition-outcome` and the stress test (R0 +58.7% / -24.1%, S0 +85.4% / -14.8%).
+- **Primary (5% drawdown, W 7 days, 6 h stop):** +34.2% / -11.6% in pre, then 0.0% in live: it stopped into cash on 08-30 and never came back. Static S0: pre +53.0%, live +22.1%. Random firing at the same count: -20% to +100% (median +33%), so the primary beat 9 of 20.
+- **The trap in "stop the agent":** a drawdown detector cannot fire while the book is in cash, so a stop that lands in cash, or a re-selection that picks cash, is absorbing. 13 of the 18 drawdown configurations ended the period in cash; 3 of the never-retune configurations also started in cash.
+- **The whole grid (27):** median +28.5% against S0 +85.4%. Best: 3-day calendar with a 3-day look-back +106.8% / -16.2% (its 7- and 14-day neighbours -22.4% and +14.6%); never retune on 7 days +106.4% / -25.6% (it picked ride1 on 08-01 and held it); regime/volatility break with 14 days +68.4% / -14.1%. Neighbouring cells differ by 50-130 points, which is timing luck, not a method.
+- **Post-hoc sensitivity, not part of the verdict:** the drawdown loops re-checking daily while in cash range +30% to +123% (median about +65%), drawdowns -14% to -28%; none beats S4 on total and drawdown together, and the best cell's neighbour makes +34%.
+- **Static S4 (half R4, half ride 2%) is the best shape in the pool:** +106.3% / -14.1% (total:DD 7.53), pre +63.2% / live +27.3%, against S0 +85.4% / -14.8% (pre +53.0% / live +22.1%). It beats the staged split in both windows; it is the split-with-R4 candidate of `#regime-competition-outcome`, chosen from a pool, so it needs paper time.
+Reading: stopping and re-tuning on recent results chases the last winner and stands aside for the rebound, as `#adaptive-recent-2026-10-01` and `#wf-live-forward-2026-10-03` found; the configurations that win are the ones that keep one diversified book running. Any automated stop would also have to be committed code on the competition account (no manual stop). 27 trials recorded.
+

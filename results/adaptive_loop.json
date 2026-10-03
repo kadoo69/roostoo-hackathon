@@ -1,0 +1,935 @@
+{
+ "ref": "DECISIONS.md#adaptive-loop-declaration",
+ "bars_end": "2026-10-03 06:30:00+00:00",
+ "static": {
+  "R0": {
+   "full": {
+    "total": 58.7,
+    "maxDD": -24.1,
+    "tot_dd": 2.44
+   },
+   "pre": {
+    "total": 43.4,
+    "maxDD": -24.1,
+    "tot_dd": 1.8
+   },
+   "live": {
+    "total": 12.5,
+    "maxDD": -15.8,
+    "tot_dd": 0.79
+   }
+  },
+  "R1": {
+   "full": {
+    "total": 77.3,
+    "maxDD": -26.6,
+    "tot_dd": 2.91
+   },
+   "pre": {
+    "total": 46.3,
+    "maxDD": -26.6,
+    "tot_dd": 1.74
+   },
+   "live": {
+    "total": 23.2,
+    "maxDD": -14.8,
+    "tot_dd": 1.56
+   }
+  },
+  "R3": {
+   "full": {
+    "total": 79.5,
+    "maxDD": -25.6,
+    "tot_dd": 3.1
+   },
+   "pre": {
+    "total": 54.1,
+    "maxDD": -25.6,
+    "tot_dd": 2.11
+   },
+   "live": {
+    "total": 18.4,
+    "maxDD": -14.8,
+    "tot_dd": 1.25
+   }
+  },
+  "R4": {
+   "full": {
+    "total": 96.4,
+    "maxDD": -22.9,
+    "tot_dd": 4.22
+   },
+   "pre": {
+    "total": 63.3,
+    "maxDD": -22.9,
+    "tot_dd": 2.77
+   },
+   "live": {
+    "total": 22.3,
+    "maxDD": -13.7,
+    "tot_dd": 1.63
+   }
+  },
+  "ride1": {
+   "full": {
+    "total": 106.4,
+    "maxDD": -25.6,
+    "tot_dd": 4.16
+   },
+   "pre": {
+    "total": 90.1,
+    "maxDD": -25.6,
+    "tot_dd": 3.53
+   },
+   "live": {
+    "total": 9.3,
+    "maxDD": -14.6,
+    "tot_dd": 0.64
+   }
+  },
+  "ride2": {
+   "full": {
+    "total": 111.4,
+    "maxDD": -17.7,
+    "tot_dd": 6.28
+   },
+   "pre": {
+    "total": 60.4,
+    "maxDD": -17.7,
+    "tot_dd": 3.4
+   },
+   "live": {
+    "total": 31.5,
+    "maxDD": -9.8,
+    "tot_dd": 3.22
+   }
+  },
+  "ride3": {
+   "full": {
+    "total": 48.9,
+    "maxDD": -19.9,
+    "tot_dd": 2.45
+   },
+   "pre": {
+    "total": 27.0,
+    "maxDD": -19.9,
+    "tot_dd": 1.36
+   },
+   "live": {
+    "total": 17.1,
+    "maxDD": -10.8,
+    "tot_dd": 1.58
+   }
+  },
+  "S0": {
+   "full": {
+    "total": 85.4,
+    "maxDD": -14.8,
+    "tot_dd": 5.76
+   },
+   "pre": {
+    "total": 53.0,
+    "maxDD": -14.8,
+    "tot_dd": 3.57
+   },
+   "live": {
+    "total": 22.1,
+    "maxDD": -11.3,
+    "tot_dd": 1.95
+   }
+  },
+  "S4": {
+   "full": {
+    "total": 106.3,
+    "maxDD": -14.1,
+    "tot_dd": 7.53
+   },
+   "pre": {
+    "total": 63.2,
+    "maxDD": -14.1,
+    "tot_dd": 4.48
+   },
+   "live": {
+    "total": 27.3,
+    "maxDD": -10.2,
+    "tot_dd": 2.67
+   }
+  },
+  "cash": {
+   "full": {
+    "total": 0.0,
+    "maxDD": 0.0,
+    "tot_dd": null
+   },
+   "pre": {
+    "total": 0.0,
+    "maxDD": 0.0,
+    "tot_dd": null
+   },
+   "live": {
+    "total": 0.0,
+    "maxDD": 0.0,
+    "tot_dd": null
+   }
+  }
+ },
+ "grid": {
+  "dd5|W3|stop0": {
+   "full": {
+    "total": 0.0,
+    "maxDD": 0.0,
+    "tot_dd": null
+   },
+   "pre": {
+    "total": 0.0,
+    "maxDD": 0.0,
+    "tot_dd": null
+   },
+   "live": {
+    "total": 0.0,
+    "maxDD": 0.0,
+    "tot_dd": null
+   },
+   "fires": 0,
+   "switches": 0,
+   "picks": {
+    "cash": 1
+   }
+  },
+  "dd5|W3|stop12": {
+   "full": {
+    "total": 0.0,
+    "maxDD": 0.0,
+    "tot_dd": null
+   },
+   "pre": {
+    "total": 0.0,
+    "maxDD": 0.0,
+    "tot_dd": null
+   },
+   "live": {
+    "total": 0.0,
+    "maxDD": 0.0,
+    "tot_dd": null
+   },
+   "fires": 0,
+   "switches": 0,
+   "picks": {
+    "cash": 1
+   }
+  },
+  "dd5|W7|stop0": {
+   "full": {
+    "total": -1.0,
+    "maxDD": -9.8,
+    "tot_dd": -0.11
+   },
+   "pre": {
+    "total": -1.0,
+    "maxDD": -9.8,
+    "tot_dd": -0.11
+   },
+   "live": {
+    "total": 0.0,
+    "maxDD": 0.0,
+    "tot_dd": null
+   },
+   "fires": 2,
+   "switches": 2,
+   "picks": {
+    "ride1": 1,
+    "R4": 1,
+    "cash": 1
+   }
+  },
+  "dd5|W7|stop12": {
+   "full": {
+    "total": 34.2,
+    "maxDD": -11.6,
+    "tot_dd": 2.96
+   },
+   "pre": {
+    "total": 34.2,
+    "maxDD": -11.6,
+    "tot_dd": 2.96
+   },
+   "live": {
+    "total": 0.0,
+    "maxDD": 0.0,
+    "tot_dd": null
+   },
+   "fires": 8,
+   "switches": 8,
+   "picks": {
+    "ride2": 4,
+    "ride1": 3,
+    "R3": 1,
+    "cash": 1
+   }
+  },
+  "dd5|W14|stop0": {
+   "full": {
+    "total": -2.8,
+    "maxDD": -5.3,
+    "tot_dd": -0.53
+   },
+   "pre": {
+    "total": -2.8,
+    "maxDD": -5.3,
+    "tot_dd": -0.53
+   },
+   "live": {
+    "total": 0.0,
+    "maxDD": 0.0,
+    "tot_dd": null
+   },
+   "fires": 1,
+   "switches": 1,
+   "picks": {
+    "ride3": 1,
+    "cash": 1
+   }
+  },
+  "dd5|W14|stop12": {
+   "full": {
+    "total": -2.8,
+    "maxDD": -5.3,
+    "tot_dd": -0.53
+   },
+   "pre": {
+    "total": -2.8,
+    "maxDD": -5.3,
+    "tot_dd": -0.53
+   },
+   "live": {
+    "total": 0.0,
+    "maxDD": 0.0,
+    "tot_dd": null
+   },
+   "fires": 1,
+   "switches": 1,
+   "picks": {
+    "ride3": 1,
+    "cash": 1
+   }
+  },
+  "dd10|W3|stop0": {
+   "full": {
+    "total": 0.0,
+    "maxDD": 0.0,
+    "tot_dd": null
+   },
+   "pre": {
+    "total": 0.0,
+    "maxDD": 0.0,
+    "tot_dd": null
+   },
+   "live": {
+    "total": 0.0,
+    "maxDD": 0.0,
+    "tot_dd": null
+   },
+   "fires": 0,
+   "switches": 0,
+   "picks": {
+    "cash": 1
+   }
+  },
+  "dd10|W3|stop12": {
+   "full": {
+    "total": 0.0,
+    "maxDD": 0.0,
+    "tot_dd": null
+   },
+   "pre": {
+    "total": 0.0,
+    "maxDD": 0.0,
+    "tot_dd": null
+   },
+   "live": {
+    "total": 0.0,
+    "maxDD": 0.0,
+    "tot_dd": null
+   },
+   "fires": 0,
+   "switches": 0,
+   "picks": {
+    "cash": 1
+   }
+  },
+  "dd10|W7|stop0": {
+   "full": {
+    "total": -1.3,
+    "maxDD": -10.0,
+    "tot_dd": -0.13
+   },
+   "pre": {
+    "total": -1.3,
+    "maxDD": -10.0,
+    "tot_dd": -0.13
+   },
+   "live": {
+    "total": 0.0,
+    "maxDD": 0.0,
+    "tot_dd": null
+   },
+   "fires": 1,
+   "switches": 1,
+   "picks": {
+    "ride1": 1,
+    "cash": 1
+   }
+  },
+  "dd10|W7|stop12": {
+   "full": {
+    "total": -1.3,
+    "maxDD": -10.0,
+    "tot_dd": -0.13
+   },
+   "pre": {
+    "total": -1.3,
+    "maxDD": -10.0,
+    "tot_dd": -0.13
+   },
+   "live": {
+    "total": 0.0,
+    "maxDD": 0.0,
+    "tot_dd": null
+   },
+   "fires": 1,
+   "switches": 1,
+   "picks": {
+    "ride1": 1,
+    "cash": 1
+   }
+  },
+  "dd10|W14|stop0": {
+   "full": {
+    "total": 37.5,
+    "maxDD": -23.4,
+    "tot_dd": 1.61
+   },
+   "pre": {
+    "total": 24.4,
+    "maxDD": -23.4,
+    "tot_dd": 1.04
+   },
+   "live": {
+    "total": 12.4,
+    "maxDD": -14.4,
+    "tot_dd": 0.86
+   },
+   "fires": 6,
+   "switches": 5,
+   "picks": {
+    "ride2": 2,
+    "ride3": 1,
+    "ride1": 1,
+    "R1": 1,
+    "R4": 1
+   }
+  },
+  "dd10|W14|stop12": {
+   "full": {
+    "total": 35.9,
+    "maxDD": -23.7,
+    "tot_dd": 1.51
+   },
+   "pre": {
+    "total": 26.7,
+    "maxDD": -23.7,
+    "tot_dd": 1.12
+   },
+   "live": {
+    "total": 9.1,
+    "maxDD": -16.9,
+    "tot_dd": 0.54
+   },
+   "fires": 6,
+   "switches": 6,
+   "picks": {
+    "ride2": 3,
+    "ride3": 1,
+    "ride1": 1,
+    "R1": 1,
+    "R4": 1
+   }
+  },
+  "regime|W3|stop0": {
+   "full": {
+    "total": 21.6,
+    "maxDD": -22.2,
+    "tot_dd": 0.98
+   },
+   "pre": {
+    "total": 29.4,
+    "maxDD": -19.3,
+    "tot_dd": 1.52
+   },
+   "live": {
+    "total": -6.0,
+    "maxDD": -22.2,
+    "tot_dd": -0.27
+   },
+   "fires": 118,
+   "switches": 38,
+   "picks": {
+    "cash": 10,
+    "ride2": 8,
+    "ride1": 7,
+    "ride3": 4,
+    "R4": 3,
+    "R1": 3,
+    "R3": 2,
+    "R0": 2
+   }
+  },
+  "regime|W3|stop12": {
+   "full": {
+    "total": 40.4,
+    "maxDD": -20.7,
+    "tot_dd": 1.95
+   },
+   "pre": {
+    "total": 11.9,
+    "maxDD": -20.7,
+    "tot_dd": 0.58
+   },
+   "live": {
+    "total": 25.5,
+    "maxDD": -9.7,
+    "tot_dd": 2.62
+   },
+   "fires": 62,
+   "switches": 62,
+   "picks": {
+    "cash": 17,
+    "ride2": 16,
+    "ride1": 16,
+    "R1": 7,
+    "ride3": 4,
+    "R4": 2,
+    "R0": 1
+   }
+  },
+  "regime|W7|stop0": {
+   "full": {
+    "total": 32.5,
+    "maxDD": -16.4,
+    "tot_dd": 1.99
+   },
+   "pre": {
+    "total": 10.3,
+    "maxDD": -15.2,
+    "tot_dd": 0.68
+   },
+   "live": {
+    "total": 20.1,
+    "maxDD": -11.3,
+    "tot_dd": 1.77
+   },
+   "fires": 118,
+   "switches": 32,
+   "picks": {
+    "ride1": 9,
+    "R4": 6,
+    "cash": 5,
+    "ride2": 5,
+    "R1": 5,
+    "ride3": 2,
+    "R0": 1
+   }
+  },
+  "regime|W7|stop12": {
+   "full": {
+    "total": 28.9,
+    "maxDD": -22.1,
+    "tot_dd": 1.31
+   },
+   "pre": {
+    "total": 5.7,
+    "maxDD": -22.1,
+    "tot_dd": 0.26
+   },
+   "live": {
+    "total": 23.9,
+    "maxDD": -11.5,
+    "tot_dd": 2.08
+   },
+   "fires": 62,
+   "switches": 62,
+   "picks": {
+    "ride2": 17,
+    "ride1": 12,
+    "R1": 11,
+    "cash": 9,
+    "R4": 7,
+    "ride3": 5,
+    "R0": 2
+   }
+  },
+  "regime|W14|stop0": {
+   "full": {
+    "total": 68.4,
+    "maxDD": -14.1,
+    "tot_dd": 4.83
+   },
+   "pre": {
+    "total": 41.4,
+    "maxDD": -14.1,
+    "tot_dd": 2.93
+   },
+   "live": {
+    "total": 21.0,
+    "maxDD": -9.8,
+    "tot_dd": 2.15
+   },
+   "fires": 118,
+   "switches": 20,
+   "picks": {
+    "ride1": 6,
+    "ride2": 4,
+    "R1": 3,
+    "cash": 2,
+    "R0": 2,
+    "R4": 2,
+    "ride3": 1,
+    "S4": 1
+   }
+  },
+  "regime|W14|stop12": {
+   "full": {
+    "total": 46.1,
+    "maxDD": -16.1,
+    "tot_dd": 2.86
+   },
+   "pre": {
+    "total": 19.0,
+    "maxDD": -16.1,
+    "tot_dd": 1.18
+   },
+   "live": {
+    "total": 24.8,
+    "maxDD": -10.0,
+    "tot_dd": 2.48
+   },
+   "fires": 62,
+   "switches": 62,
+   "picks": {
+    "ride2": 27,
+    "ride1": 13,
+    "R4": 10,
+    "R1": 8,
+    "ride3": 2,
+    "cash": 2,
+    "S0": 1
+   }
+  },
+  "cal1d|W3|stop0": {
+   "full": {
+    "total": 71.1,
+    "maxDD": -22.4,
+    "tot_dd": 3.17
+   },
+   "pre": {
+    "total": 36.6,
+    "maxDD": -22.4,
+    "tot_dd": 1.63
+   },
+   "live": {
+    "total": 25.1,
+    "maxDD": -11.8,
+    "tot_dd": 2.12
+   },
+   "fires": 63,
+   "switches": 36,
+   "picks": {
+    "cash": 9,
+    "ride1": 8,
+    "ride2": 6,
+    "R1": 5,
+    "ride3": 3,
+    "R4": 2,
+    "R3": 2,
+    "R0": 1,
+    "S0": 1
+   }
+  },
+  "cal1d|W7|stop0": {
+   "full": {
+    "total": 28.5,
+    "maxDD": -17.9,
+    "tot_dd": 1.59
+   },
+   "pre": {
+    "total": 12.1,
+    "maxDD": -17.9,
+    "tot_dd": 0.68
+   },
+   "live": {
+    "total": 14.4,
+    "maxDD": -9.8,
+    "tot_dd": 1.47
+   },
+   "fires": 63,
+   "switches": 28,
+   "picks": {
+    "ride1": 7,
+    "ride2": 6,
+    "ride3": 4,
+    "R1": 4,
+    "cash": 3,
+    "R4": 3,
+    "R0": 1,
+    "S4": 1
+   }
+  },
+  "cal1d|W14|stop0": {
+   "full": {
+    "total": 46.2,
+    "maxDD": -19.8,
+    "tot_dd": 2.33
+   },
+   "pre": {
+    "total": 28.8,
+    "maxDD": -19.8,
+    "tot_dd": 1.45
+   },
+   "live": {
+    "total": 15.3,
+    "maxDD": -9.8,
+    "tot_dd": 1.57
+   },
+   "fires": 63,
+   "switches": 19,
+   "picks": {
+    "ride1": 7,
+    "R1": 3,
+    "ride2": 3,
+    "R4": 3,
+    "cash": 2,
+    "ride3": 1,
+    "R0": 1
+   }
+  },
+  "cal3d|W3|stop0": {
+   "full": {
+    "total": 106.8,
+    "maxDD": -16.2,
+    "tot_dd": 6.58
+   },
+   "pre": {
+    "total": 75.5,
+    "maxDD": -16.2,
+    "tot_dd": 4.65
+   },
+   "live": {
+    "total": 17.7,
+    "maxDD": -14.0,
+    "tot_dd": 1.26
+   },
+   "fires": 21,
+   "switches": 18,
+   "picks": {
+    "ride1": 5,
+    "cash": 4,
+    "ride2": 4,
+    "R1": 2,
+    "ride3": 2,
+    "R4": 1,
+    "R3": 1
+   }
+  },
+  "cal3d|W7|stop0": {
+   "full": {
+    "total": -22.4,
+    "maxDD": -31.6,
+    "tot_dd": -0.71
+   },
+   "pre": {
+    "total": -22.0,
+    "maxDD": -31.6,
+    "tot_dd": -0.7
+   },
+   "live": {
+    "total": -0.7,
+    "maxDD": -13.9,
+    "tot_dd": -0.05
+   },
+   "fires": 21,
+   "switches": 16,
+   "picks": {
+    "ride1": 5,
+    "ride2": 3,
+    "cash": 3,
+    "R4": 2,
+    "ride3": 2,
+    "R0": 1,
+    "R1": 1
+   }
+  },
+  "cal3d|W14|stop0": {
+   "full": {
+    "total": 14.6,
+    "maxDD": -28.0,
+    "tot_dd": 0.52
+   },
+   "pre": {
+    "total": -7.1,
+    "maxDD": -28.0,
+    "tot_dd": -0.25
+   },
+   "live": {
+    "total": 25.4,
+    "maxDD": -9.8,
+    "tot_dd": 2.6
+   },
+   "fires": 21,
+   "switches": 8,
+   "picks": {
+    "cash": 2,
+    "ride1": 2,
+    "ride2": 2,
+    "ride3": 1,
+    "R0": 1,
+    "R4": 1
+   }
+  },
+  "never|W3|stop0": {
+   "full": {
+    "total": 0.0,
+    "maxDD": 0.0,
+    "tot_dd": null
+   },
+   "pre": {
+    "total": 0.0,
+    "maxDD": 0.0,
+    "tot_dd": null
+   },
+   "live": {
+    "total": 0.0,
+    "maxDD": 0.0,
+    "tot_dd": null
+   },
+   "fires": 0,
+   "switches": 0,
+   "picks": {
+    "cash": 1
+   }
+  },
+  "never|W7|stop0": {
+   "full": {
+    "total": 106.4,
+    "maxDD": -25.6,
+    "tot_dd": 4.16
+   },
+   "pre": {
+    "total": 90.1,
+    "maxDD": -25.6,
+    "tot_dd": 3.53
+   },
+   "live": {
+    "total": 9.3,
+    "maxDD": -14.6,
+    "tot_dd": 0.64
+   },
+   "fires": 0,
+   "switches": 0,
+   "picks": {
+    "ride1": 1
+   }
+  },
+  "never|W14|stop0": {
+   "full": {
+    "total": 48.9,
+    "maxDD": -19.9,
+    "tot_dd": 2.45
+   },
+   "pre": {
+    "total": 27.0,
+    "maxDD": -19.9,
+    "tot_dd": 1.36
+   },
+   "live": {
+    "total": 17.1,
+    "maxDD": -10.8,
+    "tot_dd": 1.58
+   },
+   "fires": 0,
+   "switches": 0,
+   "picks": {
+    "ride3": 1
+   }
+  }
+ },
+ "primary_picks": [
+  [
+   "2026-08-01 00:00:00+00:00",
+   "ride1"
+  ],
+  [
+   "2026-08-11 20:30:00+00:00",
+   "ride1"
+  ],
+  [
+   "2026-08-15 23:30:00+00:00",
+   "R3"
+  ],
+  [
+   "2026-08-22 14:00:00+00:00",
+   "ride2"
+  ],
+  [
+   "2026-08-24 21:30:00+00:00",
+   "ride2"
+  ],
+  [
+   "2026-08-25 22:30:00+00:00",
+   "ride2"
+  ],
+  [
+   "2026-08-27 11:00:00+00:00",
+   "ride1"
+  ],
+  [
+   "2026-08-28 21:30:00+00:00",
+   "ride2"
+  ],
+  [
+   "2026-08-30 09:30:00+00:00",
+   "cash"
+  ]
+ ],
+ "control_random_totals": [
+  67.5,
+  74.3,
+  23.6,
+  -3.3,
+  34.1,
+  41.1,
+  37.9,
+  17.6,
+  16.8,
+  48.6,
+  40.4,
+  56.5,
+  -4.0,
+  58.7,
+  99.8,
+  -20.0,
+  31.6,
+  28.5,
+  -9.9,
+  5.9
+ ],
+ "grid_median_full_total": 28.5,
+ "checks": {
+  "beats_S0_total_pre": false,
+  "beats_S0_total_live": false,
+  "beats_S0_totdd_pre": false,
+  "beats_S0_totdd_live": false,
+  "beats_16_of_20_controls": false,
+  "grid_median_beats_S0": false
+ },
+ "verdict": "FAIL"
+}
