@@ -4824,3 +4824,18 @@ Operator 2026-10-03 ~06:40Z: `regime_ls_30m` leads the forward fleet; study it a
 Arms: R0 plain competition rule, R1 `regime_ls_30m` as configured, R2 R1 with the 4h confirmation, R3 R0 without it, R4 R1 without shorts; live Binance 30m bars 2026-08-01..now, the live simulator with fees, ticks and the ladder.
 Rule: R1 must beat R0 in both pre (08-01..09-19) and live (09-19..now), with max drawdown no more than 2 pp worse, a worst 14-day window no worse, at least 16 of 20 shifted-regime controls beaten, and holding under doubled fees.
 
+## regime-competition-outcome
+
+FAIL for `regime_ls_30m` as the competition rule (`results/regime_competition.json`, `python3 -m gates.regime_competition`, 25 coins, 30m bars 2026-08-01..10-03 06:30Z). R0 reproduces the stress test's plain rule exactly (+58.6% / -24.1%).
+| arm | total / max DD / Sharpe / total:DD | doubled fees | pre | live | trend 09-17..23 | chop 09-23..now | 14-day median / worst / P(>0) | 3-day worst |
+|---|---|---|---|---|---|---|---|---|
+| R0 plain rule | +58.6% / -24.1% / 3.72 / 2.43 | +38.0% | +51.5% | +12.4% | +25.5% | -0.4% | +13.0% / -9.4% / 0.86 | -14.6% |
+| R1 regime_ls_30m | +77.1% / -26.6% / 4.30 / 2.90 | +37.4% | +54.5% | +23.0% | +23.5% | +10.5% | +17.0% / -4.7% / 0.88 | -16.6% |
+| R2 R1 + 4h confirm | +46.4% / -22.4% / 3.16 / 2.07 | +19.1% | +38.6% | +13.4% | +29.4% | -0.3% | +12.5% / -8.3% / 0.82 | -11.4% |
+| R3 R0 - 4h confirm | +79.2% / -25.6% / 4.41 / 3.09 | +51.1% | +62.7% | +18.3% | +15.9% | +6.7% | +19.0% / -3.9% / 0.92 | -15.5% |
+| R4 R1 without shorts | +96.1% / -22.9% / 5.20 / 4.20 | +66.4% | +72.4% | +22.1% | +18.3% | +9.3% | +20.7% / -3.9% / 0.92 | -12.3% |
+R1 checks: beats R0 pre and live (yes), worst 14-day no worse (yes), beats 20 of 20 shifted-regime controls (yes, controls +28% to +67%), max drawdown within 2 pp (NO, -26.6% vs -24.1%), holds under doubled fees (NO, +37.4% vs +38.0%).
+Decomposition: the regime is DOWN 12.6% of bars. Its shorts COST 19.1 points over the period (R1 vs R4) and add 0.9 in the live window; they double the fee drag (doubled fees take 40 points off R1, 30 off R4). The gain comes from two other parts: dropping the 4h confirmation (R3 vs R0, +20.6 points, also `htf0_30m` ahead of `momentum_top3_30m` on paper) and blocking new longs in a DOWN regime (R4 vs R3, +16.9 points, better in pre, live and chop).
+Against the 50/50 split (`#stress-split-vs-rule-2026-10-03`: +85.5% / -14.8%, doubled fees +67.6%, worst 14-day -6.1%, worst 3-day -8.1%): R4 earns more and has the better worst fortnight, but its drawdown is 8 points deeper and its worst 3 days 4 points worse; for Screen 3 the split stays ahead on total:DD (5.78 vs 4.20).
+Reading: the regime book's forward lead is real in direction but not for the reason it was built; the shorts are a drag on history and the useful parts are a long-only regime block and no 4h filter. R4 was a declared arm but is the best of four, so it is a candidate, not a result: it needs paper time and a split-with-R4 replay before it goes near the competition account. Nothing live changed; four trials recorded.
+

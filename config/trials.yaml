@@ -6203,3 +6203,23 @@ trials:
   config: price_action:mom_4h|1h|raw
   status: fail
   note: DECISIONS.md#price-action-outcome
+- signal: regime_competition
+  gate: regime_competition
+  config: regime_competition:R1
+  status: fail
+  note: DECISIONS.md#regime-competition-outcome
+- signal: regime_competition
+  gate: regime_competition
+  config: regime_competition:R2
+  status: fail
+  note: DECISIONS.md#regime-competition-outcome
+- signal: regime_competition
+  gate: regime_competition
+  config: regime_competition:R3
+  status: declared_before_test
+  note: DECISIONS.md#regime-competition-outcome
+- signal: regime_competition
+  gate: regime_competition
+  config: regime_competition:R4
+  status: declared_before_test
+  note: DECISIONS.md#regime-competition-outcome
