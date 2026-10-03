@@ -1,0 +1,28 @@
+meta:
+  name: split_r4
+  frozen: true
+  declared_utc: '2026-10-03T18:00:00Z'
+  requested_by: 'operator 2026-10-03: improve the planned split and integrate what the best bots do, before the competition account activates'
+  declared_ref: DECISIONS.md#split-r4-declaration
+  written_before_any_number: false
+  contamination: 'S0 and S4 half-return totals were seen in #adaptive-loop-outcome (S4 +106.3% / -14.1% vs S0 +85.4% / -14.8%); the cap and tilt arms have no numbers yet'
+lessons:
+  ride_5m: 'the ride is the engine; its settings stay (2% in 15 min, +5% cap, 24 h, 3 slots)'
+  wf_live: 'a third of the book per ride trade; in a 50/50 split a ride trade is about a sixth, so the ride share is the lever'
+  htf0_30m: 'rule half without the 4h confirmation, plus the regime long-block, no shorts (R4, #regime-competition-outcome)'
+  rehearsal: 'both sleeves held WLD at 42% of the book; a combined per-coin cap limits one-coin failure'
+data: 'live Binance 5m and 30m bars, today''s 25-coin pool, 2026-08-01..now; gates.let_winners_run.simulate with maker fees, ticks and the ladder, the split replayed on combined weights at the 5m clock (rule weights carried from 30m on close times)'
+arms:
+  S0: 'plain competition rule 50% + ride 50% (the staged competition_split)'
+  S4: 'R4 rule 50% + ride 50%'
+  S4c: 'S4 with every coin''s combined weight capped at 0.35'
+  S4t: 'R4 rule 40% + ride 60%'
+  S4ct: 'S4t with the 0.35 cap'
+windows: {pre: '2026-08-01 to 2026-09-19', live: '2026-09-19 to now'}
+decision_rule: >
+  First, S0 must reproduce the staged split's stress result within 15 points of total (the combined-weight replay differs from the
+  half-returns shortcut; the gap is reported). S4 replaces S0 only if it beats S0 on total and on total / |max DD| in BOTH windows.
+  A cap or tilt is added to S4 only if it raises total / |max DD| in both windows without cutting total by more than 2 pp in either;
+  if both pass, S4ct is taken only if it also passes against S4. Doubled fees are reported and must not reverse the choice.
+nonsense_control: '20 seeds: S4 with the ride half''s triggers replaced by random triggers matched per UTC day; the chosen arm must beat at least 16'
+trials: 'S4, S4c, S4t, S4ct, one each'

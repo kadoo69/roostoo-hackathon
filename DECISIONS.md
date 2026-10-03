@@ -4911,3 +4911,9 @@ ride1_wide_5m +5.97% / -1.73% / 0.69; ride_5m +5.36% / -2.72% / 0.50; wf_live (h
 - **Risk seen live:** both sleeves of the rehearsal hold WLD (42% of the book), because the rule and the ride pick the same leader; the split's diversification fails exactly when one coin leads.
 - **20 hours is one WLD rally.** These are directions, not proof; the R4 split still needs a paper run before the competition account.
 
+## split-r4-declaration
+
+Operator 2026-10-03 ~18:00Z: improve the planned split and build in what the best bots do, before the competition account activates. Declared in `config/split_r4.yaml`; not before every number (S0 and S4 half-return totals are in `#adaptive-loop-outcome`), the cap and tilt arms have none.
+Arms on combined weights at the 5m clock, 08-01..now: S0 the staged split, S4 the R4 rule half (no 4h confirm, regime long-block, no shorts) with the ride, S4c S4 with a 0.35 combined per-coin cap, S4t rule 40% / ride 60%, S4ct both.
+Rule: S4 replaces S0 only by beating it on total and total over drawdown in both windows; a cap or tilt is added only if it raises total over drawdown in both windows and costs no more than 2 pp of total in either; doubled fees must not reverse the choice; the chosen arm must beat 16 of 20 random-trigger controls.
+
