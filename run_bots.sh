@@ -3,7 +3,7 @@ set -uo pipefail
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 cd "$ROOT"
 PY=${PY:-python3}
-CONFIGS=${CONFIGS:-"config/momentum_top3_30m.yaml config/wf_live.yaml config/blend_30m_ride.yaml config/resid_30m.yaml config/htf0_30m.yaml config/ride1_5m.yaml config/wide_30m.yaml config/ride1_wide_5m.yaml"}
+CONFIGS=${CONFIGS:-"config/momentum_top3_30m.yaml config/blend_30m_ride.yaml config/resid_30m.yaml config/htf0_30m.yaml config/ride1_5m.yaml config/wide_30m.yaml config/ride1_wide_5m.yaml"}
 # Books that place REAL Roostoo orders; each config's meta.keyset picks its keys.
 # competition = round-1 competition account, competition_rehearsal = TEST account.
 # DECISIONS.md#competition-book-2026-09-30

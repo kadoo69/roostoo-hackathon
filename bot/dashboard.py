@@ -36,11 +36,8 @@ BOTS = {"momentum_top3_30m": "config/momentum_top3_30m.yaml",
         "ride1_5m": "config/ride1_5m.yaml",
         "wide_30m": "config/wide_30m.yaml",
         "ride1_wide_5m": "config/ride1_wide_5m.yaml",
-        "sleeves_5m": "config/sleeves_5m.yaml",
-        "sleeves_ivol_5m": "config/sleeves_ivol_5m.yaml",
         "ride_z3_5m": "config/ride_z3_5m.yaml",
-        "sleeves_z3_5m": "config/sleeves_z3_5m.yaml",
-        "uni_donchian_15m": "config/uni_donchian_15m.yaml"}
+        "sleeves_z3_5m": "config/sleeves_z3_5m.yaml"}
 CONTROL_OF = {"wf_live": "momentum_top3_30m",
               "competition": "momentum_top3_30m",
               "competition_rehearsal": "momentum_top3_30m",
@@ -52,11 +49,8 @@ CONTROL_OF = {"wf_live": "momentum_top3_30m",
               "ride1_5m": "ride_5m",
               "wide_30m": "momentum_top3_30m",
               "ride1_wide_5m": "ride1_5m",
-              "sleeves_5m": "competition_rehearsal",
-              "sleeves_ivol_5m": "sleeves_5m",
               "ride_z3_5m": "ride_5m",
-              "sleeves_z3_5m": "sleeves_5m",
-              "uni_donchian_15m": "ride_5m"}
+              "sleeves_z3_5m": "competition_rehearsal"}
 EXPECTED_DRAG = {"competition": 2.452,
                  "competition_rehearsal": 2.452,
                  "wf_live": 7.4,
@@ -68,11 +62,8 @@ EXPECTED_DRAG = {"competition": 2.452,
                  "ride1_5m": 7.4,
                  "wide_30m": 2.452,
                  "ride1_wide_5m": 7.4,
-                 "sleeves_5m": 4.9,
-                 "sleeves_ivol_5m": 4.9,
                  "ride_z3_5m": 7.4,
                  "sleeves_z3_5m": 4.9,
-                 "uni_donchian_15m": 2.452,
                  "momentum_top3_30m": 2.452}
 _BREADTH = {"data": None, "updated": None}
 

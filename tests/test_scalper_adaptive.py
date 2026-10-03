@@ -32,8 +32,12 @@ def test_dynamic_bot_is_paper_only_registered_and_its_clocks_exist():
         assert load(f"config/{name}.yaml")
     assert dashboard.BOTS["wf_live"] == "config/wf_live.yaml"
     assert "wf_live" in live_validation.BOOKS and desk.group_of("wf_live", "5m") == "scalper"
-    run = open("run_bots.sh").read()
-    assert "config/wf_live.yaml" in run and "wf_live|" in run and "echo bot.scalper_adaptive_run" in run
+    from bot import ec2_feed
+    from bot.runner import bot_class
+    boot = open("deploy/ec2_bootstrap.sh").read()
+    assert "wf_live" in ec2_feed.PAPER and "PAPER_BOOKS=${PAPER_BOOKS:-\"wf_live " in boot
+    assert bot_class(yaml.safe_load(open("config/wf_live.yaml"))).__name__ == "AdaptiveScalperBot"
+    assert "config/wf_live.yaml" not in open("run_bots.sh").read().split("CONFIGS=")[1].split("\n")[0]
 
 
 def test_wf_live_grid_has_eighteen_variants_from_5m_to_4h_plus_cash_and_is_paper():

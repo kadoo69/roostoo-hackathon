@@ -15,19 +15,16 @@ Current as of 2026-10-02 (the books that run; retired books are in git history a
 | book | clock | runner | what it is |
 |---|---|---|---|
 | `ride_5m` | 5m | AdaptiveScalperBot | the momentum ride: +2% in 15 minutes, hold to +5% or 24 h (`#ride-and-blend-declaration`) |
-| `sleeves_5m` | 5m | SleevesBot | 50/50 rule + ride, separate ledgers (`#sleeves-declaration`) |
-| `sleeves_ivol_5m` | 5m | SleevesBot | `sleeves_5m` with inverse-volatility entry sizing (`#sleeves-ivol-declaration`) |
 | `ride_z3_5m` | 5m | AdaptiveScalperBot | the ride with a per-coin 3-sigma trigger (`#ride-z3-declaration`) |
-| `sleeves_z3_5m` | 5m | SleevesBot | `sleeves_5m` with that ride half (`#ride-z3-declaration`) |
+| `sleeves_z3_5m` | 5m | SleevesBot | the 50/50 split with that ride half (`#ride-z3-declaration`) |
+| `wf_live` | 5m | AdaptiveScalperBot | the dynamic bot: picks the best style of the last 3 days every hour, 3 pp switch margin (`#walkforward-live-declaration`), on EC2 since 2026-10-03 (`#wf-live-to-ec2-2026-10-03`) |
 | `regime_ls_30m` | 30m | RegimeLSBot | the 30m rule that shorts breakdowns in a DOWN regime (`#regime-ls-declaration`, `#regime-ls-to-ec2-2026-10-02`) |
-| `uni_donchian_15m` | 15m | Bot | UNI only, Donchian 20/10, failed its validation rule (`#single-coin-outcome`) |
 
 ## Paper on the Mac (`./run_bots.sh`)
 
 | book | clock | module | what it is |
 |---|---|---|---|
 | `momentum_top3_30m` | 30m | contenders_run | the competition rule's paper control |
-| `wf_live` | 5m | scalper_adaptive_run | the dynamic bot: picks the best style of the last 3 days every hour, 3 pp switch margin (`#walkforward-live-declaration`) |
 | `blend_30m_ride` | 5m | hedge_explorer_run | fixed 50/50 blend of the 30m rule and the ride in one book (`#ride-and-blend-declaration`) |
 | `resid_30m`, `htf0_30m` | 5m | scalper_adaptive_run | residual-price rule, and the 30m rule without the 4h filter (`#replay-decomposition-2026-10-01`) |
 | `ride1_5m` | 5m | scalper_adaptive_run | the ride with a 1% trigger (`#ride-trigger-2026-10-01`) |
