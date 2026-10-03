@@ -82,4 +82,6 @@ def test_competition_split_is_the_rehearsed_split_on_the_comp_keys():
     assert s.keyset == "comp" and s.exit_escalation and not s.shorts_enabled and not s.booking.get("enabled")
     assert bot_class(split).__name__ == "SleevesBot"
     with open("deploy/ec2_bootstrap.sh") as fh:
-        assert "competition_split" not in fh.read()
+        books = next(ln for ln in fh.read().splitlines() if ln.startswith("BOOKS="))
+    units = books.split('"')[1].split()
+    assert "competition_split" in units and "competition" not in units

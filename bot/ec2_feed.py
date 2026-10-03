@@ -17,7 +17,7 @@ from bot.settings import ROOT
 MARKER = ROOT / "run" / "LIVE_HOST_EC2"
 CACHE = ROOT / "run" / "ec2_state.json"
 REFRESH_S = 180
-LIVE = ("competition", "competition_rehearsal")
+LIVE = ("competition_split", "competition", "competition_rehearsal")
 PAPER = ("wf_live", "ride_5m", "ride_z3_5m", "sleeves_z3_5m", "split_tilt_5m", "regime_ls_30m")
 BOOKS = LIVE + PAPER
 _LOCK = threading.Lock()

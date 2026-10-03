@@ -40,6 +40,24 @@ def next_sleep(now_s: float, poll_s: float, bar_s: float, offset_s: float = CLOS
     return max(0.5, min(poll_s, wake - now_s))
 
 
+def ticker_age(client, stale_s: float) -> tuple[float, float | None]:
+    """Age of the last ticker by the client's clock. When it reads stale, the client's server-time offset
+    is synced again and the age read once more, so an offset left wrong by a host sleep or a clock step
+    never freezes a book; a ticker that is really stale stays stale. Returns the age and, after a resync,
+    the age it replaced. DECISIONS.md#clock-resync-2026-10-03"""
+    t = getattr(client, "last_ticker_server_time_ms", None)
+    if t is None:
+        return float("inf"), None
+    age = max(0.0, (client._timestamp() - t) / 1000.0)
+    if age < stale_s or not hasattr(client, "sync_time"):
+        return age, None
+    try:
+        client.sync_time()
+    except Exception:
+        return age, None
+    return max(0.0, (client._timestamp() - t) / 1000.0), age
+
+
 def stale_cycle(wall0: float, mono0: float, wall1: float, mono1: float,
                 sleep_s: float = STALE_SLEEP_S, limit_s: float = STALE_CYCLE_S) -> bool:
     """True when the machine slept more than `sleep_s` since the cycle fetched its bars and quotes
@@ -469,9 +487,11 @@ class Bot:
                                           "decision_deferred": hold_bar,
                                           "ref": "DECISIONS.md#live-audit-2026-09-24"})
         quotes = feed.roostoo_quotes(self.client)
-        ticker_time = getattr(self.client, "last_ticker_server_time_ms", None)
-        ticker_age_s = (float("inf") if ticker_time is None else
-                        max(0.0, (self.client._timestamp() - ticker_time) / 1000.0))
+        ticker_age_s, resynced = ticker_age(self.client, float(self.s.kill_stale_ticker_s))
+        if resynced is not None:
+            self.journal.write("lifecycle", {"event": "clock_resynced", "ticker_age_s": round(ticker_age_s, 3),
+                                             "stale_before_s": round(resynced, 3),
+                                             "ref": "DECISIONS.md#clock-resync-2026-10-03"})
         if not self.s.dry_run:
             self.settle_blocked_submission()
             self.adopt_wallet()

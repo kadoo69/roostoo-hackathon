@@ -26,6 +26,7 @@ from bot.settings import ROOT, load
 # is the stale-hardcoded-list defect already in HANDOVER.md section 8.
 BOTS = {"momentum_top3_30m": "config/momentum_top3_30m.yaml",
         "competition": "config/competition.yaml",
+        "competition_split": "config/competition_split.yaml",
         "wf_live": "config/wf_live.yaml",
         "competition_rehearsal": "config/competition_rehearsal.yaml",
         "ride_5m": "config/ride_5m.yaml",
@@ -41,6 +42,7 @@ BOTS = {"momentum_top3_30m": "config/momentum_top3_30m.yaml",
         "split_tilt_5m": "config/split_tilt_5m.yaml"}
 CONTROL_OF = {"wf_live": "momentum_top3_30m",
               "competition": "momentum_top3_30m",
+              "competition_split": "competition_rehearsal",
               "competition_rehearsal": "momentum_top3_30m",
               "ride_5m": "momentum_top3_30m",
               "blend_30m_ride": "momentum_top3_30m",
@@ -54,6 +56,7 @@ CONTROL_OF = {"wf_live": "momentum_top3_30m",
               "sleeves_z3_5m": "competition_rehearsal",
               "split_tilt_5m": "competition_rehearsal"}
 EXPECTED_DRAG = {"competition": 2.452,
+                 "competition_split": 4.9,
                  "competition_rehearsal": 2.452,
                  "wf_live": 7.4,
                  "ride_5m": 7.4,
