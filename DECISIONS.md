@@ -4865,3 +4865,9 @@ FAIL, every check (`results/adaptive_loop.json`, `python3 -m archive.gates.adapt
 - **Static S4 (half R4, half ride 2%) is the best shape in the pool:** +106.3% / -14.1% (total:DD 7.53), pre +63.2% / live +27.3%, against S0 +85.4% / -14.8% (pre +53.0% / live +22.1%). It beats the staged split in both windows; it is the split-with-R4 candidate of `#regime-competition-outcome`, chosen from a pool, so it needs paper time.
 Reading: stopping and re-tuning on recent results chases the last winner and stands aside for the rebound, as `#adaptive-recent-2026-10-01` and `#wf-live-forward-2026-10-03` found; the configurations that win are the ones that keep one diversified book running. Any automated stop would also have to be committed code on the competition account (no manual stop). 27 trials recorded.
 
+## tick-capture-declaration
+
+Operator 2026-10-03: find and exploit gaps in the market structure, the best move in chop. Declared in `config/tick_capture.yaml`; NOT written before any number (the PEPE quote and the fill semantics below were seen first).
+Structure: Roostoo copies Binance ticks; PEPE's tick is 23.5 bps of its price (ARB, TRUMP, ENA, XLM, ADA 4-5 bps, the rest under 3.5 bps), and Roostoo quotes it one tick wide. Rehearsal orders show a limit at the bid fills at once as TAKER (0.10%) when LastPrice sits there (PUMP 10-02 16:10Z, UNI 10-03 04:00Z) and rests as MAKER otherwise; a 07:12-07:14Z sample has PEPE's LastPrice flipping between bid and ask every 30-60 s.
+Test: forward paper on the live ticker, PEPE against four 4-5 bps controls, touch and trade-through fill rules; worth a paper book only if PEPE nets positive under both rules and the controls do not under the touch rule. Any competition use needs a real-order micro-test elsewhere and the organisers asked first.
+

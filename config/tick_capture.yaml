@@ -1,0 +1,23 @@
+meta:
+  name: tick_capture
+  frozen: true
+  declared_utc: '2026-10-03T07:30:00Z'
+  requested_by: 'operator 2026-10-03: find and exploit gaps in the market structure; the best move when the market is choppy'
+  declared_ref: DECISIONS.md#tick-capture-declaration
+  written_before_any_number: false
+  contamination: 'two observations came before declaring: Roostoo quotes PEPE one tick wide (4.25e-6 / 4.26e-6, 23.5 bps) with LastPrice flipping between them about every 30-60 s (07:12-07:14Z sample), and rehearsal orders show a limit at the bid fills at once as TAKER when LastPrice is at it, and rests as MAKER otherwise'
+mechanism: >
+  Roostoo copies Binance's tick, and PEPE's tick is 23.5 bps of its price, more than a maker round trip (10 bps). Roostoo fills a
+  resting limit when its LastPrice reaches it, with no queue. While LastPrice alternates between bid and ask without the level
+  moving, a resting buy at the bid and a resting sell at the ask both fill: about 13.5 bps per round trip, independent of market
+  direction, which is what a choppy market lacks.
+failure_mode: 'the level moves (a trend) and inventory is caught on the wrong side; Roostoo fills only on a trade-through, not a touch; flips are rarer than sampled; the 30 calls/min budget; organisers treat it as exploiting the venue'
+test: >
+  Forward paper on the live Roostoo ticker (unsigned, every 6 s), PEPE as the arm and ARB, TRUMP, ENA, XLM (ticks 4-5 bps, below the
+  fee) as controls that must NOT pay. One unit = 10,000 USD, at most 2 units of inventory; buy resting at the bid, sell resting at the
+  entry's ask; an order that is marketable when placed fills at once as taker. Two fill rules: touch (LastPrice <= buy / >= sell) and
+  trade-through (LastPrice strictly beyond the order, which only happens when the level moves). Inventory marked at the bid.
+decision_rule: >
+  Worth building as a paper book only if PEPE's net P&L (fees and the mark of open inventory included) is positive under BOTH fill
+  rules over the test and the controls are not positive under the touch rule; a real-order micro-test on a non-competition account
+  is then required before any competition use, and the organisers are asked first.
