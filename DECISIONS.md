@@ -4879,3 +4879,11 @@ CLOSED, not allowed: the organisers' slides permit directional strategies only, 
 
 Operator 2026-10-03 ~07:55Z: which hours have the highest volatility and potential; the India session seems flat, New York overnight seems to make the money. Declared in `config/session_timing.yaml` (not before every number: `#price-action-outcome` already had session means). Three windows (08-01..09-05, 09-05..09-19, 09-19..now); an effect counts only with the same sign and |t| >= 2 in all three, and an hours filter for a book earns a paper test only if it improves the book in all three.
 
+## session-timing-outcome
+
+Volatility is concentrated in New York; profit is not (`results/session_timing.json`, `python3 -m archive.gates.session_timing`). Windows A 08-01..09-05, B 09-05..09-19, C 09-19..10-03 08:00Z.
+- **Volatility:** 14:00-16:00Z (19:30-21:30 IST, the US equity open) is the most volatile block in every window: mean absolute 30m move 50.7 / 56.9-59.5 / 94.6 bps at 14:00Z against 32-44 bps in the quietest hours. The New York session (13:30-20:00Z) carries 32-36% of daily volume and the most ride triggers (5.4 / 9.1 / 7.2 a day, against 2.8 / 2.8 / 5.5 in the India session). The hour-by-hour profile is less stable than the block (rank correlation 0.38-0.69 between windows).
+- **Direction:** no session's pool return holds a sign across the three windows (New York +37 / +22 / -54 bps a day; India +7 / +27 / +33; London +9 / +17 / +84, t 2.3 in C only). No edge passes the rule.
+- **Books by session, S4 % a day:** India -0.02 / +0.50 / +0.47; London +0.04 / +0.37 / +1.10 (t 2.7 in C); New York +0.36 / +0.20 / -0.04; late US +0.31 / -0.14 / +0.56; early Asia +0.29 / +0.76 / -0.29. The best session rotates every window (A New York and late US, B early Asia, C London and late US), and no session is negative for S4 in all three, so no trading-hours filter qualifies. The ride's +5% hit rate by session also rotates (New York 0.58 / 0.41 / 0.71).
+Reading: New York gives the most movement and the most entries, but in the last two weeks its moves reversed and London and the late US hours paid. The operator's impression that India hours are flat does not hold in C (+0.47% a day for S4). Keep the books trading around the clock; the timing that matters is that the triggers cluster in 12:00-17:00Z, so the bot must be up then (EC2 is).
+
