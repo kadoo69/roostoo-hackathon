@@ -59,6 +59,7 @@ Concentration, the derisk ramp, the weight path, the deployment rule and the boo
 | long-only on the live 15m/30m contenders rules | 2 | fail: shorts are only ~2% of position-bars there, so nothing changes; long-only passes at 1h (already paper as momentum_top3_1h_long); the 15m live rule is about -8% a fortnight historically | `#lowtf-long-only-clocks-outcome` |
 | acceleration guard on the contenders rule (refuse blow-off entries, exit on sharp deceleration) | 3 | fail; about equal to the control, early exits cost 2-3 points a fortnight | `#accel-guard-outcome` |
 | rotation hysteresis | - | null, effects below the noise threshold | `#rotation-hysteresis-outcome` |
+| price action and technicals at 1h-24h: candle structure, compression, trend quality, oscillators, volume, levels, session, BTC/ETH lead, 13 breakout/climax events, +5% continuation features | 10 | no tradeable edge; short-horizon rank reversal and stretched-volatile laggards pass statistically but are 1-3 bps/h against a 10 bps round trip; every event and session effect flips with the 09-23 regime change | `#price-action-outcome` |
 
 **Ledger stands at 1,020 rows** (679 in the Sharpe family before the positioning run). Every configuration counts, including nulls and abandoned searches.
 
