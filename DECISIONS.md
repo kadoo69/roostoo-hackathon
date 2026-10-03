@@ -4780,3 +4780,13 @@ Method: an import graph from every entry point (`bot.runner` and the EC2 units, 
 - **Archived (113 modules, `archive/README.md`):** 86 one-off gates, 13 signal modules, 6 data collectors, `ml_research`, 3 portfolio helpers and `bot/alt_data.py`, with 11 test files; run as `python3 -m archive.gates.<name>`. Kept live because a doc or skill uses them as tools: `gates.live_validation`, `gates.universe_coverage`, `gates.adaptive_recent`, `gates.competition_1h` (and `gates.crash_shorts`, which it imports).
 - **Found, not changed (EC2 code, to fix with the operator):** `bot.runner` would start `blend_30m_ride` as `AdaptiveScalperBot` instead of the blend in `bot.hedge_explorer_run` (harmless today, the Mac starts it by module name); `bot/regime.py` still reads the scanner's state file for a regime gate no book uses (all are `always_on`).
 Checks: 648 tests in the main suite and 92 in `archive/tests` pass; ruff clean on the live tree and `archive/`; every one of 214 modules imports.
+
+## stress-split-vs-rule-2026-10-03
+
+Operator 2026-10-03 ~05:55Z, before the stage-3 call: stress-test the 50/50 split against the plain competition rule. Live Binance bars 2026-08-01 to 10-03 05:50Z, today's 25-coin pool, `gates.let_winners_run.simulate` with maker fees, ticks and the ladder, the split approximated as half of each book's 30-minute returns (`results/stress_split_vs_rule.json`).
+| | full period total / max DD / Sharpe / Sortino / Calmar | doubled fees total / max DD | 14-day windows median / worst / P(>0) / worst DD | 3-day worst | trend 09-17..23 | chop 09-23..now |
+|---|---|---|---|---|---|---|
+| plain rule | +58.6% / -24.1% / 3.98 / 4.95 / 2.43 | +38.1% / -25.5% | +13.1% / -9.4% / 0.86 / -24.1% | -14.6% | +25.5% | -0.3% (DD -15.8%) |
+| 50/50 split | +85.5% / -14.8% / 5.44 / 7.30 / 5.76 | +67.6% / -16.1% | +19.5% / -6.1% / 0.82 / -14.8% | -8.1% | +36.9% | -0.2% (DD -11.3%) |
+| ride alone | +111.7% / -17.7% / 5.52 / 7.39 / 6.29 | +98.4% / -19.1% | +25.5% / -12.4% / 0.76 / -15.4% | -8.5% | +48.7% | -0.6% (DD -9.8%) |
+Reading: the split beats the plain rule on return, drawdown and every Screen 3 ratio, survives doubled fees better, and has the shallower worst 14-day and 3-day windows; P(14-day > 0) is 0.82 against 0.86. In chop all three are flat and the split's drawdown is a third smaller. The ride alone earns most but has the deepest worst 14-day window. Caveats: the ride was chosen on part of this window (09-19..10-01), the pool is today's, and the split is a return blend rather than the separate-ledger runner.

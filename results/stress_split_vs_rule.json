@@ -1,0 +1,140 @@
+{
+ "plain rule": {
+  "full": {
+   "total": 58.6,
+   "maxDD": -24.1,
+   "sharpe": 3.98,
+   "sortino": 4.95,
+   "calmar": 2.43
+  },
+  "fees x2": {
+   "total": 38.1,
+   "maxDD": -25.5,
+   "sharpe": 2.89,
+   "sortino": 3.6,
+   "calmar": 1.49
+  },
+  "14d": {
+   "n": 50,
+   "median": 13.1,
+   "worst": -9.4,
+   "best": 55.3,
+   "p_pos": 0.86,
+   "worst_dd": -24.1
+  },
+  "3d": {
+   "n": 61,
+   "median": 0.3,
+   "worst": -14.6,
+   "best": 31.8,
+   "p_pos": 0.52,
+   "worst_dd": -18.1
+  },
+  "trend 09-17..23": {
+   "total": 25.5,
+   "maxDD": -9.3,
+   "sharpe": 12.27,
+   "sortino": 15.55,
+   "calmar": 2.74
+  },
+  "chop 09-23..now": {
+   "total": -0.3,
+   "maxDD": -15.8,
+   "sharpe": 0.27,
+   "sortino": 0.36,
+   "calmar": -0.02
+  }
+ },
+ "50/50 split": {
+  "full": {
+   "total": 85.5,
+   "maxDD": -14.8,
+   "sharpe": 5.44,
+   "sortino": 7.3,
+   "calmar": 5.76
+  },
+  "fees x2": {
+   "total": 67.6,
+   "maxDD": -16.1,
+   "sharpe": 4.6,
+   "sortino": 6.17,
+   "calmar": 4.2
+  },
+  "14d": {
+   "n": 50,
+   "median": 19.5,
+   "worst": -6.1,
+   "best": 65.0,
+   "p_pos": 0.82,
+   "worst_dd": -14.8
+  },
+  "3d": {
+   "n": 61,
+   "median": 0.8,
+   "worst": -8.1,
+   "best": 31.6,
+   "p_pos": 0.57,
+   "worst_dd": -11.1
+  },
+  "trend 09-17..23": {
+   "total": 36.9,
+   "maxDD": -6.2,
+   "sharpe": 17.5,
+   "sortino": 23.87,
+   "calmar": 5.94
+  },
+  "chop 09-23..now": {
+   "total": -0.2,
+   "maxDD": -11.3,
+   "sharpe": 0.31,
+   "sortino": 0.42,
+   "calmar": -0.02
+  }
+ },
+ "ride alone": {
+  "full": {
+   "total": 111.7,
+   "maxDD": -17.7,
+   "sharpe": 5.52,
+   "sortino": 7.39,
+   "calmar": 6.29
+  },
+  "fees x2": {
+   "total": 98.4,
+   "maxDD": -19.1,
+   "sharpe": 5.09,
+   "sortino": 6.8,
+   "calmar": 5.14
+  },
+  "14d": {
+   "n": 50,
+   "median": 25.5,
+   "worst": -12.4,
+   "best": 76.4,
+   "p_pos": 0.76,
+   "worst_dd": -15.4
+  },
+  "3d": {
+   "n": 61,
+   "median": 0.3,
+   "worst": -8.5,
+   "best": 31.1,
+   "p_pos": 0.54,
+   "worst_dd": -13.1
+  },
+  "trend 09-17..23": {
+   "total": 48.7,
+   "maxDD": -8.6,
+   "sharpe": 18.82,
+   "sortino": 26.8,
+   "calmar": 5.66
+  },
+  "chop 09-23..now": {
+   "total": -0.6,
+   "maxDD": -9.8,
+   "sharpe": 0.29,
+   "sortino": 0.39,
+   "calmar": -0.06
+  }
+ }
+}
