@@ -4943,3 +4943,15 @@ NO CHANGE: the staged split (S0) stays the candidate (`results/split_r4.json`, `
 Operator 2026-10-03 ~18:00Z: run the 40/60 tilt test. Declared in `config/split_tilt.yaml`; the tilt on the R4 base was seen (`#split-r4-outcome`), none on the plain-rule base. Same ledger replay: T0 the staged 50/50 split, T1 rule 40% / ride 60%, 60/40 and 30/70 reported for shape only.
 Rule: T1 replaces 50/50 only by beating it on total and total over drawdown in both windows, with doubled fees, a worst fortnight no more than 1 point worse, and 16 of 20 random-trigger controls beaten.
 
+## split-tilt-outcome
+
+PASS, every check (`results/split_tilt.json`, `python3 -m archive.gates.split_tilt`, separate-ledger replay 2026-08-01..10-03 18:20Z). T0 reproduces S0 (+89.4% vs +89.5%).
+| rule / ride | total / max DD / total:DD | pre total / DD | live total / DD | doubled fees | worst 14 days | largest coin |
+|---|---|---|---|---|---|---|
+| 60 / 40 (shape) | +83.6% / -18.0% / 4.66 | +49.7% / -18.0% | +22.8% / -11.6% | +66.5% | -7.4% | 0.44 |
+| 50 / 50 T0 (staged) | +89.4% / -16.9% / 5.31 | +51.7% / -16.9% | +25.0% / -10.9% | +72.8% | -7.2% | 0.42 |
+| 40 / 60 T1 | +95.2% / -15.8% / 6.04 | +53.6% / -15.8% | +27.2% / -10.3% | +79.1% | -6.9% | 0.40 |
+| 30 / 70 (shape) | +101.0% / -15.5% / 6.49 | +55.5% / -15.5% | +29.4% / -10.0% | +85.4% | -6.7% | 0.39 |
+T1 beats T0 on total and total:DD in both windows, under doubled fees, with a shallower worst fortnight, and beats all 20 random-trigger controls (+36% to +75%).
+Reading: the shape is monotone; every step towards the ride adds return AND cuts drawdown in this period, because the rule half's drawdowns are the deeper ones; the forward books say the same (`#fleet-forward-2026-10-03`). 30/70 is better still but was not the declared arm and is not chosen. Nothing is promoted on a replay alone: `split_tilt_5m` paper-trades on EC2 beside `competition_rehearsal` (falsification in its config); if it holds after 24 live hours, `competition_split.yaml` moves to `rule_share: 0.4` with the operator. One trial recorded.
+

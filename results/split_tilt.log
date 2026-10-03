@@ -1,0 +1,5 @@
+T0   rule 50% full {'total': 89.4, 'maxDD': -16.9, 'tot_dd': 5.31} pre 51.7/-16.9 live 25.0/-10.9 x2 72.8 worst14 -7.2 coin 0.419
+T1   rule 40% full {'total': 95.2, 'maxDD': -15.8, 'tot_dd': 6.04} pre 53.6/-15.8 live 27.2/-10.3 x2 79.1 worst14 -6.9 coin 0.402
+S60  rule 60% full {'total': 83.6, 'maxDD': -18.0, 'tot_dd': 4.66} pre 49.7/-18.0 live 22.8/-11.6 x2 66.5 worst14 -7.4 coin 0.436
+S30  rule 30% full {'total': 101.0, 'maxDD': -15.5, 'tot_dd': 6.49} pre 55.5/-15.5 live 29.4/-10.0 x2 85.4 worst14 -6.7 coin 0.386
+{"controls": [60.5, 48.5, 65.8, 39.9, 38.1, 60.4, 56.8, 58.3, 56.0, 61.6, 42.7, 36.1, 59.6, 52.1, 48.4, 52.6, 74.9, 44.1, 74.5, 45.6], "checks": {"T0_reproduces_S0_within_1pp": true, "beats_total_pre": true, "beats_total_live": true, "beats_totdd_pre": true, "beats_totdd_live": true, "fees_x2": true, "worst_14d_within_1pp": true, "beats_16_of_20_random": true}, "verdict": "PASS"}

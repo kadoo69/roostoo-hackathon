@@ -1,0 +1,134 @@
+{
+ "ref": "DECISIONS.md#split-tilt-declaration",
+ "bars_end": "2026-10-03 18:00:00+00:00",
+ "reference_S0": 89.5,
+ "T0": {
+  "full": {
+   "total": 89.4,
+   "maxDD": -16.9,
+   "tot_dd": 5.31
+  },
+  "pre": {
+   "total": 51.7,
+   "maxDD": -16.9,
+   "tot_dd": 3.07
+  },
+  "live": {
+   "total": 25.0,
+   "maxDD": -10.9,
+   "tot_dd": 2.3
+  },
+  "fees_x2": {
+   "total": 72.8,
+   "maxDD": -18.3,
+   "tot_dd": 3.97
+  },
+  "worst_14d": -7.2,
+  "max_coin_weight": 0.419
+ },
+ "T1": {
+  "full": {
+   "total": 95.2,
+   "maxDD": -15.8,
+   "tot_dd": 6.04
+  },
+  "pre": {
+   "total": 53.6,
+   "maxDD": -15.8,
+   "tot_dd": 3.4
+  },
+  "live": {
+   "total": 27.2,
+   "maxDD": -10.3,
+   "tot_dd": 2.65
+  },
+  "fees_x2": {
+   "total": 79.1,
+   "maxDD": -18.2,
+   "tot_dd": 4.34
+  },
+  "worst_14d": -6.9,
+  "max_coin_weight": 0.402
+ },
+ "S60": {
+  "full": {
+   "total": 83.6,
+   "maxDD": -18.0,
+   "tot_dd": 4.66
+  },
+  "pre": {
+   "total": 49.7,
+   "maxDD": -18.0,
+   "tot_dd": 2.77
+  },
+  "live": {
+   "total": 22.8,
+   "maxDD": -11.6,
+   "tot_dd": 1.96
+  },
+  "fees_x2": {
+   "total": 66.5,
+   "maxDD": -18.6,
+   "tot_dd": 3.58
+  },
+  "worst_14d": -7.4,
+  "max_coin_weight": 0.436
+ },
+ "S30": {
+  "full": {
+   "total": 101.0,
+   "maxDD": -15.5,
+   "tot_dd": 6.49
+  },
+  "pre": {
+   "total": 55.5,
+   "maxDD": -15.5,
+   "tot_dd": 3.57
+  },
+  "live": {
+   "total": 29.4,
+   "maxDD": -10.0,
+   "tot_dd": 2.95
+  },
+  "fees_x2": {
+   "total": 85.4,
+   "maxDD": -18.1,
+   "tot_dd": 4.71
+  },
+  "worst_14d": -6.7,
+  "max_coin_weight": 0.386
+ },
+ "control_random_totals": [
+  60.5,
+  48.5,
+  65.8,
+  39.9,
+  38.1,
+  60.4,
+  56.8,
+  58.3,
+  56.0,
+  61.6,
+  42.7,
+  36.1,
+  59.6,
+  52.1,
+  48.4,
+  52.6,
+  74.9,
+  44.1,
+  74.5,
+  45.6
+ ],
+ "checks": {
+  "T0_reproduces_S0_within_1pp": true,
+  "beats_total_pre": true,
+  "beats_total_live": true,
+  "beats_totdd_pre": true,
+  "beats_totdd_live": true,
+  "fees_x2": true,
+  "worst_14d_within_1pp": true,
+  "beats_16_of_20_random": true
+ },
+ "verdict": "PASS"
+}

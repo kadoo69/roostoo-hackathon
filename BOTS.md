@@ -18,6 +18,7 @@ Current as of 2026-10-02 (the books that run; retired books are in git history a
 | `ride_z3_5m` | 5m | AdaptiveScalperBot | the ride with a per-coin 3-sigma trigger (`#ride-z3-declaration`) |
 | `sleeves_z3_5m` | 5m | SleevesBot | the 50/50 split with that ride half (`#ride-z3-declaration`) |
 | `wf_live` | 5m | AdaptiveScalperBot | the dynamic bot: picks the best style of the last 3 days every hour, 3 pp switch margin (`#walkforward-live-declaration`), on EC2 since 2026-10-03 (`#wf-live-to-ec2-2026-10-03`) |
+| `split_tilt_5m` | 5m | SleevesBot | the staged split with rule 40% / ride 60%, paper before promotion (`#split-tilt-outcome`) |
 | `regime_ls_30m` | 30m | RegimeLSBot | the 30m rule that shorts breakdowns in a DOWN regime (`#regime-ls-declaration`, `#regime-ls-to-ec2-2026-10-02`) |
 
 ## Paper on the Mac (`./run_bots.sh`)

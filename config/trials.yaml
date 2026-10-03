@@ -6378,3 +6378,8 @@ trials:
   config: split_r4:S4ct
   status: fail
   note: DECISIONS.md#split-r4-outcome
+- signal: split_tilt
+  gate: split_tilt
+  config: split_tilt:T1_rule40_ride60
+  status: live_paper_ab
+  note: DECISIONS.md#split-tilt-outcome
