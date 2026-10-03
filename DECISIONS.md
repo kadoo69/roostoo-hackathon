@@ -4818,3 +4818,9 @@ Controls: random features pass 1 of 120 tests, random event times 1 of 780, week
 - **+5% continuation:** 52.7% of 112 (W1), 39.6% of 169 (W2), 28.6% of 14 (last 3 days), falling with the regime. No feature at the touch separates continuations in both windows. Session flips outright: in W1 touches in EU/US hours continued 40% against 71% otherwise (z -3.2), in W2 48% against 26% (z +2.8).
 Reading: at 1h to 24h, the price-action and technical features the operator listed carry either nothing or a reversal too small to trade at Roostoo's fees. The ride's edge lives in the tail that rank statistics treat as noise, and its continuation rate is falling, not predictable. Nothing changes in any book; ten trials recorded as fail. The one actionable observation is the falling continuation rate (52.7% to 39.6% to 28.6%), which is below the 37.5% break-even of holding past +5% (`#coin-eda-outcome`); the ride's +5% cap is therefore right for the current market, and `#ride-exits-outcome` already keeps it.
 
+## regime-competition-declaration
+
+Operator 2026-10-03 ~06:40Z: `regime_ls_30m` leads the forward fleet; study it and whether it can be the competition bot. Declared in `config/regime_competition.yaml` before any replay number (its forward paper result was seen and is the reason, not the test).
+Arms: R0 plain competition rule, R1 `regime_ls_30m` as configured, R2 R1 with the 4h confirmation, R3 R0 without it, R4 R1 without shorts; live Binance 30m bars 2026-08-01..now, the live simulator with fees, ticks and the ladder.
+Rule: R1 must beat R0 in both pre (08-01..09-19) and live (09-19..now), with max drawdown no more than 2 pp worse, a worst 14-day window no worse, at least 16 of 20 shifted-regime controls beaten, and holding under doubled fees.
+

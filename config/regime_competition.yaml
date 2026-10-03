@@ -1,0 +1,28 @@
+meta:
+  name: regime_competition
+  frozen: true
+  declared_utc: '2026-10-03T06:45:00Z'
+  requested_by: 'operator 2026-10-03: regime_ls_30m is doing best on paper; study it and whether it can be the competition bot'
+  declared_ref: DECISIONS.md#regime-competition-declaration
+  written_before_any_number: true
+  contamination: 'its forward paper result (+3.6% since its EC2 move, shorts in NEAR/PUMP profitable) was seen before declaring; that is the reason for the study and is not used to pass it'
+data: 'live Binance 30m and 4h bars, today''s 25-coin pool, 2026-08-01 to now; gates.let_winners_run.simulate (maker 0.05%, shorts 0.10% a side, tick, ladder)'
+arms:
+  R0: 'plain competition rule (config/competition.yaml contenders block, long-only)'
+  R1: 'regime_ls_30m as configured (DOWN regime: block new longs, short breakdowns; 4h confirm off)'
+  R2: 'R1 with the 4h confirmation on (isolates the regime switch from the filter change)'
+  R3: 'R0 with the 4h confirmation off (= htf0, isolates the filter change)'
+  R4: 'R1 without shorts (DOWN only blocks new longs)'
+windows:
+  pre: '2026-08-01 to 2026-09-19'
+  live: '2026-09-19 to now'
+  trend: '2026-09-17 to 09-23'
+  chop: '2026-09-23 to now'
+  rolling: 'every 14-day and 3-day window, stepped daily'
+nonsense_control: '20 seeds: R1 with its DOWN regime series circularly shifted by a random 3-20 days; R1 must beat at least 16 of 20 on full-period total'
+decision_rule: >
+  R1 is recommended as the competition rule only if it beats R0 on total return in BOTH pre and live, its full-period max
+  drawdown is no more than 2 pp worse, its worst 14-day window is no worse, it beats at least 16 of 20 shifted controls, and it
+  holds under doubled fees. Comparison with the 50/50 split uses the split's stress-test numbers (#stress-split-vs-rule-2026-10-03).
+  Shorts on the competition account additionally need the venue to allow them; otherwise only R4 is eligible.
+trials: 'R1 to R4, one each'
