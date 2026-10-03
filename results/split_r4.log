@@ -1,0 +1,6 @@
+S0    full {'total': 60.0, 'maxDD': -12.7, 'tot_dd': 4.73} pre 42.0/-12.7 live 12.9/-9.8 x2 48.3 maxcoin 0.417 gross 0.673
+S4    full {'total': 62.0, 'maxDD': -12.4, 'tot_dd': 4.98} pre 42.2/-12.4 live 14.1/-7.5 x2 48.1 maxcoin 0.417 gross 0.739
+S4c   full {'total': 61.5, 'maxDD': -12.4, 'tot_dd': 4.94} pre 42.2/-12.4 live 13.7/-7.5 x2 47.7 maxcoin 0.35 gross 0.721
+S4t   full {'total': 65.1, 'maxDD': -13.6, 'tot_dd': 4.8} pre 41.4/-13.6 live 16.9/-7.4 x2 52.5 maxcoin 0.4 gross 0.731
+S4ct  full {'total': 64.9, 'maxDD': -13.6, 'tot_dd': 4.78} pre 41.4/-13.6 live 16.8/-7.4 x2 52.3 maxcoin 0.35 gross 0.718
+{"s0_gap": -25.5, "controls": [56.4, 46.2, 56.8, 46.0, 46.1, 52.1, 68.4, 53.0, 54.6, 66.8, 49.3, 50.7, 67.2, 68.4, 59.0, 44.4, 69.8, 59.3, 47.4, 54.4], "checks": {"S0_within_15pp_of_stress": false, "S4_beats_S0": true, "fees_x2_keeps_choice_over_S0": true, "beats_16_of_20_random": false}, "choice": "S0"}

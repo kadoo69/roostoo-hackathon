@@ -4917,3 +4917,8 @@ Operator 2026-10-03 ~18:00Z: improve the planned split and build in what the bes
 Arms on combined weights at the 5m clock, 08-01..now: S0 the staged split, S4 the R4 rule half (no 4h confirm, regime long-block, no shorts) with the ride, S4c S4 with a 0.35 combined per-coin cap, S4t rule 40% / ride 60%, S4ct both.
 Rule: S4 replaces S0 only by beating it on total and total over drawdown in both windows; a cap or tilt is added only if it raises total over drawdown in both windows and costs no more than 2 pp of total in either; doubled fees must not reverse the choice; the chosen arm must beat 16 of 20 random-trigger controls.
 
+## split-r4-amendment
+
+VOID, first run (`results/split_r4.log`): the combined-weight replay put S0 at +60.0% / -12.7% against the reference +85.5% / -14.8%, a -25.5 pp gap, outside the declared 15 pp, so no arm is read. Cause: one weight book for both halves makes them interfere (a coin both halves hold cannot be topped up, one ladder for both), the defect `#blend-checkpoint-outcome` already found and the reason the live bot keeps separate ledgers.
+Amendment before any ledger number: the same arms, windows, rules and controls, replayed with two separate ledgers per 5m bar using the live `bot/sleeves.step` (entries, exits and the per-sleeve ladder), tick cost charged on each traded notional, the rule half entering only new names as `SleevesBot.compute_target` does; the cap is applied at entry by a new `bot/sleeves.cap_entries` that the live runner will share.
+
