@@ -1,0 +1,63 @@
+meta:
+  name: price_action
+  frozen: true
+  declared_utc: '2026-10-03T06:40:00Z'
+  requested_by: 'operator 2026-10-03: in-depth analysis of price action and technical factors to get insights (HANDOVER open item 4)'
+  declared_ref: DECISIONS.md#price-action-declaration
+  written_before_any_number: true
+data: >
+  Live Binance 5m bars for the 25-coin pool of momentum_top3_30m (BTC and ETH are in it), fetched once from 2026-08-29
+  for warm-up; 15m and 1h bars are built from the 5m bars on close times. Recent windows only.
+windows:
+  W1: '2026-09-05 to 2026-09-19'
+  W2: '2026-09-19 to now'
+  L3: 'last 3 days (descriptive only, too short for the rule)'
+mechanisms:
+  candle: 'closing location, body and wicks show who controlled the bar; a close near the high with a small upper wick is demand that should carry; long upper wicks are supply'
+  compression: 'volatility clusters and mean-reverts; narrow ranges (BB width, NR7, ATR ratio) precede expansion, and the direction of the break should persist'
+  trend_quality: 'a clean trend (high ADX, aligned and rising MAs, high efficiency ratio) should continue more than a noisy one with the same return'
+  oscillators: 'overbought/oversold and MACD histogram turns are the textbook timing signals; RSI bands are a dead family here, reported as features only'
+  volume: 'moves on high relative volume and with volume concentrated on up bars carry information; climax bars mark exhaustion'
+  levels: 'traders anchor on recent highs/lows, the prior UTC day range and round numbers; breaks of them should continue, approaches should stall'
+  session: 'liquidity and participants change with the Asia/EU/US sessions; returns or the persistence of moves may differ by session'
+  btc_lead: 'alts follow BTC/ETH with a lag, and momentum should work better when the market leg is up'
+features:
+  candle_1h: [body_frac, upper_wick, lower_wick, close_loc, gap, inside_bar, outside_bar]
+  candle_4h: [body_frac_4h, close_loc_4h, upper_wick_4h]
+  compression: [bb_width, bbw_pctile_120h, atr_ratio_6_48, nr7, range_expansion]
+  trend_quality: [adx14, di_diff, ema20_slope, ma_alignment, dist_ema20, dist_ema50, dist_vwap24, efficiency_24h]
+  oscillators: [rsi14_1h, rsi14_15m, stoch_k14, macd_hist]
+  volume: [rvol_1h, rvol_24h, obv_slope_24h, updown_volume_24h, taker_buy_share_24h]
+  levels: [dist_24h_high, dist_24h_low, dist_72h_high, dist_72h_low, pos_72h_range, dist_prev_day_high, dist_prev_day_low, round_dist]
+  btc_lead: [btc_resid_1h, btc_resid_4h, beta_btc]
+  reference: [mom_1h, mom_4h, mom_24h]
+events:
+  list: [inside_break_up, nr7_break_up, squeeze_break_up, outside_up, climax_up, climax_down, macd_turn_up, macd_turn_down, rsi_cross_70, rsi_cross_30, prev_day_high_break, high_72h_break, round_cross_up]
+  measure: 'mean forward 1h/4h/24h return minus the pool, one event per coin per horizon (no overlap), t of the mean'
+questions:
+  cross_section: >
+    rank IC (Spearman across coins, at least 15 coins) of every feature at each 1h close against the next 1h, 4h and 24h
+    log return, raw and residual (minus 168h beta x pool). Sampled every hour; t of the mean IC with Newey-West lags = horizon - 1.
+  events: 'the event list above'
+  session: >
+    pool mean 1h return by session (Asia 00-08, EU 08-13, US 13-21, late 21-24 UTC) and by hour; whether a session's pool return
+    predicts the next session's (time series); whether a coin's return in one session predicts its rank in the next (rank IC)
+  btc_lead: >
+    BTC and ETH past 1h/4h return against the pool ex BTC/ETH next 1h/4h (time series, Newey-West); momentum IC (mom_4h, mom_24h)
+    split by BTC 4h sign
+  continuation: >
+    every 5m ride entry (3-bar return >= 2%) that touches +5%: does it reach +10% before falling back to +2%? Features at the touch
+    (1h close_loc, upper_wick, rsi14_15m, rsi14_1h, adx14, bbw_pctile before entry, rvol_1h, dist_72h_high, above prior-day high,
+    efficiency_24h, macd_hist, session, BTC 1h and ETH 1h return); continuation rate in the top vs bottom half
+decision_rule: >
+  An EDGE needs the same sign in W1 and W2 and |t| >= 2 in both (IC: Newey-West t of the mean IC; events: t of the mean excess
+  return; time series: Newey-West t of the slope; continuation: two-proportion z). An event edge is TRADEABLE only if its mean
+  excess exceeds the 0.10% maker round trip in both windows. L3 is reported, never used to pass. Everything else is descriptive.
+  An edge earns a declared paper test, never a direct change to a live book. About 330 tests are run; with independent tests the
+  rule passes by chance about once in 1,000 tests, and the random-feature control measures the real rate.
+nonsense_control: >
+  (1) a feature that sees the future (next-hour return) must score |t| >> 2; (2) every feature lagged one week must pass the rule
+  no more often than random noise; (3) 20 seeds of a random cross-sectional feature and of random event times matched per coin,
+  the count passing the rule is the false-edge base rate.
+dead_families: 'RSI bands, mean reversion, acceleration, order flow and volume as rankers are reported as features only, never proposed as rules'
+trials: 'one per feature x target that is called an edge'

@@ -4796,3 +4796,12 @@ Reading: the split beats the plain rule on return, drawdown and every Screen 3 r
 Operator 2026-10-03 ~06:20Z, after the stage-3 config switch was blocked by the session's permission check: make a separate bot with the split logic, to become the main competition bot later. `config/competition_split.yaml` is `competition_rehearsal` (50/50 rule + ride sleeves, separate ledgers) on the COMP keys with the competition book's risk block; `tests/test_runner.py` asserts it equals the rehearsal in every trading section and is absent from `deploy/ec2_bootstrap.sh`.
 It is NOT started: it trades the same account as `competition`, and two units on one account would both trade it. Its rule half reads `config/competition.yaml` (`sleeves.rule_config: competition`), so `competition.yaml` must stay the plain 30m rule.
 Switch, operator only: on EC2 `systemctl disable --now roostoo-live@competition`, then `systemctl enable --now roostoo-live@competition_split`, then add it to `BOOKS` in `deploy/ec2_bootstrap.sh` (replacing `competition`) and to the desk and validation registries. Evidence for the switch: `#stress-split-vs-rule-2026-10-03`, `#sleeves-rehearsal-2026-10-02`.
+
+## price-action-declaration
+
+Operator 2026-10-03 (HANDOVER open item 4): in-depth price action and technical factors on the present market. Declared in `config/price_action.yaml` before any number, `python3 -m gates.price_action`.
+Data: live Binance 5m bars for the 25-coin pool, 15m and 1h built from them on close times; windows W1 2026-09-05..09-19 and W2 09-19..now, the last 3 days reported only.
+Families: candle structure, volatility compression, trend quality, oscillators, volume, levels (recent highs/lows, prior UTC day, round numbers), session, and BTC/ETH lead; 46 features, 13 events, a +5% continuation study.
+Rule: an EDGE needs the same sign and |t| >= 2 in both windows; an event edge is TRADEABLE only above the 0.10% maker round trip in both. Controls: a future-seeing feature, week-lagged features, and 20 seeds of random features and random event times as the false-edge base rate.
+Dead families (RSI bands, mean reversion, acceleration, flow and volume rankers) appear only as features.
+
