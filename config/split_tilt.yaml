@@ -1,0 +1,21 @@
+meta:
+  name: split_tilt
+  frozen: true
+  declared_utc: '2026-10-03T18:05:00Z'
+  requested_by: 'operator 2026-10-03: run the 40/60 tilt test on the staged split'
+  declared_ref: DECISIONS.md#split-tilt-declaration
+  written_before_any_number: false
+  contamination: 'the 40/60 tilt on the R4 base beat 50/50 in both windows (#split-r4-outcome); no tilt on the plain-rule base has been computed'
+mechanism: 'the ride carries the return (ride_5m and wf_live forward, #fleet-forward-2026-10-03); a larger ride share raises the size of each ride trade from about a sixth to a fifth of the book while the rule half still dampens drawdowns'
+failure_mode: 'a heavier ride share deepens the drawdown and the worst windows more than it adds return; the R4 result does not carry to the plain rule'
+data: 'the ledger replay of #split-r4-amendment (archive.gates.split_r4.ledger): two separate sleeves per 5m bar with the live bot.sleeves.step, ticks charged, 2026-08-01..now'
+arms:
+  T0: 'staged split: plain competition rule 50% + ride 50% (competition_split as built)'
+  T1: 'plain competition rule 40% + ride 60%'
+sensitivity: 'rule 60/40 and 30/70, reported only, never chosen'
+windows: {pre: '2026-08-01 to 2026-09-19', live: '2026-09-19 to now'}
+decision_rule: >
+  T0 must reproduce #split-r4-outcome S0 within 1 point (same harness). T1 replaces T0 only if it beats T0 on total AND on
+  total / |max DD| in BOTH windows, its doubled-fee total also beats T0's, its worst 14-day window is no worse by more than 1 point,
+  and it beats at least 16 of 20 random-trigger controls of itself. Otherwise the split stays 50/50.
+trials: 'T1, one'

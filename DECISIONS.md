@@ -4938,3 +4938,8 @@ NO CHANGE: the staged split (S0) stays the candidate (`results/split_r4.json`, `
 - **The one consistent signal is more ride:** S4t beats S4 on total and total:DD in both windows (+1.8 and +1.9 points, total:DD 3.58 vs 3.23 pre and 2.56 vs 2.26 live), matching the forward lesson from `ride_5m` and `wf_live`. A 40/60 tilt was declared only on the R4 base, so it is a candidate for its own declared test on the staged split, not a result.
 - `bot/sleeves.cap_entries` stays as a tested helper; no live book uses it.
 
+## split-tilt-declaration
+
+Operator 2026-10-03 ~18:00Z: run the 40/60 tilt test. Declared in `config/split_tilt.yaml`; the tilt on the R4 base was seen (`#split-r4-outcome`), none on the plain-rule base. Same ledger replay: T0 the staged 50/50 split, T1 rule 40% / ride 60%, 60/40 and 30/70 reported for shape only.
+Rule: T1 replaces 50/50 only by beating it on total and total over drawdown in both windows, with doubled fees, a worst fortnight no more than 1 point worse, and 16 of 20 random-trigger controls beaten.
+
