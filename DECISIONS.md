@@ -5108,3 +5108,14 @@ No lock beats L24 in the last 3 days, and each wins one window while losing anot
 ## ride-rotation-declaration
 
 Operator 2026-10-04 20:47 IST: when stronger signals come and holdings are weak, interchange them, for short-term gains. Written before any number; full text in `config/ride_rotation.yaml`. With all 3 slots held and a fresh z >= 2.5 trigger, sell the holding with the lowest return since entry (at least 1 h old) and buy the trigger, at most one swap a bar: RS0 (only if that holding is below entry), RSH (below +0.5 dvol), RSA (always). Same decision rule as `#ride-gain-lock-declaration`. Three trials.
+
+## ride-rotation-outcome
+
+NOT RECOMMENDED, no swaps (`results/ride_rotation.json`, `python3 -m archive.gates.ride_rotation`). Total return / max DD / entries a day, z >= 2.5 entries, V2 targets, 24 h hold, 27 coins:
+| arm | W1 (09-05..09-19) | W2 (09-19..10-04 15:20Z) | last 3 days |
+|---|---|---|---|
+| L24 (live, no swaps) | +18.43% / -12.16% / 2.9 | +22.11% / -10.50% / 2.8 | **+4.65%** / -4.92% / 3.0 |
+| RS0 (swap the weakest if below entry) | **+21.35%** / -11.86% / 8.1 | **+24.32%** / -9.71% / 9.1 | +0.65% / -3.09% / 9.0 |
+| RSH (swap if below +0.5 dvol) | +15.22% / -17.54% / 15.9 | +21.42% / -8.80% / 18.4 | -1.24% / -3.25% / 18.3 |
+| RSA (always swap) | +9.21% / -21.13% / 22.4 | +14.05% / -11.79% / 23.5 | -2.85% / -6.22% / 23.7 |
+RS0 is the nearest miss of the day's exit studies: ahead of L24 by 2.9 and 2.2 pp in W1 and W2 with slightly shallower drawdown, but 4.0 pp behind in the last 3 days, the choppy regime the competition is trading in now. Swapping triples turnover (8-9 entries a day against 3); in chop the new bursts revert and the swapped-out holdings recover, so the fees and the round trips decide it. Swapping more readily (RSH, RSA) is worse in every window. RS0 is the candidate to re-test if the market turns to trend. Three trials recorded.

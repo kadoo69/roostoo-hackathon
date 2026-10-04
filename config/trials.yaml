@@ -6468,3 +6468,18 @@ trials:
   config: ride_gain_lock:TR1
   status: fail
   note: DECISIONS.md#ride-gain-lock-outcome
+- signal: ride_rotation
+  gate: ride_rotation
+  config: ride_rotation:RS0
+  status: fail
+  note: DECISIONS.md#ride-rotation-outcome
+- signal: ride_rotation
+  gate: ride_rotation
+  config: ride_rotation:RSH
+  status: fail
+  note: DECISIONS.md#ride-rotation-outcome
+- signal: ride_rotation
+  gate: ride_rotation
+  config: ride_rotation:RSA
+  status: fail
+  note: DECISIONS.md#ride-rotation-outcome

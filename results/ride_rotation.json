@@ -1,0 +1,115 @@
+{
+ "windows": {
+  "W1": [
+   "2026-09-05 00:00:00+00:00",
+   "2026-09-19 00:00:00+00:00"
+  ],
+  "W2": [
+   "2026-09-19 00:00:00+00:00",
+   "2026-10-04 15:10:00+00:00"
+  ],
+  "last_3d": [
+   "2026-10-01 15:10:00+00:00",
+   "2026-10-04 15:10:00+00:00"
+  ]
+ },
+ "arms": {
+  "L24": {
+   "W1": {
+    "total_pct": 18.43,
+    "max_dd_pct": -12.16,
+    "entries_per_day": 2.9,
+    "mean_gross": 0.94
+   },
+   "W2": {
+    "total_pct": 22.11,
+    "max_dd_pct": -10.5,
+    "entries_per_day": 2.8,
+    "mean_gross": 0.96
+   },
+   "last_3d": {
+    "total_pct": 4.65,
+    "max_dd_pct": -4.92,
+    "entries_per_day": 3.0,
+    "mean_gross": 0.96
+   }
+  },
+  "RS0": {
+   "W1": {
+    "total_pct": 21.35,
+    "max_dd_pct": -11.86,
+    "entries_per_day": 8.1,
+    "mean_gross": 0.98
+   },
+   "W2": {
+    "total_pct": 24.32,
+    "max_dd_pct": -9.71,
+    "entries_per_day": 9.1,
+    "mean_gross": 0.99
+   },
+   "last_3d": {
+    "total_pct": 0.65,
+    "max_dd_pct": -3.09,
+    "entries_per_day": 9.0,
+    "mean_gross": 0.96
+   }
+  },
+  "RSH": {
+   "W1": {
+    "total_pct": 15.22,
+    "max_dd_pct": -17.54,
+    "entries_per_day": 15.9,
+    "mean_gross": 0.98
+   },
+   "W2": {
+    "total_pct": 21.42,
+    "max_dd_pct": -8.8,
+    "entries_per_day": 18.4,
+    "mean_gross": 0.99
+   },
+   "last_3d": {
+    "total_pct": -1.24,
+    "max_dd_pct": -3.25,
+    "entries_per_day": 18.3,
+    "mean_gross": 1.0
+   }
+  },
+  "RSA": {
+   "W1": {
+    "total_pct": 9.21,
+    "max_dd_pct": -21.13,
+    "entries_per_day": 22.4,
+    "mean_gross": 0.99
+   },
+   "W2": {
+    "total_pct": 14.05,
+    "max_dd_pct": -11.79,
+    "entries_per_day": 23.5,
+    "mean_gross": 1.0
+   },
+   "last_3d": {
+    "total_pct": -2.85,
+    "max_dd_pct": -6.22,
+    "entries_per_day": 23.7,
+    "mean_gross": 1.0
+   }
+  }
+ },
+ "best": "RS0",
+ "worst_window": {
+  "RS0": [
+   0.65,
+   -11.86
+  ],
+  "RSH": [
+   -1.24,
+   -17.54
+  ],
+  "RSA": [
+   -2.85,
+   -21.13
+  ]
+ },
+ "recommended": false,
+ "ref": "DECISIONS.md#ride-rotation-declaration"
+}
