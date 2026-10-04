@@ -5093,3 +5093,14 @@ The best by worst window, L12, loses to L24 in the last 3 days and in W1 (by 12 
 ## ride-gain-lock-declaration
 
 Operator 2026-10-04 20:38 IST, with SUI at +3.1% and its first ladder skim done: monitor the trades by time frame, SUI may not be positive by tomorrow, take exits accordingly. A hand-placed exit is prohibited (FAQ Q28), so only bot logic is considered. Written before any number; full text in `config/ride_gain_lock.yaml`. Against the live ride (L24, V2 targets, 24 h): BE1 (after +1 dvol, exit back at entry), LK1 (after +1 dvol, exit at +0.5 dvol), TR1 (after +1 dvol, trail 1 dvol from the peak close). Same decision rule as `#ride-laggard-exits-declaration`. Three trials.
+
+## ride-gain-lock-outcome
+
+NOT RECOMMENDED, the live exits stay (`results/ride_gain_lock.json`, `python3 -m archive.gates.ride_gain_lock`). Total return / max DD / entries a day, z >= 2.5 entries, V2 targets, 24 h hold, 27 coins:
+| arm | W1 (09-05..09-19) | W2 (09-19..10-04 15:10Z) | last 3 days |
+|---|---|---|---|
+| L24 (live) | +18.43% / -12.16% / 2.9 | **+21.91%** / -10.50% / 2.8 | **+4.75%** / -4.92% / 3.0 |
+| BE1 (breakeven after +1 dvol) | +11.11% / -15.53% / 3.1 | **+28.50%** / -10.59% / 3.0 | +3.26% / -7.39% / 3.3 |
+| LK1 (lock +0.5 dvol after +1 dvol) | **+20.67%** / -11.18% / 3.4 | +6.08% / -13.00% / 3.3 | +4.10% / -5.28% / 3.7 |
+| TR1 (trail 1 dvol after +1 dvol) | +19.22% / -12.56% / 3.1 | +19.75% / -15.29% / 3.0 | +3.37% / -7.29% / 3.3 |
+No lock beats L24 in the last 3 days, and each wins one window while losing another, the same sign-flip as `#ride-exits-outcome` and `#ride-laggard-exits-outcome`. Locks also deepen the drawdown in most windows: they sell on pullbacks inside moves that later reach the target. Gains are already protected by the 3%/15% booking ladder, which sold part of SUI at +3% today. Three trials recorded.

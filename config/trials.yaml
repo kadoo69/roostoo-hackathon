@@ -6453,3 +6453,18 @@ trials:
   config: ride_laggard_exits:TS6
   status: fail
   note: DECISIONS.md#ride-laggard-exits-outcome
+- signal: ride_gain_lock
+  gate: ride_gain_lock
+  config: ride_gain_lock:BE1
+  status: fail
+  note: DECISIONS.md#ride-gain-lock-outcome
+- signal: ride_gain_lock
+  gate: ride_gain_lock
+  config: ride_gain_lock:LK1
+  status: fail
+  note: DECISIONS.md#ride-gain-lock-outcome
+- signal: ride_gain_lock
+  gate: ride_gain_lock
+  config: ride_gain_lock:TR1
+  status: fail
+  note: DECISIONS.md#ride-gain-lock-outcome

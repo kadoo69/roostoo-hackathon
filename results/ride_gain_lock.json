@@ -1,0 +1,115 @@
+{
+ "windows": {
+  "W1": [
+   "2026-09-05 00:00:00+00:00",
+   "2026-09-19 00:00:00+00:00"
+  ],
+  "W2": [
+   "2026-09-19 00:00:00+00:00",
+   "2026-10-04 15:05:00+00:00"
+  ],
+  "last_3d": [
+   "2026-10-01 15:05:00+00:00",
+   "2026-10-04 15:05:00+00:00"
+  ]
+ },
+ "arms": {
+  "L24": {
+   "W1": {
+    "total_pct": 18.43,
+    "max_dd_pct": -12.16,
+    "entries_per_day": 2.9,
+    "mean_gross": 0.94
+   },
+   "W2": {
+    "total_pct": 21.91,
+    "max_dd_pct": -10.5,
+    "entries_per_day": 2.8,
+    "mean_gross": 0.96
+   },
+   "last_3d": {
+    "total_pct": 4.75,
+    "max_dd_pct": -4.92,
+    "entries_per_day": 3.0,
+    "mean_gross": 0.96
+   }
+  },
+  "BE1": {
+   "W1": {
+    "total_pct": 11.11,
+    "max_dd_pct": -15.53,
+    "entries_per_day": 3.1,
+    "mean_gross": 0.94
+   },
+   "W2": {
+    "total_pct": 28.5,
+    "max_dd_pct": -10.59,
+    "entries_per_day": 3.0,
+    "mean_gross": 0.96
+   },
+   "last_3d": {
+    "total_pct": 3.26,
+    "max_dd_pct": -7.39,
+    "entries_per_day": 3.3,
+    "mean_gross": 0.97
+   }
+  },
+  "LK1": {
+   "W1": {
+    "total_pct": 20.67,
+    "max_dd_pct": -11.18,
+    "entries_per_day": 3.4,
+    "mean_gross": 0.9
+   },
+   "W2": {
+    "total_pct": 6.08,
+    "max_dd_pct": -13.0,
+    "entries_per_day": 3.3,
+    "mean_gross": 0.97
+   },
+   "last_3d": {
+    "total_pct": 4.1,
+    "max_dd_pct": -5.28,
+    "entries_per_day": 3.7,
+    "mean_gross": 0.97
+   }
+  },
+  "TR1": {
+   "W1": {
+    "total_pct": 19.22,
+    "max_dd_pct": -12.56,
+    "entries_per_day": 3.1,
+    "mean_gross": 0.93
+   },
+   "W2": {
+    "total_pct": 19.75,
+    "max_dd_pct": -15.29,
+    "entries_per_day": 3.0,
+    "mean_gross": 0.95
+   },
+   "last_3d": {
+    "total_pct": 3.37,
+    "max_dd_pct": -7.29,
+    "entries_per_day": 3.3,
+    "mean_gross": 0.97
+   }
+  }
+ },
+ "best": "LK1",
+ "worst_window": {
+  "BE1": [
+   3.26,
+   -15.53
+  ],
+  "LK1": [
+   4.1,
+   -13.0
+  ],
+  "TR1": [
+   3.37,
+   -15.29
+  ]
+ },
+ "recommended": false,
+ "ref": "DECISIONS.md#ride-gain-lock-declaration"
+}
