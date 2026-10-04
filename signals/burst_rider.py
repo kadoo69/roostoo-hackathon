@@ -77,9 +77,11 @@ def live_step(close: pd.DataFrame, high: pd.DataFrame, cfg: dict, held: dict[str
     A live book cannot follow `weights()`: its path fills the slots with entries the book never
     took (blocked at a start, or reshuffled as the replay window moves), and those ghost slots stop
     every new entry (`DECISIONS.md#ride-ghost-slots-2026-10-01`). Here the slots are the positions
-    the book holds. `held[s] = [entry bar, entry close, target]` (the target fraction fixed at entry; a
-    two-element record from before targets were stored is sized from the volatility at its entry bar
-    when that bar is in `close`, else `tp_pct`), `last[s]` = the bar of the last entry
+    the book holds. `held[s] = [entry bar, entry close, target, weight]` (target and weight fixed at
+    entry; a record from before targets were stored is sized from the volatility at its entry bar when
+    that bar is in `close`, else `tp_pct`; a record without a weight keeps 1 / max(n, positions held),
+    so a book whose `n` was lowered keeps its open positions at their size and opens new 1 / n entries
+    only as weight frees: DECISIONS.md#competition-two-slots-2026-10-04), `last[s]` = the bar of the last entry
     (cooldown). Ages count bars by time, so the exit after downtime uses every bar since the entry.
     Same rule as `weights()`, bar for bar (`tests/test_burst_rider_live.py`).
     """
@@ -92,8 +94,10 @@ def live_step(close: pd.DataFrame, high: pd.DataFrame, cfg: dict, held: dict[str
     r3f = close / close.shift(3) - 1.0
     sd = entry_sd(r3f, cfg)
     keep = {}
+    legacy = 1.0 / max(n, len(held)) if held else 1.0 / n
     for s, rec in held.items():
         at, px = pd.Timestamp(rec[0]), float(rec[1])
+        wt = float(rec[3]) if len(rec) > 3 else legacy
         if len(rec) > 2:
             tp = float(rec[2])
         else:
@@ -101,9 +105,9 @@ def live_step(close: pd.DataFrame, high: pd.DataFrame, cfg: dict, held: dict[str
         since = hi[s].loc[hi.index > at] if s in hi else pd.Series(dtype=float)
         hit = bool((since >= px * (1 + tp)).any())
         if not hit and round((t - at) / step) < hold:
-            keep[s] = [str(at), px, tp]
+            keep[s] = [str(at), px, tp, wt]
     new_last = dict(last)
-    free = n - len(keep)
+    free = int((1.0 - sum(v[3] for v in keep.values()) + 1e-9) * n)
     if free > 0 and len(close) > 3:
         r3, lvl = r3f.iloc[-1], trigger_level(r3f, cfg).iloc[-1]
         cand = []
@@ -114,11 +118,11 @@ def live_step(close: pd.DataFrame, high: pd.DataFrame, cfg: dict, held: dict[str
                 continue
             cand.append((float(r), close.columns.get_loc(s), s))
         for _, _, s in sorted(cand, reverse=True)[:free]:
-            keep[s] = [str(t), float(close[s].iloc[-1]), target_pct(cfg, float(sd[s].iloc[-1]))]
+            keep[s] = [str(t), float(close[s].iloc[-1]), target_pct(cfg, float(sd[s].iloc[-1])), 1.0 / n]
             new_last[s] = str(t)
     floor = t - step * (cool + hold)
     new_last = {s: at for s, at in new_last.items() if s in keep or pd.Timestamp(at) > floor}
-    return keep, new_last, {s: 1.0 / n for s in keep}
+    return keep, new_last, {s: v[3] for s, v in keep.items()}
 
 
 def probe_entry(close: pd.DataFrame, cfg: dict, held: dict[str, list], last: dict[str, str],
@@ -137,4 +141,4 @@ def probe_entry(close: pd.DataFrame, cfg: dict, held: dict[str, list], last: dic
         return held, last, {}
     s = str(z.idxmax())
     tp = target_pct(cfg, float(entry_sd(r3f, cfg)[s].iloc[-1]))
-    return {s: [str(t), float(close[s].iloc[-1]), tp]}, {**last, s: str(t)}, {s: 1.0 / n}
+    return {s: [str(t), float(close[s].iloc[-1]), tp, 1.0 / n]}, {**last, s: str(t)}, {s: 1.0 / n}

@@ -16,7 +16,7 @@ adaptive:
       clock: 5m
       tp_pct: 5.0
       hold_bars: 288
-      n: 3
+      n: 2
       cooldown_bars: 12
       sigma_k: 2.5
       sigma_bars: 288

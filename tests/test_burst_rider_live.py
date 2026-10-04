@@ -177,3 +177,19 @@ def test_target_is_two_days_of_own_volatility_and_old_records_are_sized_at_their
     held, _, _ = burst_rider.live_step(close.iloc[:152], high.iloc[:152], cfg, {s: [str(at), 1e9]}, {})
     sd = burst_rider.entry_sd(close / close.shift(3) - 1.0, cfg).at[at, s]
     assert held[s][2] == burst_rider.target_pct(cfg, float(sd))
+
+
+def test_lowering_n_keeps_open_positions_at_their_size_and_opens_new_slots_as_weight_frees():
+    close, high = panel(5, T=400)
+    cfg = {**CFG, "n": 2, "hold_bars": 30}
+    t0 = close.index[-1]
+    old = {s: [str(t0), 1e9, 0.5] for s in ("C0", "C1", "C2")}
+    held, _, target = burst_rider.live_step(close, high, cfg, old, {})
+    assert target == {"C0": 1 / 3, "C1": 1 / 3, "C2": 1 / 3} and all(v[3] == 1 / 3 for v in held.values())
+    two = {s: held[s] for s in ("C0", "C1")}
+    held2, _, target2 = burst_rider.live_step(close, high, {**cfg, "thresh_pct": -100.0}, two, {})
+    assert set(target2) == {"C0", "C1"} and sum(target2.values()) == 2 / 3
+    one = {"C0": held["C0"]}
+    held3, _, target3 = burst_rider.live_step(close, high, {**cfg, "thresh_pct": -100.0}, one, {})
+    new = [s for s in target3 if s != "C0"]
+    assert len(new) == 1 and target3[new[0]] == 0.5 and target3["C0"] == 1 / 3 and sum(target3.values()) <= 1.0
