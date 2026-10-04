@@ -36,7 +36,7 @@ from bot.strategy import (REGIME_SYMBOL, REPLAY_BARS, replay_book, replay_short_
 from gates.concentration import rank_score
 from venue.roostoo import RoostooClient
 
-BOOKS = ("competition", "competition_split", "competition_rehearsal", "momentum_top3_30m", "wf_live", "blend_30m_ride", "resid_30m", "htf0_30m", "ride1_5m", "wide_30m", "ride1_wide_5m", "ride_5m", "regime_ls_30m", "ride_z3_5m", "sleeves_z3_5m", "split_tilt_5m")
+BOOKS = ("competition", "competition_split", "competition_wf", "competition_rehearsal", "momentum_top3_30m", "wf_live", "blend_30m_ride", "resid_30m", "htf0_30m", "ride1_5m", "wide_30m", "ride1_wide_5m", "ride_5m", "regime_ls_30m", "ride_z3_5m", "sleeves_z3_5m", "split_tilt_5m")
 EQUITY = 100_000.0
 
 

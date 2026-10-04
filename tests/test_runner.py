@@ -87,4 +87,4 @@ def test_competition_split_is_the_rehearsed_split_on_the_comp_keys():
     with open("deploy/ec2_bootstrap.sh") as fh:
         books = next(ln for ln in fh.read().splitlines() if ln.startswith("BOOKS="))
     units = books.split('"')[1].split()
-    assert "competition_split" in units and "competition" not in units
+    assert "competition_wf" in units and not {"competition", "competition_split"} & set(units)
