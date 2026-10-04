@@ -124,6 +124,7 @@ FEE_RATE = {"LIMIT": 0.0005, "MARKET": 0.0010}
 SHORT_FEE = 0.0010
 SELLS_FIRST = ("SELL", "SHORT_CLOSE")
 OPENS = ("BUY", "SHORT_OPEN")
+UNDERFILL_DONE = 0.25
 
 
 class Bot:
@@ -187,6 +188,8 @@ class Bot:
         self.last_decision_bar = saved.get("last_decision_bar")
         self.pending_entries = ({k: float(v) for k, v in (saved.get("pending_entries") or {}).items()}
                                 if saved.get("pending_bar") == saved.get("last_bar") else {})
+        self.underfilled = (set(saved["underfilled"]) if "underfilled" in saved
+                            else self.capped_entries_held())
         self.journal.write("lifecycle", {
             "event": "resumed" if saved else "cold_start",
             # A one-shot diagnostic run resumes state exactly like a supervised
@@ -289,6 +292,7 @@ class Bot:
             "opened": self.opened,
             "last_decision_bar": self.last_decision_bar,
             "pending_entries": self.pending_entries,
+            "underfilled": sorted(getattr(self, "underfilled", set())),
             "pending_bar": str(self.last_bar) if self.last_bar is not None else None,
             "last_marks": {k: round(v, 12) for k, v in getattr(self, "last_marks", {}).items()}})
 
@@ -386,6 +390,22 @@ class Bot:
         if short:
             out["collateral"] = round(qty * plan["price"], 2)
         return out
+
+    def capped_entries_held(self) -> set[str]:
+        """Held symbols whose latest BUY was cut short by cash and which have not been sold since,
+        read from the order journal, for state saved before `underfilled` existed.
+        DECISIONS.md#underfilled-entry-2026-10-04"""
+        last: dict[str, dict] = {}
+        for f in sorted(self.journal.dir.glob("orders-*.jsonl"))[-2:]:
+            for line in f.read_text().splitlines():
+                try:
+                    r = json.loads(line)
+                except ValueError:
+                    continue
+                if r.get("event") == "placed" and r.get("symbol") and r.get("side") in ("BUY", "SELL"):
+                    last[r["symbol"]] = r
+        return {s for s, r in last.items()
+                if r["side"] == "BUY" and r.get("cash_capped_from") and self.holdings.get(s, 0.0) > 0}
 
     def apply_dry_fill(self, plan: dict) -> bool:
         if plan.get("skipped") or not self.s.dry_run:
@@ -580,8 +600,14 @@ class Bot:
             target = portfolio.hold_shorts(target, current_w)
         # The skim ladder is a shared capability, not a property of one bot:
         # any config carrying a `booking` block gets it. bot/booking.py.
+        wanted = dict(target)
         target, skims = booking.apply(target, current_w, prices, self.skim_refs,
-                                      equity, self.s.booking)
+                                      equity, self.s.booking, grow=self.underfilled)
+        if fresh:
+            skimmed = {e["symbol"] for e in skims}
+            self.underfilled = {s for s in self.underfilled
+                                if s in wanted and s not in skimmed and current_w.get(s, 0.0) > 0
+                                and current_w[s] < wanted[s] * (1.0 - UNDERFILL_DONE)}
         if skims:
             self.skims += len(skims)
             self.journal.write("signals", {"event": "skim", "bar": str(matrix.index[-1])
@@ -638,6 +664,8 @@ class Bot:
                 continue
             if not plan.get("skipped") and plan["side"] in OPENS:
                 plan = self.fit_to_cash(plan, spendable)
+                if plan.get("cash_capped_from") and plan["side"] == "BUY":
+                    self.underfilled.add(plan["symbol"])
             rec = self.executor.send(plan)
             if not plan.get("skipped"):
                 if self.s.dry_run:

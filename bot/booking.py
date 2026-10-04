@@ -26,8 +26,13 @@ from __future__ import annotations
 
 
 def apply(base: dict[str, float], current: dict[str, float], prices: dict[str, float],
-          refs: dict[str, float], equity: float, cfg: dict) -> tuple[dict[str, float], list[dict]]:
-    """Returns the booked target and the skim events. Mutates `refs` in place."""
+          refs: dict[str, float], equity: float, cfg: dict,
+          grow: set[str] | None = None) -> tuple[dict[str, float], list[dict]]:
+    """Returns the booked target and the skim events. Mutates `refs` in place.
+
+    A held position is capped at its current weight so skimmed cash is never bought back, except a
+    symbol in `grow`: an entry the venue cash cut short, which may still be completed up to its
+    target. DECISIONS.md#underfilled-entry-2026-10-04"""
     if not cfg.get("enabled") or equity <= 0:
         for s in list(refs):
             if s not in base:
@@ -68,7 +73,7 @@ def apply(base: dict[str, float], current: dict[str, float], prices: dict[str, f
         if not ref or ref <= 0:
             refs[sym] = px
             ref = px
-        tgt = min(want, held)
+        tgt = want if sym in (grow or ()) else min(want, held)
         if px >= ref * (1.0 + step):
             skimmed = held * (1.0 - frac)
             if (held - skimmed) * equity >= floor:

@@ -92,3 +92,22 @@ def test_short_ladder_covers_a_slice_after_a_three_percent_fall_and_never_tops_u
     off = {k: v for k, v in cfg.items() if k != "shorts"}
     out, ev = booking.apply({"X": -0.5}, {"X": -0.4}, {"X": 90.0}, {"X": 100.0}, 1000.0, off)
     assert out["X"] == -0.5 and not ev
+
+
+CFG_BOOK = {"enabled": True, "step_pct": 0.03, "skim_fraction": 0.15, "min_skim_notional": 10.0}
+
+
+def test_a_cash_capped_entry_is_completed_but_a_skimmed_position_is_never_topped_up():
+    target, current, prices = {"PUMPUSDT": 1 / 3, "LTCUSDT": 1 / 3}, {"PUMPUSDT": 0.051, "LTCUSDT": 0.20}, {"PUMPUSDT": 0.0065, "LTCUSDT": 71.6}
+    refs = {"PUMPUSDT": 0.0065, "LTCUSDT": 71.6}
+    capped, _ = booking.apply(target, current, prices, dict(refs), 101_700.0, CFG_BOOK)
+    assert capped["PUMPUSDT"] == 0.051 and capped["LTCUSDT"] == 0.20
+    grown, _ = booking.apply(target, current, prices, dict(refs), 101_700.0, CFG_BOOK, grow={"PUMPUSDT"})
+    assert grown["PUMPUSDT"] == pytest.approx(1 / 3) and grown["LTCUSDT"] == 0.20
+    orders = portfolio.deltas(grown, current, 101_700.0, prices)
+    assert [(o["symbol"], o["side"]) for o in orders] == [("PUMPUSDT", "BUY")]
+    assert orders[0]["notional"] == pytest.approx((1 / 3 - 0.051) * 101_700.0, rel=1e-6)
+    up = {"PUMPUSDT": 0.0067}
+    skim, ev = booking.apply({"PUMPUSDT": 1 / 3}, {"PUMPUSDT": 0.30}, up, {"PUMPUSDT": 0.0065}, 101_700.0, CFG_BOOK,
+                             grow={"PUMPUSDT"})
+    assert ev and skim["PUMPUSDT"] == pytest.approx(0.30 * 0.85)
