@@ -6398,3 +6398,13 @@ trials:
   config: ride_scaled_entry:Z2
   status: fail
   note: DECISIONS.md#ride-scaled-entry-outcome
+- signal: ride_z3_wide
+  gate: ride_z3_wide
+  config: ride_z3_wide:Z3
+  status: baseline
+  note: DECISIONS.md#ride-z3-wide-outcome
+- signal: ride_z3_wide
+  gate: ride_z3_wide
+  config: ride_z3_wide:Z3W
+  status: fail
+  note: DECISIONS.md#ride-z3-wide-outcome

@@ -5020,3 +5020,13 @@ This harness's Z3 numbers differ from D2 in `#ride-dynamic-trigger-outcome` (+23
 ## ride-z3-wide-declaration
 
 Operator 2026-10-04 about 13:20Z (18:50 IST), after `ride1_wide_5m` caught PUMP and BMT: test the z3 trigger on the wide universe. Written before any number; full text in `config/ride_z3_wide.yaml`. Z3 on the 27 coins of the live `competition_z3` unit against Z3W on the 64 coins of `ride1_wide_5m` (venue_all), same rule, maker fees and ticks, windows W1 09-05..09-19, W2 09-19..now and the last 3 days, each started flat. Z3W is recommended only if it beats Z3 on total return in all three with max drawdown no more than 2 pp worse in each, and beats at least 16 of 20 random 27-coin subsets of the 64 in W2 and the last 3 days. Roostoo depth on the thin coins is not modelled, so a pass goes to paper first. Two trials.
+
+## ride-z3-wide-outcome
+
+FAIL, `competition_z3` stays on its 27 coins (`results/ride_z3_wide.json`, `python3 -m archive.gates.ride_z3_wide`; the random-subset control was not run because Z3W failed the return condition). Total return / max DD / entries (of them outside the pool), each window started flat:
+| arm | W1 (09-05..09-19) | W2 (09-19..10-04 13:30Z) | last 3 days |
+|---|---|---|---|
+| Z3, 27 coins (live) | **+15.03%** / -13.97% / 47 | **+28.63%** / -7.68% / 51 | **+4.64%** / -6.06% / 10 |
+| Z3W, 64 coins | +0.08% / -14.57% / 55 (35) | -12.25% / -20.40% / 52 (32) | +1.72% / -7.97% / 11 (4) |
+The failure mode named in the declaration is what happened. The extra coins took most of the slots (35 of 55 and 32 of 52 entries) and lost: their gross P&L was +1.4%, -9.8% and -1.6% against +4.9%, +1.4% and +4.3% for the pool coins in the same arm. Their 3-sigma moves reverse, and the slots they hold block the pool's 3-sigma moves that carry the ride (Z3's pool P&L is +18.8%, +31.4% and +5.4%). `ride1_wide_5m`'s forward return is not evidence for breadth: about half of it is one PUMP position, a pool coin.
+Z3 here (27 coins, FET and FIL included) is higher than the 25-coin Z3 of `#ride-scaled-entry-outcome` (W2 +28.6% against +20.9%); the arms of each study are compared within their own harness. Two trials recorded.
