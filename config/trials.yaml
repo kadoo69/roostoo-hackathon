@@ -6518,3 +6518,8 @@ trials:
   config: ride_entry_regime:RG
   status: fail
   note: DECISIONS.md#ride-entry-regime-outcome
+- signal: repeat_trigger_forward
+  gate: repeat_trigger_forward
+  config: repeat_trigger_forward:R_vs_F
+  status: forward_pending
+  note: DECISIONS.md#repeat-trigger-forward-declaration

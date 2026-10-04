@@ -1,0 +1,21 @@
+meta:
+  name: repeat_trigger_forward
+  frozen: true
+  declared_utc: '2026-10-04T19:40:00Z'
+  requested_by: 'operator 2026-10-05 01:05 IST: write the repeat-trigger forward test (FET triggered three times on 10-04 and kept running while the book was full)'
+  declared_ref: DECISIONS.md#repeat-trigger-forward-declaration
+  written_before_any_number: true
+forward_only: 'scored only on triggers at or after 2026-10-04 19:40Z; the 30-day history is printed as context and is not part of the decision'
+mechanism: 'a coin that bursts to 2.5 sigma again within hours of its last burst is in a sustained move with flow behind it, unlike a one-off squeeze; its later triggers should continue more than first-time triggers'
+failure_mode: 'repeat triggers are late in a move and exhausted (the z >= 5 bucket averaged 0% over 30 days), so they continue no better or worse'
+definitions:
+  trigger: 'z >= 2.5 on a closed 5m bar (3-bar return over the coin''s 288-bar std of 3-bar returns), at most one per coin per 12 bars, 27-coin pool'
+  R: 'repeat trigger: the coin had at least one other trigger in the previous 72 bars (6 h)'
+  F: 'first trigger: no trigger in the previous 72 bars'
+  outcome: 'ride return from the trigger close under the live exits (2 x dvol target, else the close 288 bars later), only for triggers whose 288 bars have elapsed; 6 h forward return reported too'
+decision_rule: >
+  Read on or after 2026-10-07 19:40Z (3 forward days). If R has at least 15 completed triggers, its mean ride return
+  exceeds F's by at least 1.0 pp, and its win rate is at least 55%, a swap rule (sell the weakest holding below entry
+  to buy a repeat trigger) is declared and run as a paper book on EC2 beside the competition book. Otherwise NULL and
+  no change. The competition book changes only on the operator's decision after a paper result.
+trials: 1
