@@ -2,7 +2,12 @@
 
 Current state only. The full history of sessions to 2026-09-23 is archived at `docs/archive/HANDOVER_2026-09-23.md`; older section references in code and configs point there.
 
-## CURRENT STATE 2026-10-04 19:32 IST / 14:02Z (read this first; everything below is history)
+## CURRENT STATE 2026-10-04 23:00 IST / 17:30Z (read this first; everything below is history)
+
+### 23:00 IST: competition_z25 now runs 2 slots of 1/2 (`#competition-two-slots-2026-10-04`, commit `51f5446`)
+- Evidence `#ride-hold-slots-outcome`: N2 beat N3 in every window (+20.3 / +47.7 / +4.1% against +18.4 / +24.3 / +3.7%), drawdown no worse; leader-hold failed.
+- Transition: LTC, PUMP, UNI (opened under n=3) keep 1/3 and their exits; slots are counted by weight, so new 1/2 entries open as they exit. No forced sale.
+- Also tonight: underfilled-entry fix (`#underfilled-entry-2026-10-04`); SUI closed at its target (+5.1%); day-one lessons in CLAUDE.md. Equity 101,788 (+1.79%) at 23:00 IST.
 
 ### FIRST COMPETITION FILL 19:30 IST (14:00Z): BUY SUI, about 27,992 at 1.1907 (33.3k, maker LIMIT, order 3421782)
 - Placed by the one-shot probe (`#competition-probe-2026-10-04`, commit `f1d0f85`, z >= 2.0, SUI the highest z on the 13:55Z bar); the probe is now spent (`probe_done` in `live/competition_z25/ride_state.json`). It proves COMP trading is enabled after the open. SUI is held under the ride exits: +5% over the 1.1934 entry close (high >= about 1.253) or 24 h (14:00Z 10-05), plus the 3%/15% ladder.
