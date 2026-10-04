@@ -5058,3 +5058,14 @@ Change, committed code and config, no hand-placed order: `adaptive.probe_entry: 
 ## ride-vol-exits-declaration
 
 Operator 2026-10-04 19:52 IST: make the exits dynamic, as per market conditions. Written before any number; full text in `config/ride_vol_exits.yaml`. On the live z >= 2.5 entries, the fixed +5% target (F5) against targets sized to each coin's own one-day volatility at entry (dvol = 288-bar std of 3-bar returns x sqrt(96)): V2 (2 x dvol), V3 (3 x dvol), V3S (3 x dvol plus a stop at -1.5 x dvol); 24 h hold in all. The best arm is recommended only if it beats F5 in the last 3 days and in W1 or W2 and its worst window is not below F5's; otherwise the operator sees the numbers before any deployment. Prior: trails after +5% flipped sign (`#ride-exits-outcome`). Three trials.
+
+## ride-vol-exits-outcome
+
+NOT RECOMMENDED by the declared rule; F5 stays unless the operator decides otherwise (`results/ride_vol_exits.json`, `python3 -m archive.gates.ride_vol_exits`). Total return / max DD / entries a day, 27 coins, z >= 2.5 entries:
+| arm | W1 (09-05..09-19) | W2 (09-19..10-04 14:25Z) | last 3 days |
+|---|---|---|---|
+| F5 (live, +5%) | +14.82% / -17.69% / 3.2 | +17.00% / -8.66% / 3.3 | +2.91% / -5.95% / 3.3 |
+| V2 (2 x dvol) | **+18.43%** / -12.16% / 2.9 | **+22.01%** / -10.50% / 2.7 | +4.10% / -4.66% / 3.0 |
+| V3 (3 x dvol) | +7.15% / -13.53% / 3.0 | +11.89% / -16.12% / 3.0 | +4.54% / -3.91% / 3.0 |
+| V3S (3 x dvol, stop -1.5 x dvol) | +9.48% / -12.16% / 3.1 | +14.51% / -10.91% / 3.1 | +4.54% / -3.91% / 3.0 |
+The declared selection (highest worst-window return) picks V3S, which trails F5 in W1 and W2, so the rule says no. Recorded as seen, not acted on: V2 beats F5 in all three windows, with drawdown 5.5 and 1.3 pp shallower in W1 and the last 3 days and 1.8 pp deeper in W2. Choosing V2 now is a pick made after seeing three arms, so it carries that selection on record; it is the operator's call. Noise on record too: F5's last-3-days return was +7.06% in `#ride-agile-outcome` 45 minutes earlier and is +2.91% here, the window having moved by under an hour. Current dvol: TRX 0.54%, BTC 0.58%, ETH 0.72% up to FET 4.68%, NEAR 5.06%, PUMP 8.23%, so V2's targets run from about 1.1% to 16.5%. Three trials recorded.

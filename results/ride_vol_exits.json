@@ -1,0 +1,132 @@
+{
+ "windows": {
+  "W1": [
+   "2026-09-05 00:00:00+00:00",
+   "2026-09-19 00:00:00+00:00"
+  ],
+  "W2": [
+   "2026-09-19 00:00:00+00:00",
+   "2026-10-04 14:15:00+00:00"
+  ],
+  "last_3d": [
+   "2026-10-01 14:15:00+00:00",
+   "2026-10-04 14:15:00+00:00"
+  ]
+ },
+ "arms": {
+  "F5": {
+   "W1": {
+    "total_pct": 14.82,
+    "max_dd_pct": -17.69,
+    "entries_per_day": 3.2
+   },
+   "W2": {
+    "total_pct": 17.0,
+    "max_dd_pct": -8.66,
+    "entries_per_day": 3.3
+   },
+   "last_3d": {
+    "total_pct": 2.91,
+    "max_dd_pct": -5.95,
+    "entries_per_day": 3.3
+   }
+  },
+  "V2": {
+   "W1": {
+    "total_pct": 18.43,
+    "max_dd_pct": -12.16,
+    "entries_per_day": 2.9
+   },
+   "W2": {
+    "total_pct": 22.01,
+    "max_dd_pct": -10.5,
+    "entries_per_day": 2.7
+   },
+   "last_3d": {
+    "total_pct": 4.1,
+    "max_dd_pct": -4.66,
+    "entries_per_day": 3.0
+   }
+  },
+  "V3": {
+   "W1": {
+    "total_pct": 7.15,
+    "max_dd_pct": -13.53,
+    "entries_per_day": 3.0
+   },
+   "W2": {
+    "total_pct": 11.89,
+    "max_dd_pct": -16.12,
+    "entries_per_day": 3.0
+   },
+   "last_3d": {
+    "total_pct": 4.54,
+    "max_dd_pct": -3.91,
+    "entries_per_day": 3.0
+   }
+  },
+  "V3S": {
+   "W1": {
+    "total_pct": 9.48,
+    "max_dd_pct": -12.16,
+    "entries_per_day": 3.1
+   },
+   "W2": {
+    "total_pct": 14.51,
+    "max_dd_pct": -10.91,
+    "entries_per_day": 3.1
+   },
+   "last_3d": {
+    "total_pct": 4.54,
+    "max_dd_pct": -3.91,
+    "entries_per_day": 3.0
+   }
+  }
+ },
+ "best": "V3S",
+ "worst_window": {
+  "V2": [
+   4.1,
+   -12.16
+  ],
+  "V3": [
+   4.54,
+   -16.12
+  ],
+  "V3S": [
+   4.54,
+   -12.16
+  ]
+ },
+ "recommended": false,
+ "dvol_now_pct": {
+  "TRXUSDT": 0.54,
+  "BTCUSDT": 0.58,
+  "ETHUSDT": 0.72,
+  "XRPUSDT": 1.07,
+  "SOLUSDT": 1.16,
+  "DOGEUSDT": 1.2,
+  "AVAXUSDT": 1.65,
+  "XLMUSDT": 1.71,
+  "BNBUSDT": 1.73,
+  "ADAUSDT": 1.8,
+  "TRUMPUSDT": 1.87,
+  "LINKUSDT": 2.01,
+  "UNIUSDT": 2.17,
+  "FILUSDT": 2.21,
+  "SUIUSDT": 2.39,
+  "PEPEUSDT": 2.49,
+  "LTCUSDT": 2.53,
+  "ONDOUSDT": 2.63,
+  "AAVEUSDT": 2.65,
+  "ARBUSDT": 2.67,
+  "TAOUSDT": 3.56,
+  "ENAUSDT": 3.59,
+  "ZECUSDT": 3.64,
+  "WLDUSDT": 4.08,
+  "FETUSDT": 4.68,
+  "NEARUSDT": 5.06,
+  "PUMPUSDT": 8.23
+ },
+ "ref": "DECISIONS.md#ride-vol-exits-declaration"
+}

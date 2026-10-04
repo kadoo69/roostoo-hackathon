@@ -6423,3 +6423,18 @@ trials:
   config: ride_agile:C25
   status: fail
   note: DECISIONS.md#ride-agile-outcome
+- signal: ride_vol_exits
+  gate: ride_vol_exits
+  config: ride_vol_exits:V2
+  status: not_selected_post_hoc_candidate
+  note: DECISIONS.md#ride-vol-exits-outcome
+- signal: ride_vol_exits
+  gate: ride_vol_exits
+  config: ride_vol_exits:V3
+  status: fail
+  note: DECISIONS.md#ride-vol-exits-outcome
+- signal: ride_vol_exits
+  gate: ride_vol_exits
+  config: ride_vol_exits:V3S
+  status: fail
+  note: DECISIONS.md#ride-vol-exits-outcome
