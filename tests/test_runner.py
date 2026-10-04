@@ -87,7 +87,7 @@ def test_competition_split_is_the_rehearsed_split_on_the_comp_keys():
     with open("deploy/ec2_bootstrap.sh") as fh:
         books = next(ln for ln in fh.read().splitlines() if ln.startswith("BOOKS="))
     units = books.split('"')[1].split()
-    assert "competition_z3" in units and not {"competition", "competition_split", "competition_wf", "competition_ride"} & set(units)
+    assert "competition_z25" in units and not {"competition", "competition_split", "competition_wf", "competition_ride", "competition_z3"} & set(units)
 
 
 def test_competition_ride_is_ride_5m_on_the_comp_keys():
@@ -108,3 +108,13 @@ def test_competition_z3_is_ride_z3_5m_on_the_comp_keys():
     s = load("config/competition_z3.yaml")
     assert s.keyset == "comp" and s.exit_escalation and not z3["meta"]["paper_only"]
     assert bot_class(z3).__name__ == "AdaptiveScalperBot"
+
+
+def test_competition_z25_is_competition_z3_at_two_and_a_half_sigma():
+    z25, z3 = _cfg("competition_z25"), _cfg("competition_z3")
+    for sec in ("contenders", "strategy", "execution", "risk", "booking", "short", "target_lock"):
+        assert z25[sec] == z3[sec], sec
+    a25, a3 = next(iter(z25["adaptive"]["burst_arms"].values())), next(iter(z3["adaptive"]["burst_arms"].values()))
+    assert a25["sigma_k"] == 2.5 and {k: v for k, v in a25.items() if k != "sigma_k"} == {k: v for k, v in a3.items() if k != "sigma_k"}
+    s = load("config/competition_z25.yaml")
+    assert s.keyset == "comp" and s.exit_escalation and bot_class(z25).__name__ == "AdaptiveScalperBot"

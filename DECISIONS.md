@@ -5034,3 +5034,18 @@ Z3 here (27 coins, FET and FIL included) is higher than the 25-coin Z3 of `#ride
 ## ride-agile-declaration
 
 Operator 2026-10-04 19:03 IST, after being shown that z = 2 lost to z = 3 in every window: "still loosen the conditions a little so we can at least have an agile bot which skims the profits clearly". The decision to loosen is the operator's; this study, written before any number (`config/ride_agile.yaml`), only picks which loosened variant: A25 (sigma_k 2.5, tp 5%, 24 h), B25 (2.5, tp 3%, 12 h), C25 (2.5, tp 2%, 6 h), on the 27-coin pool, windows W1, W2 and the last 3 days. Deployed arm = highest worst-window return, ties to the shallower worst drawdown; Z3 reported beside it. If every arm loses in two or more windows, the operator is told before deployment. Three trials.
+
+## ride-agile-outcome
+
+A25 picked by the declared rule (`results/ride_agile.json`, `python3 -m archive.gates.ride_agile`). Total return / max DD / entries a day, 27 coins, each window started flat:
+| arm | W1 (09-05..09-19) | W2 (09-19..10-04 13:40Z) | last 3 days |
+|---|---|---|---|
+| Z3 (was live) | +15.03% / -13.97% / 3.4 | **+28.63%** / -7.68% / 3.3 | +4.63% / -6.06% / 3.3 |
+| **A25** (2.5 sigma, +5%, 24 h) | +14.82% / -17.69% / 3.2 | +17.23% / -8.66% / 3.3 | **+7.06%** / -6.55% / 3.3 |
+| B25 (2.5 sigma, +3%, 12 h) | +12.22% / -22.50% / 6.6 | +10.45% / -14.19% / 7.2 | +2.72% / -4.87% / 6.7 |
+| C25 (2.5 sigma, +2%, 6 h) | +15.23% / -15.92% / 12.4 | -6.20% / -13.69% / 13.9 | -2.62% / -6.28% / 11.7 |
+Cost of loosening, on record: A25 is level with Z3 in W1, 11.4 pp behind in W2 and 2.4 pp ahead in the last 3 days (the chop), with drawdown 0.5-3.7 pp deeper. Nearer take-profits make the book busier (6.6-13.9 entries a day) and worse: they cap the few big winners that carry the ride, the failure mode named in the declaration. Profit skimming stays with the 3%/15% booking ladder already on the book.
+
+## competition-z25-2026-10-04
+
+Operator 2026-10-04 19:03 IST: loosen for an agile bot. `config/competition_z25.yaml` is `config/competition_z3.yaml` with `sigma_k` 2.5 (A25 of `#ride-agile-outcome`), everything else unchanged. `competition_z3` stopped and disabled while flat; one unit per account; `competition_z3`, `competition_ride`, `competition_wf` and the split stay staged.

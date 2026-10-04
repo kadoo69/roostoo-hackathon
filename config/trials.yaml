@@ -6408,3 +6408,18 @@ trials:
   config: ride_z3_wide:Z3W
   status: fail
   note: DECISIONS.md#ride-z3-wide-outcome
+- signal: ride_agile
+  gate: ride_agile
+  config: ride_agile:A25
+  status: deployed_by_operator
+  note: DECISIONS.md#ride-agile-outcome
+- signal: ride_agile
+  gate: ride_agile
+  config: ride_agile:B25
+  status: fail
+  note: DECISIONS.md#ride-agile-outcome
+- signal: ride_agile
+  gate: ride_agile
+  config: ride_agile:C25
+  status: fail
+  note: DECISIONS.md#ride-agile-outcome

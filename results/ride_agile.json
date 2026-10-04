@@ -1,0 +1,120 @@
+{
+ "windows": {
+  "W1": [
+   "2026-09-05 00:00:00+00:00",
+   "2026-09-19 00:00:00+00:00"
+  ],
+  "W2": [
+   "2026-09-19 00:00:00+00:00",
+   "2026-10-04 13:25:00+00:00"
+  ],
+  "last_3d": [
+   "2026-10-01 13:25:00+00:00",
+   "2026-10-04 13:25:00+00:00"
+  ]
+ },
+ "arms": {
+  "Z3": {
+   "W1": {
+    "total_pct": 15.03,
+    "max_dd_pct": -13.97,
+    "entries_per_day": 3.4,
+    "mean_gross": 0.89
+   },
+   "W2": {
+    "total_pct": 28.63,
+    "max_dd_pct": -7.68,
+    "entries_per_day": 3.3,
+    "mean_gross": 0.93
+   },
+   "last_3d": {
+    "total_pct": 4.63,
+    "max_dd_pct": -6.06,
+    "entries_per_day": 3.3,
+    "mean_gross": 0.95
+   }
+  },
+  "A25": {
+   "W1": {
+    "total_pct": 14.82,
+    "max_dd_pct": -17.69,
+    "entries_per_day": 3.2,
+    "mean_gross": 0.96
+   },
+   "W2": {
+    "total_pct": 17.23,
+    "max_dd_pct": -8.66,
+    "entries_per_day": 3.3,
+    "mean_gross": 0.97
+   },
+   "last_3d": {
+    "total_pct": 7.06,
+    "max_dd_pct": -6.55,
+    "entries_per_day": 3.3,
+    "mean_gross": 0.97
+   }
+  },
+  "B25": {
+   "W1": {
+    "total_pct": 12.22,
+    "max_dd_pct": -22.5,
+    "entries_per_day": 6.6,
+    "mean_gross": 0.88
+   },
+   "W2": {
+    "total_pct": 10.45,
+    "max_dd_pct": -14.19,
+    "entries_per_day": 7.2,
+    "mean_gross": 0.91
+   },
+   "last_3d": {
+    "total_pct": 2.72,
+    "max_dd_pct": -4.87,
+    "entries_per_day": 6.7,
+    "mean_gross": 0.91
+   }
+  },
+  "C25": {
+   "W1": {
+    "total_pct": 15.23,
+    "max_dd_pct": -15.92,
+    "entries_per_day": 12.4,
+    "mean_gross": 0.75
+   },
+   "W2": {
+    "total_pct": -6.2,
+    "max_dd_pct": -13.69,
+    "entries_per_day": 13.9,
+    "mean_gross": 0.79
+   },
+   "last_3d": {
+    "total_pct": -2.62,
+    "max_dd_pct": -6.28,
+    "entries_per_day": 11.7,
+    "mean_gross": 0.83
+   }
+  }
+ },
+ "worst_window": {
+  "A25": [
+   7.06,
+   -17.69
+  ],
+  "B25": [
+   2.72,
+   -22.5
+  ],
+  "C25": [
+   -6.2,
+   -15.92
+  ]
+ },
+ "pick": "A25",
+ "windows_losing": {
+  "A25": 0,
+  "B25": 0,
+  "C25": 2
+ },
+ "tell_operator_first": false,
+ "ref": "DECISIONS.md#ride-agile-declaration"
+}
