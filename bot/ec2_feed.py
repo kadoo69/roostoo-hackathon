@@ -104,9 +104,23 @@ def fetch() -> dict:
     raise RuntimeError(f"no EC2JSON line (rc={rc}): {text[-300:]}")
 
 
+def fetch_isolated(timeout: float = 240) -> dict:
+    """`fetch()` in a child process, so a long-running desk always reads the current AWS sign-in from disk:
+    an in-process boto3 session kept failing as expired after `deploy/aws_login.py` had renewed it,
+    while fresh processes succeeded (2026-10-04, HANDOVER.md lessons)."""
+    import subprocess
+    import sys
+    code = "import json; from bot.ec2_feed import fetch; print('EC2FEED ' + json.dumps(fetch()))"
+    p = subprocess.run([sys.executable, "-c", code], cwd=str(ROOT), capture_output=True, text=True, timeout=timeout)
+    for line in p.stdout.splitlines():
+        if line.startswith("EC2FEED "):
+            return json.loads(line[len("EC2FEED "):])
+    raise RuntimeError(f"fetch child rc={p.returncode}: {(p.stderr or p.stdout)[-300:]}")
+
+
 def refresh_once() -> None:
     try:
-        data = fetch()
+        data = fetch_isolated()
         with _LOCK:
             _STATE.update({"ts": time.time(), "data": data, "error": None})
         CACHE.parent.mkdir(parents=True, exist_ok=True)
