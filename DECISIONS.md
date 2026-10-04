@@ -4968,3 +4968,10 @@ Operator 2026-10-04 06:06Z: the competition account now runs `competition_split`
 Before the switch the account had joined at 2026-10-03 22:46Z (wallet readable, 100,000) while trading stayed closed until the 2026-10-04 12:00Z start (20:00 HKT): the plain-rule unit's 30 LTC buys were rejected with "you do not have permission to trade"; nothing filled.
 The plain `competition` unit is never to run again beside the split (`deploy/ec2_bootstrap.sh` `BOOKS` names only the split). The ride share (50/50 or 40/60) is decided at about 11:00Z from `split_tilt_5m` against `competition_rehearsal`.
 
+## competition-code-review-2026-10-04
+
+Operator 2026-10-04 ~07:45Z: review the competition bot's logic before the 12:00Z trading open. Path: `bot.runner` -> `SleevesBot` (`bot/sleeves_run.py`) -> `bot/sleeves.py` ledgers, `signals/burst_rider.live_step`, the inherited `Bot.cycle` guards (`bot/run.py`).
+- **Finding, acted on:** `SleevesBot._load` splits capital by `rule_share` only when `live/<book>/sleeves.json` is absent, then always reloads the saved ledgers; `competition_split` wrote a 50/50 ledger at 06:06Z. A `rule_share` change therefore needs the unit stopped and `sleeves.json` archived before the restart, which is safe only while the account holds no positions.
+- **Checked, no change:** entries are never stale: the rule half enters only names that are new on the bar and the ride only triggers on the last bar, so the cold start at 12:00Z buys nothing from the past; a bar re-decided after a restart starts from the saved `before` state; an unfilled entry stays in the sleeve's units, so the account target keeps asking for it; account booking is off and each sleeve runs its own ladder; exit escalation is on; the 25% drawdown halt is the only liquidation; de-risk off by operator choice; the clock resync (`#clock-resync-2026-10-03`) is deployed.
+- **Known risk, accepted:** both halves can hold the same leader (WLD 42% on 10-03, PUMP 34% now); the 0.35 coin cap cost more return than it saved (`#split-r4-outcome`).
+
