@@ -57,6 +57,7 @@ Research, all nulls except the tilt: price action (`#price-action-outcome`), reg
 4. End-of-run de-risk: operator decision during the competition (`derisk_start_utc` is 12-31, i.e. off).
 
 ### Lessons (do not repeat)
+- Only the 8787 desk pulls EC2 (`bot/dashboard.py` starts `ec2_feed` on that port alone); 8789 never shows EC2 books. On 10-04 the 8787 feed thread stalled for 7 h after the AWS token expired (age 26004 s, no error shown) and the process still ran 11:47 IST code: after `deploy/aws_login.py`, restart it (`python3 -m bot.dashboard`) and check `/api/desk` `ec2.fetched_age_s` < 400.
 - Guard every commit on the pytest result (`case` on the summary line); a `| tail -1 &&` chain committed failing tests on 10-04.
 - A sleeves ledger records entries even when the venue rejects the order (pre-open); reset it before the first real trading bar.
 - Keep the Mac on mains with sleep disabled through any decision window; scheduled reminders live only in an awake session.
