@@ -87,4 +87,14 @@ def test_competition_split_is_the_rehearsed_split_on_the_comp_keys():
     with open("deploy/ec2_bootstrap.sh") as fh:
         books = next(ln for ln in fh.read().splitlines() if ln.startswith("BOOKS="))
     units = books.split('"')[1].split()
-    assert "competition_wf" in units and not {"competition", "competition_split"} & set(units)
+    assert "competition_ride" in units and not {"competition", "competition_split", "competition_wf"} & set(units)
+
+
+def test_competition_ride_is_ride_5m_on_the_comp_keys():
+    ride, src, wf = _cfg("competition_ride"), _cfg("ride_5m"), _cfg("competition_wf")
+    for sec in ("adaptive", "contenders", "strategy", "booking", "short", "target_lock"):
+        assert ride[sec] == src[sec], sec
+    assert ride["execution"] == wf["execution"] and ride["risk"] == wf["risk"]
+    s = load("config/competition_ride.yaml")
+    assert s.keyset == "comp" and s.exit_escalation and not ride["meta"]["paper_only"]
+    assert bot_class(ride).__name__ == "AdaptiveScalperBot"

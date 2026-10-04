@@ -10,7 +10,7 @@ from __future__ import annotations
 from bot.blotter import DUST_NOTIONAL
 
 GROUPS = (("live", "LIVE on Roostoo - real orders"), ("scalper", "PAPER - the dynamic bot and fixed-clock baselines"))
-LIVE_BOOKS = {"competition", "competition_split", "competition_wf", "competition_rehearsal"}
+LIVE_BOOKS = {"competition", "competition_split", "competition_wf", "competition_ride", "competition_rehearsal"}
 SCALPER_BOOKS = {"momentum_top3_30m", "wf_live", "blend_30m_ride", "resid_30m", "htf0_30m", "ride1_5m", "wide_30m", "ride1_wide_5m", "ride_5m", "regime_ls_30m", "ride_z3_5m", "sleeves_z3_5m", "split_tilt_5m"}
 DESK_GROUPS = ("live", "scalper")
 TOTALS_GROUPS = ("live",)
