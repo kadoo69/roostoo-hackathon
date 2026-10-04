@@ -98,3 +98,21 @@ def live_step(close: pd.DataFrame, high: pd.DataFrame, cfg: dict, held: dict[str
     floor = t - step * (cool + hold)
     new_last = {s: at for s, at in new_last.items() if s in keep or pd.Timestamp(at) > floor}
     return keep, new_last, {s: 1.0 / n for s in keep}
+
+
+def probe_entry(close: pd.DataFrame, cfg: dict, held: dict[str, list], last: dict[str, str],
+                min_z: float) -> tuple[dict[str, list], dict[str, str], dict[str, float]]:
+    """One entry on an empty ride: the coin with the highest z (3-bar return over its trigger std)
+    at or above `min_z` on the last bar, outside its cooldown, held under the ride's normal exits.
+    Operator-ordered once on the competition account: DECISIONS.md#competition-probe-2026-10-04"""
+    if held or len(close) <= 3 or not cfg.get("sigma_k"):
+        return held, last, {}
+    n, cool = int(cfg.get("n", 3)), int(cfg.get("cooldown_bars", 12))
+    t, step = close.index[-1], close.index[-1] - close.index[-2]
+    r3f = close / close.shift(3) - 1.0
+    z = (r3f.iloc[-1] / (trigger_level(r3f, cfg).iloc[-1] / float(cfg["sigma_k"]))).dropna()
+    z = z[[s for s in z.index if not (s in last and round((t - pd.Timestamp(last[s])) / step) < cool)]]
+    if z.empty or z.max() < min_z:
+        return held, last, {}
+    s = str(z.idxmax())
+    return {s: [str(t), float(close[s].iloc[-1])]}, {**last, s: str(t)}, {s: 1.0 / n}

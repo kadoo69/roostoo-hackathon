@@ -26,6 +26,9 @@ adaptive:
   switch_margin_pp: 1.0
   start_variant: ride_z25|+5%|24h
   use_decision_point: false
+  probe_entry:
+    min_z: 2.0
+    ref: DECISIONS.md#competition-probe-2026-10-04
 contenders:
   min_hold_bars: 3
   min_hold_ref: DECISIONS.md#min-hold-5m

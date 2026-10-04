@@ -244,7 +244,20 @@ class AdaptiveScalperBot(ContendersBot):
         state = {"held": {s: v for s, v in state["held"].items() if current.get(s, 0.0) >= HELD_MIN},
                  "last": dict(state["last"])}
         held, last, target = burst_rider.live_step(close, high, self.variants[vid]["cc"], state["held"], state["last"])
-        saved[vid] = {"bar": bar, "before": state, "after": {"held": held, "last": last}}
+        probe = (getattr(self, "ad", None) or {}).get("probe_entry") or {}
+        probed = bool(rec and rec.get("probe_done") and rec.get("probe_bar") != bar)
+        fired = False
+        if probe and not probed and not target and not getattr(self, "cold_start", False):
+            held, last, target = burst_rider.probe_entry(close, self.variants[vid]["cc"], held, last,
+                                                         float(probe["min_z"]))
+            fired = bool(target)
+            if fired:
+                self.journal.write("signals", {"event": "probe_entry", "bar": bar, "target": target,
+                                               "min_z": float(probe["min_z"]),
+                                               "ref": "DECISIONS.md#competition-probe-2026-10-04"})
+        saved[vid] = {"bar": bar, "before": state, "after": {"held": held, "last": last},
+                      "probe_done": probed or bool(target),
+                      "probe_bar": bar if fired else (rec or {}).get("probe_bar")}
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(saved))
         out = pd.DataFrame(0.0, index=close.index, columns=close.columns)

@@ -139,3 +139,18 @@ def test_sigma_trigger_is_per_coin():
     pd.testing.assert_frame_equal(lvl, exp)
     flat = burst_rider.trigger_level(r3, CFG)
     assert float(flat.iloc[-1, 0]) == 0.01
+
+
+def test_probe_entry_takes_the_single_highest_z_coin_only_on_an_empty_ride():
+    close, _ = panel(3)
+    cfg = {**CFG, "sigma_k": 3.0, "sigma_bars": 288}
+    r3 = close / close.shift(3) - 1.0
+    z = r3.iloc[-1] / (burst_rider.trigger_level(r3, cfg).iloc[-1] / 3.0)
+    held, last, target = burst_rider.probe_entry(close, cfg, {}, {}, float(z.max()) - 1e-9)
+    assert list(target) == [z.idxmax()] and target[z.idxmax()] == 1 / 3
+    assert held[z.idxmax()][1] == close[z.idxmax()].iloc[-1] and last[z.idxmax()] == str(close.index[-1])
+    assert burst_rider.probe_entry(close, cfg, {}, {}, float(z.max()) + 1e-6)[2] == {}
+    assert burst_rider.probe_entry(close, cfg, {"C0": ["x", 1.0]}, {}, -99.0)[2] == {}
+    cooled = {z.idxmax(): str(close.index[-2])}
+    assert z.idxmax() not in burst_rider.probe_entry(close, cfg, {}, cooled, -99.0)[2]
+    assert burst_rider.probe_entry(close, CFG, {}, {}, -99.0)[2] == {}
