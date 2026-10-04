@@ -76,8 +76,11 @@ def test_regime_book_runs_its_own_class_on_ec2():
 
 def test_competition_split_is_the_rehearsed_split_on_the_comp_keys():
     split, reh = _cfg("competition_split"), _cfg("competition_rehearsal")
-    for sec in ("sleeves", "adaptive", "contenders", "strategy", "execution", "booking", "short", "target_lock"):
+    for sec in ("adaptive", "contenders", "strategy", "execution", "booking", "short", "target_lock"):
         assert split[sec] == reh[sec], sec
+    assert {k: v for k, v in split["sleeves"].items() if k != "rule_share"} == \
+        {k: v for k, v in reh["sleeves"].items() if k != "rule_share"}
+    assert split["sleeves"]["rule_share"] == 0.4
     s = load("config/competition_split.yaml")
     assert s.keyset == "comp" and s.exit_escalation and not s.shorts_enabled and not s.booking.get("enabled")
     assert bot_class(split).__name__ == "SleevesBot"

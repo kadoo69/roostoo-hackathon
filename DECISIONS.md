@@ -4975,3 +4975,8 @@ Operator 2026-10-04 ~07:45Z: review the competition bot's logic before the 12:00
 - **Checked, no change:** entries are never stale: the rule half enters only names that are new on the bar and the ride only triggers on the last bar, so the cold start at 12:00Z buys nothing from the past; a bar re-decided after a restart starts from the saved `before` state; an unfilled entry stays in the sleeve's units, so the account target keeps asking for it; account booking is off and each sleeve runs its own ladder; exit escalation is on; the 25% drawdown halt is the only liquidation; de-risk off by operator choice; the clock resync (`#clock-resync-2026-10-03`) is deployed.
 - **Known risk, accepted:** both halves can hold the same leader (WLD 42% on 10-03, PUMP 34% now); the 0.35 coin cap cost more return than it saved (`#split-r4-outcome`).
 
+## competition-ride-share-2026-10-04
+
+The 11:00Z call (`#clock-resync-2026-10-03`): over the same hours (2026-10-03 18:11Z to 10-04 11:13Z) `split_tilt_5m` (40/60) returned -0.54% against `competition_rehearsal` (50/50) -0.58%: level-or-ahead, so the declared rule gives 40/60 (`#split-tilt-outcome`). `config/competition_split.yaml` moves to `rule_share: 0.4`.
+The ledger check found a second reason to restart from a fresh ledger: before the open every order was rejected ("no permission to trade") while `bot.sleeves.step` still recorded the rule sleeve's entry (about 24k of units), so at 12:00Z the account would have bought a signal from hours earlier. Restart procedure, operator-approved, while the account holds no positions: stop `roostoo-live@competition_split`, archive `live/competition_split/sleeves.json`, start it, verify a 40/60 ledger with no units.
+

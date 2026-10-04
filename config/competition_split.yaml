@@ -146,5 +146,5 @@ target_lock:
 sleeves:
   rule_clock: 30m
   rule_config: competition
-  rule_share: 0.5
+  rule_share: 0.4
   ride: *id001
