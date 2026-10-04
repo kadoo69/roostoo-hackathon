@@ -2,7 +2,11 @@
 
 Current state only. The full history of sessions to 2026-09-23 is archived at `docs/archive/HANDOVER_2026-09-23.md`; older section references in code and configs point there.
 
-## CURRENT STATE 2026-10-04 19:10 IST / 13:40Z (read this first; everything below is history)
+## CURRENT STATE 2026-10-04 19:32 IST / 14:02Z (read this first; everything below is history)
+
+### FIRST COMPETITION FILL 19:30 IST (14:00Z): BUY SUI, about 27,992 at 1.1907 (33.3k, maker LIMIT, order 3421782)
+- Placed by the one-shot probe (`#competition-probe-2026-10-04`, commit `f1d0f85`, z >= 2.0, SUI the highest z on the 13:55Z bar); the probe is now spent (`probe_done` in `live/competition_z25/ride_state.json`). It proves COMP trading is enabled after the open. SUI is held under the ride exits: +5% over the 1.1934 entry close (high >= about 1.253) or 24 h (14:00Z 10-05), plus the 3%/15% ladder.
+- All 17 live decisions from 12:35Z to 13:45Z matched an independent recomputation from Binance bars (no mismatches).
 
 ### Switch at 19:06 IST: the competition account now runs `competition_z25` (`#competition-z25-2026-10-04`)
 - Operator 19:03 IST: loosen for an agile bot. `competition_z3` with `sigma_k` 2.5, picked by the declared `#ride-agile-outcome` (2.5 sigma beat nearer take-profits; it trails z3 by 11 pp in W2 and leads by 2.4 pp in the last 3 days). Commit `069f003`; `roostoo-live@competition_z25` active, all other competition units inactive and disabled; swapped while flat.
