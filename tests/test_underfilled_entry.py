@@ -8,7 +8,9 @@ def _bot(tmp_path, rows, holdings):
     d = tmp_path / "live" / "b"
     d.mkdir(parents=True)
     (d / "orders-2026-10-04.jsonl").write_text("\n".join(json.dumps(r) for r in rows) + "\n")
-    return SimpleNamespace(journal=SimpleNamespace(dir=d), holdings=holdings)
+    bot = SimpleNamespace(journal=SimpleNamespace(dir=d), holdings=holdings)
+    bot.capped_entry_prices = lambda: Bot.capped_entry_prices(bot)
+    return bot
 
 
 def test_capped_entries_are_recovered_from_the_order_journal_after_a_restart(tmp_path):

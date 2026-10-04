@@ -5173,3 +5173,13 @@ Operator 2026-10-05 01:05 IST: write the repeat-trigger forward test. On 10-04 F
 ## ride-swap-paper-2026-10-05
 
 Operator 2026-10-05 01:25 IST: set up the swap paper book and monitor it until 10:00 IST. A paper A/B on EC2 started flat at the same time, both keyless: `ride_z25_5m` (the live `competition_z25` rule exactly) and `ride_z25_swap_5m` (the same plus `repeat_swap`: with every slot held, sell the weakest holding that is below its entry and at least 12 bars old to buy a coin triggering now that also triggered 12 to 72 bars ago; the new entry takes the sold weight; `signals.burst_rider.repeat_swap`, test in `tests/test_burst_rider_live.py`). The competition book is unchanged (no `repeat_swap` key). Read beside `#repeat-trigger-forward-declaration`: the A/B gives the equity difference over the same hours, the forward test the per-trigger statistic. 10:00 IST is a progress read only; no decision before the 10-08 read.
+
+## underfill-chase-cap-2026-10-05
+
+Operator 2026-10-05 01:35 IST: build the price cap on completing a cash-capped entry, live only on a separate yes.
+On 10-04 PUMP's trigger order was cut by cash to 4.4k at 0.006492 (`#underfilled-entry-2026-10-04`); the completion bought 29.4k at 0.006636 at 16:15Z, 2.2% higher, so 87% of the position paid a price the ride's backtest never modelled (it enters at the trigger close), while the take-profit stays anchored to the trigger close.
+Most of that 30-minute delay was the fix's deploy time, but a completion can still lag a fast coin by a bar or more.
+Rule: with `booking.underfill_max_chase` set (0.01 proposed, fixed a priori, not fitted), an underfilled symbol may grow only while its mark is at most that far above the capped order's limit price; above it the completion waits (it resumes if the price comes back) and the bar-close decision logs `underfill_chase_blocked`.
+The reference is saved in state (`underfill_ref`) and recovered from the order journal for state saved before it existed.
+Absent the key, behaviour is unchanged; no config sets it yet, so the competition book is untouched.
+Paper cannot exercise it: dry-run sells settle at once, so a paper entry is never cash-capped; the evidence is `tests/test_underfill_chase_cap.py`, including the 10-04 PUMP numbers, where the completion is not bought.

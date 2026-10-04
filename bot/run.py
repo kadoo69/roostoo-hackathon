@@ -127,6 +127,25 @@ OPENS = ("BUY", "SHORT_OPEN")
 UNDERFILL_DONE = 0.25
 
 
+def chase_capped(grow: set[str], refs: dict[str, float], prices: dict[str, float],
+                 cap: float | None) -> tuple[set[str], dict[str, float]]:
+    """Splits underfilled symbols into those that may be completed now and those whose price has run
+    more than `cap` past the capped order's price (returned with that rise). Completing a cash-capped
+    entry later pays the later price, which the backtest never modelled: it entered at the trigger.
+    `cap` is `booking.underfill_max_chase`; None keeps the old behaviour, as does a symbol without a
+    reference or a price. DECISIONS.md#underfill-chase-cap-2026-10-05"""
+    if cap is None:
+        return set(grow), {}
+    allowed, blocked = set(), {}
+    for sym in grow:
+        ref, px = refs.get(sym), prices.get(sym)
+        if ref and px and px > ref * (1.0 + cap):
+            blocked[sym] = px / ref - 1.0
+        else:
+            allowed.add(sym)
+    return allowed, blocked
+
+
 class Bot:
     def __init__(self, settings: Settings, mode: str = "continuous"):
         self.mode = mode
@@ -190,6 +209,10 @@ class Bot:
                                 if saved.get("pending_bar") == saved.get("last_bar") else {})
         self.underfilled = (set(saved["underfilled"]) if "underfilled" in saved
                             else self.capped_entries_held())
+        recovered = self.capped_entry_prices() if self.underfilled else {}
+        self.underfill_ref = {s: float((saved.get("underfill_ref") or {}).get(s) or recovered.get(s) or 0)
+                              for s in self.underfilled}
+        self.underfill_ref = {s: v for s, v in self.underfill_ref.items() if v > 0}
         self.journal.write("lifecycle", {
             "event": "resumed" if saved else "cold_start",
             # A one-shot diagnostic run resumes state exactly like a supervised
@@ -293,6 +316,7 @@ class Bot:
             "last_decision_bar": self.last_decision_bar,
             "pending_entries": self.pending_entries,
             "underfilled": sorted(getattr(self, "underfilled", set())),
+            "underfill_ref": {k: round(v, 12) for k, v in getattr(self, "underfill_ref", {}).items()},
             "pending_bar": str(self.last_bar) if self.last_bar is not None else None,
             "last_marks": {k: round(v, 12) for k, v in getattr(self, "last_marks", {}).items()}})
 
@@ -395,6 +419,11 @@ class Bot:
         """Held symbols whose latest BUY was cut short by cash and which have not been sold since,
         read from the order journal, for state saved before `underfilled` existed.
         DECISIONS.md#underfilled-entry-2026-10-04"""
+        return set(self.capped_entry_prices())
+
+    def capped_entry_prices(self) -> dict[str, float]:
+        """`capped_entries_held` with the capped BUY's limit price, the reference the completion may
+        not chase past. DECISIONS.md#underfill-chase-cap-2026-10-05"""
         last: dict[str, dict] = {}
         for f in sorted(self.journal.dir.glob("orders-*.jsonl"))[-2:]:
             for line in f.read_text().splitlines():
@@ -404,7 +433,7 @@ class Bot:
                     continue
                 if r.get("event") == "placed" and r.get("symbol") and r.get("side") in ("BUY", "SELL"):
                     last[r["symbol"]] = r
-        return {s for s, r in last.items()
+        return {s: float(r.get("price") or 0.0) for s, r in last.items()
                 if r["side"] == "BUY" and r.get("cash_capped_from") and self.holdings.get(s, 0.0) > 0}
 
     def apply_dry_fill(self, plan: dict) -> bool:
@@ -601,13 +630,23 @@ class Bot:
         # The skim ladder is a shared capability, not a property of one bot:
         # any config carrying a `booking` block gets it. bot/booking.py.
         wanted = dict(target)
+        chase_cap = self.s.booking.get("underfill_max_chase")
+        growable, chased = chase_capped(self.underfilled, self.underfill_ref, prices,
+                                        None if chase_cap is None else float(chase_cap))
+        if chased and fresh:
+            self.journal.write("signals", {"event": "underfill_chase_blocked",
+                                           "bar": str(matrix.index[-1]) if len(matrix) else None,
+                                           "rise": {k: round(v, 5) for k, v in chased.items()},
+                                           "cap": chase_cap,
+                                           "ref": "DECISIONS.md#underfill-chase-cap-2026-10-05"})
         target, skims = booking.apply(target, current_w, prices, self.skim_refs,
-                                      equity, self.s.booking, grow=self.underfilled)
+                                      equity, self.s.booking, grow=growable)
         self.underfilled -= {e["symbol"] for e in skims}
         if fresh:
             self.underfilled = {s for s in self.underfilled
                                 if s in wanted and current_w.get(s, 0.0) > 0
                                 and current_w[s] < wanted[s] * (1.0 - UNDERFILL_DONE)}
+        self.underfill_ref = {s: v for s, v in self.underfill_ref.items() if s in self.underfilled}
         if skims:
             self.skims += len(skims)
             self.journal.write("signals", {"event": "skim", "bar": str(matrix.index[-1])
@@ -666,6 +705,7 @@ class Bot:
                 plan = self.fit_to_cash(plan, spendable)
                 if plan.get("cash_capped_from") and plan["side"] == "BUY":
                     self.underfilled.add(plan["symbol"])
+                    self.underfill_ref.setdefault(plan["symbol"], float(plan["price"]))
             rec = self.executor.send(plan)
             if not plan.get("skipped"):
                 if self.s.dry_run:

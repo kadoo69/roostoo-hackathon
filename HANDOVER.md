@@ -19,7 +19,9 @@ Current state only. The full history of sessions to 2026-09-23 is archived at `d
 ### Next actions (in order)
 1. 10:00 IST 10-05: progress read of the A/B (`ride_z25_5m` vs `ride_z25_swap_5m`: equity, whether the swap fired and on what) and a forward checkpoint of the live 2-slot rule on trades since 23:00 IST only. No decision from it.
 2. On or after 01:10 IST 10-08: `python3 -m archive.gates.repeat_trigger_forward`; decide by `#repeat-trigger-forward-declaration` together with the A/B equity. Only a pass makes the swap a candidate for the competition book, and only on the operator's decision.
-3. Daily: `python3 deploy/export_logs.py`, commit `logs/` (covers every unit that traded the COMP account). At the end: `git tag submission-final`.
+3. Awaiting the operator: `#underfill-chase-cap-2026-10-05` is built and tested (commit on main, not on EC2). Going live = add `underfill_max_chase: 0.01` under `booking:` in `config/competition_z25.yaml`, deploy, restart the unit while no entry is pending.
+4. Leaderboard 01:31 IST 10-05: 9th at +0.4%; 1st +3.1%, 2nd +1.4%, places 3-10 within 0.6 pp. No rank rule yet.
+5. Daily: `python3 deploy/export_logs.py`, commit `logs/` (covers every unit that traded the COMP account). At the end: `git tag submission-final`.
 
 ### Research state (do not re-test without new evidence)
 - 10-04 nulls on the ride: sizing by z, the 64-coin universe, nearer targets, shorter holds, gain locks, rotation, leader hold, pullback entry, trend-gated rotation. Passed: 2.5 sigma trigger (by rule), V2 volatility targets (operator call after seeing three arms), 2 slots (`#ride-hold-slots-outcome`).
