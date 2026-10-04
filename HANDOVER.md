@@ -5,7 +5,7 @@ Current state only. The full history of sessions to 2026-09-23 is archived at `d
 ## CURRENT STATE 2026-10-05 01:20 IST / 2026-10-04 19:50Z (read this first; everything below is history)
 
 ### The competition account
-- Unit `roostoo-live@competition_z25` on EC2 `i-015fad70d34b0b83d`, code `f96c829`, config `config/competition_z25.yaml`.
+- Unit `roostoo-live@competition_z25` on EC2 `i-015fad70d34b0b83d`, code `6697030`, config `config/competition_z25.yaml`.
 - Rule: per-coin 15-minute burst ride. Buy when a coin's 3-bar 5m return reaches 2.5 x its own 24 h std (z >= 2.5); take profit at 2 x the coin's one-day volatility fixed at entry, else exit after 24 h; 3%/15% booking ladder; 2 slots of 1/2 since 23:00 IST (`#competition-two-slots-2026-10-04`).
 - Holding LTC, PUMP, UNI at 1/3 each (opened under n=3, kept by the weight-aware transition); 2 x 1/2 entries begin once two of them exit. Latest exits: LTC and UNI by about 20:00 IST 10-05, PUMP by about 21:10 IST (its target is +16.7%).
 - Equity 100,699 (+0.70%) at 01:18 IST; peak 102,527 at 22:22 IST; drawdown almost all PUMP (-4.3% since the peak, the pool flat). Realized: SUI +5.1% (+1.7k), skims +203. Leaderboard about 3rd at the last look (gap about 1-2.5 pp, day 1 of 14).
@@ -19,7 +19,7 @@ Current state only. The full history of sessions to 2026-09-23 is archived at `d
 ### Next actions (in order)
 1. 10:00 IST 10-05: progress read of the A/B (`ride_z25_5m` vs `ride_z25_swap_5m`: equity, whether the swap fired and on what) and a forward checkpoint of the live 2-slot rule on trades since 23:00 IST only. No decision from it.
 2. On or after 01:10 IST 10-08: `python3 -m archive.gates.repeat_trigger_forward`; decide by `#repeat-trigger-forward-declaration` together with the A/B equity. Only a pass makes the swap a candidate for the competition book, and only on the operator's decision.
-3. Awaiting the operator: `#underfill-chase-cap-2026-10-05` is built and tested (commit on main, not on EC2). Going live = add `underfill_max_chase: 0.01` under `booking:` in `config/competition_z25.yaml`, deploy, restart the unit while no entry is pending.
+3. LIVE since 01:47 IST 10-05 (20:17Z, commit `6697030`): `#underfill-chase-cap-2026-10-05`, a cut-short entry completes only within 1% of its order price. Restart resumed LTC/PUMP/UNI, first bar-close decision (20:15Z bar) clean, 0 orders, no alerts. E2E check: `python3 deploy/checks/underfill_chase_e2e.py`.
 4. Leaderboard 01:31 IST 10-05: 9th at +0.4%; 1st +3.1%, 2nd +1.4%, places 3-10 within 0.6 pp. No rank rule yet.
 5. Daily: `python3 deploy/export_logs.py`, commit `logs/` (covers every unit that traded the COMP account). At the end: `git tag submission-final`.
 
