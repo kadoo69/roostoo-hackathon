@@ -1,0 +1,25 @@
+meta:
+  name: ride_z3_wide
+  frozen: true
+  declared_utc: '2026-10-04T13:25:00Z'
+  requested_by: 'operator 2026-10-04 18:50 IST, after ride1_wide_5m (1% ride on about 64 coins) caught PUMP and BMT: run the test of the z3 trigger on the wide universe'
+  declared_ref: DECISIONS.md#ride-z3-wide-declaration
+  written_before_any_number: true
+prior: 'a 1% fixed trigger lost to 2% on the pool (#ride-threshold-recheck-outcome); the per-coin 3-sigma trigger was best risk-adjusted (#ride-dynamic-trigger-outcome); sizing by z failed (#ride-scaled-entry-outcome). ride1_wide_5m is +6.6% forward but about half of it is one PUMP position, and PUMP is in the pool.'
+mechanism: 'a 3-sigma move is rare per coin; with 64 coins instead of 27 the 3 slots fill sooner and can pick the largest relative moves from a wider set, so the ride is invested more of the time on stronger moves'
+failure_mode: 'the extra coins are smaller and thinner (BMT, 1000CHEEMS, EDEN, recent listings); their 3-sigma moves are noisier, cost more in ticks, and reverse more, so the wider set adds entries that lose'
+base: 'Z3 = config/ride_z3_5m.yaml burst arm (sigma_k 3, sigma_bars 288, tp 5%, hold 288, n 3, cooldown 12), maker fees and ticks (gates.let_winners_run.simulate), on the 27-coin universe of the live competition_z3 unit'
+arms:
+  Z3W: 'the same rule on the ride1_wide_5m universe (universe_mode venue_all, 64 coins from its latest universe file)'
+attribution: 'report the share of Z3W entries and of its net P&L from coins outside the 27-coin pool'
+nonsense_control: 'only if Z3W passes the return condition: Z3 on 20 random 27-coin subsets of the 64; Z3W must beat at least 16 of them in the last 3 days and W2, so the gain is the breadth and not a lucky subset'
+windows:
+  W1: '2026-09-05 to 2026-09-19'
+  W2: '2026-09-19 to now'
+  last_3d: 'the last 3 days'
+decision_rule: >
+  Z3W is RECOMMENDED only if its total return beats Z3 in W1, W2 and the last 3 days, with max drawdown no more
+  than 2 pp worse in each, and it passes the nonsense control. A coin without enough history in a window simply
+  has no trigger there. Roostoo depth on the thin coins is not modelled; a pass would go to paper before the
+  competition account. Changing the live book stays an operator decision.
+trials: 2
