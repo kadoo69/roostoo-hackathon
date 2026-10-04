@@ -6483,3 +6483,23 @@ trials:
   config: ride_rotation:RSA
   status: fail
   note: DECISIONS.md#ride-rotation-outcome
+- signal: ride_hold_slots
+  gate: ride_hold_slots
+  config: ride_hold_slots:LX
+  status: fail
+  note: DECISIONS.md#ride-hold-slots-outcome
+- signal: ride_hold_slots
+  gate: ride_hold_slots
+  config: ride_hold_slots:N2
+  status: pass
+  note: DECISIONS.md#ride-hold-slots-outcome
+- signal: ride_hold_slots
+  gate: ride_hold_slots
+  config: ride_hold_slots:N4
+  status: fail
+  note: DECISIONS.md#ride-hold-slots-outcome
+- signal: ride_hold_slots
+  gate: ride_hold_slots
+  config: ride_hold_slots:N5
+  status: fail
+  note: DECISIONS.md#ride-hold-slots-outcome

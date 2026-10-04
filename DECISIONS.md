@@ -5129,3 +5129,15 @@ Amended 21:50 IST: the first deploy cleared the set only on bar-close decisions,
 ## ride-hold-slots-declaration
 
 Operator 2026-10-04 23:00 IST: run the leader-hold and slot-count tests; the objective is portfolio value. Written before any number; full text in `config/ride_hold_slots.yaml`. Against the live ride (N3: z >= 2.5, 3 slots, V2 targets, 24 h): test 1 LX (at the 24 h limit keep a coin that is in the pool's top 3 by 24 h residual return, re-checked every 24 h); test 2 N2 / N4 / N5 slots at 1/n. Same decision rule as `#ride-gain-lock-declaration`, per test, judged on total return. Four trials.
+
+## ride-hold-slots-outcome
+
+Test 2 PASSES: N2 (2 slots at 1/2) is recommended by the declared rule; test 1 (leader hold) FAILS (`results/ride_hold_slots.json`, `python3 -m archive.gates.ride_hold_slots`). Total return / max DD / entries a day, z >= 2.5 entries, V2 targets, 24 h hold, 27 coins:
+| arm | W1 (09-05..09-19) | W2 (09-19..10-04 17:30Z) | last 3 days |
+|---|---|---|---|
+| N3 (live) | +18.43% / -12.16% / 2.9 | +24.30% / -10.50% / 2.9 | +3.67% / -3.08% / 3.0 |
+| **N2** | **+20.29%** / -10.81% / 2.0 | **+47.67%** / -9.25% / 1.8 | **+4.12%** / -3.12% / 2.0 |
+| N4 | +11.97% / -11.31% / 3.9 | +19.68% / -11.25% / 3.9 | +2.14% / -5.00% / 4.3 |
+| N5 | +17.06% / -11.23% / 4.7 | +23.03% / -9.43% / 4.8 | +2.32% / -4.87% / 5.3 |
+| LX (keep a top-3 residual leader past 24 h) | +2.86% / -20.72% / 2.8 | +13.93% / -11.38% / 2.6 | +3.67% / -3.08% / 3.0 |
+Supplementary check after the verdict (not part of the rule): N2 against N3 on sub-windows, 09-19..09-26 +19.4% / -9.3% against +11.2% / -10.5%, 09-26..10-04 +13.5% / -10.8% against +8.0% / -11.1%, last 7 days +18.7% / -7.3% against +14.5% / -7.6%; the largest single coin adds 6-7 pp, so the gain is not one trade. Mechanism consistent with the day's skipped-trigger record: with fewer slots the book takes only the first trigger of a cluster and skips the rest, which mostly revert. Leader hold flips (W1 -15.6 pp): a 24 h residual leader does not keep leading. Four trials recorded.
