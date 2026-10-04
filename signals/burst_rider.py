@@ -23,8 +23,22 @@ def trigger_level(r3: pd.DataFrame, cfg: dict) -> pd.DataFrame:
     return pd.DataFrame(float(cfg.get("thresh_pct", 2.0)) / 100, index=r3.index, columns=r3.columns)
 
 
+def target_pct(cfg: dict, sd: float) -> float:
+    """Take-profit as a fraction of the entry price: `tp_vol_k` x one day of the coin's own volatility at entry
+    (`sd`, its std of 3-bar returns, x sqrt(96)) when set and `sd` is known, else the fixed `tp_pct`.
+    DECISIONS.md#competition-vol-exits-2026-10-04"""
+    if cfg.get("tp_vol_k") and np.isfinite(sd) and sd > 0:
+        return float(cfg["tp_vol_k"]) * float(sd) * float(np.sqrt(96))
+    return float(cfg.get("tp_pct", 2.0)) / 100
+
+
+def entry_sd(r3: pd.DataFrame, cfg: dict) -> pd.DataFrame:
+    """The coin's std of 3-bar returns over the previous `sigma_bars` bars, as the trigger uses it."""
+    n = int(cfg.get("sigma_bars", 288))
+    return r3.rolling(n, min_periods=n // 2).std().shift(1)
+
+
 def weights(close: pd.DataFrame, high: pd.DataFrame, cfg: dict) -> pd.DataFrame:
-    tp = float(cfg.get("tp_pct", 2.0)) / 100
     hold = int(cfg.get("hold_bars", 48))
     n = int(cfg.get("n", 3))
     cool = int(cfg.get("cooldown_bars", 12))
@@ -33,16 +47,17 @@ def weights(close: pd.DataFrame, high: pd.DataFrame, cfg: dict) -> pd.DataFrame:
     r3f = close / close.shift(3) - 1.0
     r3 = r3f.to_numpy(dtype=float)
     lvl = trigger_level(r3f, cfg).to_numpy(dtype=float)
+    sd = entry_sd(r3f, cfg).to_numpy(dtype=float)
     T, N = c.shape
     out = np.zeros((T, N))
-    entry = np.full(N, np.nan)
+    entry, tpj = np.full(N, np.nan), np.full(N, np.nan)
     age = np.zeros(N, dtype=int)
     last = np.full(N, -10**9)
     for t in range(T):
         held = ~np.isnan(entry)
         for j in np.flatnonzero(held):
             age[j] += 1
-            if (np.isfinite(h[t, j]) and h[t, j] >= entry[j] * (1 + tp)) or age[j] >= hold:
+            if (np.isfinite(h[t, j]) and h[t, j] >= entry[j] * (1 + tpj[j])) or age[j] >= hold:
                 entry[j] = np.nan
         held = ~np.isnan(entry)
         free = n - int(held.sum())
@@ -50,7 +65,7 @@ def weights(close: pd.DataFrame, high: pd.DataFrame, cfg: dict) -> pd.DataFrame:
             cand = [(r3[t, j], j) for j in range(N)
                     if not held[j] and np.isfinite(r3[t, j]) and np.isfinite(lvl[t, j]) and r3[t, j] >= lvl[t, j] and t - last[j] >= cool]
             for _, j in sorted(cand, reverse=True)[:free]:
-                entry[j], age[j], last[j] = c[t, j], 0, t
+                entry[j], age[j], last[j], tpj[j] = c[t, j], 0, t, target_pct(cfg, sd[t, j])
         out[t] = np.where(~np.isnan(entry), 1.0 / n, 0.0)
     return pd.DataFrame(out, index=close.index, columns=close.columns)
 
@@ -62,28 +77,34 @@ def live_step(close: pd.DataFrame, high: pd.DataFrame, cfg: dict, held: dict[str
     A live book cannot follow `weights()`: its path fills the slots with entries the book never
     took (blocked at a start, or reshuffled as the replay window moves), and those ghost slots stop
     every new entry (`DECISIONS.md#ride-ghost-slots-2026-10-01`). Here the slots are the positions
-    the book holds. `held[s] = [entry bar, entry close]`, `last[s]` = the bar of the last entry
+    the book holds. `held[s] = [entry bar, entry close, target]` (the target fraction fixed at entry; a
+    two-element record from before targets were stored is sized from the volatility at its entry bar
+    when that bar is in `close`, else `tp_pct`), `last[s]` = the bar of the last entry
     (cooldown). Ages count bars by time, so the exit after downtime uses every bar since the entry.
     Same rule as `weights()`, bar for bar (`tests/test_burst_rider_live.py`).
     """
-    tp = float(cfg.get("tp_pct", 2.0)) / 100
     hold = int(cfg.get("hold_bars", 48))
     n = int(cfg.get("n", 3))
     cool = int(cfg.get("cooldown_bars", 12))
     t = close.index[-1]
     step = close.index[-1] - close.index[-2]
     hi = high.reindex_like(close)
+    r3f = close / close.shift(3) - 1.0
+    sd = entry_sd(r3f, cfg)
     keep = {}
-    for s, (at, px) in held.items():
-        at = pd.Timestamp(at)
+    for s, rec in held.items():
+        at, px = pd.Timestamp(rec[0]), float(rec[1])
+        if len(rec) > 2:
+            tp = float(rec[2])
+        else:
+            tp = target_pct(cfg, float(sd.at[at, s]) if s in sd and at in sd.index else float("nan"))
         since = hi[s].loc[hi.index > at] if s in hi else pd.Series(dtype=float)
-        hit = bool((since >= float(px) * (1 + tp)).any())
+        hit = bool((since >= px * (1 + tp)).any())
         if not hit and round((t - at) / step) < hold:
-            keep[s] = [str(at), float(px)]
+            keep[s] = [str(at), px, tp]
     new_last = dict(last)
     free = n - len(keep)
     if free > 0 and len(close) > 3:
-        r3f = close / close.shift(3) - 1.0
         r3, lvl = r3f.iloc[-1], trigger_level(r3f, cfg).iloc[-1]
         cand = []
         for s, r in r3.items():
@@ -93,7 +114,7 @@ def live_step(close: pd.DataFrame, high: pd.DataFrame, cfg: dict, held: dict[str
                 continue
             cand.append((float(r), close.columns.get_loc(s), s))
         for _, _, s in sorted(cand, reverse=True)[:free]:
-            keep[s] = [str(t), float(close[s].iloc[-1])]
+            keep[s] = [str(t), float(close[s].iloc[-1]), target_pct(cfg, float(sd[s].iloc[-1]))]
             new_last[s] = str(t)
     floor = t - step * (cool + hold)
     new_last = {s: at for s, at in new_last.items() if s in keep or pd.Timestamp(at) > floor}
@@ -115,4 +136,5 @@ def probe_entry(close: pd.DataFrame, cfg: dict, held: dict[str, list], last: dic
     if z.empty or z.max() < min_z:
         return held, last, {}
     s = str(z.idxmax())
-    return {s: [str(t), float(close[s].iloc[-1])]}, {**last, s: str(t)}, {s: 1.0 / n}
+    tp = target_pct(cfg, float(entry_sd(r3f, cfg)[s].iloc[-1]))
+    return {s: [str(t), float(close[s].iloc[-1]), tp]}, {**last, s: str(t)}, {s: 1.0 / n}

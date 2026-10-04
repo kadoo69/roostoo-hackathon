@@ -115,6 +115,7 @@ def test_competition_z25_is_competition_z3_at_two_and_a_half_sigma():
     for sec in ("contenders", "strategy", "execution", "risk", "booking", "short", "target_lock"):
         assert z25[sec] == z3[sec], sec
     a25, a3 = next(iter(z25["adaptive"]["burst_arms"].values())), next(iter(z3["adaptive"]["burst_arms"].values()))
-    assert a25["sigma_k"] == 2.5 and {k: v for k, v in a25.items() if k != "sigma_k"} == {k: v for k, v in a3.items() if k != "sigma_k"}
+    assert a25["sigma_k"] == 2.5 and a25["tp_vol_k"] == 2.0
+    assert {k: v for k, v in a25.items() if k not in ("sigma_k", "tp_vol_k")} == {k: v for k, v in a3.items() if k != "sigma_k"}
     s = load("config/competition_z25.yaml")
     assert s.keyset == "comp" and s.exit_escalation and bot_class(z25).__name__ == "AdaptiveScalperBot"

@@ -20,6 +20,7 @@ adaptive:
       cooldown_bars: 12
       sigma_k: 2.5
       sigma_bars: 288
+      tp_vol_k: 2.0
   allow_cash: false
   lookback_days: 3
   reselect_minutes: 60

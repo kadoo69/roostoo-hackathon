@@ -53,7 +53,7 @@ def test_an_entry_the_book_never_took_does_not_block_new_entries():
     assert set(path.columns[path.iloc[-1] > 0]) == {"A", "B", "C"}
     held, last, target = burst_rider.live_step(close, high, CFG, {}, {})
     assert target == {"D": 1 / 3}
-    assert held["D"] == [str(idx[7]), 103.0] and last == {"D": str(idx[7])}
+    assert held["D"][:2] == [str(idx[7]), 103.0] and last == {"D": str(idx[7])}
 
 
 def test_downtime_exit_uses_every_bar_since_the_entry():
@@ -111,7 +111,7 @@ def test_ride_target_seeds_from_held_longs_and_a_style_switch_clears_the_state(t
     assert w.iloc[-1]["B"] == 1 / 3
     path = tmp_path / "live" / "ride_test" / "ride_state.json"
     import json
-    assert json.loads(path.read_text())["ride"]["after"]["held"]["B"] == [str(idx[2]), 100.0]
+    assert json.loads(path.read_text())["ride"]["after"]["held"]["B"][:2] == [str(idx[2]), 100.0]
     bot.clear_ride_state(set())
     assert json.loads(path.read_text()) == {}
     unseeded = fake_bot(tmp_path / "u", monkeypatch, {"B": 0.33}, opened={"B": [str(idx[2]), 1]})
@@ -154,3 +154,26 @@ def test_probe_entry_takes_the_single_highest_z_coin_only_on_an_empty_ride():
     cooled = {z.idxmax(): str(close.index[-2])}
     assert z.idxmax() not in burst_rider.probe_entry(close, cfg, {}, cooled, -99.0)[2]
     assert burst_rider.probe_entry(close, CFG, {}, {}, -99.0)[2] == {}
+
+
+def test_volatility_targets_match_between_the_replay_and_the_live_step():
+    cfg = {**CFG, "sigma_k": 2.5, "sigma_bars": 60, "tp_vol_k": 2.0, "hold_bars": 40}
+    for seed in range(4):
+        close, high = panel(seed, T=500)
+        path = burst_rider.weights(close, high, cfg)
+        live = run_live(close, high, cfg)
+        assert path.iloc[3:].sum().sum() > 5
+        pd.testing.assert_frame_equal(live, path.iloc[3:], check_freq=False, check_names=False)
+    assert not path.equals(burst_rider.weights(close, high, {k: v for k, v in cfg.items() if k != "tp_vol_k"}))
+
+
+def test_target_is_two_days_of_own_volatility_and_old_records_are_sized_at_their_entry_bar():
+    cfg = {**CFG, "sigma_k": 2.5, "sigma_bars": 60, "tp_vol_k": 2.0}
+    assert abs(burst_rider.target_pct(cfg, 0.002) - 2.0 * 0.002 * np.sqrt(96)) < 1e-12
+    assert burst_rider.target_pct(cfg, float("nan")) == CFG["tp_pct"] / 100
+    assert burst_rider.target_pct(CFG, 0.002) == CFG["tp_pct"] / 100
+    close, high = panel(2, T=200)
+    at, s = close.index[150], "C0"
+    held, _, _ = burst_rider.live_step(close.iloc[:152], high.iloc[:152], cfg, {s: [str(at), 1e9]}, {})
+    sd = burst_rider.entry_sd(close / close.shift(3) - 1.0, cfg).at[at, s]
+    assert held[s][2] == burst_rider.target_pct(cfg, float(sd))
