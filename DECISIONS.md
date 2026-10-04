@@ -5078,3 +5078,14 @@ Change: `tp_vol_k: 2.0` on the `competition_z25` ride arm; `signals.burst_rider.
 ## ride-laggard-exits-declaration
 
 Operator 2026-10-04 20:20 IST: keep positions and profit booking realistic, no lagging positions held too long. Written before any number; full text in `config/ride_laggard_exits.yaml`. Against the live z >= 2.5 ride with V2 targets and a 24 h hold (L24): L12 (12 h hold), L6 (6 h hold), TS6 (exit at 6 h only if at or below entry, else hold to 24 h). Recommended only if the best arm beats L24 in the last 3 days and in W1 or W2 with a worst window not below L24's. Three trials.
+
+## ride-laggard-exits-outcome
+
+NOT RECOMMENDED, the 24 h hold stays (`results/ride_laggard_exits.json`, `python3 -m archive.gates.ride_laggard_exits`). Total return / max DD / entries a day, z >= 2.5 entries, V2 targets, 27 coins:
+| arm | W1 (09-05..09-19) | W2 (09-19..10-04 14:55Z) | last 3 days |
+|---|---|---|---|
+| L24 (live) | **+18.43%** / -12.16% / 2.9 | +21.77% / -10.50% / 2.8 | **+4.41%** / -4.92% / 3.0 |
+| L12 (12 h hold) | +6.23% / -20.61% / 5.1 | **+37.73%** / -8.66% / 5.4 | +3.39% / -2.42% / 6.0 |
+| L6 (6 h hold) | +12.66% / -14.33% / 9.1 | -8.27% / -18.46% / 9.6 | -0.98% / -5.82% / 10.3 |
+| TS6 (exit at 6 h if not above entry) | +17.50% / -11.06% / 4.4 | +23.09% / -12.46% / 4.9 | -1.86% / -5.87% / 6.0 |
+The best by worst window, L12, loses to L24 in the last 3 days and in W1 (by 12 pp, drawdown 8.5 pp deeper), so the rule says no. Every early-exit arm flips sign between windows, as the trails did (`#ride-exits-outcome`): whether a slow position recovers is not predictable at 6 or 12 h, and each early exit pays a round trip and hands the slot to a fresh trigger that is no better on average. A position is not held past 24 h in any case. Three trials recorded.

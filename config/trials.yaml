@@ -6438,3 +6438,18 @@ trials:
   config: ride_vol_exits:V3S
   status: fail
   note: DECISIONS.md#ride-vol-exits-outcome
+- signal: ride_laggard_exits
+  gate: ride_laggard_exits
+  config: ride_laggard_exits:L12
+  status: fail
+  note: DECISIONS.md#ride-laggard-exits-outcome
+- signal: ride_laggard_exits
+  gate: ride_laggard_exits
+  config: ride_laggard_exits:L6
+  status: fail
+  note: DECISIONS.md#ride-laggard-exits-outcome
+- signal: ride_laggard_exits
+  gate: ride_laggard_exits
+  config: ride_laggard_exits:TS6
+  status: fail
+  note: DECISIONS.md#ride-laggard-exits-outcome

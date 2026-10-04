@@ -1,0 +1,115 @@
+{
+ "windows": {
+  "W1": [
+   "2026-09-05 00:00:00+00:00",
+   "2026-09-19 00:00:00+00:00"
+  ],
+  "W2": [
+   "2026-09-19 00:00:00+00:00",
+   "2026-10-04 14:40:00+00:00"
+  ],
+  "last_3d": [
+   "2026-10-01 14:40:00+00:00",
+   "2026-10-04 14:40:00+00:00"
+  ]
+ },
+ "arms": {
+  "L24": {
+   "W1": {
+    "total_pct": 18.43,
+    "max_dd_pct": -12.16,
+    "entries_per_day": 2.9,
+    "mean_gross": 0.94
+   },
+   "W2": {
+    "total_pct": 21.77,
+    "max_dd_pct": -10.5,
+    "entries_per_day": 2.8,
+    "mean_gross": 0.96
+   },
+   "last_3d": {
+    "total_pct": 4.41,
+    "max_dd_pct": -4.92,
+    "entries_per_day": 3.0,
+    "mean_gross": 0.96
+   }
+  },
+  "L12": {
+   "W1": {
+    "total_pct": 6.23,
+    "max_dd_pct": -20.61,
+    "entries_per_day": 5.1,
+    "mean_gross": 0.87
+   },
+   "W2": {
+    "total_pct": 37.73,
+    "max_dd_pct": -8.66,
+    "entries_per_day": 5.4,
+    "mean_gross": 0.91
+   },
+   "last_3d": {
+    "total_pct": 3.39,
+    "max_dd_pct": -2.42,
+    "entries_per_day": 6.0,
+    "mean_gross": 0.92
+   }
+  },
+  "L6": {
+   "W1": {
+    "total_pct": 12.66,
+    "max_dd_pct": -14.33,
+    "entries_per_day": 9.1,
+    "mean_gross": 0.76
+   },
+   "W2": {
+    "total_pct": -8.27,
+    "max_dd_pct": -18.46,
+    "entries_per_day": 9.6,
+    "mean_gross": 0.81
+   },
+   "last_3d": {
+    "total_pct": -0.98,
+    "max_dd_pct": -5.82,
+    "entries_per_day": 10.3,
+    "mean_gross": 0.81
+   }
+  },
+  "TS6": {
+   "W1": {
+    "total_pct": 17.5,
+    "max_dd_pct": -11.06,
+    "entries_per_day": 4.4,
+    "mean_gross": 0.91
+   },
+   "W2": {
+    "total_pct": 23.09,
+    "max_dd_pct": -12.46,
+    "entries_per_day": 4.9,
+    "mean_gross": 0.91
+   },
+   "last_3d": {
+    "total_pct": -1.86,
+    "max_dd_pct": -5.87,
+    "entries_per_day": 6.0,
+    "mean_gross": 0.9
+   }
+  }
+ },
+ "best": "L12",
+ "worst_window": {
+  "L12": [
+   3.39,
+   -20.61
+  ],
+  "L6": [
+   -8.27,
+   -18.46
+  ],
+  "TS6": [
+   -1.86,
+   -12.46
+  ]
+ },
+ "recommended": false,
+ "ref": "DECISIONS.md#ride-laggard-exits-declaration"
+}
