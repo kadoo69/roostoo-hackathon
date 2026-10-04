@@ -2,9 +2,14 @@
 
 Current state only. The full history of sessions to 2026-09-23 is archived at `docs/archive/HANDOVER_2026-09-23.md`; older section references in code and configs point there.
 
-## CURRENT STATE 2026-10-04 18:31 IST / 13:01Z (read this first; everything below is history)
+## CURRENT STATE 2026-10-04 19:10 IST / 13:40Z (read this first; everything below is history)
 
-### Switch at 18:30 IST: the competition account now runs `competition_z3` (`#competition-z3-2026-10-04`)
+### Switch at 19:06 IST: the competition account now runs `competition_z25` (`#competition-z25-2026-10-04`)
+- Operator 19:03 IST: loosen for an agile bot. `competition_z3` with `sigma_k` 2.5, picked by the declared `#ride-agile-outcome` (2.5 sigma beat nearer take-profits; it trails z3 by 11 pp in W2 and leads by 2.4 pp in the last 3 days). Commit `069f003`; `roostoo-live@competition_z25` active, all other competition units inactive and disabled; swapped while flat.
+- Its first decision (13:30Z bar) wanted SOL at 121.75; the cold-start guard suppressed it by design (`#cold-start-chases-the-bar`). The ride state drops entries the book does not hold on the next decision, so no ghost slot; SOL is in its 1 h cooldown. Every unit switch costs the first bar's trigger this way.
+- Tested and failed today, do not re-propose without new evidence: sizing by z (`#ride-scaled-entry-outcome`), the 64-coin universe (`#ride-z3-wide-outcome`), take-profits nearer than +5% (`#ride-agile-outcome`).
+
+### Earlier switch at 18:30 IST: `competition_z3` (`#competition-z3-2026-10-04`)
 - Operator 18:27 IST: run ride z3 (per-coin 3-sigma trigger) while the market is choppy, switch back to `competition_ride` when it swings. Commit `b037499`; `roostoo-live@competition_z3` active, every other competition unit inactive and disabled. Swapped while flat (100,000 cash, 0 orders). First cycle 13:00Z clean, target empty, all 3 slots free.
 - Switch back = the procedure below with `competition_ride` (config, tests and registries already exist; set `BOOKS` and the `tests/test_runner.py` assertion to it). Swap only while flat or accept that the new unit ignores the old unit's positions.
 
