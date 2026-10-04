@@ -2,7 +2,15 @@
 
 Current state only. The full history of sessions to 2026-09-23 is archived at `docs/archive/HANDOVER_2026-09-23.md`; older section references in code and configs point there.
 
-## CURRENT STATE 2026-10-04 17:55 IST / 12:25Z (read this first; everything below is history)
+## CURRENT STATE 2026-10-04 18:13 IST / 12:43Z (read this first; everything below is history)
+
+### Switch at 18:11 IST: the competition account now runs `competition_ride` (`#competition-ride-2026-10-04`)
+- Operator 18:10 IST: "go ahead with ride 5m logic and get in the trade, we will switch dynamically". `config/competition_ride.yaml` = `ride_5m` on the COMP keys with competition_wf's execution/risk blocks. Commit `702f635`, EC2 checked out at it; `roostoo-live@competition_ride` active, `competition_wf` and `competition_split` inactive and disabled (one unit per account). competition_wf was flat (100,000 cash, 0 orders) when stopped.
+- First cycle 12:41Z: no faults, 100,000 cash, ride target empty: no coin has a live +2%/15m trigger, and its replay holds nothing, so all 3 slots are free (no ghost slots). It buys on the next fresh trigger. NEAR/PUMP (held by paper `ride_5m`) triggered before the start and are not bought (stale-entry guard unchanged).
+- Dynamic switching = same procedure in reverse: `systemctl disable --now roostoo-live@competition_ride`, `systemctl enable --now roostoo-live@<book>`, update `BOOKS` in `deploy/ec2_bootstrap.sh` and the test in `tests/test_runner.py`, commit and push. Switch while flat where possible: a new unit does not inherit the old one's positions. For the split, archive `live/competition_split/sleeves.json` first.
+- Status: `deploy/ec2_status.sh` now reports competition_ride first.
+
+## Previous state 2026-10-04 17:55 IST / 12:25Z (history)
 
 ### First hour of the competition (opened 17:30 IST / 12:00Z)
 - `competition_wf` is live on the COMP account, cycling every 30 s, wallet 100,000, no errors, no freeze, **no orders yet**.
