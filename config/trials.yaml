@@ -6383,3 +6383,18 @@ trials:
   config: split_tilt:T1_rule40_ride60
   status: live_paper_ab
   note: DECISIONS.md#split-tilt-outcome
+- signal: ride_scaled_entry
+  gate: ride_scaled_entry
+  config: ride_scaled_entry:Z3
+  status: baseline
+  note: DECISIONS.md#ride-scaled-entry-outcome
+- signal: ride_scaled_entry
+  gate: ride_scaled_entry
+  config: ride_scaled_entry:S23
+  status: fail
+  note: DECISIONS.md#ride-scaled-entry-outcome
+- signal: ride_scaled_entry
+  gate: ride_scaled_entry
+  config: ride_scaled_entry:Z2
+  status: fail
+  note: DECISIONS.md#ride-scaled-entry-outcome

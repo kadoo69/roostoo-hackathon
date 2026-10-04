@@ -1,0 +1,24 @@
+meta:
+  name: ride_scaled_entry
+  frozen: true
+  declared_utc: '2026-10-04T13:12:00Z'
+  requested_by: 'operator 2026-10-04 18:40 IST: we could have profited from the last 15 minutes move based on position sizing; run the test'
+  declared_ref: DECISIONS.md#ride-scaled-entry-declaration
+  written_before_any_number: true
+prior: 'lower fixed triggers did not beat 2% in every window (#ride-threshold-recheck-outcome); minute bursts revert below cost (#micro-scan-2026-10-01); the per-coin 3-sigma trigger was best risk-adjusted (#ride-dynamic-trigger-outcome)'
+mechanism: 'a 2-sigma move is more often the start of a 3-sigma move than a random bar is; a third-size entry there captures part of the leg before the full trigger, and the small size limits the loss when it reverts'
+failure_mode: 'most 2-sigma moves revert (#micro-scan-2026-10-01); partial entries pay fees and occupy slots for up to 24 h, crowding out full 3-sigma entries'
+base: 'Z3 = config/ride_z3_5m.yaml burst arm (sigma_k 3, sigma_bars 288, tp 5%, hold 288, n 3, cooldown 12), live sell-at-close, maker fees and ticks (gates.let_winners_run.simulate)'
+arms:
+  S23: 'enter at z >= 2 with a third of a slot, top up to a full slot on a later bar with z >= 3; z >= 3 enters a full slot directly; cap and hold from the first entry; the slot exits whole'
+  Z2: 'control: enter at z >= 2 with a full slot'
+nonsense_control: 'only if S23 passes: S23 with its partial entries moved to random coins and bars of the same UTC day (200 sets); its gain over Z3 must beat at least 160 of them'
+windows:
+  W1: '2026-09-05 to 2026-09-19'
+  W2: '2026-09-19 to now'
+  last_3d: 'the last 3 days'
+decision_rule: >
+  S23 is RECOMMENDED only if its total return beats Z3 in W1, W2 and the last 3 days, with max drawdown no more
+  than 2 pp worse than Z3's in each, and it passes the nonsense control. Otherwise competition_z3 stays as it is.
+  Changing the live book stays an operator decision.
+trials: 3

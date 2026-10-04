@@ -5000,8 +5000,19 @@ Stale-entry guard unchanged: `ride_z3_5m`'s current paper holdings (BNB, LINK, P
 
 ## ride-scaled-entry-declaration
 
-Operator 2026-10-04 about 13:10Z (18:40 IST), after FET climbed about +2.4% in 30 minutes without reaching the z3 trigger: would sizing by signal strength have captured it, "run the test". Written before any number. `python3 -m gates.ride_scaled_entry`, `results/ride_scaled_entry.json`. Everything as `config/ride_z3_5m.yaml` (3-bar 5m return over the coin's own 288-bar std of 3-bar returns, `sigma_k` 3, +5% cap, 288-bar hold, 3 slots, 12-bar cooldown, maker fees and ticks via `gates.let_winners_run.simulate`), three arms:
+Operator 2026-10-04 about 13:10Z (18:40 IST), after FET climbed about +2.4% in 30 minutes without reaching the z3 trigger: would sizing by signal strength have captured it, "run the test". Written before any number. `python3 -m archive.gates.ride_scaled_entry`, `results/ride_scaled_entry.json`. Everything as `config/ride_z3_5m.yaml` (3-bar 5m return over the coin's own 288-bar std of 3-bar returns, `sigma_k` 3, +5% cap, 288-bar hold, 3 slots, 12-bar cooldown, maker fees and ticks via `gates.let_winners_run.simulate`), three arms:
 - Z3 (live `competition_z3`): enter at z >= 3 with a full slot (1/3 of the book).
 - S23 (the proposal): enter at z >= 2 with a third of a slot (1/9 of the book); if a later bar of the same holding reaches z >= 3, top up to the full slot at that bar's close. The partial holding occupies a slot. The +5% cap and the 288-bar hold run from the first entry; the whole slot exits together. A coin can also enter at z >= 3 directly with a full slot.
 - Z2 (control): enter at z >= 2 with a full slot. It separates the lower trigger from the sizing.
 Windows as `#ride-dynamic-trigger-declaration`, each started flat: W1 2026-09-05..09-19, W2 09-19..now, last 3 days. S23 is recommended only if it beats Z3 on total return in all three windows with max drawdown no more than 2 pp worse in each. Three trials (S23, Z2, and the Z3 baseline re-run).
+
+## ride-scaled-entry-outcome
+
+FAIL, `competition_z3` stays as it is (`results/ride_scaled_entry.json`; the nonsense control was not run because S23 failed the return condition). Total return / max DD / entries a day, 25 coins, each window started flat:
+| arm | W1 (09-05..09-19) | W2 (09-19..10-04 13:05Z) | last 3 days |
+|---|---|---|---|
+| Z3 (live) | **+14.33%** / -13.07% / 3.2 | **+20.92%** / -7.49% / 3.2 | **+4.64%** / -6.06% / 3.3 |
+| S23 (third slot at z >= 2, top-up at z >= 3) | -0.30% / -11.39% / 3.5 | +7.14% / -8.56% / 3.5 | +0.23% / -2.28% / 3.0 |
+| Z2 (full slot at z >= 2) | +8.24% / -17.39% / 3.5 | +14.17% / -10.36% / 3.5 | -1.44% / -7.01% / 3.0 |
+S23 trails Z3 by 14.6, 13.8 and 4.4 pp; the failure mode named in the declaration is what happened: the 2-sigma partial entries take the slots (mean gross 0.74-0.82 against 0.87-0.94) and most never reach 3 sigma, so the full-size 3-sigma moves that carry the ride arrive with the slots already holding third-size positions. Z2 shows the lower trigger alone is worse on both return and drawdown, consistent with `#ride-threshold-recheck-outcome` and `#micro-scan-2026-10-01`. S23's only gain is the shallower drawdown that comes from holding less. The FET climb of 18:00-18:30 IST is one case of a 2-sigma move that kept going; across 30 days that case is the minority.
+This harness's Z3 numbers differ from D2 in `#ride-dynamic-trigger-outcome` (+23.9 / +23.2 / +5.1%) because the windows start flat here and the bar history was refetched; the arms are compared within one harness. Three trials recorded.
