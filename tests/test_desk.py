@@ -117,7 +117,7 @@ def test_ec2_mode_hides_local_live_books_and_takes_live_totals_from_ec2(tmp_path
     monkeypatch.setitem(ec2_feed._STATE, "ts", time.time())
     monkeypatch.setitem(ec2_feed._STATE, "error", None)
     monkeypatch.setitem(ec2_feed._STATE, "data", {"commit": "abc", "books": {
-        "competition": {"active": "active", "last_waiting": {"ts_utc": "2026-10-02T12:00:00+00:00"}},
+        "competition_split": {"active": "active", "last_waiting": {"ts_utc": "2026-10-02T12:00:00+00:00"}},
         "competition_rehearsal": {"active": "active", "start_equity": 50000.0, "equity": 53000.0,
                                   "last_cycles": {"ts_utc": "2026-10-02T12:00:00+00:00"}, "positions": {"AAVE": 0.4}}}})
     snap = {"generated": "2026-10-02T12:00:00+00:00", "breadth": {},
@@ -126,7 +126,7 @@ def test_ec2_mode_hides_local_live_books_and_takes_live_totals_from_ec2(tmp_path
     p = desk.payload(snap)
     assert [b["bot"] for b in p["books"]] == ["momentum_top3_30m"]
     reh = next(b for b in p["ec2"]["books"] if b["bot"] == "competition_rehearsal")
-    comp = next(b for b in p["ec2"]["books"] if b["bot"] == "competition")
+    comp = next(b for b in p["ec2"]["books"] if b["bot"] == "competition_split")
     assert reh["ret_pct"] == 6.0 and reh["net"] == 3000.0 and comp["waiting"] and comp["ret_pct"] is None
     assert p["totals"]["net"] == 3000 and p["totals"]["online"] == 2 and p["totals"]["realised"] is None
 
@@ -141,7 +141,7 @@ def test_a_paper_book_on_ec2_replaces_its_local_row_and_stays_out_of_live_totals
     monkeypatch.setitem(ec2_feed._STATE, "ts", time.time())
     monkeypatch.setitem(ec2_feed._STATE, "error", None)
     monkeypatch.setitem(ec2_feed._STATE, "data", {"commit": "abc", "books": {
-        "competition": {"active": "active", "last_waiting": {"ts_utc": "2026-10-02T12:00:00+00:00"}},
+        "competition_split": {"active": "active", "last_waiting": {"ts_utc": "2026-10-02T12:00:00+00:00"}},
         "competition_rehearsal": {"active": "active", "start_equity": 50000.0, "equity": 51000.0,
                                   "last_cycles": {"ts_utc": "2026-10-02T12:00:00+00:00"}},
         "ride_5m": {"active": "active", "start_equity": 100000.0, "equity": 106000.0,
