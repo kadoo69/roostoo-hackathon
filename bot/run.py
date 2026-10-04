@@ -603,10 +603,10 @@ class Bot:
         wanted = dict(target)
         target, skims = booking.apply(target, current_w, prices, self.skim_refs,
                                       equity, self.s.booking, grow=self.underfilled)
+        self.underfilled -= {e["symbol"] for e in skims}
         if fresh:
-            skimmed = {e["symbol"] for e in skims}
             self.underfilled = {s for s in self.underfilled
-                                if s in wanted and s not in skimmed and current_w.get(s, 0.0) > 0
+                                if s in wanted and current_w.get(s, 0.0) > 0
                                 and current_w[s] < wanted[s] * (1.0 - UNDERFILL_DONE)}
         if skims:
             self.skims += len(skims)
