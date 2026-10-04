@@ -5150,3 +5150,14 @@ Transition safeguard (`signals.burst_rider.live_step`): ride records now carry t
 ## ride-entry-regime-declaration
 
 Operator 2026-10-05 00:35 IST: run the pullback-entry and trend-regime rotation tests. Written before any number; full text in `config/ride_entry_regime.yaml`. Against the live ride (B2: 2 slots, z >= 2.5, 2 x dvol targets, 24 h), in an explicit bar-level book with maker fees: test A PB05 / PB10 (rest the entry 0.5 / 1.0 x the coin's 3-bar std below the trigger close for 6 bars, else cancel); test B RG (swap the weakest holding below entry for a fresh trigger only while a trend filter is on: 60% of the pool above its 3-day-ago close and pool 3-day return above +3%). Same decision rule as `#ride-hold-slots-declaration`. Three trials.
+
+## ride-entry-regime-outcome
+
+Both FAIL; the live 2-slot ride stays (`results/ride_entry_regime.json`, `python3 -m archive.gates.ride_entry_regime`). Total return / max DD, explicit bar-level book, maker fees, no ladder, 27 coins:
+| arm | W1 (09-05..09-19) | W2 (09-19..10-04 19:05Z) | last 3 days |
+|---|---|---|---|
+| B2 (live) | **+22.30%** / -11.92% | **+46.17%** / -11.48% | -0.53% / -6.06% |
+| PB05 (rest 0.5 s below) | -1.54% / -19.04% | +8.81% / -13.68% | -0.21% / -5.17% |
+| PB10 (rest 1.0 s below) | +8.54% / -14.10% | +8.30% / -14.34% | +0.30% / -5.17% |
+| RG (swap only in trend) | +32.56% / -20.13% | +15.25% / -11.85% | -1.10% / -5.39% |
+Trend filter on 34% / 43% / 8% of bars. Pullback entries: the failure mode named in the declaration, the bursts that never pull back are the ones that carry the ride, so a resting limit misses the winners (W2 -37 pp) for a 0.3-0.8 pp gain in chop. Regime rotation: +10 pp in W1, -31 pp in W2 with a deeper drawdown; the filter does not separate the windows where swapping pays. Recorded with it: in this harness the live rule is -0.53% over the last 3 days (the chop since 10-01), against +22% and +46% in the trend windows; its edge is in trends, and chop costs it a little. Three trials recorded.

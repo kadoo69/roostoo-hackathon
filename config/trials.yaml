@@ -6503,3 +6503,18 @@ trials:
   config: ride_hold_slots:N5
   status: fail
   note: DECISIONS.md#ride-hold-slots-outcome
+- signal: ride_entry_regime
+  gate: ride_entry_regime
+  config: ride_entry_regime:PB05
+  status: fail
+  note: DECISIONS.md#ride-entry-regime-outcome
+- signal: ride_entry_regime
+  gate: ride_entry_regime
+  config: ride_entry_regime:PB10
+  status: fail
+  note: DECISIONS.md#ride-entry-regime-outcome
+- signal: ride_entry_regime
+  gate: ride_entry_regime
+  config: ride_entry_regime:RG
+  status: fail
+  note: DECISIONS.md#ride-entry-regime-outcome
