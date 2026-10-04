@@ -206,18 +206,116 @@ def alerts(books: list[dict]) -> list[dict]:
     return out
 
 
+COMP_OPEN = "2026-10-04T12:00:00+00:00"
+COMP_END = "2026-10-18T12:00:00+00:00"
+BAR_MIN = 5
+
+
+def competition_view(ec2: dict | None, radar: dict) -> dict | None:
+    """The live competition unit in detail: equity path, each position against its take-profit, 24 h exit
+    and next skim, free slots, closed trades and the benchmark since the open. DECISIONS.md#desk-revamp-2026-10-05"""
+    import datetime as dt
+    import json
+
+    from bot.settings import ROOT
+    if not ec2:
+        return None
+    bk = next((b for b in ec2["books"] if not b.get("paper") and b["bot"] != "competition_rehearsal"
+               and b.get("active") == "active"), None)
+    if not bk:
+        return None
+    now = dt.datetime.now(dt.UTC)
+    ride = bk.get("ride") or {}
+    held = ride.get("held") or {}
+    mon = bk.get("monitor") or {}
+    marks = {k.replace("USDT", ""): v.get("mark") for k, v in (mon.get("positions") or {}).items()}
+    for r in radar.get("rows") or []:
+        marks.setdefault(r["symbol"], r.get("price"))
+    eq = mon.get("equity") or bk.get("equity")
+    start = bk.get("start_equity") or 100_000.0
+    hold = int(radar.get("hold_bars") or 288)
+    slots = int(radar.get("slots") or 2)
+    lots: dict[str, list[float]] = {}
+    for lot in bk.get("open_lots") or []:
+        q, c = float(lot.get("qty") or 0), float(lot.get("cost_basis") or 0)
+        acc = lots.setdefault(lot["symbol"].replace("USDT", ""), [0.0, 0.0])
+        acc[0] += q
+        acc[1] += c
+    pos = []
+    for sym, rec in held.items():
+        s = sym.replace("USDT", "")
+        at = dt.datetime.fromisoformat(str(rec[0]).replace(" ", "T"))
+        sig_px, tgt, wt = float(rec[1]), float(rec[2]), float(rec[3])
+        qty = (bk.get("entries") or {}).get(s, {}).get("qty")
+        if s in lots and lots[s][0] > 0:
+            fill = lots[s][1] / lots[s][0]          # average cost over the open FIFO lots
+        else:
+            fill = (bk.get("entries") or {}).get(s, {}).get("entry") or sig_px
+        mark = marks.get(s)
+        tgt_px = sig_px * (1 + tgt)
+        exit_at = at + dt.timedelta(minutes=BAR_MIN * (hold + 1))
+        ref = (bk.get("skim_refs") or {}).get(sym)
+        row = {"symbol": s, "weight_now": (bk.get("positions") or {}).get(s), "slot_weight": wt,
+               "entry_bar": at.isoformat(), "signal_px": sig_px, "fill_px": fill, "target_pct": round(tgt * 100, 2),
+               "target_px": tgt_px, "exit_at": exit_at.isoformat(),
+               "hours_left": round((exit_at - now).total_seconds() / 3600, 2),
+               "held_h": round((now - at).total_seconds() / 3600, 2), "mark": mark,
+               "next_skim_px": ref * 1.03 if ref else None}
+        if mark:
+            row.update({"pnl_pct": round((mark / fill - 1) * 100, 2),
+                        "pnl_usd": round(qty * (mark - fill), 2) if qty else None,
+                        "to_target_pct": round((tgt_px / mark - 1) * 100, 2),
+                        "progress": round((mark - sig_px) / (tgt_px - sig_px), 3) if tgt_px > sig_px else None,
+                        "to_skim_pct": round((ref * 1.03 / mark - 1) * 100, 2) if ref else None})
+        pos.append(row)
+    pos.sort(key=lambda r: r["hours_left"])
+    used = sum(r["slot_weight"] for r in pos)
+    rows = radar.get("rows") or []
+    btc = next((r for r in rows if r["symbol"] == "BTC"), {})
+    opens = sorted(r["ret_open"] for r in rows if r.get("ret_open") is not None)
+    closed = [{"symbol": t["symbol"].replace("USDT", ""), "entry_ts": t.get("entry_ts"), "exit_ts": t.get("exit_ts"),
+               "entry": t.get("entry_price"), "exit": t.get("exit_price"), "qty": t.get("qty"),
+               "net": round(float(t.get("net_pnl") or 0), 2), "ret_pct": round(float(t.get("net_return_pct") or 0), 2),
+               "hold_h": t.get("hold_hours"), "kind": t.get("exit_kind")} for t in (bk.get("closed") or [])]
+    closed.sort(key=lambda t: str(t["exit_ts"]), reverse=True)
+    t0, t1 = dt.datetime.fromisoformat(COMP_OPEN), dt.datetime.fromisoformat(COMP_END)
+    try:
+        board = json.loads((ROOT / "run" / "leaderboard.json").read_text())
+    except (OSError, ValueError):
+        board = None
+    return {"bot": bk["bot"], "since": bk.get("since"), "last_cycle": mon.get("ts_utc") or bk.get("last_cycle"),
+            "cycle_age_s": mon.get("cycle_age_s"), "alerts": mon.get("alerts") or [],
+            "equity": eq, "start": start, "ret_pct": round((eq / start - 1) * 100, 3) if eq else None,
+            "net": round(eq - start, 2) if eq else None, "peak": mon.get("peak") or bk.get("peak"),
+            "dd_pct": round((eq / (mon.get("peak") or bk.get("peak") or eq) - 1) * 100, 2) if eq else None,
+            "cash": mon.get("cash") or bk.get("cash"), "positions": pos, "slots": slots,
+            "slots_free": max(0, int((1.0 - used + 1e-9) * slots)), "weight_used": round(used, 4),
+            "series": bk.get("eq_series") or [], "closed": closed, "stats": bk.get("blotter") or {},
+            "orders_today": mon.get("orders_today"), "faults_today": mon.get("faults_today"),
+            "last_order": mon.get("last_order"), "orders": bk.get("orders") or [],
+            "bench": {"btc_open": btc.get("ret_open"), "btc_24h": btc.get("ret_24h"),
+                      "pool_median_open": opens[len(opens) // 2] if opens else None,
+                      "pool_up": sum(1 for x in opens if x > 0), "pool_n": len(opens)},
+            "clock": {"open": COMP_OPEN, "end": COMP_END, "elapsed_frac": round((now - t0) / (t1 - t0), 4),
+                      "day": (now - t0).days + 1, "days": (t1 - t0).days,
+                      "hours_left": round((t1 - now).total_seconds() / 3600, 1)},
+            "leaderboard": board}
+
+
 def payload(snap: dict) -> dict:
     by_name = {b["bot"]: b for b in snap["bots"]}
     shown = [b for b in snap["bots"] if group_of(b["bot"], (b.get("meta") or {}).get("interval")) in DESK_GROUPS]
     books = [book(b, by_name) for b in shown]
-    from bot import ec2_feed
+    from bot import ec2_feed, trigger_watch
     ec2 = ec2_feed.payload()
+    radar = trigger_watch.payload()
     if ec2:
         on_ec2 = {b["bot"] for b in ec2["books"]}
         books = [b for b in books if b["group"] != "live" and b["bot"] not in on_ec2]
     prog = progress_by_book()
     for b in books:
         b["risk"] = (prog.get(b["bot"]) or {}).get("ratios_total")
+        b["progress"] = prog.get(b["bot"]) or {}
     books.sort(key=lambda b: -(b["ret_pct"] or 0.0))
     live = [b for b in books if b["equity"] is not None and b["group"] in TOTALS_GROUPS]
     total = {"net": round(sum(b["net"] or 0.0 for b in live)), "realised": round(sum(b["realised"] or 0.0 for b in live)),
@@ -239,5 +337,6 @@ def payload(snap: dict) -> dict:
     return {"generated": snap["generated"], "totals": total, "ec2": ec2, "paper": paper_tot,
             "groups": [{"key": k, "label": v} for k, v in GROUPS if k in DESK_GROUPS],
             "books": books, "exposure": exposure(books), "activity": activity(books), "alerts": alerts(books),
-            "closed": closed_feed(shown), "walkforward": walkforward(),
-            "breadth": snap.get("breadth")}
+            "closed": closed_feed(shown), "walkforward": {**walkforward(), **((ec2 or {}).get("wf") or {})},
+            "breadth": snap.get("breadth"), "radar": radar, "competition": competition_view(ec2, radar),
+            "ec2_progress": (ec2 or {}).get("progress") or {}}

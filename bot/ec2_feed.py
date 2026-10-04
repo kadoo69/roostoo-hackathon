@@ -78,8 +78,58 @@ for b in BOOKS:
     errs = sorted(d.glob("errors-*.jsonl"))
     rows = [json.loads(x) for x in errs[-1].read_text().splitlines()] if errs and day in errs[-1].name else []
     rec["errors_today_rows"] = [{"event": r.get("event"), "error": str(r.get("error", ""))[:160]} for r in rows[-200:]]
+    if b != "competition_rehearsal" and b not in PAPER and rec.get("active") == "active":
+        # The detail panel of the desk, for the live competition unit only. DECISIONS.md#desk-revamp-2026-10-05
+        try:
+            st = json.loads((d / "state.json").read_text())
+            rec["skim_refs"] = st.get("skim_refs") or {}
+            rec["universe"] = st.get("universe") or []
+            rec["cash"] = st.get("cash")
+        except (OSError, ValueError):
+            pass
+        try:
+            rec["ride"] = next(iter(json.loads((d / "ride_state.json").read_text()).values())).get("after")
+        except (OSError, ValueError, StopIteration, AttributeError):
+            rec["ride"] = None
+        series, seen = [], set()
+        for f in sorted(d.glob("cycles-*.jsonl"))[-3:]:
+            for line in f.read_text().splitlines():
+                try:
+                    r = json.loads(line)
+                except ValueError:
+                    continue
+                if r.get("event") != "cycle" or r.get("equity") is None:
+                    continue
+                key = r["ts_utc"][:15]  # one point per 10 minutes
+                if key in seen:
+                    series[-1] = [r["ts_utc"], round(r["equity"], 2)]
+                    continue
+                seen.add(key)
+                series.append([r["ts_utc"], round(r["equity"], 2)])
+        rec["eq_series"] = series[-600:]
+        try:
+            from bot.blotter import build
+            bl = build(b)
+            rec["closed"] = bl.get("closed") or []
+            rec["open_lots"] = bl.get("open") or []
+            rec["blotter"] = bl.get("stats") or {}
+        except Exception as exc:  # noqa: BLE001
+            rec["closed"], rec["blotter"] = [], {"error": repr(exc)[:200]}
+        try:
+            rec["monitor"] = json.loads(Path("live/monitor/latest.json").read_text())
+        except (OSError, ValueError):
+            rec["monitor"] = None
     out["books"][b] = rec
-print("EC2JSON " + json.dumps(out))
+try:
+    from gates.wf_report import summary
+    out["wf"] = summary("wf_live")
+except Exception as exc:  # noqa: BLE001
+    out["wf"] = {"error": repr(exc)[:200]}
+try:
+    out["progress"] = {r["book"]: r for r in json.loads(Path("results/progress/latest.json").read_text()).get("books", [])}
+except (OSError, ValueError):
+    out["progress"] = {}
+print("EC2JSON " + json.dumps(out, default=str))
 PY
 '''.replace("BOOKS", repr(BOOKS)).replace("PAPER", repr(PAPER))
 
@@ -147,6 +197,18 @@ def refresh_loop() -> None:
         time.sleep(REFRESH_S)
 
 
+def competition_context() -> tuple[list[str], dict[str, str], set[str]]:
+    """Universe, last entry bars and held symbols of the active competition unit, for the trigger radar."""
+    with _LOCK:
+        data = _STATE["data"] or {}
+    for name in LIVE:
+        b = (data.get("books") or {}).get(name) or {}
+        if name != "competition_rehearsal" and b.get("active") == "active" and b.get("universe"):
+            ride = b.get("ride") or {}
+            return list(b["universe"]), dict(ride.get("last") or {}), set(ride.get("held") or {})
+    return [], {}, set()
+
+
 def active() -> bool:
     return MARKER.exists()
 
@@ -171,6 +233,9 @@ def payload() -> dict | None:
                       "start_equity": start, "equity": eq, "net": round(eq - start, 2) if start and eq else None,
                       "ret_pct": round((eq / start - 1) * 100, 2) if start and eq else None,
                       "peak": b.get("peak"), "positions": b.get("positions") or {}, "entries": b.get("entries") or {},
-                      "curve": b.get("curve") or [], "orders": b.get("orders") or [], **error_counts(b)})
-    return {"host": MARKER.read_text().strip(), "commit": data.get("commit"), "fetched_age_s":
+                      "curve": b.get("curve") or [], "orders": b.get("orders") or [], **error_counts(b),
+                      **{k: b[k] for k in ("skim_refs", "universe", "cash", "ride", "eq_series", "closed", "open_lots", "blotter",
+                                           "monitor") if k in b}})
+    return {"host": MARKER.read_text().strip(), "commit": data.get("commit"), "wf": data.get("wf"),
+            "progress": data.get("progress") or {}, "fetched_age_s":
             round(time.time() - st["ts"]) if st["ts"] else None, "error": st["error"], "books": books}

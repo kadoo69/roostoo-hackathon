@@ -101,8 +101,10 @@ NETWORK_ERROR = ("ConnectionError", "ReadTimeout", "RemoteDisconnected", "HTTPSC
 
 def transient(e: dict) -> bool:
     """Recovered network blips, config changes and deferred data gaps are not faults; a data gap
-    is waited out and retried by the cycle itself. DECISIONS.md#live-audit-2026-09-24"""
-    if e.get("event") in ("config_changed_mid_run", "data_incomplete"):
+    is waited out and retried by the cycle itself. DECISIONS.md#live-audit-2026-09-24
+    A held coin missing from one ticker read is marked at its last known price by design
+    (`mark_from_last_known`, DECISIONS.md#live-faults-2026-10-01), a handled gap, not a fault."""
+    if e.get("event") in ("config_changed_mid_run", "data_incomplete", "mark_from_last_known"):
         return True
     return e.get("event") == "cycle_error" and any(k in str(e.get("error", "")) for k in NETWORK_ERROR)
 
@@ -278,6 +280,7 @@ HTML = (Path(__file__).parent / "dashboard.html")
 ANALYSIS_HTML = (Path(__file__).parent / "analysis.html")
 HEATMAP_HTML = (Path(__file__).parent / "heatmap.html")
 DESK_HTML = (Path(__file__).parent / "desk.html")
+CLASSIC_HTML = (Path(__file__).parent / "desk_classic.html")
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -310,6 +313,7 @@ class Handler(BaseHTTPRequestHandler):
             self._json(heatmap_payload())
             return
         body = (ANALYSIS_HTML if self.path.startswith("/analysis")
+                else CLASSIC_HTML if self.path.startswith("/classic")
                 else HEATMAP_HTML if self.path.startswith("/heatmap")
                 else HTML if self.path.startswith("/full")
                 else DESK_HTML).read_bytes()
@@ -318,6 +322,20 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)
+
+
+def radar_context() -> tuple[list[str], dict[str, str], set[str]]:
+    """The competition unit's universe and ride state from the EC2 pull; before the first pull, the 27
+    coins of `results/market_structure.json`. DECISIONS.md#desk-revamp-2026-10-05"""
+    from bot.ec2_feed import competition_context
+    uni, last, held = competition_context()
+    if uni:
+        return uni, last, held
+    try:
+        ms = json.loads((ROOT / "results" / "market_structure.json").read_text())
+        return [c + "USDT" for c in ms["coins"]], {}, set()
+    except (OSError, ValueError, KeyError):
+        return ["BTCUSDT", "ETHUSDT", "SOLUSDT"], {}, set()
 
 
 def main() -> int:
@@ -331,6 +349,8 @@ def main() -> int:
     if a.port == 8787:
         from bot.ec2_feed import refresh_loop as ec2_loop
         threading.Thread(target=ec2_loop, daemon=True).start()
+        from bot import trigger_watch
+        threading.Thread(target=trigger_watch.refresh_loop, args=(radar_context,), daemon=True).start()
     srv = ThreadingHTTPServer((a.host, a.port), Handler)
     print(f"dashboard: http://{a.host}:{a.port}")
     srv.serve_forever()
