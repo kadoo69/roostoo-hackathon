@@ -1,0 +1,25 @@
+meta:
+  name: ride_agile
+  frozen: true
+  declared_utc: '2026-10-04T13:35:00Z'
+  requested_by: 'operator 2026-10-04 19:03 IST: still loosen the conditions a little so we can at least have an agile bot which skims the profits clearly'
+  declared_ref: DECISIONS.md#ride-agile-declaration
+  written_before_any_number: true
+decision_made_by_operator: 'the competition book is loosened; this study only chooses which loosened variant, it does not decide whether to loosen'
+prior: 'z = 2 lost to z = 3 in every window (#ride-scaled-entry-outcome); lower fixed thresholds lost (#ride-threshold-recheck-outcome)'
+mechanism: 'a 2.5-sigma trigger fires more often; a nearer take-profit and a shorter hold book the small follow-through quickly and recycle the slot instead of waiting 24 h'
+failure_mode: 'more entries on moves that revert; a near take-profit caps the few big winners that carry the ride'
+base: 'Z3 = the live competition_z3 rule (sigma_k 3, tp 5%, hold 288 bars, n 3, cooldown 12), 27 coins, maker fees and ticks'
+arms:
+  A25: 'sigma_k 2.5, tp 5%, hold 288'
+  B25: 'sigma_k 2.5, tp 3%, hold 144 (12 h)'
+  C25: 'sigma_k 2.5, tp 2%, hold 72 (6 h)'
+windows:
+  W1: '2026-09-05 to 2026-09-19'
+  W2: '2026-09-19 to now'
+  last_3d: 'the last 3 days'
+decision_rule: >
+  The arm deployed is the one with the highest worst-window total return across W1, W2 and the last 3 days; ties go
+  to the shallower worst drawdown. Z3 is reported beside it so the cost or gain of loosening is on record. If every
+  arm loses money in two or more windows, the operator is told before anything is deployed.
+trials: 3
