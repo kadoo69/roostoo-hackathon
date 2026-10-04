@@ -44,3 +44,11 @@ Skills: `roostoo-live-report` (the 30-minute report), `roostoo-incident` (live f
 - Markdown: one sentence per line, never the em dash. Commits describe only what they contain, no co-author trailer.
 - Checks before done: `python3 -m pytest tests -q` and `python3 -m ruff check bot/ signals/ gates/ data/ core/ tests/ archive/`.
 - **Nothing live imports `archive/`.** A one-off study moves to `archive/gates/` once its outcome is in `DECISIONS.md`.
+
+## Competition lessons (2026-10-04, first day live)
+
+- Execution bugs cost more than strategy choices: a cash-capped entry could never be completed (`#underfilled-entry-2026-10-04`); test any same-cycle sell-then-buy path end to end.
+- Every competition unit switch costs the first bar's trigger (cold-start guard) and resets state; switch only with a committed reason, never to chase a single move.
+- Exit tuning is exhausted on the ride (trails, locks, shorter holds, rotation, nearer targets all null on 10-04); the edge is the entry trigger and staying fully invested.
+- Hand-placed orders on the COMP keys are banned (FAQ Q28); a "probe" entry in code was borderline, do not repeat it.
+- The Mac `aws` CLI is broken (Homebrew Python 3.14 pyexpat); use `bot.ec2_session.run_script`, and renew SSO with `deploy/aws_login.py`.
