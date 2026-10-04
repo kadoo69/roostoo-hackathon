@@ -5089,3 +5089,7 @@ NOT RECOMMENDED, the 24 h hold stays (`results/ride_laggard_exits.json`, `python
 | L6 (6 h hold) | +12.66% / -14.33% / 9.1 | -8.27% / -18.46% / 9.6 | -0.98% / -5.82% / 10.3 |
 | TS6 (exit at 6 h if not above entry) | +17.50% / -11.06% / 4.4 | +23.09% / -12.46% / 4.9 | -1.86% / -5.87% / 6.0 |
 The best by worst window, L12, loses to L24 in the last 3 days and in W1 (by 12 pp, drawdown 8.5 pp deeper), so the rule says no. Every early-exit arm flips sign between windows, as the trails did (`#ride-exits-outcome`): whether a slow position recovers is not predictable at 6 or 12 h, and each early exit pays a round trip and hands the slot to a fresh trigger that is no better on average. A position is not held past 24 h in any case. Three trials recorded.
+
+## ride-gain-lock-declaration
+
+Operator 2026-10-04 20:38 IST, with SUI at +3.1% and its first ladder skim done: monitor the trades by time frame, SUI may not be positive by tomorrow, take exits accordingly. A hand-placed exit is prohibited (FAQ Q28), so only bot logic is considered. Written before any number; full text in `config/ride_gain_lock.yaml`. Against the live ride (L24, V2 targets, 24 h): BE1 (after +1 dvol, exit back at entry), LK1 (after +1 dvol, exit at +0.5 dvol), TR1 (after +1 dvol, trail 1 dvol from the peak close). Same decision rule as `#ride-laggard-exits-declaration`. Three trials.

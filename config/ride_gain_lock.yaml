@@ -1,0 +1,24 @@
+meta:
+  name: ride_gain_lock
+  frozen: true
+  declared_utc: '2026-10-04T15:10:00Z'
+  requested_by: 'operator 2026-10-04 20:38 IST: monitor the trades by time frame, we do not know if SUI will be positive by tomorrow, take exits accordingly'
+  declared_ref: DECISIONS.md#ride-gain-lock-declaration
+  written_before_any_number: true
+prior: 'trails armed at +5% flipped sign (#ride-exits-outcome); shorter holds and a 6 h time stop lost (#ride-laggard-exits-outcome); a -1.5 dvol price stop lost (#ride-vol-exits-outcome V3S). A stop that arms only after a gain has not been tested.'
+mechanism: 'a burst that has already run part way to its target and then gives it all back has failed; exiting at a locked level keeps part of the gain and frees the slot, while positions that never armed keep the full 24 h'
+failure_mode: 'normal pullbacks inside a move hit the lock and sell winners that would have reached the target; every lock exit pays a round trip'
+base: 'L24 = live competition_z25 with V2 exits: entry z >= 2.5, 3 slots, 12-bar cooldown, target 2 x dvol at entry, 288-bar hold; maker fees and ticks; 27-coin pool. dvol = 288-bar std of 3-bar returns at entry x sqrt(96)'
+arms:
+  BE1: 'once a bar high reaches entry x (1 + 1 x dvol), exit at the first close at or below the entry price'
+  LK1: 'once a bar high reaches entry x (1 + 1 x dvol), exit at the first close at or below entry x (1 + 0.5 x dvol)'
+  TR1: 'once a bar high reaches entry x (1 + 1 x dvol), exit at the first close 1 x dvol below the highest close since entry'
+windows:
+  W1: '2026-09-05 to 2026-09-19'
+  W2: '2026-09-19 to now'
+  last_3d: 'the last 3 days'
+decision_rule: >
+  The best arm (highest worst-window total return, ties to the shallower worst drawdown) is RECOMMENDED only if it
+  beats L24 in the last 3 days and in at least one of W1 / W2, and its worst-window return is not below L24's.
+  Otherwise L24 stays and the operator sees the numbers first. Changing the live book stays an operator decision.
+trials: 3
