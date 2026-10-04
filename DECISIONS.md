@@ -4962,3 +4962,9 @@ Operator 2026-10-03 ~19:45Z, before the competition start (2026-10-04 12:00Z, 20
 - **Deployment swap for the split:** `deploy/ec2_bootstrap.sh` `BOOKS` now names `competition_split competition_rehearsal`, so a bootstrap run can never start the plain `competition` unit beside the split on one account; the desk, EC2 feed, dashboard, validation list and `deploy/ec2_status.sh` show `competition_split` (and the old unit while it exists). The switch itself stays an operator step on EC2: fetch and reset, `systemctl disable --now roostoo-live@competition`, `systemctl enable --now roostoo-live@competition_split`.
 - **Ride share:** decided at about 11:00Z on 10-04 by comparing `split_tilt_5m` with `competition_rehearsal` over the same hours (40/60 if level or ahead, else 50/50). De-risking at the end stays off; the operator will check it during the competition.
 
+## competition-switch-2026-10-04
+
+Operator 2026-10-04 06:06Z: the competition account now runs `competition_split` (the rehearsed 50/50 rule + ride split, `#competition-split-staged-2026-10-03`). Steps on EC2: checkout moved 04dfb1c -> 32bd7ee (`#clock-resync-2026-10-03`), `roostoo-live@competition` disabled at about 06:05Z, `roostoo-live@competition_split` enabled 06:06:31Z; its first cycle reads the wallet at 100,000 cash, no freeze, no orders.
+Before the switch the account had joined at 2026-10-03 22:46Z (wallet readable, 100,000) while trading stayed closed until the 2026-10-04 12:00Z start (20:00 HKT): the plain-rule unit's 30 LTC buys were rejected with "you do not have permission to trade"; nothing filled.
+The plain `competition` unit is never to run again beside the split (`deploy/ec2_bootstrap.sh` `BOOKS` names only the split). The ride share (50/50 or 40/60) is decided at about 11:00Z from `split_tilt_5m` against `competition_rehearsal`.
+
