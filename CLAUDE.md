@@ -48,6 +48,8 @@ Skills: `roostoo-live-report` (the 30-minute report), `roostoo-incident` (live f
 ## Competition lessons (2026-10-04, first day live)
 
 - Execution bugs cost more than strategy choices: a cash-capped entry could never be completed (`#underfilled-entry-2026-10-04`); test any same-cycle sell-then-buy path end to end.
+- An entry completed in a later cycle pays the later price: PUMP's trigger bought 4.4k at 0.006492 and the completion bought 29.4k at 0.006636 thirty minutes later (+2.2%), while the take-profit stays anchored to the trigger close; that chase was the whole 10-04 night drawdown.
+- A day-one rank is noise: Screen 2 is the top 20 on 14-day raw return, and one coin moves a book several places; do not change the rule to chase rank.
 - Every competition unit switch costs the first bar's trigger (cold-start guard) and resets state; switch only with a committed reason, never to chase a single move.
 - Exit tuning is exhausted on the ride (trails, locks, shorter holds, rotation, nearer targets all null on 10-04); the edge is the entry trigger and staying fully invested.
 - Hand-placed orders on the COMP keys are banned (FAQ Q28); a "probe" entry in code was borderline, do not repeat it.
