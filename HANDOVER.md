@@ -2,7 +2,37 @@
 
 Current state only. The full history of sessions to 2026-09-23 is archived at `docs/archive/HANDOVER_2026-09-23.md`; older section references in code and configs point there.
 
-## CURRENT STATE 2026-10-03 06:30Z (read this first; everything below is history)
+## CURRENT STATE 2026-10-04 11:40Z (read this first; everything below is history)
+
+### Competition
+- **Trading opens 2026-10-04 12:00Z (20:00 HKT / 17:30 IST), runs 14 days (end about 10-18 12:00Z, confirm with the organisers).** Repo link before 10-14 (`python3 deploy/export_logs.py`, commit `logs/`, tag `submission-final` at the end).
+- **The competition account runs `competition_wf` = `wf_live` on the COMP keys** (operator 10-04 11:15Z, `#competition-wf-2026-10-04`): hourly replay of ~30 styles over 3 days, trades the leader, 3.0 pp switch margin, cash allowed, booking ladder on, exit escalation on, 25% drawdown halt, de-risk off (operator will check during the run). Its first pick at 11:30Z was `15m|htf0|vol1.5` (fresh start, no incumbency), while paper `wf_live` holds `resid|1h`.
+- The account joined 10-03 22:46Z (wallet 100,000); orders were rejected ("no permission to trade") until the open, nothing filled. `competition_split` ran it 06:06-11:25Z, never traded, now inactive and disabled.
+- **Known risks recorded before the switch:** `wf_live`'s selection has not beaten the mean style or the fixed rule forward (picks -5.3% vs -4.6% / -2.4%); its +5.8% paper came from ride trades and downtime luck; it never placed real orders; its config has `short.enabled: true` (short styles can be picked; shorts were a drag in every test and whether the COMP account accepts shorts is untested). No manual stop or override on the competition account (rules); any change is a committed config plus a unit restart.
+- **Fallback, staged:** `competition_split` at rule 40 / ride 60 (`#competition-ride-share-2026-10-04`, `#split-tilt-outcome`; 40/60 led 50/50 by 0.04-0.08 pt over 17 live hours). Switch: `systemctl disable --now roostoo-live@competition_wf`, archive `live/competition_split/sleeves.json` if it exists (SleevesBot reads `rule_share` only when it is absent, `#competition-code-review-2026-10-04`), `systemctl enable --now roostoo-live@competition_split`, and change `BOOKS` in `deploy/ec2_bootstrap.sh` back. Never two units on one account.
+
+### Where things run
+- **EC2** `i-015fad70d34b0b83d`, checkout `9867b88`. Live: `competition_wf` (COMP), `competition_rehearsal` (TEST keys, 50/50 split, real orders). Paper: `wf_live`, `ride_5m`, `ride_z3_5m`, `sleeves_z3_5m`, `split_tilt_5m` (40/60), `regime_ls_30m`. Status: `deploy/ec2_status.sh`; scripts: `python3 deploy/ssm_shell.py <script FILE>` (piping a heredoc through `/dev/stdin` returns nothing).
+- **Mac** paper: `momentum_top3_30m`, `blend_30m_ride`, `resid_30m`, `htf0_30m`, `ride1_5m`, `wide_30m`, `ride1_wide_5m`; desk on 8787 (manual) and 8789 (launchd). **The Mac sleeps on battery and that blinds monitoring** (EC2 bots are unaffected): keep it on mains, `sudo pmset -a disablesleep 1`. AWS SSO expires after some hours: `python3 deploy/aws_login.py` and approve the link within minutes.
+
+### Book snapshot 2026-10-04 11:36Z (since each book's start)
+competition_wf 0.00% (100,000 cash, waiting for the open); rehearsal -0.66% since 10-03 14:22Z; split_tilt_5m -0.59%; wf_live +5.81%; ride_z3_5m +4.59% (Sharpe 21); regime_ls_30m +3.59%; ride_5m +2.45%; sleeves_z3_5m +1.55%; Mac: ride1_wide_5m about +7%, htf0_30m about +3%, momentum_top3_30m (the old rule's twin) about +0.3%.
+
+### Done 2026-10-03/04 (all committed, DECISIONS anchors)
+Research, all nulls except the tilt: price action (`#price-action-outcome`), regime_ls as comp bot (`#regime-competition-outcome`), stop-and-retune loop (`#adaptive-loop-outcome`), tick capture closed as market making (`#tick-capture-closed`), session timing (`#session-timing-outcome`), R4 split (`#split-r4-outcome`), 40/60 tilt PASS (`#split-tilt-outcome`). Fleet: wf_live moved to EC2, three paper books retired (`#wf-live-to-ec2-2026-10-03`), fleet review (`#fleet-forward-2026-10-03`). Code: clock resync before a stale-ticker freeze (`#clock-resync-2026-10-03`), `bot/sleeves.cap_entries` (tested, unused). Switches: `#competition-switch-2026-10-04`, `#competition-wf-2026-10-04`.
+
+### Open items
+1. First hours of the competition: watch `competition_wf` orders, fills, faults and its style picks; if it faults, trades shorts that error, or bleeds, the operator decides on the split fallback.
+2. Checkpoint 10-05: `ride_z3_5m` / `sleeves_z3_5m` and `regime_ls_30m` against their declared rules; `split_tilt_5m` 3-day stop rule.
+3. Mac paper books still run pre-fix code until their next restart (`./run_bots.sh restart`, operator).
+4. End-of-run de-risk: operator decision during the competition (`derisk_start_utc` is 12-31, i.e. off).
+
+### Lessons (do not repeat)
+- Guard every commit on the pytest result (`case` on the summary line); a `| tail -1 &&` chain committed failing tests on 10-04.
+- A sleeves ledger records entries even when the venue rejects the order (pre-open); reset it before the first real trading bar.
+- Keep the Mac on mains with sleep disabled through any decision window; scheduled reminders live only in an awake session.
+
+## Previous state 2026-10-03 06:30Z (history)
 
 ### Deadlines and blockers
 - **Competition starts 2026-10-03 12:00Z (20:00 HKT / 17:30 IST)**, runs to 10-17; repo link before 10-14 (`python3 deploy/export_logs.py`, commit `logs/`, tag `submission-final` at the end).
