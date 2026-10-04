@@ -1,0 +1,26 @@
+meta:
+  name: day3_fleet_forward
+  frozen: true
+  declared_utc: '2026-10-04T21:00:00Z'
+  requested_by: 'operator 2026-10-05 02:25 IST: write the day 3 declaration (after seeing that regime_ls_30m, ride1_wide_5m and ride_z3_5m led the live book over the first 9 hours)'
+  declared_ref: DECISIONS.md#day3-fleet-forward-declaration
+  written_before_any_number: false
+  numbers_seen_before_writing: 'returns from 10-04 12:00Z to 20:47Z only: regime_ls_30m +2.05%, ride1_wide_5m +1.98%, ride_z3_5m +1.24%, live competition +0.42%. Those 9 hours are inside the window; the thresholds below are set so that a lead of that size (1.6 pp) does not pass on its own.'
+window:
+  start_utc: '2026-10-04T12:00:00Z'
+  end_utc: '2026-10-07T12:00:00Z'
+  sub_windows: ['2026-10-04T12:00Z..2026-10-05T12:00Z', '2026-10-05T12:00Z..2026-10-06T12:00Z', '2026-10-06T12:00Z..2026-10-07T12:00Z']
+purpose: 'a forward fleet check, not a hypothesis test: no single book has a stated mechanism for beating the live ride here, so a pass makes a book a candidate for the operator to weigh with its own declared test record, never an automatic switch'
+live_reference: 'the competition account: 100,000 flat from the open until its first fill (19:30 IST 10-04), then the equity in live/competition_z25 cycle journals (EC2)'
+challengers: 'every paper book on EC2 and the Mac with cycle journals covering the window; the A/B pair (ride_z25_5m / ride_z25_swap_5m) is excluded, it started at 19:47Z and has its own read (#ride-swap-paper-2026-10-05); competition_rehearsal is reported but is a 50/50 split on the TEST account'
+measures: 'return start to end on cycle-journal equity (first cycle at or after the start, last at or before the end); max drawdown on 10-minute equity; return in each sub-window; uptime = share of 10-minute buckets with at least one cycle; closed trades with exit inside the window (bot.blotter)'
+eligibility: 'uptime at least 95% and at least 5 closed trades in the window (a book that slept missed bars, its path is not the strategy''s)'
+decision_rule: >
+  Scored on or after 2026-10-07 12:00Z (17:30 IST) by `python3 -m archive.gates.day3_fleet_forward` (on EC2 for EC2 books,
+  on the Mac for Mac books). An eligible challenger is a CANDIDATE only if all three hold against the live reference:
+  (1) window return at least 2.0 pp higher; (2) max drawdown no more than 2.0 pp deeper; (3) higher return in at least
+  2 of the 3 sub-windows. With about 12 challengers, one may pass by luck alone, so a candidate is put to the operator
+  with its own declared test outcome (for example regime_ls_30m failed #regime-competition-outcome, the 64-coin
+  universe failed #ride-z3-wide-outcome, the 3-sigma trigger trailed 2.5 sigma in #ride-agile-outcome). No candidate:
+  NULL, the live rule stays. The competition book changes only on the operator's decision.
+trials: 1
