@@ -63,6 +63,18 @@ for b in BOOKS:
             if r.get("event") in ("placed", "filled", "cancelled_stale", "rejected"):
                 rows.append({k: r.get(k) for k in ("ts_utc", "event", "side", "pair", "status", "price", "quantity", "filled_quantity")})
     rec["orders"] = rows[-6:]
+    buys = {}
+    for f in orders[-2:]:
+        for line in f.read_text().splitlines():
+            r = json.loads(line)
+            if r.get("event") == "placed" and r.get("side") == "BUY" and r.get("symbol"):
+                buys[r["symbol"]] = r.get("price")
+    try:
+        held_q = json.loads((d / "state.json").read_text()).get("holdings") or {}
+    except (OSError, ValueError):
+        held_q = {}
+    rec["entries"] = {k[:-4] if k.endswith("USDT") else k: {"qty": q, "entry": buys.get(k)}
+                      for k, q in held_q.items() if q and buys.get(k)}
     errs = sorted(d.glob("errors-*.jsonl"))
     rows = [json.loads(x) for x in errs[-1].read_text().splitlines()] if errs and day in errs[-1].name else []
     rec["errors_today_rows"] = [{"event": r.get("event"), "error": str(r.get("error", ""))[:160]} for r in rows[-200:]]
@@ -144,7 +156,7 @@ def payload() -> dict | None:
                       "halt": (b.get("last_cycles") or {}).get("halt"), "freeze": (b.get("last_cycles") or {}).get("freeze"),
                       "start_equity": start, "equity": eq, "net": round(eq - start, 2) if start and eq else None,
                       "ret_pct": round((eq / start - 1) * 100, 2) if start and eq else None,
-                      "peak": b.get("peak"), "positions": b.get("positions") or {}, "curve": b.get("curve") or [],
-                      "orders": b.get("orders") or [], **error_counts(b)})
+                      "peak": b.get("peak"), "positions": b.get("positions") or {}, "entries": b.get("entries") or {},
+                      "curve": b.get("curve") or [], "orders": b.get("orders") or [], **error_counts(b)})
     return {"host": MARKER.read_text().strip(), "commit": data.get("commit"), "fetched_age_s":
             round(time.time() - st["ts"]) if st["ts"] else None, "error": st["error"], "books": books}

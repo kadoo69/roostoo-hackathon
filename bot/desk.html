@@ -134,7 +134,7 @@ tr.fresh td{background:rgba(124,196,255,.05)}
   <div class="side">
    <div class="card"><div class="hd"><h3>Live prices</h3><span class="faint" id="lpStat" style="margin-left:auto;font-size:11px">connecting</span></div>
     <div class="list"><div class="lp lph"><span>Coin</span><span class="num">Price</span><span class="num" title="move since the bots last marked it (they mark every ~30 s)">vs mark</span><span class="num">24h</span><span class="num" title="open P&amp;L of every book holding it, at the live price">Open P&amp;L</span></div><div id="lp"></div>
-    <div class="faint" style="font-size:10.5px;margin-top:6px">Binance public stream, tick by tick. Display only: the bots still mark every ~30 s and decide at bar closes.</div></div></div>
+    <div class="faint" style="font-size:10.5px;margin-top:6px">Binance public stream, tick by tick. Display only: the bots still mark every ~30 s and decide at bar closes. COMP rows are the competition account: vs fill price and its open P&amp;L.</div></div></div>
    <div class="card"><div class="hd"><h3>What the dynamic bot sees</h3><span class="faint" style="margin-left:auto;font-size:11px">live · hourly</span></div><div class="list" id="wf" style="max-height:230px;overflow:auto"></div></div>
    <div class="card"><div class="hd"><h3>Fleet exposure</h3><span class="faint" style="margin-left:auto;font-size:11px">USD · books · open P&amp;L</span></div><div class="list" id="exposure"></div></div>
    <div class="card"><div class="hd"><h3>Activity</h3><span class="faint" style="margin-left:auto;font-size:11px">your local time</span></div><div class="list scroll" id="activity"></div></div>
@@ -397,9 +397,13 @@ function band(){
  $('band').innerHTML=`<div class="bandh"><b>Live on Roostoo</b><span>AWS EC2 Sydney · ${esc((E.host||'').split(' ')[0])} · commit ${esc(E.commit||'-')} · ${pulled}</span></div>`+E.books.filter(b=>!b.paper).map(card).join('')+(E.books.some(b=>b.paper)?`<div class="bandh" style="margin-top:2px"><b>Paper on EC2</b><span>always-on twins for the 10-03 comparison</span></div>`+E.books.filter(b=>b.paper).map(card).join(''):'');
 }
 const LP={ws:null,syms:'',last:{},open24:{},ticks:0,at:0,hosts:['wss://data-stream.binance.vision/stream','wss://stream.binance.com:9443/stream'],h:0,retry:0};
+function lpComp(){
+ const b=D&&D.ec2&&(D.ec2.books||[]).find(x=>/^competition/.test(x.bot)&&x.bot!=='competition_rehearsal'&&x.active==='active');
+ return b?Object.entries(b.entries||{}).map(([c,e])=>({symbol:c,qty:+e.qty,entry:+e.entry})):[];
+}
 function lpWanted(){
- const held=(D&&D.exposure||[]).map(e=>e.symbol);
- return [...new Set([...held,'BTC','ETH'])];
+ const comp=lpComp().map(e=>e.symbol), held=(D&&D.exposure||[]).map(e=>e.symbol);
+ return [...new Set([...comp,...held,'BTC','ETH'])];
 }
 function lpConnect(){
  const syms=lpWanted(), key=syms.join(',');
@@ -418,7 +422,8 @@ function lpConnect(){
 }
 function lpRow(c,prev){
  const el=document.getElementById('lp-'+c); if(!el){lpRender();return;}
- const e=(D.exposure||[]).find(x=>x.symbol===c)||{}, p=LP.last[c], o=LP.open24[c];
+ const k=lpComp().find(x=>x.symbol===c);
+ const e=k?{mark:k.entry,qty:k.qty,basis:k.qty*k.entry}:(D.exposure||[]).find(x=>x.symbol===c)||{}, p=LP.last[c], o=LP.open24[c];
  const pe=el.querySelector('.p'); pe.textContent=px(p);
  if(prev!=null&&p!==prev){pe.classList.remove('fu','fd');void pe.offsetWidth;pe.classList.add(p>prev?'fu':'fd');}
  const vm=e.mark?(p/e.mark-1)*100:null, d24=o?(p/o-1)*100:null;
@@ -429,7 +434,8 @@ function lpRow(c,prev){
 }
 function lpRender(){
  const syms=lpWanted();
- $('lp').innerHTML=syms.map(c=>`<div class="lp" id="lp-${esc(c)}"><b>${esc(c)}</b><span class="num p">${px(LP.last[c])}</span><span class="num vm">-</span><span class="num d24">-</span><span class="num pl">-</span></div>`).join('');
+ const comp=new Set(lpComp().map(e=>e.symbol));
+ $('lp').innerHTML=syms.map(c=>`<div class="lp" id="lp-${esc(c)}"><b>${esc(c)}${comp.has(c)?' <span class="st ok" style="font-size:9px;padding:1px 4px" title="held on the competition account; vs mark = vs fill price, P&L = competition P&L">COMP</span>':''}</b><span class="num p">${px(LP.last[c])}</span><span class="num vm">-</span><span class="num d24">-</span><span class="num pl">-</span></div>`).join('');
  syms.forEach(c=>{if(LP.last[c]!=null) lpRow(c,null);});
 }
 setInterval(()=>{const a=LP.at?(Date.now()-LP.at)/1000:null;
