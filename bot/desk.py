@@ -255,7 +255,7 @@ def competition_view(ec2: dict | None, radar: dict) -> dict | None:
         tgt_px = sig_px * (1 + tgt)
         exit_at = at + dt.timedelta(minutes=BAR_MIN * (hold + 1))
         ref = (bk.get("skim_refs") or {}).get(sym)
-        row = {"symbol": s, "weight_now": (bk.get("positions") or {}).get(s), "slot_weight": wt,
+        row = {"symbol": s, "qty": qty, "weight_now": (bk.get("positions") or {}).get(s), "slot_weight": wt,
                "entry_bar": at.isoformat(), "signal_px": sig_px, "fill_px": fill, "target_pct": round(tgt * 100, 2),
                "target_px": tgt_px, "exit_at": exit_at.isoformat(),
                "hours_left": round((exit_at - now).total_seconds() / 3600, 2),

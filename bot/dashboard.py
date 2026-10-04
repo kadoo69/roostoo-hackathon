@@ -308,6 +308,10 @@ class Handler(BaseHTTPRequestHandler):
             snap = snapshot()
             self._json(analysis_payload(snap["bots"], CONTROL_OF))
             return
+        if self.path.startswith("/api/quotes"):
+            from bot.live_quotes import payload as quotes_payload
+            self._json(quotes_payload())
+            return
         if self.path.startswith("/api/heatmap"):
             from bot.heatmap import payload as heatmap_payload
             self._json(heatmap_payload())
@@ -351,6 +355,8 @@ def main() -> int:
         threading.Thread(target=ec2_loop, daemon=True).start()
         from bot import trigger_watch
         threading.Thread(target=trigger_watch.refresh_loop, args=(radar_context,), daemon=True).start()
+        from bot import live_quotes
+        threading.Thread(target=live_quotes.refresh_loop, daemon=True).start()
     srv = ThreadingHTTPServer((a.host, a.port), Handler)
     print(f"dashboard: http://{a.host}:{a.port}")
     srv.serve_forever()

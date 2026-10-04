@@ -156,7 +156,7 @@ footer{color:var(--faint);font-size:11px;margin-top:16px;display:flex;gap:16px;f
 <script>
 const $ = id => document.getElementById(id);
 const IST = {timeZone:"Asia/Kolkata"};
-let D = null, radarKey = "z_forming";
+let D = null, Q = null, radarKey = "z_forming";
 
 const fmt = (v, d=2) => v==null||isNaN(v) ? "–" : Number(v).toLocaleString("en-IN",{minimumFractionDigits:d,maximumFractionDigits:d});
 const pct = (v, d=2, sign=true) => v==null||isNaN(v) ? "–" : (sign && v>0 ? "+" : "") + Number(v).toFixed(d) + "%";
@@ -186,6 +186,7 @@ function render() {
   }
   pills.push(`<span class="pill ${ec2.error?"bad":(ec2.fetched_age_s??1e9)<400?"ok":"warn"}">EC2 feed <b>${ec2.error?"error":ago(ec2.fetched_age_s)}</b></span>`);
   pills.push(`<span class="pill ${r.error?"bad":(r.age_s??1e9)<180?"ok":"warn"}">radar <b>${r.error?"error":ago(r.age_s)}</b></span>`);
+  pills.push(`<span class="pill ${!Q||Q.error?"bad":(Q.age_s??1e9)<10?"ok":"warn"}">venue quotes <b>${!Q?"–":Q.error?"error":ago(Q.age_s)}</b> <span class="faint">every ${Q?.refresh_s??3}s</span></span>`);
   pills.push(`<span class="pill">commit <b>${esc(ec2.commit||"–")}</b></span>`);
   $("pills").innerHTML = pills.join("");
   // banners
@@ -205,7 +206,7 @@ function render() {
   const lb = c.leaderboard, me = lb ? lb.rows.find(x => x.team===lb.team) : null;
   const clk = c.clock;
   $("kpis").innerHTML = [
-    kpi("Equity", fmt(c.equity,0), `<span class="${cls(c.net)}">${c.net>0?"+":""}${fmt(c.net,0)}</span> since the open`),
+    kpi("Equity", fmt(c.equity,0), `<span class="${cls(c.net)}">${c.net>0?"+":""}${fmt(c.net,0)}</span> since the open${c.live_equity?' · <span class="up">live</span>':""}`, "", "Live: the bot's cash plus each holding at the venue's last price, every few seconds. The bot values the book the same way."),
     kpi("Return", `<span class="${cls(c.ret_pct)}">${pct(c.ret_pct)}</span>`, `peak ${fmt(c.peak,0)}`, "", "Since 100,000 at the open, 2026-10-04 17:30 IST."),
     kpi("From peak", `<span class="${c.dd_pct<-0.05?"down":""}">${pct(c.dd_pct)}</span>`, `the monitor alerts beyond -5%`),
     kpi("vs BTC", `<span class="${cls(exBtc)}">${pct(exBtc)}</span>`, `BTC ${pct(b.btc_open)} since the open`, "", "Our return minus BTC's since the open."),
@@ -299,7 +300,7 @@ function drawPositions(c, r) {
       <div class="meta num">
         <span>signal close</span><b>${px(p.signal_px)}</b>
         <span>avg fill</span><b>${px(p.fill_px)}${p.fill_px&&p.signal_px&&Math.abs(p.fill_px/p.signal_px-1)>0.003?` <span class="warn">(${pct((p.fill_px/p.signal_px-1)*100,1)})</span>`:""}</b>
-        <span>mark</span><b>${px(p.mark)}</b>
+        <span>mark (live)</span><b>${px(p.mark)}${p.bid?` <span class="faint">${px(p.bid)} / ${px(p.ask)}</span>`:""}</b>
         <span>take-profit</span><b>${px(p.target_px)} <span class="muted">(+${fmt(p.target_pct,1)}%, ${pct(p.to_target_pct,1)} away)</span></b>
         <span>next skim</span><b>${px(p.next_skim_px)} <span class="muted">(${pct(p.to_skim_pct,1)})</span></b>
         <span>24 h exit</span><b>${ist(p.exit_at)} IST <span class="muted">(in ${hrs(p.hours_left)})</span></b>
@@ -428,11 +429,38 @@ document.querySelectorAll("#radartabs button").forEach(b => b.onclick = () => {
   radarKey = b.dataset.k; document.querySelectorAll("#radartabs button").forEach(x=>x.classList.toggle("on", x===b)); if (D) drawRadar(D.competition, D.radar||{});
 });
 
+function applyQuotes() {
+  const c = D && D.competition;
+  if (!c || !Q || !Q.quotes) return;
+  let held = 0, all = c.positions.length > 0;
+  c.positions.forEach(p => {
+    const q = Q.quotes[p.symbol];
+    if (!q || !q.last) { all = false; return; }
+    p.mark = q.last; p.bid = q.bid; p.ask = q.ask;
+    p.pnl_pct = (p.mark / p.fill_px - 1) * 100;
+    if (p.qty) { p.pnl_usd = p.qty * (p.mark - p.fill_px); held += p.qty * p.mark; } else all = false;
+    p.progress = p.target_px > p.signal_px ? (p.mark - p.signal_px) / (p.target_px - p.signal_px) : null;
+    p.to_target_pct = (p.target_px / p.mark - 1) * 100;
+    if (p.next_skim_px) p.to_skim_pct = (p.next_skim_px / p.mark - 1) * 100;
+  });
+  if (all && c.cash != null) {
+    c.equity = c.cash + held; c.live_equity = true; c.net = c.equity - c.start;
+    c.ret_pct = (c.equity / c.start - 1) * 100; c.dd_pct = (c.equity / Math.max(c.peak || c.equity, c.equity) - 1) * 100;
+  }
+  (D.radar?.rows || []).forEach(r => { const q = Q.quotes[r.symbol]; if (q && q.last) r.price = q.last; });
+}
+
+async function loadQuotes() {
+  try { const r = await fetch("/api/quotes", {cache:"no-store"}); Q = await r.json(); if (D) { applyQuotes(); render(); } }
+  catch (e) { Q = {error: String(e)}; }
+}
+
 async function load() {
-  try { const r = await fetch("/api/desk", {cache:"no-store"}); D = await r.json(); render(); }
+  try { const r = await fetch("/api/desk", {cache:"no-store"}); D = await r.json(); applyQuotes(); render(); }
   catch (e) { $("banners").innerHTML = `<div class="banner">Desk API unreachable: ${esc(e)}</div>`; }
 }
 load(); setInterval(load, 30000);
+loadQuotes(); setInterval(loadQuotes, 3000);
 window.addEventListener("resize", () => D && D.competition && drawEquity(D.competition));
 </script>
 </body>
