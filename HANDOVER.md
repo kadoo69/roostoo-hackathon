@@ -4,6 +4,11 @@ Current state only. The full history of sessions to 2026-09-23 is archived at `d
 
 ## CURRENT STATE 2026-10-04 23:00 IST / 17:30Z (read this first; everything below is history)
 
+### Pending reads
+- 2026-10-05 10:00 IST: forward checkpoint of the live 2-slot ride (trades since 23:00 IST only).
+- On or after 2026-10-07 19:40Z (01:10 IST 10-08): `python3 -m archive.gates.repeat_trigger_forward`, decide by `#repeat-trigger-forward-declaration` (paper book only if it passes).
+- EC2 monitor: `live/monitor/status-<day>.jsonl` on the instance (`#ec2-monitor-2026-10-05`); exit-variant research on the ride is exhausted (10 nulls on 10-04).
+
 ### 23:00 IST: competition_z25 now runs 2 slots of 1/2 (`#competition-two-slots-2026-10-04`, commit `51f5446`)
 - Evidence `#ride-hold-slots-outcome`: N2 beat N3 in every window (+20.3 / +47.7 / +4.1% against +18.4 / +24.3 / +3.7%), drawdown no worse; leader-hold failed.
 - Transition: LTC, PUMP, UNI (opened under n=3) keep 1/3 and their exits; slots are counted by weight, so new 1/2 entries open as they exit. No forced sale.
