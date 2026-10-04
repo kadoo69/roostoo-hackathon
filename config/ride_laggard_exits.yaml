@@ -1,0 +1,24 @@
+meta:
+  name: ride_laggard_exits
+  frozen: true
+  declared_utc: '2026-10-04T14:55:00Z'
+  requested_by: 'operator 2026-10-04 20:20 IST: keep the positions and profit booking realistic, we do not want lagging positions held too long'
+  declared_ref: DECISIONS.md#ride-laggard-exits-declaration
+  written_before_any_number: true
+prior: 'a -1.5 x dvol price stop lost in W1 and W2 (#ride-vol-exits-outcome, V3S); shorter holds were only tested together with nearer targets (#ride-agile-outcome, B25/C25, both worse)'
+mechanism: 'a burst that has not followed through within hours is unlikely to reach its target in the rest of the 24 h; freeing its slot lets the next trigger in'
+failure_mode: 'slow starters that recover late are cut, and every early exit pays a round-trip fee and hands the slot to a fresh trigger that is no better on average'
+base: 'L24 = live competition_z25 with the V2 exits: entry z >= 2.5, 3 slots, 12-bar cooldown, target 2 x the coin''s dvol at entry, 288-bar (24 h) hold; maker fees and ticks; 27-coin pool'
+arms:
+  L12: 'hold 144 bars (12 h), otherwise L24'
+  L6: 'hold 72 bars (6 h), otherwise L24'
+  TS6: 'time stop: at 72 bars (6 h) exit if the close is at or below the entry price, otherwise keep to 288 bars'
+windows:
+  W1: '2026-09-05 to 2026-09-19'
+  W2: '2026-09-19 to now'
+  last_3d: 'the last 3 days'
+decision_rule: >
+  The best arm (highest worst-window total return, ties to the shallower worst drawdown) is RECOMMENDED only if it
+  beats L24 in the last 3 days and in at least one of W1 / W2, and its worst-window return is not below L24's.
+  Otherwise L24 stays. Changing the live book stays an operator decision.
+trials: 3
