@@ -1,0 +1,29 @@
+meta:
+  name: ride_entry_regime
+  frozen: true
+  declared_utc: '2026-10-04T19:05:00Z'
+  requested_by: 'operator 2026-10-05 00:35 IST: run both tests (pullback entry, trend-regime rotation)'
+  declared_ref: DECISIONS.md#ride-entry-regime-declaration
+  written_before_any_number: true
+objective: 'total return (portfolio value), drawdown reported'
+harness: 'explicit bar-level book: each entry is 1/n of equity at its fill, fills and exits at the stated prices, 0.05% maker fee per side, marked at every 5m close; no booking ladder in any arm'
+base: 'B2 = live competition_z25 after 23:00 IST: entry at the close of a bar with z >= 2.5 (3-bar return over the coin''s 288-bar std of 3-bar returns), 2 slots at 1/2, 12-bar cooldown, exit when a high reaches entry x (1 + 2 x dvol) at that price, else at the close 288 bars after entry; 27-coin pool'
+test_A_pullback_entry:
+  mechanism: 'bursts in this pool mean-revert within minutes (#micro-scan-2026-10-01); a resting limit below the burst close buys the usual pullback cheaper, and a burst that never pulls back is often one that keeps going'
+  failure_mode: 'the strongest bursts never pull back, so the limit misses exactly the winners and fills the faders'
+  PB05: 'on a trigger, rest a buy at close x (1 - 0.5 x s), s = the coin''s 3-bar std at the trigger; filled at that price if a bar low within the next 6 bars reaches it, else cancelled; the slot is reserved while it rests; hold and target count from the fill'
+  PB10: 'as PB05 with 1.0 x s'
+test_B_regime_rotation:
+  mechanism: 'swapping the weakest holding for a fresh trigger won both trend windows and lost the chop (#ride-rotation-outcome); a trend filter known before each bar should keep the swap only where it pays'
+  failure_mode: 'the regime label lags turns and swaps in the first days of chop'
+  trend: 'ON at a bar when at least 60% of the pool closed above its close 864 bars (3 days) earlier AND the equal-weight pool 3-day return is above +3%; known at that close'
+  RG: 'B2, and when trend is ON and both slots are held and a coin triggers, sell the holding with the lowest return since entry if it is below its entry and at least 12 bars old, and buy the trigger at that close; at most one swap a bar'
+windows:
+  W1: '2026-09-05 to 2026-09-19'
+  W2: '2026-09-19 to now'
+  last_3d: 'the last 3 days'
+decision_rule: >
+  Each test separately: its best arm (highest worst-window total return, ties to the shallower worst drawdown) is
+  RECOMMENDED only if it beats B2 on total return in the last 3 days and in at least one of W1 / W2, and its
+  worst-window return is not below B2's. Otherwise B2 stays. Changing the live book stays an operator decision.
+trials: 3
