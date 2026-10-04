@@ -193,3 +193,19 @@ def test_lowering_n_keeps_open_positions_at_their_size_and_opens_new_slots_as_we
     held3, _, target3 = burst_rider.live_step(close, high, {**cfg, "thresh_pct": -100.0}, one, {})
     new = [s for s in target3 if s != "C0"]
     assert len(new) == 1 and target3[new[0]] == 0.5 and target3["C0"] == 1 / 3 and sum(target3.values()) <= 1.0
+
+
+def test_repeat_swap_sells_the_weakest_losing_holding_for_a_coin_that_triggers_again():
+    idx = pd.date_range("2026-10-04", periods=120, freq="5min", tz="UTC")
+    close = pd.DataFrame(100.0, index=idx, columns=["A", "B", "C"])
+    close.loc[idx[60]:, "C"] = 103.0
+    close.loc[idx[-1], "C"] = 106.5
+    high = close.copy()
+    cfg = {**CFG, "thresh_pct": 2.0, "n": 2, "hold_bars": 288, "repeat_swap": {"window_bars": 72, "min_gap_bars": 12, "min_age_bars": 12}}
+    held = {"A": [str(idx[10]), 101.0, 0.05, 0.5], "B": [str(idx[10]), 99.0, 0.05, 0.5]}
+    out, last, target = burst_rider.live_step(close, high, cfg, held, {})
+    assert set(out) == {"B", "C"} and out["C"][3] == 0.5 and target == {"B": 0.5, "C": 0.5}
+    no_swap = {k: v for k, v in cfg.items() if k != "repeat_swap"}
+    assert set(burst_rider.live_step(close, high, no_swap, held, {})[0]) == {"A", "B"}
+    winners = {"A": [str(idx[10]), 99.0, 0.05, 0.5], "B": [str(idx[10]), 99.0, 0.05, 0.5]}
+    assert set(burst_rider.live_step(close, high, cfg, winners, {})[0]) == {"A", "B"}

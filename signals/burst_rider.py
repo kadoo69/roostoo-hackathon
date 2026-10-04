@@ -108,6 +108,10 @@ def live_step(close: pd.DataFrame, high: pd.DataFrame, cfg: dict, held: dict[str
             keep[s] = [str(at), px, tp, wt]
     new_last = dict(last)
     free = int((1.0 - sum(v[3] for v in keep.values()) + 1e-9) * n)
+    swap = cfg.get("repeat_swap") or {}
+    if free <= 0 and swap and keep and len(close) > 3:
+        keep, new_last = repeat_swap(close, cfg, keep, new_last, swap)
+        free = 0
     if free > 0 and len(close) > 3:
         r3, lvl = r3f.iloc[-1], trigger_level(r3f, cfg).iloc[-1]
         cand = []
@@ -123,6 +127,39 @@ def live_step(close: pd.DataFrame, high: pd.DataFrame, cfg: dict, held: dict[str
     floor = t - step * (cool + hold)
     new_last = {s: at for s, at in new_last.items() if s in keep or pd.Timestamp(at) > floor}
     return keep, new_last, {s: v[3] for s, v in keep.items()}
+
+
+def repeat_swap(close: pd.DataFrame, cfg: dict, keep: dict[str, list], last: dict[str, str],
+                swap: dict) -> tuple[dict[str, list], dict[str, str]]:
+    """With every slot held, sell the weakest holding below its entry (at least `min_age_bars` old) to buy a repeat
+    trigger: a coin triggering now that also triggered between `min_gap_bars` and `window_bars` bars ago. The new
+    entry takes the sold position's weight. Paper only: DECISIONS.md#ride-swap-paper-2026-10-05"""
+    t = close.index[-1]
+    step = close.index[-1] - close.index[-2]
+    win, gap, age_min = int(swap.get("window_bars", 72)), int(swap.get("min_gap_bars", 12)), int(swap.get("min_age_bars", 12))
+    cool = int(cfg.get("cooldown_bars", 12))
+    r3f = close / close.shift(3) - 1.0
+    lvl = trigger_level(r3f, cfg)
+    hit = (r3f >= lvl)
+    now = hit.iloc[-1]
+    past = hit.iloc[-1 - win:-gap].any() if len(hit) > win else hit.iloc[:-gap].any()
+    cand = [(float(r3f[s].iloc[-1]), s) for s in close.columns if now.get(s, False) and past.get(s, False) and s not in keep
+            and not (s in last and round((t - pd.Timestamp(last[s])) / step) < cool)]
+    if not cand:
+        return keep, last
+    rets = {s: float(close[s].iloc[-1]) / v[1] - 1 for s, v in keep.items()
+            if s in close and round((t - pd.Timestamp(v[0])) / step) >= age_min}
+    if not rets:
+        return keep, last
+    weak = min(rets, key=rets.get)
+    if rets[weak] >= 0:
+        return keep, last
+    wt = keep[weak][3]
+    _, s = max(cand)
+    sd = entry_sd(r3f, cfg)
+    out = {k: v for k, v in keep.items() if k != weak}
+    out[s] = [str(t), float(close[s].iloc[-1]), target_pct(cfg, float(sd[s].iloc[-1])), wt]
+    return out, {**last, s: str(t)}
 
 
 def probe_entry(close: pd.DataFrame, cfg: dict, held: dict[str, list], last: dict[str, str],

@@ -119,3 +119,13 @@ def test_competition_z25_is_competition_z3_at_two_and_a_half_sigma():
     assert {k: v for k, v in a25.items() if k not in ("sigma_k", "tp_vol_k", "n")} == {k: v for k, v in a3.items() if k not in ("sigma_k", "n")}
     s = load("config/competition_z25.yaml")
     assert s.keyset == "comp" and s.exit_escalation and bot_class(z25).__name__ == "AdaptiveScalperBot"
+
+
+def test_swap_paper_pair_is_the_live_rule_with_and_without_the_repeat_swap():
+    live, ctl, swp = _cfg("competition_z25"), _cfg("ride_z25_5m"), _cfg("ride_z25_swap_5m")
+    a_live, a_ctl, a_swp = (next(iter(c["adaptive"]["burst_arms"].values())) for c in (live, ctl, swp))
+    assert a_ctl == a_live and {k: v for k, v in a_swp.items() if k != "repeat_swap"} == a_live
+    assert a_swp["repeat_swap"] == {"window_bars": 72, "min_gap_bars": 12, "min_age_bars": 12}
+    for name in ("ride_z25_5m", "ride_z25_swap_5m"):
+        s = load(f"config/{name}.yaml")
+        assert s.keyset is None and s.dry_run and "probe_entry" not in _cfg(name)["adaptive"]
