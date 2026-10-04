@@ -2,7 +2,36 @@
 
 Current state only. The full history of sessions to 2026-09-23 is archived at `docs/archive/HANDOVER_2026-09-23.md`; older section references in code and configs point there.
 
-## CURRENT STATE 2026-10-04 23:00 IST / 17:30Z (read this first; everything below is history)
+## CURRENT STATE 2026-10-05 01:20 IST / 2026-10-04 19:50Z (read this first; everything below is history)
+
+### The competition account
+- Unit `roostoo-live@competition_z25` on EC2 `i-015fad70d34b0b83d`, code `f96c829`, config `config/competition_z25.yaml`.
+- Rule: per-coin 15-minute burst ride. Buy when a coin's 3-bar 5m return reaches 2.5 x its own 24 h std (z >= 2.5); take profit at 2 x the coin's one-day volatility fixed at entry, else exit after 24 h; 3%/15% booking ladder; 2 slots of 1/2 since 23:00 IST (`#competition-two-slots-2026-10-04`).
+- Holding LTC, PUMP, UNI at 1/3 each (opened under n=3, kept by the weight-aware transition); 2 x 1/2 entries begin once two of them exit. Latest exits: LTC and UNI by about 20:00 IST 10-05, PUMP by about 21:10 IST (its target is +16.7%).
+- Equity 100,699 (+0.70%) at 01:18 IST; peak 102,527 at 22:22 IST; drawdown almost all PUMP (-4.3% since the peak, the pool flat). Realized: SUI +5.1% (+1.7k), skims +203. Leaderboard about 3rd at the last look (gap about 1-2.5 pp, day 1 of 14).
+- No faults. No manual order has ever been sent on the COMP keys (FAQ Q28). Every live change today is a commit with a DECISIONS anchor and a README change-table row.
+
+### Running right now
+- EC2: `competition_z25` (live), `competition_rehearsal` (TEST keys), paper `wf_live`, `ride_5m`, `ride_z3_5m`, `sleeves_z3_5m`, `split_tilt_5m`, `regime_ls_30m`, and the new A/B pair `ride_z25_5m` / `ride_z25_swap_5m` (both started flat 01:15 IST, `#ride-swap-paper-2026-10-05`).
+- EC2 monitor: `roostoo-monitor.timer` every 5 min writes `live/monitor/status-<day>.jsonl` and `latest.json` (read-only, alerts for stale cycle, halt/freeze, drawdown > 5%, no unit) (`#ec2-monitor-2026-10-05`). `deploy/ec2_status.sh` prints it.
+- Mac: desk on 8787 (pulls EC2 via a child process since `e35623e`; 8789 never shows EC2 by design), half-hourly monitor, 7 paper books. The Mac `aws` CLI is broken (Homebrew Python 3.14); use `bot.ec2_session.run_script` and renew SSO with `python3 deploy/aws_login.py`.
+
+### Next actions (in order)
+1. 10:00 IST 10-05: progress read of the A/B (`ride_z25_5m` vs `ride_z25_swap_5m`: equity, whether the swap fired and on what) and a forward checkpoint of the live 2-slot rule on trades since 23:00 IST only. No decision from it.
+2. On or after 01:10 IST 10-08: `python3 -m archive.gates.repeat_trigger_forward`; decide by `#repeat-trigger-forward-declaration` together with the A/B equity. Only a pass makes the swap a candidate for the competition book, and only on the operator's decision.
+3. Daily: `python3 deploy/export_logs.py`, commit `logs/` (covers every unit that traded the COMP account). At the end: `git tag submission-final`.
+
+### Research state (do not re-test without new evidence)
+- 10-04 nulls on the ride: sizing by z, the 64-coin universe, nearer targets, shorter holds, gain locks, rotation, leader hold, pullback entry, trend-gated rotation. Passed: 2.5 sigma trigger (by rule), V2 volatility targets (operator call after seeing three arms), 2 slots (`#ride-hold-slots-outcome`).
+- Trigger strength over 30 days: z 2.5-4 rides about +1.3% with 56% wins; z >= 5 (exhaustion) about 0% with 38%. Fresh triggers and 6.5 h-old flat holdings are worth about the same (+0.99% vs +0.88%), less than a swap's cost, which is why swaps lose on average.
+- The rule earns in trends (+22% / +46% in the trend windows) and gives back a little in chop (-0.5% over the last 3 days). Today's money went to FET (+9.7% since the open, three triggers we missed while switching or full) and ADA.
+
+### Lessons from day one (also in CLAUDE.md)
+- Execution bugs cost more than strategy: the cash-capped entry that could never complete (`#underfilled-entry-2026-10-04`) cost about the gap to first place.
+- Every unit switch costs the first bar's trigger; switching in the first two hours missed FET at 18:20 and SOL at 19:00.
+- The one-shot probe entry was borderline under Q28; never repeat it.
+
+## Day-one detail 2026-10-04 17:30-23:00 IST (history)
 
 ### Pending reads
 - 2026-10-05 10:00 IST: forward checkpoint of the live 2-slot ride (trades since 23:00 IST only).
