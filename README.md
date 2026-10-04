@@ -105,6 +105,9 @@ It changed during the competition as the rules allow (FAQ Q28); every change is 
 | 19:06 | `competition_z25` (2.5-sigma trigger) | `#ride-agile-outcome`, `#competition-z25-2026-10-04` |
 | 19:17 | one entry on the highest z >= 2.0 to confirm the account trades (bot logic, spent at 19:30) | `#competition-probe-2026-10-04` |
 | 20:00 | take-profit at 2 x each coin's daily volatility | `#ride-vol-exits-outcome`, `#competition-vol-exits-2026-10-04` |
+| 21:42 | complete an entry that venue cash cut short (execution fix) | `#underfilled-entry-2026-10-04` |
+| 23:15 | 2 slots of 1/2 instead of 3 of 1/3 | `#ride-hold-slots-outcome`, `#competition-two-slots-2026-10-04` |
+| 10-05 02:05 | complete a cut-short entry only within 1% of its order price (execution guard) | `#underfill-chase-cap-2026-10-05` |
 Rejected the same day after declared tests: sizing by signal strength, a 64-coin universe, nearer take-profits, shorter holds (`#ride-scaled-entry-outcome`, `#ride-z3-wide-outcome`, `#ride-agile-outcome`, `#ride-laggard-exits-outcome`).
 
 ## 4. Setup and how to run

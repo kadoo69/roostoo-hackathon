@@ -112,8 +112,12 @@ def test_competition_z3_is_ride_z3_5m_on_the_comp_keys():
 
 def test_competition_z25_is_competition_z3_at_two_and_a_half_sigma():
     z25, z3 = _cfg("competition_z25"), _cfg("competition_z3")
-    for sec in ("contenders", "strategy", "execution", "risk", "booking", "short", "target_lock"):
+    for sec in ("contenders", "strategy", "execution", "risk", "short", "target_lock"):
         assert z25[sec] == z3[sec], sec
+    # The only booking difference is the completion cap, DECISIONS.md#underfill-chase-cap-2026-10-05.
+    chase = ("underfill_max_chase", "underfill_max_chase_ref")
+    assert {k: v for k, v in z25["booking"].items() if k not in chase} == z3["booking"]
+    assert z25["booking"]["underfill_max_chase"] == 0.01
     a25, a3 = next(iter(z25["adaptive"]["burst_arms"].values())), next(iter(z3["adaptive"]["burst_arms"].values()))
     assert a25["sigma_k"] == 2.5 and a25["tp_vol_k"] == 2.0 and a25["n"] == 2
     assert {k: v for k, v in a25.items() if k not in ("sigma_k", "tp_vol_k", "n")} == {k: v for k, v in a3.items() if k not in ("sigma_k", "n")}
