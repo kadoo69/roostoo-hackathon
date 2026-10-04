@@ -2,9 +2,13 @@
 
 Current state only. The full history of sessions to 2026-09-23 is archived at `docs/archive/HANDOVER_2026-09-23.md`; older section references in code and configs point there.
 
-## CURRENT STATE 2026-10-04 18:13 IST / 12:43Z (read this first; everything below is history)
+## CURRENT STATE 2026-10-04 18:31 IST / 13:01Z (read this first; everything below is history)
 
-### Switch at 18:11 IST: the competition account now runs `competition_ride` (`#competition-ride-2026-10-04`)
+### Switch at 18:30 IST: the competition account now runs `competition_z3` (`#competition-z3-2026-10-04`)
+- Operator 18:27 IST: run ride z3 (per-coin 3-sigma trigger) while the market is choppy, switch back to `competition_ride` when it swings. Commit `b037499`; `roostoo-live@competition_z3` active, every other competition unit inactive and disabled. Swapped while flat (100,000 cash, 0 orders). First cycle 13:00Z clean, target empty, all 3 slots free.
+- Switch back = the procedure below with `competition_ride` (config, tests and registries already exist; set `BOOKS` and the `tests/test_runner.py` assertion to it). Swap only while flat or accept that the new unit ignores the old unit's positions.
+
+### Earlier switch at 18:11 IST: `competition_ride` (`#competition-ride-2026-10-04`)
 - Operator 18:10 IST: "go ahead with ride 5m logic and get in the trade, we will switch dynamically". `config/competition_ride.yaml` = `ride_5m` on the COMP keys with competition_wf's execution/risk blocks. Commit `702f635`, EC2 checked out at it; `roostoo-live@competition_ride` active, `competition_wf` and `competition_split` inactive and disabled (one unit per account). competition_wf was flat (100,000 cash, 0 orders) when stopped.
 - First cycle 12:41Z: no faults, 100,000 cash, ride target empty: no coin has a live +2%/15m trigger, and its replay holds nothing, so all 3 slots are free (no ghost slots). It buys on the next fresh trigger. NEAR/PUMP (held by paper `ride_5m`) triggered before the start and are not bought (stale-entry guard unchanged).
 - Dynamic switching = same procedure in reverse: `systemctl disable --now roostoo-live@competition_ride`, `systemctl enable --now roostoo-live@<book>`, update `BOOKS` in `deploy/ec2_bootstrap.sh` and the test in `tests/test_runner.py`, commit and push. Switch while flat where possible: a new unit does not inherit the old one's positions. For the split, archive `live/competition_split/sleeves.json` first.
