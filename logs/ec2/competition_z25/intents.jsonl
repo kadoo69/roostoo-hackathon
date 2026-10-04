@@ -1,0 +1,6 @@
+{"event": "intent", "intent_id": "5305ac2d27b4414e893da5", "utc": "2026-10-04T14:00:35.313711+00:00", "pair": "SUI/USD", "side": "BUY", "quantity": 27992.3, "price": 1.1907, "type": "LIMIT", "symbol": "SUIUSDT"}
+{"event": "resolved", "intent_id": "5305ac2d27b4414e893da5", "outcome": "placed", "utc": "2026-10-04T14:00:35.869806+00:00", "detail": {"order_id": 3421782, "status": "PENDING"}}
+{"event": "intent", "intent_id": "e4eb96983b4e48de8eba0b", "utc": "2026-10-04T14:35:05.466921+00:00", "pair": "UNI/USD", "side": "BUY", "quantity": 3695.39, "price": 9.045, "type": "LIMIT", "symbol": "UNIUSDT"}
+{"event": "resolved", "intent_id": "e4eb96983b4e48de8eba0b", "outcome": "placed", "utc": "2026-10-04T14:35:05.668173+00:00", "detail": {"order_id": 3421842, "status": "PENDING"}}
+{"event": "intent", "intent_id": "72e2fb18137a4c2aa456d3", "utc": "2026-10-04T14:40:06.562388+00:00", "pair": "LTC/USD", "side": "BUY", "quantity": 465.603, "price": 71.33, "type": "LIMIT", "symbol": "LTCUSDT"}
+{"event": "resolved", "intent_id": "72e2fb18137a4c2aa456d3", "outcome": "placed", "utc": "2026-10-04T14:40:07.172049+00:00", "detail": {"order_id": 3421859, "status": "PENDING"}}

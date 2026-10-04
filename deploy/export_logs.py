@@ -19,7 +19,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 from bot.ec2_session import run_script  # noqa: E402
 
-BOOKS = ("competition", "competition_rehearsal")
+BOOKS = ("competition", "competition_split", "competition_wf", "competition_ride", "competition_z3", "competition_z25", "competition_rehearsal")
 KEEP = ("orders-", "signals-", "reconcile-", "errors-", "lifecycle-", "waiting-", "intents", "trades_")
 REMOTE = f"""
 cd /opt/roostoo-hackathon
