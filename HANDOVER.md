@@ -2,7 +2,15 @@
 
 Current state only. The full history of sessions to 2026-09-23 is archived at `docs/archive/HANDOVER_2026-09-23.md`; older section references in code and configs point there.
 
-## CURRENT STATE 2026-10-04 11:40Z (read this first; everything below is history)
+## CURRENT STATE 2026-10-04 17:55 IST / 12:25Z (read this first; everything below is history)
+
+### First hour of the competition (opened 17:30 IST / 12:00Z)
+- `competition_wf` is live on the COMP account, cycling every 30 s, wallet 100,000, no errors, no freeze, **no orders yet**.
+- Cause, not a fault: its style `15m|htf0|vol1.5` (picked 17:00 IST) holds LTC 46% / SOL 34% / XRP 20% in its replay path, entered before the open, so `stale_entry_blocked` refuses them every bar (`#stale-rebuy-2026-10-01`), and the sticky top-3 slots stay full until one exits its channel (close under its 10-bar low): the cold-start ghost-slot issue (open decision 5 of the 10-01 state below).
+- Unstuck by any of: a channel exit in LTC/SOL/XRP; the hourly re-pick (next about 18:00 IST) moving to another style (a new style starts clean; the ride style trades from real positions at once); or the operator switching to the split fallback. Changing the guard or slot logic is real-money code and needs a declared change and operator approval.
+- Decision point: if still flat around 19:30 IST, the operator decides on the split fallback (procedure below).
+- Paper at 17:52 IST: wf_live +5.74%, ride_z3_5m +4.48%, regime_ls_30m +4.01%, ride_5m +2.33%, sleeves_z3_5m +1.51%, split_tilt_5m -0.62%, rehearsal -0.67% (since 10-03 19:52 IST).
+- The operator wants every time in IST.
 
 ### Competition
 - **Trading opens 2026-10-04 12:00Z (20:00 HKT / 17:30 IST), runs 14 days (end about 10-18 12:00Z, confirm with the organisers).** Repo link before 10-14 (`python3 deploy/export_logs.py`, commit `logs/`, tag `submission-final` at the end).
