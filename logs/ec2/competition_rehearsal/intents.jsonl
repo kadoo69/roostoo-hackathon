@@ -74,3 +74,13 @@
 {"event": "resolved", "intent_id": "de34808885da45639f855c", "outcome": "placed", "utc": "2026-10-04T09:30:09.078245+00:00", "detail": {"order_id": 3421028, "status": "FILLED"}}
 {"event": "intent", "intent_id": "715952599d9b4bff89ef22", "utc": "2026-10-04T14:30:07.780999+00:00", "pair": "BNB/USD", "side": "SELL", "quantity": 16.033, "price": 787.06, "type": "LIMIT", "symbol": "BNBUSDT"}
 {"event": "resolved", "intent_id": "715952599d9b4bff89ef22", "outcome": "placed", "utc": "2026-10-04T14:30:07.980922+00:00", "detail": {"order_id": 3421834, "status": "PENDING"}}
+{"event": "intent", "intent_id": "cb1e7576a2a74051bba8c0", "utc": "2026-10-04T15:05:07.750265+00:00", "pair": "SUI/USD", "side": "BUY", "quantity": 7198.7, "price": 1.2281, "type": "LIMIT", "symbol": "SUIUSDT"}
+{"event": "resolved", "intent_id": "cb1e7576a2a74051bba8c0", "outcome": "placed", "utc": "2026-10-04T15:05:08.044010+00:00", "detail": {"order_id": 3421903, "status": "FILLED"}}
+{"event": "intent", "intent_id": "f770db32b8ad4302b6396d", "utc": "2026-10-04T16:00:10.883861+00:00", "pair": "FET/USD", "side": "BUY", "quantity": 51523.0, "price": 0.2458, "type": "LIMIT", "symbol": "FETUSDT"}
+{"event": "resolved", "intent_id": "f770db32b8ad4302b6396d", "outcome": "placed", "utc": "2026-10-04T16:00:11.686575+00:00", "detail": {"order_id": 3421997, "status": "PENDING"}}
+{"event": "intent", "intent_id": "449209fb47d849d985d862", "utc": "2026-10-04T18:30:07.518028+00:00", "pair": "SOL/USD", "side": "SELL", "quantity": 45.616, "price": 121.45, "type": "LIMIT", "symbol": "SOLUSDT"}
+{"event": "resolved", "intent_id": "449209fb47d849d985d862", "outcome": "placed", "utc": "2026-10-04T18:30:07.856630+00:00", "detail": {"order_id": 3422285, "status": "PENDING"}}
+{"event": "intent", "intent_id": "3611318188254c858b118d", "utc": "2026-10-04T18:30:07.859444+00:00", "pair": "PUMP/USD", "side": "BUY", "quantity": 209699.0, "price": 0.006554, "type": "LIMIT", "symbol": "PUMPUSDT"}
+{"event": "resolved", "intent_id": "3611318188254c858b118d", "outcome": "placed", "utc": "2026-10-04T18:30:08.283360+00:00", "detail": {"order_id": 3422286, "status": "PENDING"}}
+{"event": "intent", "intent_id": "9f0e5de6496943fe993305", "utc": "2026-10-04T18:40:06.465368+00:00", "pair": "PUMP/USD", "side": "BUY", "quantity": 657677.0, "price": 0.006568, "type": "LIMIT", "symbol": "PUMPUSDT"}
+{"event": "resolved", "intent_id": "9f0e5de6496943fe993305", "outcome": "placed", "utc": "2026-10-04T18:40:07.653086+00:00", "detail": {"order_id": 3422307, "status": "FILLED"}}
