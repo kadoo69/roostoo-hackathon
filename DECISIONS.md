@@ -5104,3 +5104,7 @@ NOT RECOMMENDED, the live exits stay (`results/ride_gain_lock.json`, `python3 -m
 | LK1 (lock +0.5 dvol after +1 dvol) | **+20.67%** / -11.18% / 3.4 | +6.08% / -13.00% / 3.3 | +4.10% / -5.28% / 3.7 |
 | TR1 (trail 1 dvol after +1 dvol) | +19.22% / -12.56% / 3.1 | +19.75% / -15.29% / 3.0 | +3.37% / -7.29% / 3.3 |
 No lock beats L24 in the last 3 days, and each wins one window while losing another, the same sign-flip as `#ride-exits-outcome` and `#ride-laggard-exits-outcome`. Locks also deepen the drawdown in most windows: they sell on pullbacks inside moves that later reach the target. Gains are already protected by the 3%/15% booking ladder, which sold part of SUI at +3% today. Three trials recorded.
+
+## ride-rotation-declaration
+
+Operator 2026-10-04 20:47 IST: when stronger signals come and holdings are weak, interchange them, for short-term gains. Written before any number; full text in `config/ride_rotation.yaml`. With all 3 slots held and a fresh z >= 2.5 trigger, sell the holding with the lowest return since entry (at least 1 h old) and buy the trigger, at most one swap a bar: RS0 (only if that holding is below entry), RSH (below +0.5 dvol), RSA (always). Same decision rule as `#ride-gain-lock-declaration`. Three trials.

@@ -1,0 +1,25 @@
+meta:
+  name: ride_rotation
+  frozen: true
+  declared_utc: '2026-10-04T15:20:00Z'
+  requested_by: 'operator 2026-10-04 20:47 IST: if stronger signals come and existing holdings get weak, interchange them; we need short-term gains to stay on the leaderboard'
+  declared_ref: DECISIONS.md#ride-rotation-declaration
+  written_before_any_number: true
+prior: 'with 3 slots and a 24 h hold the ride is full most of the time (mean gross 0.94-0.96), so triggers that arrive while full are skipped; early exits on their own lost (#ride-laggard-exits-outcome, #ride-gain-lock-outcome), but they freed the slot for no particular signal'
+mechanism: 'a fresh 2.5-sigma burst is more likely to continue than a holding that has gone nowhere since its own burst; swapping the weakest holding for the new trigger keeps the slots in live moves'
+failure_mode: 'each swap pays two round-trip fees; a weak holding may recover, and the new burst may revert like most short moves do (#micro-scan-2026-10-01)'
+base: 'L24 = live competition_z25 with V2 exits: entry z >= 2.5, 3 slots, 12-bar cooldown, target 2 x dvol at entry, 288-bar hold, no swaps; maker fees and ticks; 27-coin pool'
+swap: 'at a bar where all 3 slots are held and a coin triggers (z >= 2.5, outside cooldown), the holding with the lowest return since entry is sold and the trigger with the largest z bought, at most one swap per bar, only if that holding is at least 12 bars (1 h) old and meets the arm''s weakness test'
+arms:
+  RS0: 'weak = return since entry below 0'
+  RSH: 'weak = return since entry below +0.5 x dvol (has not moved halfway to a half target)'
+  RSA: 'weak = always (the weakest holding is swapped for any new trigger)'
+windows:
+  W1: '2026-09-05 to 2026-09-19'
+  W2: '2026-09-19 to now'
+  last_3d: 'the last 3 days'
+decision_rule: >
+  The best arm (highest worst-window total return, ties to the shallower worst drawdown) is RECOMMENDED only if it
+  beats L24 in the last 3 days and in at least one of W1 / W2, and its worst-window return is not below L24's.
+  Otherwise L24 stays and the operator sees the numbers first. Changing the live book stays an operator decision.
+trials: 3
