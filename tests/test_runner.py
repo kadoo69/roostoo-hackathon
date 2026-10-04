@@ -87,7 +87,7 @@ def test_competition_split_is_the_rehearsed_split_on_the_comp_keys():
     with open("deploy/ec2_bootstrap.sh") as fh:
         books = next(ln for ln in fh.read().splitlines() if ln.startswith("BOOKS="))
     units = books.split('"')[1].split()
-    assert "competition_ride" in units and not {"competition", "competition_split", "competition_wf"} & set(units)
+    assert "competition_z3" in units and not {"competition", "competition_split", "competition_wf", "competition_ride"} & set(units)
 
 
 def test_competition_ride_is_ride_5m_on_the_comp_keys():
@@ -98,3 +98,13 @@ def test_competition_ride_is_ride_5m_on_the_comp_keys():
     s = load("config/competition_ride.yaml")
     assert s.keyset == "comp" and s.exit_escalation and not ride["meta"]["paper_only"]
     assert bot_class(ride).__name__ == "AdaptiveScalperBot"
+
+
+def test_competition_z3_is_ride_z3_5m_on_the_comp_keys():
+    z3, src, wf = _cfg("competition_z3"), _cfg("ride_z3_5m"), _cfg("competition_wf")
+    for sec in ("adaptive", "contenders", "strategy", "booking", "short", "target_lock"):
+        assert z3[sec] == src[sec], sec
+    assert z3["execution"] == wf["execution"] and z3["risk"] == wf["risk"]
+    s = load("config/competition_z3.yaml")
+    assert s.keyset == "comp" and s.exit_escalation and not z3["meta"]["paper_only"]
+    assert bot_class(z3).__name__ == "AdaptiveScalperBot"
