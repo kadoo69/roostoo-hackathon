@@ -1,0 +1,28 @@
+meta:
+  name: ride_hold_slots
+  frozen: true
+  declared_utc: '2026-10-04T17:30:00Z'
+  requested_by: 'operator 2026-10-04 23:00 IST: run tests 1 and 2, our main objective is to maximise portfolio value'
+  declared_ref: DECISIONS.md#ride-hold-slots-declaration
+  written_before_any_number: true
+objective: 'total return (portfolio value), with drawdown reported'
+base: 'N3 = live competition_z25: entry z >= 2.5, 3 slots at 1/3, 12-bar cooldown, target 2 x dvol at entry, 288-bar hold; maker fees and ticks; 27-coin pool'
+test_1_leader_hold:
+  mechanism: 'day leaders persist over days in crypto (cross-sectional momentum); the 24 h limit sells a coin that is still leading the pool and needs a fresh burst to re-enter'
+  failure_mode: 'leaders mean-revert after a big day; holding them blocks fresh triggers'
+  LX: 'at the 288-bar limit, if the coin is among the top 3 of the pool by 24 h residual return (its 288-bar return minus the pool mean 288-bar return), the hold is extended by another 288 bars, re-checked at each limit; the target exit is unchanged'
+test_2_slots:
+  mechanism: 'fewer, larger slots concentrate on the strongest triggers; more, smaller slots catch more triggers'
+  failure_mode: 'concentration raises variance; more slots dilute into the weaker triggers that reverse'
+  N2: '2 slots at 1/2'
+  N4: '4 slots at 1/4'
+  N5: '5 slots at 1/5'
+windows:
+  W1: '2026-09-05 to 2026-09-19'
+  W2: '2026-09-19 to now'
+  last_3d: 'the last 3 days'
+decision_rule: >
+  Each test separately: its best arm (highest worst-window total return, ties to the shallower worst drawdown) is
+  RECOMMENDED only if it beats N3 on total return in the last 3 days and in at least one of W1 / W2, and its
+  worst-window return is not below N3's. Otherwise N3 stays. Changing the live book stays an operator decision.
+trials: 4
