@@ -84,6 +84,9 @@ for b in $BOOKS; do
   systemctl enable "roostoo-live@$b" >/dev/null 2>&1
   systemctl restart "roostoo-live@$b"
 done
+cp "$DEST/deploy/roostoo-monitor.service" "$DEST/deploy/roostoo-monitor.timer" /etc/systemd/system/
+systemctl daemon-reload
+systemctl enable --now roostoo-monitor.timer >/dev/null 2>&1
 cp "$DEST/deploy/roostoo-paper@.service" /etc/systemd/system/
 systemctl daemon-reload
 for b in $PAPER_BOOKS; do
