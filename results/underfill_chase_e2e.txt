@@ -1,0 +1,9 @@
+e2e_chase_blocked: cap=0.01 ref=0.006187 mark=0.006373 rise=+3.00% rc=0
+  PUMP orders: none
+  blocked event: {'PUMPUSDT': 0.02935}
+e2e_chase_within: cap=0.01 ref=0.006341 mark=0.006373 rise=+0.50% rc=0
+  PUMP orders: [('dry_run', 'BUY', 28320)]
+  blocked event: none
+e2e_chase_off: cap=None ref=0.006187 mark=0.006373 rise=+3.00% rc=0
+  PUMP orders: [('dry_run', 'BUY', 28320)]
+  blocked event: none
