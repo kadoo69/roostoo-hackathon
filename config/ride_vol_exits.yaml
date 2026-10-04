@@ -1,0 +1,26 @@
+meta:
+  name: ride_vol_exits
+  frozen: true
+  declared_utc: '2026-10-04T14:25:00Z'
+  requested_by: 'operator 2026-10-04 19:52 IST: make the exits dynamic as well, as per market conditions'
+  declared_ref: DECISIONS.md#ride-vol-exits-declaration
+  written_before_any_number: true
+prior: 'trails after +5% flipped sign between windows and the cap stayed (#ride-exits-outcome); which winners keep running is not predictable from the +5% touch (#live-excursion-outcome). A volatility-scaled target has not been tested.'
+mechanism: 'a fixed +5% is far for BTC or LTC (1-2% daily vol) and near for PUMP (5-8%); a target and stop sized to each coin''s own volatility at entry book quiet coins sooner and give volatile ones room, so slots recycle in chop'
+failure_mode: 'nearer targets on quiet coins cap the rare big moves that carry the ride (#ride-agile-outcome: +2%/+3% targets lost), and a stop cuts entries that would have recovered inside the 24 h hold'
+base: 'F5 = live competition_z25: entry at z >= 2.5 (3-bar 5m return over the coin''s own 288-bar std of 3-bar returns), 3 slots, 12-bar cooldown, +5% target, 288-bar hold; maker fees and ticks (gates.let_winners_run.simulate); 27-coin pool'
+volatility: 'dvol = the coin''s 288-bar std of 3-bar returns at the entry bar (shift 1) x sqrt(96), i.e. one day of that coin''s own volatility'
+arms:
+  V2: 'target = 2 x dvol, hold 288'
+  V3: 'target = 3 x dvol, hold 288'
+  V3S: 'target = 3 x dvol, plus a stop: exit at the first close at or below entry x (1 - 1.5 x dvol), hold 288'
+windows:
+  W1: '2026-09-05 to 2026-09-19'
+  W2: '2026-09-19 to now'
+  last_3d: 'the last 3 days'
+decision_rule: >
+  The best arm (highest worst-window total return, ties to the shallower worst drawdown) is RECOMMENDED for the
+  competition book only if it beats F5 on total return in the last 3 days and in at least one of W1 / W2, and its
+  worst-window return is not below F5's. Otherwise F5 stays and the operator is shown the numbers before anything
+  is deployed. Changing the live book stays an operator decision.
+trials: 3
