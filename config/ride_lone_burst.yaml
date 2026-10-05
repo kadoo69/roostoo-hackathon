@@ -1,0 +1,18 @@
+meta:
+  name: ride_lone_burst
+  frozen: true
+  declared_utc: '2026-10-05T06:25:00Z'
+  requested_by: 'operator 2026-10-05 11:55 IST: backtest the lone burst filter'
+  declared_ref: DECISIONS.md#ride-lone-burst-declaration
+  written_before_any_number: false
+  seen_before: 'the 10-05 trigger list (#code-review-fixes-2026-10-05 session notes): the morning waves of 9-14 simultaneous triggers mostly lost, the lone FET, SUI, ADA, XLM bursts hit target; one day, not a test'
+mechanism: 'a burst on one coin while the rest are quiet carries news about that coin and continues; a wave of simultaneous triggers is the whole market twitching and reverts'
+failure_mode: 'the start of a broad trend is also a wave; skipping waves sits out the day the market turns'
+harness: 'archive.gates.ride_partial_trim book, the live rule (rank by z, no churn), ladder, maker fees, 27 coins, 12 start offsets 2 h apart'
+definition: 'N(t) = number of coins with z >= 2.5 on bar t (closed bar, point in time); a bar with N(t) above the limit opens nothing (exits and ladder run)'
+arms: {LIVE: 'no filter', LONE2: 'entries only when N(t) <= 2', LONE4: 'entries only when N(t) <= 4'}
+decision_rule: >
+  An arm is a CANDIDATE if it beats LIVE's return in at least 8 of 12 offsets in BOTH the 14-day and 3-day windows
+  with no deeper median drawdown in either. A candidate goes to a paper book; live changes only on the operator's
+  decision. Otherwise NULL.
+trials: 2

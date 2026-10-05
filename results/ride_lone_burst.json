@@ -1,0 +1,59 @@
+{
+ "spans": {
+  "14D": {
+   "LIVE": {
+    "median_ret": 21.66,
+    "median_dd": -10.35,
+    "median_sharpe": 6.08,
+    "wins": 0,
+    "worst": 16.43
+   },
+   "LONE2": {
+    "median_ret": 19.65,
+    "median_dd": -12.05,
+    "median_sharpe": 5.58,
+    "wins": 4,
+    "worst": 13.02
+   },
+   "LONE4": {
+    "median_ret": 18.11,
+    "median_dd": -11.71,
+    "median_sharpe": 5.37,
+    "wins": 4,
+    "worst": 13.34
+   }
+  },
+  "3D": {
+   "LIVE": {
+    "median_ret": 2.15,
+    "median_dd": -5.58,
+    "median_sharpe": 4.86,
+    "wins": 0,
+    "worst": -2.56
+   },
+   "LONE2": {
+    "median_ret": 2.57,
+    "median_dd": -5.95,
+    "median_sharpe": 5.49,
+    "wins": 5,
+    "worst": -2.56
+   },
+   "LONE4": {
+    "median_ret": 1.79,
+    "median_dd": -5.92,
+    "median_sharpe": 4.08,
+    "wins": 0,
+    "worst": -2.56
+   }
+  }
+ },
+ "candidate": {
+  "LONE2": false,
+  "LONE4": false
+ },
+ "bar_open_share_14d": {
+  "LONE2": 0.97,
+  "LONE4": 0.98
+ },
+ "ref": "DECISIONS.md#ride-lone-burst-declaration"
+}

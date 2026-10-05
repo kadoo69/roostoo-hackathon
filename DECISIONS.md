@@ -5370,3 +5370,11 @@ Operator 2026-10-05 11:25 IST, after `/code-review` of `e3974b8..HEAD`: fix the 
 - `signals.burst_rider.breadth` returns 0 with too little history (gate closed, as the backtest feature), and the probe entry no longer fires on a gated bar. Neither touches the live config, which has no `regime_gate` and a spent probe.
 - Research: `archive.gates.ride_partial_trim` sizes a trim-funded entry by the trim proceeds (capped at 1/n), as the live code did; the churn studies read their parameters from `config/ride_z25_churn_5m.yaml` (they raised KeyError after `#competition-churn-off-2026-10-05`); `ride_corr_liq_regime` computes the mean pairwise correlation over the coins present on each bar. The published results were not re-scored.
 - Inline comments added on 10-05 removed (project rule); their reasoning is in docstrings and these anchors.
+
+## ride-lone-burst-declaration
+
+Operator 2026-10-05 11:55 IST: backtest the lone-burst filter. Full text in `config/ride_lone_burst.yaml`. N(t) = coins at z >= 2.5 on the bar; LONE2 / LONE4 open nothing on bars with more than 2 / 4 simultaneous triggers. Against the live rule over 12 start offsets; candidate only with at least 8 of 12 wins in both the 14-day and 3-day windows and no deeper median drawdown. Suggested by one day of trigger outcomes (stated in the config), so not written before every number. Two trials.
+
+## ride-lone-burst-outcome
+
+NULL (`results/ride_lone_burst.json`, `python3 -m archive.gates.ride_lone_burst`). Median over 12 offsets, return / max DD / Sharpe, wins against LIVE: 14 days LIVE +21.66% / -10.35% / 6.08 (worst +16.4%), LONE2 +19.65% / -12.05% / 5.58 (4 of 12), LONE4 +18.11% / -11.71% / 5.37 (4 of 12); 3 days LIVE +2.15%, LONE2 +2.57% (5 of 12), LONE4 +1.79% (0 of 12). Waves are only 2-3% of bars, and skipping them also skips the waves that start a move; the one day of waves that lost on 10-05 does not generalise. Two trials recorded.
