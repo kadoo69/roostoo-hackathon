@@ -2,10 +2,10 @@
 
 Current state only. The full history of sessions to 2026-09-23 is archived at `docs/archive/HANDOVER_2026-09-23.md`; older section references in code and configs point there.
 
-## CURRENT STATE 2026-10-05 21:35 IST / 16:05Z (read this first; everything below is history)
+## CURRENT STATE 2026-10-05 21:45 IST / 16:15Z (read this first; everything below is history)
 
 ### The competition account
-- Unit `roostoo-live@competition_r4` on EC2 at `64f7cfb`: the regime contenders rule long-only, 30m, n = 3. Equity about 96,250-96,550 (-3.5% since the 100k start). Leaderboard 20:12 IST (`run/leaderboard.json`): #1 +6.0%, #10 +0.3%, top-20 line -0.1%, us second last.
+- Unit `roostoo-live@competition_r4` on EC2 at `64f7cfb`: the regime contenders rule long-only, 30m, n = 3. Equity 96,637 at 21:41 IST (-3.4% since the 100k start). Leaderboard 20:12 IST (`run/leaderboard.json`): #1 +6.0%, #10 +0.3%, top-20 line -0.1%, us second last.
 - Holdings: ADA ~0.50 (cost 0.2725), ENA ~0.24 (cost 0.2571), AAVE ~0.09 (bought 20:30 IST with idle cash), FIL ~0.08 (cost 1.0921), cash 7,289. Market regime DOWN since the 15:00Z bar: the rule's target is {AAVE 0.5} and it makes no new longs until the regime leaves DOWN.
 - Operator guards (all in `config/competition_r4.yaml`, all in DECISIONS): 6 h hold + no trims after entry (ENA/FIL until the 18:00Z bar), no sale below cost unless down >5% (`live_no_loss_exit_max`), ENA held at any loss (`live_hold_below_cost`). Cost of the guards so far: at 21:00 IST the paper copy `regime_ls_30m` cut to AAVE only and rose (+2.40% to +2.75%) while the live book fell about a point.
 - Bugs fixed today (each with a test): same-cycle rotation underfill (`#same-cycle-rotation-underfill-2026-10-05`); guards crowding held positions down to fit the gross cap (`#guard-crowding-fix-2026-10-05`, sold FIL at 21:00; an ENA sell was cancelled with `deploy/cancel_pending.py`); blotter reading an externally cancelled order as a fill (cancel tool now journals `cancelled_external`).
@@ -13,7 +13,8 @@ Current state only. The full history of sessions to 2026-09-23 is archived at `d
 ### Next actions
 1. Freeze the live book; no more live changes until the day-3 check (17:30 IST 10-07), where regime vs `ride_5m` is decided once on data. Recommend removing `live_hold_below_cost` (and probably the other guards) there: the rule's own exits beat the guards today.
 2. Paper tick-scalper grid (`bot/tick_scalper.py`, Mac, 48 cells, declared in `config/tick_scalp_pepe.yaml`): read about 08:30 IST 10-06 by its decision rule. At 68 min only PEPE touch (+250 over 28 trips) stood out; nothing survived the trade-through rule; EDEN lost -384 on one stuck lot. It runs on the Mac, so the Mac must stay on mains.
-3. AWS SSO lasts 8-12 h: `! python3 deploy/aws_login.py`, approve at once (codes expire in 10 min).
+3. Real-order scalping micro-test on the TEST account (`deploy/checks/scalp_micro_test.py`, started 21:39 IST on EC2 as user roostoo, 60 min, 1000CHEEMS about 1,000 USD a lot; journal `live/scalp_micro/events.jsonl`, `summary.json`; flattens itself at the end). Question: do resting orders fill on a touch or only on a trade-through. First sign: a buy placed at the bid with LastPrice at the same price rested PENDING (against the touch rule). Not PEPE, because `competition_rehearsal` (still active on the TEST keys) has PEPE in its universe and would sell it. A competition sleeve is worth building only if real fills net positive, and it needs accounting separate from `competition_r4`.
+4. AWS SSO lasts 8-12 h: `! python3 deploy/aws_login.py`, approve at once (codes expire in 10 min).
 
 ### Lessons from 10-05
 - Every hand-timed live move lost (13:09 switch, 14:00 seed, holding a laggard); the paper copy that never changed made money. Guards that block the rule's exits also block its risk control.
