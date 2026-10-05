@@ -15,7 +15,7 @@ set -euo pipefail
 : "${REPO_URL:?set REPO_URL to the public GitHub repo}"
 BRANCH=${BRANCH:-main}
 DEST=/opt/roostoo-hackathon
-BOOKS=${BOOKS:-"competition_z25 competition_rehearsal"}
+BOOKS=${BOOKS:-"competition_r4 competition_rehearsal"}
 PAPER_BOOKS=${PAPER_BOOKS:-"wf_live ride_5m ride_z3_5m sleeves_z3_5m split_tilt_5m regime_ls_30m ride_z25_5m ride_z25_swap_5m ride_z25_zrank_5m ride_z25_churn_5m ride_z25_gate_5m ride_z25_n4_5m"}
 
 log() { printf '\n== %s\n' "$*"; }
