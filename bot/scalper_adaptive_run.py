@@ -261,7 +261,8 @@ class AdaptiveScalperBot(ContendersBot):
         probe = (getattr(self, "ad", None) or {}).get("probe_entry") or {}
         probed = bool(rec and rec.get("probe_done") and rec.get("probe_bar") != bar)
         fired = False
-        if probe and not probed and not target and not getattr(self, "cold_start", False):
+        gated = bool(gate) and burst_rider.breadth(close, int(gate.get("bars", 288))) < float(gate["min_breadth"])
+        if probe and not probed and not target and not gated and not getattr(self, "cold_start", False):
             held, last, target = burst_rider.probe_entry(close, self.variants[vid]["cc"], held, last,
                                                          float(probe["min_z"]))
             fired = bool(target)

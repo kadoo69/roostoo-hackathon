@@ -38,6 +38,9 @@ for b in BOOKS:
            "since": subprocess.run(["systemctl", "show", "-p", "ActiveEnterTimestamp", "--value", unit], capture_output=True, text=True).stdout.strip()}
     try:
         s = json.loads((d / "state.json").read_text())
+    except (OSError, ValueError):
+        s = {}
+    try:
         curve = s.get("equity_curve") or []
         marks = s.get("last_marks") or {}
         eq = curve[-1] if curve else None
@@ -46,7 +49,7 @@ for b in BOOKS:
                     "curve": curve[-288:][::4],
                     "positions": {k[:-4] if k.endswith("USDT") else k: round(q * marks.get(k, 0) / eq, 4)
                                   for k, q in (s.get("holdings") or {}).items() if eq and q * marks.get(k, 0) / eq > 0.005}})
-    except (OSError, ValueError):
+    except (TypeError, ValueError, ZeroDivisionError):
         pass
     for kind in ("cycles", "waiting"):
         f = d / f"{kind}-{day}.jsonl"
@@ -70,7 +73,7 @@ for b in BOOKS:
             if r.get("event") == "placed" and r.get("side") == "BUY" and r.get("symbol"):
                 buys[r["symbol"]] = r.get("price")
     try:
-        held_q = json.loads((d / "state.json").read_text()).get("holdings") or {}
+        held_q = s.get("holdings") or {}
     except (OSError, ValueError):
         held_q = {}
     rec["entries"] = {k[:-4] if k.endswith("USDT") else k: {"qty": q, "entry": buys.get(k)}
@@ -81,7 +84,7 @@ for b in BOOKS:
     if b != "competition_rehearsal" and b not in PAPER and rec.get("active") == "active":
         # The detail panel of the desk, for the live competition unit only. DECISIONS.md#desk-revamp-2026-10-05
         try:
-            st = json.loads((d / "state.json").read_text())
+            st = s
             rec["skim_refs"] = st.get("skim_refs") or {}
             rec["universe"] = st.get("universe") or []
             rec["cash"] = st.get("cash")

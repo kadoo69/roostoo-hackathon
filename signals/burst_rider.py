@@ -112,7 +112,6 @@ def live_step(close: pd.DataFrame, high: pd.DataFrame, cfg: dict, held: dict[str
     new_last = dict(last)
     free = int((1.0 - sum(v[3] for v in keep.values()) + 1e-9) * n)
     gate = cfg.get("regime_gate") or {}
-    # Broad down market: no new entry, swap or churn this bar; the exits above have already run.
     gated = bool(gate) and breadth(close, int(gate.get("bars", 288))) < float(gate["min_breadth"])
     churn = cfg.get("trim_churn") or {}
     zmax = float(churn["zmax"]) if churn.get("zmax") else None
@@ -144,12 +143,13 @@ def live_step(close: pd.DataFrame, high: pd.DataFrame, cfg: dict, held: dict[str
 
 def breadth(close: pd.DataFrame, bars: int = 288) -> float:
     """Share of coins whose return over the last `bars` bars is positive, at the last bar (coins without the
-    history are left out). The regime gate's state. DECISIONS.md#competition-regime-gate-2026-10-05"""
+    history are left out). The regime gate's state; with too little history it is 0, which closes the gate, as the
+    backtest feature does (`archive.gates.ride_regime_gate.features`). DECISIONS.md#competition-regime-gate-2026-10-05"""
     if len(close) <= bars:
-        return 1.0
+        return 0.0
     r = close.iloc[-1] / close.iloc[-1 - bars] - 1.0
     r = r.dropna()
-    return float((r > 0).mean()) if len(r) else 1.0
+    return float((r > 0).mean()) if len(r) else 0.0
 
 
 def trim_churn(close: pd.DataFrame, cfg: dict, keep: dict[str, list], last: dict[str, str],
@@ -187,7 +187,6 @@ def trim_churn(close: pd.DataFrame, cfg: dict, keep: dict[str, list], last: dict
     def zh(s: str) -> float:
         lv = float(lvl[s]) if s in lvl and np.isfinite(lvl[s]) and lvl[s] > 0 else float("nan")
         return float(r3[s]) / (lv / k) if np.isfinite(lv) and np.isfinite(r3[s]) else float("nan")
-    # A holding whose own burst is at least as strong as the trigger is not trimmed for it (operator 09:10 IST).
     losers = [s for s, v in keep.items() if s in close and np.isfinite(close[s].iloc[-1])
               and round((t - pd.Timestamp(v[0])) / step) >= age_min and float(close[s].iloc[-1]) < float(v[1])
               and not (churn.get("keep_strong") and np.isfinite(zh(s)) and zh(s) >= best_z)]

@@ -395,3 +395,27 @@ def test_a_stale_exit_with_roostoo_s_bogus_filled_quantity_is_still_escalated(tm
     out = ex.sweep_unfilled()
     assert seen["cancel"] == [7] and seen["place"] and seen["place"][0][1] == "SELL" and seen["place"][0][3] is None
     assert out[-1]["reason"] == "exit_escalation"
+
+
+def test_the_blotter_skips_a_stale_cancelled_order_so_an_escalated_exit_is_booked_once(tmp_path, monkeypatch):
+    """DECISIONS.md#escalation-fill-field-2026-10-05"""
+    import json
+
+    from bot import blotter
+    d = tmp_path / "live" / "b"
+    d.mkdir(parents=True)
+    rows = [
+        {"event": "placed", "ts_utc": "2026-10-05T00:00:00+00:00", "symbol": "LTCUSDT", "side": "BUY", "quantity": 10.0,
+         "price": 70.0, "type": "LIMIT", "order_id": 1, "filled_quantity": 10.0, "filled_average_price": 70.0},
+        {"event": "placed", "ts_utc": "2026-10-05T01:00:00+00:00", "symbol": "LTCUSDT", "side": "SELL", "quantity": 10.0,
+         "price": 71.0, "type": "LIMIT", "order_id": 2, "filled_quantity": 10.0, "filled_average_price": 0},
+        {"event": "cancelled_stale", "ts_utc": "2026-10-05T01:05:00+00:00", "order_id": 2, "pair": "LTC/USD"},
+        {"event": "placed", "ts_utc": "2026-10-05T01:05:01+00:00", "symbol": "LTCUSDT", "side": "SELL", "quantity": 10.0,
+         "price": 0, "type": "MARKET", "order_id": 3, "filled_quantity": 10.0, "filled_average_price": 70.5,
+         "reason": "exit_escalation"},
+    ]
+    (d / "orders-2026-10-05.jsonl").write_text("\n".join(json.dumps(r) for r in rows) + "\n")
+    import bot.journal as journal_mod
+    monkeypatch.setattr(journal_mod, "ROOT", tmp_path)
+    out = blotter.build("b")
+    assert len(out["closed"]) == 1 and out["closed"][0]["exit_price"] == 70.5 and not out["open"]

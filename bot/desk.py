@@ -213,7 +213,9 @@ BAR_MIN = 5
 
 def competition_view(ec2: dict | None, radar: dict) -> dict | None:
     """The live competition unit in detail: equity path, each position against its take-profit, 24 h exit
-    and next skim, free slots, closed trades and the benchmark since the open. DECISIONS.md#desk-revamp-2026-10-05"""
+    and next skim, free slots, closed trades and the benchmark since the open. Cash, holdings and equity all come
+    from one read of the unit's state.json, so a trade between reads cannot pair new cash with old holdings
+    (the -15% that was not there, 2026-10-05 08:40 IST). DECISIONS.md#desk-revamp-2026-10-05"""
     import datetime as dt
     import json
 
@@ -231,7 +233,7 @@ def competition_view(ec2: dict | None, radar: dict) -> dict | None:
     marks = {k.replace("USDT", ""): v.get("mark") for k, v in (mon.get("positions") or {}).items()}
     for r in radar.get("rows") or []:
         marks.setdefault(r["symbol"], r.get("price"))
-    eq = mon.get("equity") or bk.get("equity")
+    eq = bk.get("equity") or mon.get("equity")
     start = bk.get("start_equity") or 100_000.0
     hold = int(radar.get("hold_bars") or 288)
     slots = int(radar.get("slots") or 2)
@@ -288,8 +290,6 @@ def competition_view(ec2: dict | None, radar: dict) -> dict | None:
             "equity": eq, "start": start, "ret_pct": round((eq / start - 1) * 100, 3) if eq else None,
             "net": round(eq - start, 2) if eq else None, "peak": mon.get("peak") or bk.get("peak"),
             "dd_pct": round((eq / (mon.get("peak") or bk.get("peak") or eq) - 1) * 100, 2) if eq else None,
-            # Cash from the same state.json read as the holdings (the monitor's line can be up to 5 minutes older
-            # and mixed with fresh holdings showed a -15% equity that was not there, 2026-10-05 08:40 IST).
             "cash": bk.get("cash") if bk.get("cash") is not None else mon.get("cash"),
             "bot_equity": bk.get("equity") or mon.get("equity"), "positions": pos, "slots": slots,
             "slots_free": max(0, int((1.0 - used + 1e-9) * slots)), "weight_used": round(used, 4),

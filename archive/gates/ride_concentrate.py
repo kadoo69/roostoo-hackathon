@@ -11,7 +11,7 @@ import pandas as pd
 import yaml
 
 from archive.gates.ride1_wide_vs_live import frames
-from archive.gates.ride_partial_trim import book, stats
+from archive.gates.ride_partial_trim import CHURN, book, stats
 from archive.gates.ride_z3_wide import POOL
 from core.config import RESULTS, ROOT
 from data import universe as ru
@@ -19,7 +19,7 @@ from data import universe as ru
 
 def main() -> int:
     cfg = next(iter(yaml.safe_load((ROOT / "config" / "competition_z25.yaml").read_text())["adaptive"]["burst_arms"].values()))
-    ch = cfg["trim_churn"]
+    ch = CHURN
     specs = ru.tradable_symbols()
     close, high = frames(list(POOL), pd.Timestamp("2026-09-10", tz="UTC"))
     cols = [s for s in POOL if s in close.columns and s in specs]

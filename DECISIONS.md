@@ -5361,3 +5361,12 @@ Suggested by the diagnostic above, so declared after seeing it and counted as it
 ## ride-corr-liq-nothigh-outcome
 
 FAIL (`results/ride_corr_liq_nothigh.json`). Median over 12 offsets: 14 days LIVE +24.15% / -11.43% against NOT_HIGH +16.53% / -12.41%, NOT_HIGH winning 5 of 12 with a worst offset of -1.3% against +8.4%; 3 days +2.45% against +6.23%, 6 wins and 5 ties. The weak average of high-risk triggers does not survive as a filter: skipping them also skips the few high-correlation bursts that start a market-wide move. One trial.
+
+## code-review-fixes-2026-10-05
+
+Operator 2026-10-05 11:25 IST, after `/code-review` of `e3974b8..HEAD`: fix the findings without touching the live bot. Nothing was deployed and no unit restarted; the live config is unchanged.
+- `bot.blotter.build` leaves out a placed order that was later `cancelled_stale` (Roostoo reports it as fully filled and the escalation re-sends its rest), so an escalated exit is booked once (`tests/test_bot_safety.py`). It reaches the exported trade CSVs at the next EC2 pull.
+- `bot/ec2_feed.py` reads each book's state.json once, and the desk takes cash, holdings and equity from that one read; the desk's live-equity guard now only rejects a value more than 25% off (the old 3% bar hid real moves); a failed `/api/desk` load stays on the banner and the subtitle shows the payload's own time and the quote age.
+- `signals.burst_rider.breadth` returns 0 with too little history (gate closed, as the backtest feature), and the probe entry no longer fires on a gated bar. Neither touches the live config, which has no `regime_gate` and a spent probe.
+- Research: `archive.gates.ride_partial_trim` sizes a trim-funded entry by the trim proceeds (capped at 1/n), as the live code did; the churn studies read their parameters from `config/ride_z25_churn_5m.yaml` (they raised KeyError after `#competition-churn-off-2026-10-05`); `ride_corr_liq_regime` computes the mean pairwise correlation over the coins present on each bar. The published results were not re-scored.
+- Inline comments added on 10-05 removed (project rule); their reasoning is in docstrings and these anchors.

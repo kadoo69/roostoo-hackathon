@@ -156,7 +156,7 @@ footer{color:var(--faint);font-size:11px;margin-top:16px;display:flex;gap:16px;f
 <script>
 const $ = id => document.getElementById(id);
 const IST = {timeZone:"Asia/Kolkata"};
-let D = null, Q = null, radarKey = "z_forming";
+let D = null, Q = null, radarKey = "z_forming", loadError = null;
 
 const fmt = (v, d=2) => v==null||isNaN(v) ? "–" : Number(v).toLocaleString("en-IN",{minimumFractionDigits:d,maximumFractionDigits:d});
 const pct = (v, d=2, sign=true) => v==null||isNaN(v) ? "–" : (sign && v>0 ? "+" : "") + Number(v).toFixed(d) + "%";
@@ -174,7 +174,6 @@ function kpi(label, value, sub, klass="", help="") {
 }
 
 function renderLive() {
-  // On a 3 s quote tick only the parts that move with price are redrawn, so tables keep their scroll.
   const c = D && D.competition;
   if (!c) return;
   renderHeader(); drawKpis(c); drawEquity(c); drawPositions(c, D.radar || {});
@@ -200,8 +199,7 @@ function render() {
 
 function renderHeader() {
   const c = D.competition, r = D.radar || {}, ec2 = D.ec2 || {};
-  $("sub").textContent = c ? `${c.bot} · live on the competition account · updated ${new Date().toLocaleTimeString("en-GB",{...IST,hour12:false})} IST` : "competition unit not visible";
-  // pills
+  $("sub").textContent = c ? `${c.bot} · live on the competition account · data ${ist(D.generated)} IST, prices ${Q && Q.age_s != null ? ago(Q.age_s) + " old" : "–"}` : "competition unit not visible";
   const pills = [];
   if (c) {
     const age = c.cycle_age_s;
@@ -214,8 +212,8 @@ function renderHeader() {
   pills.push(`<span class="pill ${!Q||Q.error?"bad":(Q.age_s??1e9)<10?"ok":"warn"}">venue quotes <b>${!Q?"–":Q.error?"error":ago(Q.age_s)}</b> <span class="faint">every ${Q?.refresh_s??3}s</span></span>`);
   pills.push(`<span class="pill">commit <b>${esc(ec2.commit||"–")}</b></span>`);
   $("pills").innerHTML = pills.join("");
-  // banners
   const ban = [];
+  if (loadError) ban.push(`<div class="banner">${esc(loadError)}</div>`);
   if (ec2.error) ban.push(`<div class="banner">EC2 feed: ${esc(ec2.error)}</div>`);
   if (r.error) ban.push(`<div class="banner warn">Trigger radar: ${esc(r.error)}</div>`);
   if (c && c.alerts.length) ban.push(`<div class="banner">Monitor alerts: ${esc(c.alerts.join(", "))}</div>`);
@@ -457,9 +455,7 @@ function applyQuotes() {
     if (p.next_skim_px) p.to_skim_pct = (p.next_skim_px / p.mark - 1) * 100;
   });
   const live = c.cash != null ? c.cash + held : null, ref = c.bot_equity;
-  // Guard: a live value more than 3% from the bot's own last equity means the cash and holdings snapshots
-  // disagree (a trade between them), not a real move; keep the bot's value and say so.
-  c.live_mismatch = !!(all && live && ref && Math.abs(live / ref - 1) > 0.03);
+  c.live_mismatch = !!(all && live && ref && Math.abs(live / ref - 1) > 0.25);
   if (all && live && !c.live_mismatch) {
     c.equity = live; c.live_equity = true; c.net = c.equity - c.start;
     c.ret_pct = (c.equity / c.start - 1) * 100; c.dd_pct = (c.equity / Math.max(c.peak || c.equity, c.equity) - 1) * 100;
@@ -480,9 +476,10 @@ async function load() {
   if (loading) return;
   loading = true;
   const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 20000);
-  try { const r = await fetch("/api/desk", {cache:"no-store", signal: ctl.signal}); D = await r.json(); applyQuotes(); render(); }
+  try { const r = await fetch("/api/desk", {cache:"no-store", signal: ctl.signal}); D = await r.json(); loadError = null; applyQuotes(); render(); }
   catch (e) {
-    $("banners").innerHTML = `<div class="banner">Desk API ${e.name==="AbortError"?"timed out after 20 s":"unreachable: "+esc(e)}; retrying in 5 s</div>`;
+    loadError = `Desk API ${e.name==="AbortError"?"timed out after 20 s":"unreachable: "+e}; showing the last payload, retrying in 5 s`;
+    if (D) renderHeader(); else $("banners").innerHTML = `<div class="banner">${esc(loadError)}</div>`;
     setTimeout(() => { loading = false; load(); }, 5000);
     clearTimeout(timer);
     return;

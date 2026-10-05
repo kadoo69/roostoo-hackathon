@@ -318,7 +318,7 @@ def _breadth_frame(up_share: float, n_coins: int = 10, seed: int = 5):
 def test_breadth_counts_coins_up_over_the_window():
     from signals.burst_rider import breadth
     assert breadth(_breadth_frame(0.3)) == 0.3 and breadth(_breadth_frame(0.8)) == 0.8
-    assert breadth(_breadth_frame(0.3).iloc[:100]) == 1.0          # not enough history: gate open
+    assert breadth(_breadth_frame(0.3).iloc[:100]) == 0.0
 
 
 def test_regime_gate_blocks_new_entries_and_churn_in_a_broad_down_market_but_never_exits():

@@ -11,7 +11,7 @@ import pandas as pd
 import yaml
 
 from archive.gates.ride1_wide_vs_live import frames
-from archive.gates.ride_partial_trim import book, stats
+from archive.gates.ride_partial_trim import CHURN, book, stats
 from archive.gates.ride_z3_wide import POOL
 from core.config import RESULTS, ROOT
 from data import universe as ru
@@ -19,9 +19,9 @@ from data import universe as ru
 
 def features(close: pd.DataFrame, z: pd.DataFrame) -> tuple[pd.Series, pd.Series]:
     """FT and BR per bar, point in time. FT uses triggers 12..288 bars old with their 12-bar forward return."""
-    fwd = close.shift(-12) / close - 1.0                       # known 12 bars after the trigger
+    fwd = close.shift(-12) / close - 1.0
     trig = (z >= 2.5)
-    win = trig.astype(float).shift(12)                          # triggers whose outcome is known now
+    win = trig.astype(float).shift(12)
     good = (trig & (fwd > 0)).astype(float).shift(12)
     n = win.rolling(276, min_periods=1).sum().sum(axis=1)
     g = good.rolling(276, min_periods=1).sum().sum(axis=1)
@@ -33,7 +33,7 @@ def features(close: pd.DataFrame, z: pd.DataFrame) -> tuple[pd.Series, pd.Series
 
 def main() -> int:
     cfg = next(iter(yaml.safe_load((ROOT / "config" / "competition_z25.yaml").read_text())["adaptive"]["burst_arms"].values()))
-    churn = cfg["trim_churn"]
+    churn = CHURN
     specs = ru.tradable_symbols()
     close, high = frames(list(POOL), pd.Timestamp("2026-09-12", tz="UTC"))
     cols = [s for s in POOL if s in close.columns and s in specs]

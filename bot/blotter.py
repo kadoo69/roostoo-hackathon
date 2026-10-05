@@ -17,6 +17,9 @@ OPENING = ("BUY", "SHORT_OPEN")
 
 
 def _fill(o: dict) -> dict | None:
+    """A placed order as a fill. An order later `cancelled_stale` is left out by `build`: Roostoo reports such an
+    order as fully filled (`FilledQuantity` = `Quantity`), and its unfilled rest is re-sent as a separate MARKET
+    order by the exit escalation, so counting both booked one exit twice. DECISIONS.md#escalation-fill-field-2026-10-05"""
     if o.get("event") not in FILLED_EVENTS or o.get("skipped"):
         return None
     qty = o.get("filled_quantity")
@@ -72,7 +75,8 @@ def build(bot: str) -> dict:
     journal = Journal(bot)
     orders = journal.read("orders")
     skims = _skim_times(journal)
-    fills = [f for f in (_fill(o) for o in orders) if f]
+    cancelled = {o.get("order_id") for o in orders if o.get("event") == "cancelled_stale"}
+    fills = [f for f in (_fill(o) for o in orders if o.get("order_id") not in cancelled) if f]
     fills.sort(key=lambda x: x["ts"])
 
     lots: dict[str, deque] = {}

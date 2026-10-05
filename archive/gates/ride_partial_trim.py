@@ -20,6 +20,7 @@ STEP, SLICE = 0.03, 0.15
 MAX_POS = 4
 ARMS = {"B2": (None, None), "B2X": (None, 5.0), "PT33": (1 / 3, 5.0), "PT50": (0.5, 5.0)}
 OPEN = pd.Timestamp("2026-10-04 12:00", tz="UTC")
+CHURN = next(iter(yaml.safe_load((ROOT / "config" / "ride_z25_churn_5m.yaml").read_text())["adaptive"]["burst_arms"].values()))["trim_churn"]
 
 
 def book(c: np.ndarray, h: np.ndarray, z: np.ndarray, dvol: np.ndarray, cfg: dict,
@@ -28,13 +29,16 @@ def book(c: np.ndarray, h: np.ndarray, z: np.ndarray, dvol: np.ndarray, cfg: dic
          flat: np.ndarray | None = None) -> tuple[np.ndarray, int]:
     """Equity path (start 1.0) and the number of entries. A position is [qty, entry, target, age, skim_ref].
     `churn_tpk`: a trim-funded entry takes this x dvol as its target instead of `tp_vol_k` (a quicker profit that
-    recycles the capital). DECISIONS.md#ride-trim-recent-declaration"""
+    recycles the capital). A trim-funded entry is sized by the trim proceeds (capped at 1/n), as the live
+    `signals.burst_rider.trim_churn` sizes it by the freed weight. The churn parameters live in
+    `config/ride_z25_churn_5m.yaml` since the churn left the competition config (`CHURN`).
+    DECISIONS.md#ride-trim-recent-declaration"""
     n, hold, cool = int(cfg["n"]), int(cfg["hold_bars"]), int(cfg["cooldown_bars"])
     k, tpk = float(cfg["sigma_k"]), float(cfg["tp_vol_k"])
     T, N = c.shape
     cash, eq = 1.0, np.ones(T)
     pos: dict[int, list] = {}
-    slot: dict[int, float] = {}          # slot weight a position counts for (1/n for a normal entry)
+    slot: dict[int, float] = {}
     last = np.full(N, -10**9)
     entries = 0
     for t in range(T):
@@ -57,7 +61,7 @@ def book(c: np.ndarray, h: np.ndarray, z: np.ndarray, dvol: np.ndarray, cfg: dic
                 ref = c[t, j]
             pos[j] = [q, px, tp, age, ref]
         if flat is not None and flat[t] and pos:
-            for j in list(pos):          # regime says cash: sell everything at this close
+            for j in list(pos):
                 if np.isfinite(c[t, j]):
                     cash += pos[j][0] * c[t, j] * (1 - FEE)
                     del pos[j], slot[j]
@@ -66,7 +70,7 @@ def book(c: np.ndarray, h: np.ndarray, z: np.ndarray, dvol: np.ndarray, cfg: dic
                        and np.isfinite(dvol[t, j]) and z[t, j] >= k and (zmax is None or z[t, j] < zmax)
                        and t - last[j] >= cool], reverse=True)
         if allow is not None and not allow[t]:
-            trig = []                    # regime gate: no new entry and no churn this bar (exits and ladder still run)
+            trig = []
         used = sum(slot.values())
         free = int((1.0 - used + 1e-9) * n)
         for _, j in trig[:max(free, 0)]:
@@ -83,12 +87,14 @@ def book(c: np.ndarray, h: np.ndarray, z: np.ndarray, dvol: np.ndarray, cfg: dic
             losers = [j for j, p in pos.items() if p[3] >= 12 and np.isfinite(c[t, j]) and c[t, j] < p[1]
                       and not (keep_strong and np.isfinite(z[t, j]) and z[t, j] >= trig[0][0])]
             if losers:
+                freed = 0.0
                 for j in losers:
                     sold = pos[j][0] * trim
+                    freed += sold * c[t, j] * (1 - FEE)
                     cash += sold * c[t, j] * (1 - FEE)
                     pos[j][0] -= sold
                     slot[j] *= (1 - trim)
-                alloc = min(value / n, cash)
+                alloc = min(value / n, cash, freed)
                 if alloc > value * 0.05:
                     _, j = trig[0]
                     pos[j] = [alloc * (1 - FEE) / c[t, j], c[t, j], (churn_tpk or tpk) * dvol[t, j], 0, c[t, j]]
