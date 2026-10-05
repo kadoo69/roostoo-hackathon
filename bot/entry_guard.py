@@ -52,16 +52,18 @@ def update_opened(opened: dict[str, list], current: dict[str, float],
 
 def keep_young(target: dict[str, float], current: dict[str, float], opened: dict[str, list],
                bar: pd.Timestamp, step: pd.Timedelta, min_bars: int,
-               max_gross: float = 1.0) -> tuple[dict[str, float], list[str]]:
+               max_gross: float = 1.0, no_trim: bool = False) -> tuple[dict[str, float], list[str]]:
     """Young positions stay at their current weight and side; the rest of the target is scaled
-    so gross stays within `max_gross`."""
+    so gross stays within `max_gross`. With `no_trim` a young position is also kept when the
+    target only shrinks it (DECISIONS.md#live-hold-no-trim-2026-10-05)."""
     kept = {}
     for s, (at, side) in opened.items():
         if at is None or min_bars <= 0:
             continue
         age = (bar - pd.Timestamp(at)) / step
         w = current.get(s, 0.0)
-        if age < min_bars and w * side > 0 and target.get(s, 0.0) * side <= 0:
+        t = target.get(s, 0.0)
+        if age < min_bars and w * side > 0 and (t * side <= 0 or (no_trim and abs(t) < abs(w))):
             kept[s] = w
     if not kept:
         return target, []
@@ -121,7 +123,8 @@ class GuardedTarget:
                                                "symbols": dropped, "late": late,
                                                "ref": "DECISIONS.md#stale-rebuy-2026-10-01"})
         if min_bars:
-            target, kept = keep_young(target, current, self.opened, bar, step, min_bars)
+            target, kept = keep_young(target, current, self.opened, bar, step, min_bars,
+                                      no_trim=bool((getattr(self, "cc", None) or {}).get("live_hold_no_trim")))
             if kept:
                 self.journal.write("signals", {"event": "live_min_hold", "bar": str(bar), "kept": kept,
                                                "opened": {s: self.opened[s] for s in kept},

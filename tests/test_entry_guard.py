@@ -133,3 +133,18 @@ def test_live_min_hold_overrides_only_the_live_guard():
     assert live_min_hold({"min_hold_bars": 3}) == 3
     assert live_min_hold({}) == 0
     assert live_min_hold({"live_min_hold_bars": 0, "min_hold_bars": 3}) == 0
+
+
+def test_no_trim_keeps_a_young_position_the_target_only_shrinks():
+    """2026-10-05 19:00 IST: the rule cut ENA from 0.34 to 0.24 inside the operator's 6 h hold and the
+    bot sold 29% of it at a loss. DECISIONS.md#live-hold-no-trim-2026-10-05"""
+    bar = pd.Timestamp("2026-10-05 13:00", tz="UTC")
+    opened = {"ENA": ["2026-10-05 12:00:00+00:00", 1], "ADA": ["2026-10-05 08:00:00+00:00", 1]}
+    current = {"ENA": 0.34, "ADA": 0.50}
+    target = {"ENA": 0.24, "ADA": 0.50, "FIL": 0.26}
+    out, kept = keep_young(target, current, opened, bar, pd.Timedelta("30min"), 12, no_trim=True)
+    assert kept == ["ENA"] and out["ENA"] == 0.34 and abs(sum(out.values()) - 1.0) < 1e-9
+    out2, kept2 = keep_young(target, current, opened, bar, pd.Timedelta("30min"), 12)
+    assert kept2 == [] and out2["ENA"] == 0.24
+    late = bar + pd.Timedelta("6h")
+    assert keep_young(target, current, opened, late, pd.Timedelta("30min"), 12, no_trim=True)[1] == []
