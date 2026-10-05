@@ -10,6 +10,11 @@ Current state only. The full history of sessions to 2026-09-23 is archived at `d
 - Operator guards (all in `config/competition_r4.yaml`, all in DECISIONS): 6 h hold + no trims after entry (ENA/FIL until the 18:00Z bar), no sale below cost unless down >5% (`live_no_loss_exit_max`), ENA held at any loss (`live_hold_below_cost`). Cost of the guards so far: at 21:00 IST the paper copy `regime_ls_30m` cut to AAVE only and rose (+2.40% to +2.75%) while the live book fell about a point.
 - Bugs fixed today (each with a test): same-cycle rotation underfill (`#same-cycle-rotation-underfill-2026-10-05`); guards crowding held positions down to fit the gross cap (`#guard-crowding-fix-2026-10-05`, sold FIL at 21:00; an ENA sell was cancelled with `deploy/cancel_pending.py`); blotter reading an externally cancelled order as a fill (cancel tool now journals `cancelled_external`).
 
+### Overnight monitoring (2026-10-06 00:50 IST)
+- EC2 `roostoo-status.timer` (every 10 min) posts status and alerts to an unlisted ntfy.sh topic (`STATUS_NTFY_TOPIC` in the instance `.env`, not committed; `#status-feed-2026-10-06`).
+- Cloud routine "Roostoo overnight live-bot check" (`trig_016DFoScCbC5GCK1jjQxEeTN`, hourly at :37 UTC from 19:37Z to 02:37Z, Sonnet 5.5, Gmail) reads it and emails the operator on problems, trades, and a morning summary at about 08:07 IST. It can alert but not fix.
+- Guard-room bug fixed and deployed 00:35 IST (`8ecd40c`, `#held-room-fix-2026-10-06`).
+
 ### Freeze until 101,000 (operator 2026-10-06 00:12 IST)
 - "just focus on riding the profits right now we need to break above 101k atleast before changing anything": no config or live changes until equity is above 101,000. Loss guards stay (ADA, ENA held below cost).
 - FIL sold 00:00 IST at 1.1088 (+1.5% over cost) by the rule's own exit once FIL was above cost.
