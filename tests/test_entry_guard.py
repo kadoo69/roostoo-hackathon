@@ -148,3 +148,20 @@ def test_no_trim_keeps_a_young_position_the_target_only_shrinks():
     assert kept2 == [] and out2["ENA"] == 0.24
     late = bar + pd.Timedelta("6h")
     assert keep_young(target, current, opened, late, pd.Timedelta("30min"), 12, no_trim=True)[1] == []
+
+
+def test_protect_losses_keeps_a_small_loser_and_lets_a_big_one_go():
+    from bot.entry_guard import protect_losses
+    current = {"ENAUSDT": 0.24, "ADAUSDT": 0.50, "FILUSDT": 0.15}
+    entries = {"ENAUSDT": 0.2571, "ADAUSDT": 0.2725, "FILUSDT": 1.0921}
+    target = {"ADAUSDT": 0.30, "FILUSDT": 0.20, "AAVEUSDT": 0.20}
+    prices = {"ENAUSDT": 0.2521, "ADAUSDT": 0.2740, "FILUSDT": 1.0950}
+    out, kept = protect_losses(target, current, prices, entries, 0.05)
+    assert kept == ["ENAUSDT"] and out["ENAUSDT"] == 0.24
+    assert out["ADAUSDT"] == 0.30 and sum(out.values()) <= 1.0 + 1e-9
+    crowded = {"ADAUSDT": 0.50, "FILUSDT": 0.30, "AAVEUSDT": 0.20}
+    out2, _ = protect_losses(crowded, current, prices, entries, 0.05)
+    assert abs(sum(out2.values()) - 1.0) < 1e-9 and out2["ENAUSDT"] == 0.24
+    deep = {**prices, "ENAUSDT": 0.2571 * 0.94}
+    assert protect_losses(target, current, deep, entries, 0.05)[1] == []
+    assert protect_losses(target, current, prices, {}, 0.05)[1] == []

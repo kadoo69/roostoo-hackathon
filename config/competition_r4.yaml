@@ -39,6 +39,7 @@ contenders:
   live_min_hold_bars: 12
   live_min_hold_ref: DECISIONS.md#live-min-hold-6h-2026-10-05
   live_hold_no_trim: true
+  live_no_loss_exit_max: 0.05
 strategy:
   interval: 30m
   entry_bars: 20

@@ -74,6 +74,28 @@ def keep_young(target: dict[str, float], current: dict[str, float], opened: dict
     return {**{s: w * scale for s, w in rest.items()}, **kept}, sorted(kept)
 
 
+def protect_losses(target: dict[str, float], current: dict[str, float], prices: dict[str, float],
+                   entries: dict[str, float], max_loss: float,
+                   max_gross: float = 1.0) -> tuple[dict[str, float], list[str]]:
+    """A long the target would sell or shrink is kept at its current weight while its price is below
+    its entry but no more than `max_loss` below it; the rest of the target is scaled to fit `max_gross`.
+    Past `max_loss`, or at or above entry, the rule's target stands. DECISIONS.md#live-no-loss-exit-2026-10-05"""
+    kept = {}
+    for s, w in current.items():
+        e, px = entries.get(s), prices.get(s)
+        if w < HELD_MIN or not e or not px:
+            continue
+        if target.get(s, 0.0) < w and e * (1.0 - max_loss) <= px < e:
+            kept[s] = w
+    if not kept:
+        return target, []
+    rest = {s: w for s, w in target.items() if s not in kept}
+    room = max(0.0, max_gross - sum(abs(w) for w in kept.values()))
+    gross = sum(abs(w) for w in rest.values())
+    scale = min(1.0, room / gross) if gross > 0 else 1.0
+    return {**{s: w * scale for s, w in rest.items()}, **kept}, sorted(kept)
+
+
 def seed_now(cfg: dict, bar: pd.Timestamp, current: dict[str, float]) -> bool:
     """True only on the decision for `cfg["seed_bar"]`: that one decision buys the rule's whole
     current target instead of only its fresh entries (guard A off once); held names stay as they are.
@@ -129,5 +151,26 @@ class GuardedTarget:
                 self.journal.write("signals", {"event": "live_min_hold", "bar": str(bar), "kept": kept,
                                                "opened": {s: self.opened[s] for s in kept},
                                                "ref": "DECISIONS.md#catch-up-and-live-min-hold"})
+        max_loss = (getattr(self, "cc", None) or {}).get("live_no_loss_exit_max")
+        if max_loss is not None:
+            target, held = protect_losses(target, current, prices, self.entry_prices(), float(max_loss))
+            if held:
+                self.journal.write("signals", {"event": "loss_hold", "bar": str(bar), "kept": held,
+                                               "ref": "DECISIONS.md#live-no-loss-exit-2026-10-05"})
         self.last_decision_bar = str(bar)
         return target
+
+    def entry_prices(self) -> dict[str, float]:
+        """Average cost of each open long from the book's own fills (`bot.blotter`); empty on any
+        read failure, which leaves the rule's exits in force."""
+        try:
+            from bot.blotter import build
+            lots: dict[str, list[float]] = {}
+            for lot in build(self.s.name).get("open") or []:
+                acc = lots.setdefault(lot["symbol"], [0.0, 0.0])
+                acc[0] += float(lot.get("qty") or 0.0)
+                acc[1] += float(lot.get("cost_basis") or 0.0)
+            return {s: c / q for s, (q, c) in lots.items() if q > 0}
+        except Exception as exc:                                  # noqa: BLE001
+            self.journal.write("errors", {"event": "entry_prices_failed", "error": repr(exc)[:200]})
+            return {}
