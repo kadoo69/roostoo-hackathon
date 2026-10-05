@@ -521,6 +521,16 @@ class Bot:
             pos["collateral"] -= coll
         return True
 
+    def book_offset(self) -> float:
+        """Account equity held outside this book's own view of the wallet, such as a cash sleeve
+        (`bot.cash_sleeve`): the drawdown kill switch and the reported equity count the whole account,
+        target weights only the book's part. Zero for every plain book.
+        DECISIONS.md#cash-ride-sleeve-2026-10-05"""
+        return 0.0
+
+    def snapshot_extra(self) -> dict:
+        return {}
+
     def regime_closes(self, matrix: pd.DataFrame) -> pd.Series:
         """BTC closes for the short regime, fetched on their own when BTC is not in the pool,
         so the regime never adds BTC to what the book may trade."""
@@ -559,7 +569,8 @@ class Bot:
                     "event": "wallet_unavailable", "orders": 0,
                     "ref": "DECISIONS.md#roostoo-keys-2026-09-30"})
         equity, prices = self.mark(quotes)
-        self.equity_curve.append(equity)
+        offset = self.book_offset()
+        self.equity_curve.append(equity + offset)
 
         if self.s.mirror_reference == "none":
             mirror, worst = [], None
@@ -767,7 +778,7 @@ class Bot:
         held_weights = portfolio.current_weights(self.holdings, prices, equity, self.shorts)
         snapshot = {
             "event": "cycle", "bar": str(matrix.index[-1]) if len(matrix) else None,
-            "new_bar": fresh, "equity": round(equity, 2),
+            "new_bar": fresh, "equity": round(equity + offset, 2),
             "cash": round(self.cash, 2),
             "gross_exposure": round(sum(abs(w) for w in held_weights.values()), 4),
             "n_long": sum(1 for w in held_weights.values() if w > 0),
@@ -788,6 +799,7 @@ class Bot:
             "config_sha": self.s.config_sha256,
             "gate": gate,
             "stale_aborted": aborted is not None or None,
+            **self.snapshot_extra(),
         }
         if not self.s.dry_run:
             self.adopt_wallet()

@@ -164,7 +164,8 @@ def test_n4_paper_book_is_the_live_rule_with_four_slots():
 def test_competition_r4_is_the_long_only_regime_rule_on_the_comp_keys():
     """DECISIONS.md#competition-r4-2026-10-05"""
     r4, paper, live = _cfg("competition_r4"), _cfg("regime_ls_30m"), _cfg("competition_z25")
-    assert bot_class(r4).__name__ == "RegimeLSBot"
+    from bot.regime_ls_run import RegimeLSBot
+    assert bot_class(r4).__name__ == "CashSleeveRegimeBot" and issubclass(bot_class(r4), RegimeLSBot)
     seed = {"seed_bar", "seed_ref", "live_min_hold_bars", "live_min_hold_ref", "live_hold_no_trim",
             "live_no_loss_exit_max", "live_hold_below_cost"}
     assert {k: v for k, v in r4["contenders"].items() if k not in seed} == paper["contenders"]
