@@ -3,18 +3,27 @@ meta:
   frozen: true
   paper_only: true
   declared_utc: '2026-10-05T14:40:00Z'
-  requested_by: 'operator 2026-10-05 20:05 IST: "cant we just use that 9k to make quick scalps to recover some profits", then "go ahead make the scalper bot and put it on the dash"'
+  requested_by: 'operator 2026-10-05 20:05 IST: "cant we just use that 9k to make quick scalps to recover some profits", then
+    "go ahead make the scalper bot and put it on the dash"'
   declared_ref: DECISIONS.md#tick-scalp-paper-2026-10-05
-  source: config/tick_capture.yaml (declared 2026-10-03, closed by #tick-capture-closed before any result), reopened after the organisers wrote on 2026-10-05 that tick scalping is not prohibited and will not be disqualified, though finalist judging will not value queue-blind scalping
+  source: config/tick_capture.yaml (declared 2026-10-03, closed by DECISIONS.md#tick-capture-closed before any result), reopened
+    after the organisers wrote on 2026-10-05 that tick scalping is not prohibited and will not be disqualified, though finalist
+    judging will not value queue-blind scalping
   written_before_any_number: true
-  description: 'Paper only, keyless, no orders: a resting buy at the bid and a resting sell one tick higher on PEPE, filled from the live Roostoo LastPrice, with ARB as a control whose tick is below the fee.'
-mechanism: >
-  PEPE's tick is about 23.5 bps of its price, more than a maker round trip (10 bps). Roostoo fills a resting limit when its
-  LastPrice reaches it, with no queue. While LastPrice alternates between bid and ask without the level moving, both legs fill
-  for about 13.5 bps net per round trip.
-failure_mode: 'the level moves (a trend) and the open lot is caught on the wrong side; the venue fills only on a trade-through, not a touch; flips are rarer than sampled; the 30 calls/min budget if it went live; judges discount it'
+  description: 'Paper only, keyless, no orders: a resting buy at the bid and a resting sell one tick higher on PEPE, filled
+    from the live Roostoo LastPrice, with ARB as a control whose tick is below the fee.'
+  grid_declared_utc: '2026-10-05T14:52:00Z'
+  grid_note: 'operator 20:20 IST "check different ticks hyper parametize it": 11 arms with a quoted spread above the 10 bps
+    maker round trip (zero-volume GLWB, WDCB, LITEB left out) x sell 1 or 2 ticks x touch/through = 44 arm books + 4 ARB control
+    books, 48 trials; declared before any grid number, judged only on the full window'
+mechanism: 'PEPE''s tick is about 23.5 bps of its price, more than a maker round trip (10 bps). Roostoo fills a resting limit
+  when its LastPrice reaches it, with no queue. While LastPrice alternates between bid and ask without the level moving, both
+  legs fill for about 13.5 bps net per round trip.
+
+  '
+failure_mode: the level moves (a trend) and the open lot is caught on the wrong side; the venue fills only on a trade-through,
+  not a touch; flips are rarer than sampled; the 30 calls/min budget if it went live; judges discount it
 test:
-  arm: PEPE/USD
   controls:
   - ARB/USD
   fill_rules:
@@ -23,8 +32,24 @@ test:
   unit_usd: 9957.0
   max_inventory: 1
   poll_seconds: 10
-decision_rule: >
-  After at least 12 hours: worth a live sleeve only if PEPE nets positive under BOTH fill rules (fees and the open lot's mark
-  included), completes at least 20 round trips under the touch rule, and ARB is not positive under the touch rule. Any live use
-  needs separate accounting from competition_r4 (one unit per account adopts the whole wallet) and the operator's go.
+  arms:
+  - PEPE/USD
+  - BONK/USD
+  - STO/USD
+  - LISTA/USD
+  - WLFI/USD
+  - 1000CHEEMS/USD
+  - SHIB/USD
+  - HEMI/USD
+  - AVNT/USD
+  - SOMI/USD
+  - EDEN/USD
+  sell_ticks:
+  - 1
+  - 2
+decision_rule: 'After at least 12 hours: worth a live sleeve only if PEPE nets positive under BOTH fill rules (fees and the
+  open lot''s mark included), completes at least 20 round trips under the touch rule, and ARB is not positive under the touch
+  rule. Any live use needs separate accounting from competition_r4 (one unit per account adopts the whole wallet) and the
+  operator''s go. With the grid, a cell counts only if its net is positive under BOTH fill rules at the same sell_ticks, and
+  the best cell is reported with the number of cells tried (48).'
 nonsense_control: ARB/USD, whose one-tick spread is under the 10 bps maker round trip, must not net positive.

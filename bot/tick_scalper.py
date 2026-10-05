@@ -22,8 +22,8 @@ MAKER, TAKER = 0.0005, 0.001
 
 
 class Book:
-    def __init__(self, rule: str, unit: float, max_inv: int):
-        self.rule, self.unit, self.max_inv = rule, unit, max_inv
+    def __init__(self, rule: str, unit: float, max_inv: int, sell_ticks: int = 1):
+        self.rule, self.unit, self.max_inv, self.sell_ticks = rule, unit, max_inv, sell_ticks
         self.cash, self.lots, self.buy, self.fees = 0.0, [], None, 0.0
         self.trips, self.taker_fills, self.maker_fills = 0, 0, 0
 
@@ -65,7 +65,7 @@ class Book:
                 self.buy = bid
         for lot in self.lots:
             if lot["sell"] is None:
-                lot["sell"] = max(ask, lot["entry"] + tick)
+                lot["sell"] = max(ask, lot["entry"] + tick * self.sell_ticks)
         return events
 
     def pnl(self, bid: float) -> float:
@@ -86,8 +86,11 @@ def main(argv: list[str] | None = None) -> int:
     t = cfg["test"]
     out_dir = ROOT / "live" / cfg["meta"]["name"]
     out_dir.mkdir(parents=True, exist_ok=True)
-    pairs = [t["arm"]] + list(t["controls"])
-    books = {(p, r): Book(r, float(t["unit_usd"]), int(t["max_inventory"])) for p in pairs for r in t["fill_rules"]}
+    arms = list(t.get("arms") or [t["arm"]])
+    pairs = arms + list(t["controls"])
+    ticks = [int(k) for k in (t.get("sell_ticks") or [1])]
+    books = {(p, r, k): Book(r, float(t["unit_usd"]), int(t["max_inventory"]), k)
+             for p in pairs for r in t["fill_rules"] for k in ticks}
     started = dt.datetime.now(dt.UTC).isoformat()
     polls = errors = 0
     flips = {p: 0 for p in pairs}
@@ -115,13 +118,15 @@ def main(argv: list[str] | None = None) -> int:
             last_seen[p] = last
             quotes[p] = {"bid": bid, "ask": ask, "last": last, "tick_bps": round((ask / bid - 1) * 1e4, 2)}
             for r in t["fill_rules"]:
-                for ev in books[(p, r)].step(bid, ask, last, tick):
-                    with (out_dir / f"fills-{now[:10]}.jsonl").open("a") as fh:
-                        fh.write(json.dumps({"ts_utc": now, "pair": p, "rule": r, **ev}) + "\n")
+                for k in ticks:
+                    for ev in books[(p, r, k)].step(bid, ask, last, tick):
+                        with (out_dir / f"fills-{now[:10]}.jsonl").open("a") as fh:
+                            fh.write(json.dumps({"ts_utc": now, "pair": p, "rule": r, "sell_ticks": k, **ev}) + "\n")
         state = {"ref": cfg["meta"]["declared_ref"], "started": started, "updated": now, "polls": polls,
-                 "errors": errors, "poll_seconds": t["poll_seconds"], "unit_usd": t["unit_usd"], "arm": t["arm"],
+                 "errors": errors, "poll_seconds": t["poll_seconds"], "unit_usd": t["unit_usd"], "arms": arms,
+                 "controls": list(t["controls"]),
                  "flips": flips, "quotes": quotes,
-                 "books": {f"{p}|{r}": b.view(quotes.get(p, {}).get("bid", 0.0)) for (p, r), b in books.items()}}
+                 "books": {f"{p}|{r}|{k}": b.view(quotes.get(p, {}).get("bid", 0.0)) for (p, r, k), b in books.items()}}
         tmp = out_dir / "state.json.tmp"
         tmp.write_text(json.dumps(state))
         tmp.replace(out_dir / "state.json")
