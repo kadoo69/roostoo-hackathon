@@ -67,11 +67,7 @@ def keep_young(target: dict[str, float], current: dict[str, float], opened: dict
             kept[s] = w
     if not kept:
         return target, []
-    rest = {s: w for s, w in target.items() if s not in kept}
-    room = max(0.0, max_gross - sum(abs(w) for w in kept.values()))
-    gross = sum(abs(w) for w in rest.values())
-    scale = min(1.0, room / gross) if gross > 0 else 1.0
-    return {**{s: w * scale for s, w in rest.items()}, **kept}, sorted(kept)
+    return fit_new_entries(target, current, kept, max_gross), sorted(kept)
 
 
 def protect_losses(target: dict[str, float], current: dict[str, float], prices: dict[str, float],
@@ -90,11 +86,23 @@ def protect_losses(target: dict[str, float], current: dict[str, float], prices: 
             kept[s] = w
     if not kept:
         return target, []
-    rest = {s: w for s, w in target.items() if s not in kept}
-    room = max(0.0, max_gross - sum(abs(w) for w in kept.values()))
-    gross = sum(abs(w) for w in rest.values())
+    return fit_new_entries(target, current, kept, max_gross), sorted(kept)
+
+
+def fit_new_entries(target: dict[str, float], current: dict[str, float], kept: dict[str, float],
+                    max_gross: float) -> dict[str, float]:
+    """Kept positions and every name already held stay at their target weight; only names not yet held
+    (new entries) are scaled to fit the room left under `max_gross`, so a guard can never shrink a held
+    position by crowding (21:00 IST 2026-10-05 sold FIL and ENA that way).
+    DECISIONS.md#guard-crowding-fix-2026-10-05"""
+    out = {**target, **kept}
+    held = {s for s, w in current.items() if abs(w) >= HELD_MIN}
+    fixed = {s: w for s, w in out.items() if s in kept or s in held}
+    new = {s: w for s, w in out.items() if s not in fixed}
+    room = max(0.0, max_gross - sum(abs(w) for w in fixed.values()))
+    gross = sum(abs(w) for w in new.values())
     scale = min(1.0, room / gross) if gross > 0 else 1.0
-    return {**{s: w * scale for s, w in rest.items()}, **kept}, sorted(kept)
+    return {**{s: w * scale for s, w in new.items()}, **fixed}
 
 
 def seed_now(cfg: dict, bar: pd.Timestamp, current: dict[str, float]) -> bool:

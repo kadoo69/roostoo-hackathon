@@ -161,7 +161,7 @@ def test_protect_losses_keeps_a_small_loser_and_lets_a_big_one_go():
     assert out["ADAUSDT"] == 0.30 and sum(out.values()) <= 1.0 + 1e-9
     crowded = {"ADAUSDT": 0.50, "FILUSDT": 0.30, "AAVEUSDT": 0.20}
     out2, _ = protect_losses(crowded, current, prices, entries, 0.05)
-    assert abs(sum(out2.values()) - 1.0) < 1e-9 and out2["ENAUSDT"] == 0.24
+    assert out2["ENAUSDT"] == 0.24 and out2["ADAUSDT"] == 0.50 and out2["AAVEUSDT"] == 0.0
     deep = {**prices, "ENAUSDT": 0.2571 * 0.94}
     assert protect_losses(target, current, deep, entries, 0.05)[1] == []
     assert protect_losses(target, current, prices, {}, 0.05)[1] == []
@@ -177,3 +177,19 @@ def test_no_floor_symbol_is_kept_at_any_loss():
     assert kept == ["ENAUSDT"] and out["ENAUSDT"] == 0.24 and out["ADAUSDT"] == 0.40
     above = {"ENAUSDT": 0.27, "ADAUSDT": 0.2725 * 0.90}
     assert protect_losses(target, current, above, entries, 0.05, no_floor={"ENAUSDT"})[1] == []
+
+
+def test_guards_never_crowd_a_held_position_down():
+    """2026-10-05 21:00 IST: regime DOWN, target {AAVE: 0.5}; the hold kept ENA and FIL, the loss guard
+    kept ADA, and the gross cap then shrank ENA and FIL, selling them below cost."""
+    from bot.entry_guard import protect_losses
+    bar = pd.Timestamp("2026-10-05 15:00", tz="UTC")
+    opened = {"ENAUSDT": ["2026-10-05 12:00:00+00:00", 1], "FILUSDT": ["2026-10-05 12:00:00+00:00", 1],
+              "ADAUSDT": ["2026-10-05 08:00:00+00:00", 1], "AAVEUSDT": ["2026-10-05 14:30:00+00:00", 1]}
+    current = {"ADAUSDT": 0.50, "ENAUSDT": 0.24, "FILUSDT": 0.15, "AAVEUSDT": 0.09}
+    t1, _ = keep_young({"AAVEUSDT": 0.5}, current, opened, bar, pd.Timedelta("30min"), 12, no_trim=True)
+    entries = {"ADAUSDT": 0.2725, "ENAUSDT": 0.2571, "FILUSDT": 1.0921, "AAVEUSDT": 180.0}
+    prices = {"ADAUSDT": 0.268, "ENAUSDT": 0.2476, "FILUSDT": 1.0818, "AAVEUSDT": 182.0}
+    t2, kept = protect_losses(t1, current, prices, entries, 0.05, no_floor={"ENAUSDT"})
+    for s in ("ADAUSDT", "ENAUSDT", "FILUSDT"):
+        assert t2[s] >= current[s] - 1e-12, s
