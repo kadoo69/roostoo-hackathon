@@ -5275,3 +5275,18 @@ PT50 has the better Sharpe in all three windows and shallower drawdowns but wins
 Operator 2026-10-05 09:00 IST: "build it for live book we have so many triggers we could have exploited but couldnt due to lagging losses", after `#ride-trim-recent-outcome`, where PT50C was NULL by the declared rule (it lost the last 3 days by 0.37 pp) while leading the last 14 days by 24 pp with a shallower drawdown. The operator overrides the rule knowingly; the record keeps the NULL. Risks stated to the operator before the decision: 5-7 entries a day instead of 2, so real fills and fees matter more than the harness models; the swap A/B is -1.3% vs +0.5% today.
 Rule (`signals.burst_rider.trim_churn`, `config/competition_z25.yaml` `trim_churn`): with no free slot and a fresh trigger at 2.5 <= z < 5 (not held, out of cooldown), every holding below its entry and at least 12 bars old gives up half its weight; the highest-z trigger is bought with the freed weight (capped at 1/2) with a target of 1 x its daily volatility; winners and young positions are untouched; at most 4 positions. As in the tested arm, z >= 5 triggers are skipped for normal entries too. A loser trimmed again and again falls below the 1% held floor and is then sold off (`bot.entry_guard.HELD_MIN`). The sells and the buy go out in one cycle; a buy cut by unsettled cash completes under `#underfilled-entry-2026-10-04` and `#underfill-chase-cap-2026-10-05`.
 Evidence: unit tests in `tests/test_burst_rider_live.py`; a bar-by-bar replay of the live step over the last 3 days gives 5.7 entries a day (harness 4.8-7.3); the real runner, paper and keyless, on a live-like book with a forced trigger sold half of LTC and of PUMP and bought the trigger with a 1 x dvol target, UNI untouched (`PYTHONPATH=. python3 deploy/checks/trim_churn_e2e.py`). Paper twin of the new live rule: `ride_z25_churn_5m`; the plain ranked-by-z rule stays as `ride_z25_zrank_5m`.
+
+## ride-tp-recent-declaration
+
+Operator 2026-10-05 08:28 IST: make the take-profit smaller, scaled by volatility, for consistent small profits in chop. Full text in `config/ride_tp_recent.yaml`, scored by `python3 -m archive.gates.ride_tp_recent`. Against the live rule with the churn (normal targets 2 x dvol): TP15, TP10, TP05 (1.5, 1, 0.5 x dvol). Recent windows (14 d / 3 d / 24 h); candidate rule as `#ride-rank-regime-declaration`. Written before any number. Three trials.
+
+## ride-tp-recent-outcome
+
+NULL: the 2 x dvol target stays (`results/ride_tp_recent.json`, `python3 -m archive.gates.ride_tp_recent`). Total return / max DD / Sharpe / entries a day, live rule with the churn:
+| arm | last 14 days | last 3 days | last 24 h |
+|---|---|---|---|
+| LIVE (2 x dvol) | **+34.79%** / -11.75% / **8.54** / 4.8 | -2.25% / -7.99% / -3.91 / 5.7 | +1.71% / -0.86% / 17.78 / 7.0 |
+| TP15 (1.5 x) | +18.06% / -13.30% / 5.49 / 5.1 | -2.79% / -7.99% / -4.98 / 6.0 | +1.71% / -0.86% / 17.78 / 7.0 |
+| TP10 (1 x) | +22.02% / -10.34% / 6.11 / 5.2 | -2.49% / -7.99% / -4.39 / 6.3 | **+2.96%** / -0.84% / **30.29** / 10.0 |
+| TP05 (0.5 x) | +14.73% / -12.19% / 4.36 / 7.1 | **+0.00%** / -6.34% / 0.29 / 9.0 | +1.30% / -0.72% / 22.03 / 11.0 |
+Every nearer target gives up 13-20 pp over 14 days: it books the small wins but caps the trend rides that carry the book. TP05 is flat instead of -2.25% over the last 3 days and TP10 leads the last 24 h, but neither wins two windows including the last 3 days. Note: the same LIVE arm was +0.68% over the last 3 days in `#ride-trim-recent-outcome` scored 15 minutes earlier; moving the 3-day start by a few bars swings it by about 3 pp, so single 3-day numbers are noisy. Three trials recorded.

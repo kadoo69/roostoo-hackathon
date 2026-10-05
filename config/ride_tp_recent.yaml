@@ -1,0 +1,22 @@
+meta:
+  name: ride_tp_recent
+  frozen: true
+  declared_utc: '2026-10-05T03:00:00Z'
+  requested_by: 'operator 2026-10-05 08:28 IST: keep the take profit smaller, based on the average std, in this choppy market consistent small profits would help a lot'
+  declared_ref: DECISIONS.md#ride-tp-recent-declaration
+  written_before_any_number: true
+  context: 'earlier, fixed nearer targets lost (#ride-agile-outcome) and 2 x dvol won (#competition-vol-exits-2026-10-04); the churn slice already uses 1 x dvol (#competition-trim-churn-2026-10-05); not scored on the recent windows with the churn'
+mechanism: 'in chop the bursts revert before reaching 2 x a day of volatility, so a nearer volatility-scaled target books more of them as small wins and frees the slot sooner'
+failure_mode: 'a nearer target caps the trend rides that carry the book (W2 +47% came from them), so the small wins do not pay for the lost big ones'
+harness: 'archive.gates.ride_partial_trim book with the live churn (trim 1/2, churn slice 1 x dvol, z cap 5, ranked by z), ladder, maker fees, 27 coins'
+arms:
+  LIVE: 'normal entries target 2 x dvol (the live rule now)'
+  TP15: 'normal entries 1.5 x dvol'
+  TP10: 'normal entries 1 x dvol'
+  TP05: 'normal entries 0.5 x dvol (churn slice at the same, the smaller of 1 x and this)'
+windows: {last_14d: 'the 14 days to now', last_3d: 'the 72 hours to now', last_1d: 'the 24 hours to now'}
+decision_rule: >
+  An arm is a CANDIDATE against LIVE if its return is higher in at least 2 of the 3 windows including last_3d, its
+  Sharpe is higher in at least 2 of the 3, and its last-14-day drawdown is no more than 2 pp deeper. The best
+  candidate by worst-window Sharpe is put to the operator. Otherwise NULL.
+trials: 3

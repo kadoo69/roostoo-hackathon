@@ -1,0 +1,111 @@
+{
+ "end": "2026-10-05 02:50:00+00:00",
+ "arms": {
+  "LIVE": {
+   "last_14d": {
+    "total_pct": 34.79,
+    "max_dd_pct": -11.75,
+    "sharpe": 8.54,
+    "entries_per_day": 4.79
+   },
+   "last_3d": {
+    "total_pct": -2.25,
+    "max_dd_pct": -7.99,
+    "sharpe": -3.91,
+    "entries_per_day": 5.67
+   },
+   "last_1d": {
+    "total_pct": 1.71,
+    "max_dd_pct": -0.86,
+    "sharpe": 17.78,
+    "entries_per_day": 7.0
+   }
+  },
+  "TP15": {
+   "last_14d": {
+    "total_pct": 18.06,
+    "max_dd_pct": -13.3,
+    "sharpe": 5.49,
+    "entries_per_day": 5.14
+   },
+   "last_3d": {
+    "total_pct": -2.79,
+    "max_dd_pct": -7.99,
+    "sharpe": -4.98,
+    "entries_per_day": 6.0
+   },
+   "last_1d": {
+    "total_pct": 1.71,
+    "max_dd_pct": -0.86,
+    "sharpe": 17.78,
+    "entries_per_day": 7.0
+   }
+  },
+  "TP10": {
+   "last_14d": {
+    "total_pct": 22.02,
+    "max_dd_pct": -10.34,
+    "sharpe": 6.11,
+    "entries_per_day": 5.21
+   },
+   "last_3d": {
+    "total_pct": -2.49,
+    "max_dd_pct": -7.99,
+    "sharpe": -4.39,
+    "entries_per_day": 6.33
+   },
+   "last_1d": {
+    "total_pct": 2.96,
+    "max_dd_pct": -0.84,
+    "sharpe": 30.29,
+    "entries_per_day": 10.0
+   }
+  },
+  "TP05": {
+   "last_14d": {
+    "total_pct": 14.73,
+    "max_dd_pct": -12.19,
+    "sharpe": 4.36,
+    "entries_per_day": 7.07
+   },
+   "last_3d": {
+    "total_pct": 0.0,
+    "max_dd_pct": -6.34,
+    "sharpe": 0.29,
+    "entries_per_day": 9.0
+   },
+   "last_1d": {
+    "total_pct": 1.3,
+    "max_dd_pct": -0.72,
+    "sharpe": 22.03,
+    "entries_per_day": 11.0
+   }
+  }
+ },
+ "verdict": {
+  "TP15": {
+   "return_wins": [],
+   "sharpe_wins": 0,
+   "dd_14d_within_2pp": true,
+   "candidate": false
+  },
+  "TP10": {
+   "return_wins": [
+    "last_1d"
+   ],
+   "sharpe_wins": 1,
+   "dd_14d_within_2pp": true,
+   "candidate": false
+  },
+  "TP05": {
+   "return_wins": [
+    "last_3d"
+   ],
+   "sharpe_wins": 2,
+   "dd_14d_within_2pp": true,
+   "candidate": false
+  },
+  "best": null
+ },
+ "ref": "DECISIONS.md#ride-tp-recent-declaration"
+}
