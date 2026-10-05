@@ -94,12 +94,17 @@ def fit_new_entries(target: dict[str, float], current: dict[str, float], kept: d
     """Kept positions and every name already held stay at their target weight; only names not yet held
     (new entries) are scaled to fit the room left under `max_gross`, so a guard can never shrink a held
     position by crowding (21:00 IST 2026-10-05 sold FIL and ENA that way).
-    DECISIONS.md#guard-crowding-fix-2026-10-05"""
+    DECISIONS.md#guard-crowding-fix-2026-10-05
+    A held name the guards did not keep reserves only what it will really hold, the smaller of its target
+    and its current weight, because the ladder never tops a held position up (`bot.booking.apply`); its
+    target alone left no room and zeroed FIL and UNI at 00:30 IST 2026-10-06.
+    DECISIONS.md#held-room-fix-2026-10-06"""
     out = {**target, **kept}
     held = {s for s, w in current.items() if abs(w) >= HELD_MIN}
     fixed = {s: w for s, w in out.items() if s in kept or s in held}
     new = {s: w for s, w in out.items() if s not in fixed}
-    room = max(0.0, max_gross - sum(abs(w) for w in fixed.values()))
+    reserved = sum(abs(w) if s in kept else min(abs(w), abs(current.get(s, 0.0))) for s, w in fixed.items())
+    room = max(0.0, max_gross - reserved)
     gross = sum(abs(w) for w in new.values())
     scale = min(1.0, room / gross) if gross > 0 else 1.0
     return {**{s: w * scale for s, w in new.items()}, **fixed}

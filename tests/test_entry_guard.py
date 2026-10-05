@@ -4,6 +4,7 @@ from __future__ import annotations
 from types import SimpleNamespace
 
 import pandas as pd
+import pytest
 
 from bot.entry_guard import GuardedTarget, drop_stale_entries, is_catch_up, keep_young, update_opened
 
@@ -161,7 +162,8 @@ def test_protect_losses_keeps_a_small_loser_and_lets_a_big_one_go():
     assert out["ADAUSDT"] == 0.30 and sum(out.values()) <= 1.0 + 1e-9
     crowded = {"ADAUSDT": 0.50, "FILUSDT": 0.30, "AAVEUSDT": 0.20}
     out2, _ = protect_losses(crowded, current, prices, entries, 0.05)
-    assert out2["ENAUSDT"] == 0.24 and out2["ADAUSDT"] == 0.50 and out2["AAVEUSDT"] == 0.0
+    assert out2["ENAUSDT"] == 0.24 and out2["ADAUSDT"] == 0.50
+    assert out2["AAVEUSDT"] == pytest.approx(1.0 - 0.24 - 0.50 - 0.15)
     deep = {**prices, "ENAUSDT": 0.2571 * 0.94}
     assert protect_losses(target, current, deep, entries, 0.05)[1] == []
     assert protect_losses(target, current, prices, {}, 0.05)[1] == []
@@ -193,3 +195,20 @@ def test_guards_never_crowd_a_held_position_down():
     t2, kept = protect_losses(t1, current, prices, entries, 0.05, no_floor={"ENAUSDT"})
     for s in ("ADAUSDT", "ENAUSDT", "FILUSDT"):
         assert t2[s] >= current[s] - 1e-12, s
+
+
+def test_a_held_name_reserves_only_what_it_holds_so_new_entries_are_bought():
+    """2026-10-06 00:30 IST (the 18:30Z bar): the regime left DOWN and the rule wanted FIL 0.5 and UNI 0.152
+    with 8.5k cash idle; the loss guard kept ADA and ENA, and AAVE, held at 0.10 and never topped up, was
+    counted at its 0.348 target, so the room was negative and both entries were scaled to zero."""
+    from bot.entry_guard import protect_losses
+    current = {"ADAUSDT": 0.541, "ENAUSDT": 0.265, "AAVEUSDT": 0.10}
+    target = {"AAVEUSDT": 0.34785, "FILUSDT": 0.5, "UNIUSDT": 0.15215}
+    entries = {"ADAUSDT": 0.2725, "ENAUSDT": 0.2571, "AAVEUSDT": 180.0}
+    prices = {"ADAUSDT": 0.2651, "ENAUSDT": 0.2498, "AAVEUSDT": 182.0, "FILUSDT": 1.13, "UNIUSDT": 9.0}
+    out, kept = protect_losses(target, current, prices, entries, 0.05, no_floor={"ENAUSDT"})
+    assert kept == ["ADAUSDT", "ENAUSDT"]
+    room = 1.0 - (0.541 + 0.265 + 0.10)
+    assert out["FILUSDT"] + out["UNIUSDT"] == pytest.approx(room)
+    assert out["FILUSDT"] / out["UNIUSDT"] == pytest.approx(0.5 / 0.15215)
+    assert out["ADAUSDT"] == 0.541 and out["ENAUSDT"] == 0.265 and out["AAVEUSDT"] == 0.34785
