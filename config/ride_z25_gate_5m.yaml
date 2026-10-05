@@ -5,9 +5,8 @@ meta:
   paper_only: true
   requested_by: 'operator 2026-10-05 08:40 IST: run the z vs return ranking test and
     judge on forward paper too'
-  description: 'PAPER: the live competition_z25 rule plus the breadth regime gate
-    (no new entries or churn while < 40% of coins are up over 24 h); operator: test
-    on paper, not live'
+  description: 'PAPER: the live competition_z25 rule (rank by z, no churn) plus the
+    breadth regime gate'
   declared_ref: DECISIONS.md#competition-regime-gate-2026-10-05
 adaptive:
   burst_arms:
@@ -21,14 +20,6 @@ adaptive:
       sigma_bars: 288
       tp_vol_k: 2.0
       rank_by: z
-      trim_churn:
-        trim: 0.5
-        churn_tpk: 1.0
-        zmax: 5.0
-        min_age_bars: 12
-        max_positions: 4
-        ref: DECISIONS.md#competition-trim-churn-2026-10-05
-        keep_strong: true
       regime_gate:
         min_breadth: 0.4
         bars: 288

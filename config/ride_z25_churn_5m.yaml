@@ -5,7 +5,8 @@ meta:
   paper_only: true
   requested_by: 'operator 2026-10-05 08:40 IST: run the z vs return ranking test and
     judge on forward paper too'
-  description: PAPER twin of the live competition_z25 rule (rank by z, trim_churn)
+  description: 'PAPER: the live competition_z25 rule plus trim_churn with keep_strong
+    (the churn, withdrawn from live 10-05 10:00 IST)'
   declared_ref: DECISIONS.md#competition-trim-churn-2026-10-05
 adaptive:
   burst_arms:

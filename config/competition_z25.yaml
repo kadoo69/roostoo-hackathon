@@ -22,14 +22,6 @@ adaptive:
       sigma_bars: 288
       tp_vol_k: 2.0
       rank_by: z
-      trim_churn:
-        trim: 0.5
-        churn_tpk: 1.0
-        zmax: 5.0
-        min_age_bars: 12
-        max_positions: 4
-        keep_strong: true
-        ref: DECISIONS.md#competition-trim-churn-2026-10-05
   allow_cash: false
   lookback_days: 3
   reselect_minutes: 60
