@@ -5204,3 +5204,20 @@ Operator 2026-10-05 02:10 IST: link the live quote to the desk. Before this, pos
 Operator 2026-10-05 02:25 IST, after seeing regime_ls_30m (+2.05%), ride1_wide_5m (+1.98%) and ride_z3_5m (+1.24%) lead the live book (+0.42%) over the first 9 hours: write the day-3 check. Full text in `config/day3_fleet_forward.yaml`, scored by `python3 -m archive.gates.day3_fleet_forward` on or after 2026-10-07 12:00Z (17:30 IST).
 Window: the open (10-04 12:00Z) to 10-07 12:00Z, three daily sub-windows. Live reference: the competition account (100,000 flat until its first fill, then `competition_z25` equity). Eligible challengers: uptime at least 95% and at least 5 closed trades; the A/B pair is excluded (own read).
 A challenger is a CANDIDATE only if it beats the live return by at least 2.0 pp, its max drawdown is no more than 2.0 pp deeper, and it beats live in at least 2 of 3 sub-windows. Not written before every number: the first 9 hours are inside the window and were seen, and the 2.0 pp bar is above the 1.6 pp lead seen. With about 12 challengers one can pass by luck, so a candidate goes to the operator with its own declared test record, never an automatic switch. No candidate: NULL, the live rule stays. One trial.
+
+## ride-partial-trim-declaration
+
+Operator 2026-10-05 08:10 IST: build a risk-management rule for a full book of losers: cut part of each losing coin, take a fresh entry in the highest-signal coin and skim it, to improve Sharpe. Written before any number; full text in `config/ride_partial_trim.yaml`, scored by `python3 -m archive.gates.ride_partial_trim`.
+Arms against the live rule with the skim ladder (B2): PT33 / PT50 (with no free slot and a fresh trigger at 2.5 <= z < 5, sell 1/3 or 1/2 of every holding below entry and at least 12 bars old, buy the highest-z trigger with the proceeds, capped at 1/2 of equity, at most 4 positions), and B2X (the live rule skipping z >= 5 triggers, a control for the exhaustion cap).
+Recommended only if the best PT arm beats B2 on Sharpe in at least 2 of 3 windows (W1, W2, last 3 days), on return in at least 2 of 3, and its drawdown is never more than 2 pp deeper; otherwise NULL. Seen before writing: the swap A/B (full swaps) trails the live rule by 2.3 pp over 7 hours today. Four trials.
+
+## ride-partial-trim-outcome
+
+FAIL, NULL: the live rule stays (`results/ride_partial_trim.json`, `python3 -m archive.gates.ride_partial_trim`). Total return / max DD / Sharpe (hourly, annualised) / entries a day, explicit bar-level book with the 3%/15% ladder on every arm, maker fees, 27 coins:
+| arm | W1 (09-05..09-19) | W2 (09-19..10-05 02:50Z) | last 3 days | since the open (context) |
+|---|---|---|---|---|
+| B2 (live) | +19.83% / -11.63% / 5.54 / 2.3 | **+46.97%** / **-9.25%** / **10.42** / 2.2 | +0.99% / -7.59% / 2.17 / 2.7 | +0.94% / -0.81% |
+| B2X (skip z >= 5) | **+35.61%** / -8.49% / 9.25 / 2.3 | +28.61% / -16.34% / 6.31 / 2.2 | -1.99% / -7.59% / -4.09 / 2.7 | +0.94% / -0.81% |
+| PT33 (trim 1/3 of losers) | +24.66% / -11.53% / 7.85 / 4.1 | +41.68% / -12.56% / 8.69 / 4.0 | +0.05% / -5.36% / 0.22 / 4.3 | +0.92% / -0.76% |
+| PT50 (trim 1/2 of losers) | +25.33% / -11.48% / 7.94 / 4.1 | +34.42% / -15.13% / 7.63 / 4.0 | **+1.68%** / **-5.21%** / 3.79 / 4.3 | +0.96% / -0.79% |
+PT50, the better trim arm by worst-window Sharpe, beats B2 on Sharpe and return in W1 and the last 3 days but loses W2 by 12.6 pp with a drawdown 5.9 pp deeper, which breaks the 2 pp drawdown condition: in the trend window the losers it trims recover and the fresh bursts it buys revert, the same failure as the full swaps and today's swap A/B. Trimming does cut the chop drawdown (-5.2% vs -7.6% over the last 3 days), at the cost of the trend windows where the ride earns. The exhaustion cap control (B2X) also fails, and badly in W2 (-18 pp): in that window the z >= 5 entries carried the book, so the 30-day "z >= 5 rides about 0%" average must not be turned into a skip rule. Four trials recorded.

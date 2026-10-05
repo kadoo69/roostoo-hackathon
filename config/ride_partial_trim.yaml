@@ -1,0 +1,24 @@
+meta:
+  name: ride_partial_trim
+  frozen: true
+  declared_utc: '2026-10-05T02:45:00Z'
+  requested_by: 'operator 2026-10-05 08:10 IST: have a risk management system for when the book is full of losers: cut some loss in each coin, take a fresh entry in the new highest-signal coin and skim in it, to improve Sharpe'
+  declared_ref: DECISIONS.md#ride-partial-trim-declaration
+  written_before_any_number: true
+  context_seen: 'the swap A/B (full swaps of the weakest loser for a repeat trigger) is -1.17% vs +1.10% for the live rule over 7 hours on 10-05; full swaps (#ride-rotation-outcome RS0) won both 2-week windows and lost the last 3 days'
+mechanism: 'a full book of stale losers cannot act on new bursts; trimming a fraction of every loser (not the whole position) frees capital for the strongest fresh trigger while keeping the losers'' recovery, so the book keeps exposure to both and diversifies the slot risk, which should cut drawdown and raise Sharpe'
+failure_mode: 'the fresh bursts revert as often as the losers recover (what sank the full swaps in chop and the swap A/B today); the extra round trips cost fees; more, smaller positions dilute the winners'
+harness: 'explicit bar-level book (archive.gates.ride_entry_regime style), 27-coin pool, 5m Binance bars, maker fee 0.05% per side, the live entry (z >= 2.5, cooldown 12 bars, 2 slots of 1/2), V2 targets (2 x dvol), 24 h hold, and the 3%/15% skim ladder on every position (all arms)'
+arms:
+  B2: 'the live rule (with the ladder)'
+  B2X: 'control: the live rule with triggers at z >= 5 skipped (isolates the exhaustion cap from the trims)'
+  PT33: 'when no slot is free and a trigger with 2.5 <= z < 5 fires: sell 1/3 of every holding that is below its entry and at least 12 bars old; the proceeds (capped at 1/2 of equity) buy the highest-z such trigger, which then has the normal exits and ladder; at most 4 positions'
+  PT50: 'the same with 1/2 of each losing holding'
+windows: {W1: '2026-09-05..2026-09-19', W2: '2026-09-19..now (includes the competition so far)', last_3d: 'the last 72 hours'}
+measures: 'total return, max drawdown, Sharpe on hourly equity returns (annualised x sqrt(8760)), entries per day; the since-open segment (10-04 12:00Z..now) printed as context'
+decision_rule: >
+  The best of PT33 / PT50 by worst-window Sharpe is RECOMMENDED only if, against B2: Sharpe is higher in at least 2 of
+  the 3 windows, total return is at least B2's in at least 2 of the 3 windows, and max drawdown is never more than 2 pp
+  deeper. If B2X alone passes the same test, the exhaustion cap is reported separately as its own candidate. Otherwise
+  NULL and the live rule stays. Going live needs the operator's decision after the result, then a paper or dry run.
+trials: 4

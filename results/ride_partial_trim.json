@@ -1,0 +1,143 @@
+{
+ "windows": {
+  "W1": [
+   "2026-09-05 00:00:00+00:00",
+   "2026-09-19 00:00:00+00:00"
+  ],
+  "W2": [
+   "2026-09-19 00:00:00+00:00",
+   "2026-10-05 02:20:00+00:00"
+  ],
+  "last_3d": [
+   "2026-10-02 02:20:00+00:00",
+   "2026-10-05 02:20:00+00:00"
+  ],
+  "since_open": [
+   "2026-10-04 12:00:00+00:00",
+   "2026-10-05 02:20:00+00:00"
+  ]
+ },
+ "arms": {
+  "B2": {
+   "W1": {
+    "total_pct": 19.83,
+    "max_dd_pct": -11.63,
+    "sharpe": 5.54,
+    "entries_per_day": 2.29
+   },
+   "W2": {
+    "total_pct": 46.97,
+    "max_dd_pct": -9.25,
+    "sharpe": 10.42,
+    "entries_per_day": 2.24
+   },
+   "last_3d": {
+    "total_pct": 0.99,
+    "max_dd_pct": -7.59,
+    "sharpe": 2.17,
+    "entries_per_day": 2.67
+   },
+   "since_open": {
+    "total_pct": 0.94,
+    "max_dd_pct": -0.81,
+    "sharpe": 26.78,
+    "entries_per_day": 3.35
+   }
+  },
+  "B2X": {
+   "W1": {
+    "total_pct": 35.61,
+    "max_dd_pct": -8.49,
+    "sharpe": 9.25,
+    "entries_per_day": 2.29
+   },
+   "W2": {
+    "total_pct": 28.61,
+    "max_dd_pct": -16.34,
+    "sharpe": 6.31,
+    "entries_per_day": 2.17
+   },
+   "last_3d": {
+    "total_pct": -1.99,
+    "max_dd_pct": -7.59,
+    "sharpe": -4.09,
+    "entries_per_day": 2.67
+   },
+   "since_open": {
+    "total_pct": 0.94,
+    "max_dd_pct": -0.81,
+    "sharpe": 26.78,
+    "entries_per_day": 3.35
+   }
+  },
+  "PT33": {
+   "W1": {
+    "total_pct": 24.66,
+    "max_dd_pct": -11.53,
+    "sharpe": 7.85,
+    "entries_per_day": 4.07
+   },
+   "W2": {
+    "total_pct": 41.68,
+    "max_dd_pct": -12.56,
+    "sharpe": 8.69,
+    "entries_per_day": 4.04
+   },
+   "last_3d": {
+    "total_pct": 0.05,
+    "max_dd_pct": -5.36,
+    "sharpe": 0.22,
+    "entries_per_day": 4.33
+   },
+   "since_open": {
+    "total_pct": 0.92,
+    "max_dd_pct": -0.76,
+    "sharpe": 25.01,
+    "entries_per_day": 6.7
+   }
+  },
+  "PT50": {
+   "W1": {
+    "total_pct": 25.33,
+    "max_dd_pct": -11.48,
+    "sharpe": 7.94,
+    "entries_per_day": 4.07
+   },
+   "W2": {
+    "total_pct": 34.42,
+    "max_dd_pct": -15.13,
+    "sharpe": 7.63,
+    "entries_per_day": 4.04
+   },
+   "last_3d": {
+    "total_pct": 1.68,
+    "max_dd_pct": -5.21,
+    "sharpe": 3.79,
+    "entries_per_day": 4.33
+   },
+   "since_open": {
+    "total_pct": 0.96,
+    "max_dd_pct": -0.79,
+    "sharpe": 23.82,
+    "entries_per_day": 6.7
+   }
+  }
+ },
+ "verdict": {
+  "best_trim_arm": "PT50",
+  "trim": {
+   "sharpe_wins": 2,
+   "return_wins": 2,
+   "dd_within_2pp": false,
+   "pass": false
+  },
+  "cap_control_B2X": {
+   "sharpe_wins": 1,
+   "return_wins": 1,
+   "dd_within_2pp": false,
+   "pass": false
+  },
+  "recommended": false
+ },
+ "ref": "DECISIONS.md#ride-partial-trim-declaration"
+}
