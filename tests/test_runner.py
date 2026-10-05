@@ -87,7 +87,8 @@ def test_competition_split_is_the_rehearsed_split_on_the_comp_keys():
     with open("deploy/ec2_bootstrap.sh") as fh:
         books = next(ln for ln in fh.read().splitlines() if ln.startswith("BOOKS="))
     units = books.split('"')[1].split()
-    assert "competition_z25" in units and not {"competition", "competition_split", "competition_wf", "competition_ride", "competition_z3"} & set(units)
+    assert "competition_r4" in units and not {"competition", "competition_split", "competition_wf", "competition_ride", "competition_z3",
+                                               "competition_z25"} & set(units)
 
 
 def test_competition_ride_is_ride_5m_on_the_comp_keys():
