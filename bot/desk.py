@@ -288,7 +288,10 @@ def competition_view(ec2: dict | None, radar: dict) -> dict | None:
             "equity": eq, "start": start, "ret_pct": round((eq / start - 1) * 100, 3) if eq else None,
             "net": round(eq - start, 2) if eq else None, "peak": mon.get("peak") or bk.get("peak"),
             "dd_pct": round((eq / (mon.get("peak") or bk.get("peak") or eq) - 1) * 100, 2) if eq else None,
-            "cash": mon.get("cash") or bk.get("cash"), "positions": pos, "slots": slots,
+            # Cash from the same state.json read as the holdings (the monitor's line can be up to 5 minutes older
+            # and mixed with fresh holdings showed a -15% equity that was not there, 2026-10-05 08:40 IST).
+            "cash": bk.get("cash") if bk.get("cash") is not None else mon.get("cash"),
+            "bot_equity": bk.get("equity") or mon.get("equity"), "positions": pos, "slots": slots,
             "slots_free": max(0, int((1.0 - used + 1e-9) * slots)), "weight_used": round(used, 4),
             "series": bk.get("eq_series") or [], "closed": closed, "stats": bk.get("blotter") or {},
             "orders_today": mon.get("orders_today"), "faults_today": mon.get("faults_today"),

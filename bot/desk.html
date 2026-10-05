@@ -173,7 +173,32 @@ function kpi(label, value, sub, klass="", help="") {
   return `<div class="kpi"><div class="l">${label}${help?` <span class="help" title="${esc(help)}">?</span>`:""}</div><div class="v ${klass}">${value}</div><div class="s">${sub||"&nbsp;"}</div></div>`;
 }
 
+function renderLive() {
+  // On a 3 s quote tick only the parts that move with price are redrawn, so tables keep their scroll.
+  const c = D && D.competition;
+  if (!c) return;
+  renderHeader(); drawKpis(c); drawEquity(c); drawPositions(c, D.radar || {});
+}
+
 function render() {
+  renderHeader();
+  const c = D.competition, r = D.radar || {};
+  if (!c) { $("kpis").innerHTML = ""; return; }
+  drawKpis(c);
+  drawEquity(c);
+  drawBoard(c);
+  drawPositions(c, r);
+  drawRadar(c, r);
+  drawMarket(c, r);
+  drawStats(c);
+  drawTrades(c);
+  drawFleet();
+  drawWf();
+  drawHealth(c);
+  $("foot").textContent = `payload ${ist(D.generated,true)} IST · all times IST · read-only page, it cannot trade`;
+}
+
+function renderHeader() {
   const c = D.competition, r = D.radar || {}, ec2 = D.ec2 || {};
   $("sub").textContent = c ? `${c.bot} · live on the competition account · updated ${new Date().toLocaleTimeString("en-GB",{...IST,hour12:false})} IST` : "competition unit not visible";
   // pills
@@ -196,9 +221,9 @@ function render() {
   if (c && c.alerts.length) ban.push(`<div class="banner">Monitor alerts: ${esc(c.alerts.join(", "))}</div>`);
   (D.alerts||[]).forEach(a => ban.push(`<div class="banner ${a.level==="warn"?"warn":""}">${esc(a.text)}</div>`));
   $("banners").innerHTML = ban.join("");
-  if (!c) { $("kpis").innerHTML = ""; return; }
+}
 
-  // KPIs
+function drawKpis(c) {
   const b = c.bench, st = c.stats || {};
   const realised = st.net_pnl, open = c.positions.reduce((a,p)=>a+(p.pnl_usd||0),0);
   const exBtc = b.btc_open!=null && c.ret_pct!=null ? c.ret_pct - b.btc_open : null;
@@ -206,7 +231,7 @@ function render() {
   const lb = c.leaderboard, me = lb ? lb.rows.find(x => x.team===lb.team) : null;
   const clk = c.clock;
   $("kpis").innerHTML = [
-    kpi("Equity", fmt(c.equity,0), `<span class="${cls(c.net)}">${c.net>0?"+":""}${fmt(c.net,0)}</span> since the open${c.live_equity?' · <span class="up">live</span>':""}`, "", "Live: the bot's cash plus each holding at the venue's last price, every few seconds. The bot values the book the same way."),
+    kpi("Equity", fmt(c.equity,0), `<span class="${cls(c.net)}">${c.net>0?"+":""}${fmt(c.net,0)}</span> since the open${c.live_equity?' · <span class="up">live</span>':c.live_mismatch?' · <span class="warn">bot value (snapshot mid-trade)</span>':""}`, "", "Live: the bot's cash plus each holding at the venue's last price, every few seconds. The bot values the book the same way."),
     kpi("Return", `<span class="${cls(c.ret_pct)}">${pct(c.ret_pct)}</span>`, `peak ${fmt(c.peak,0)}`, "", "Since 100,000 at the open, 2026-10-04 17:30 IST."),
     kpi("From peak", `<span class="${c.dd_pct<-0.05?"down":""}">${pct(c.dd_pct)}</span>`, `the monitor alerts beyond -5%`),
     kpi("vs BTC", `<span class="${cls(exBtc)}">${pct(exBtc)}</span>`, `BTC ${pct(b.btc_open)} since the open`, "", "Our return minus BTC's since the open."),
@@ -216,18 +241,6 @@ function render() {
     kpi("Rank", me ? `#${me.rank}` : "–", me ? `${pct(me.ret_pct,1)} · as of ${ist(lb.at,true)} IST` : "paste into run/leaderboard.json"),
     kpi("Competition", `Day ${clk.day} / ${clk.days}`, `${fmt(clk.hours_left,0)} h left<div class="clockbar"><i style="width:${(clk.elapsed_frac*100).toFixed(1)}%"></i></div>`),
   ].join("");
-
-  drawEquity(c);
-  drawBoard(c);
-  drawPositions(c, r);
-  drawRadar(c, r);
-  drawMarket(c, r);
-  drawStats(c);
-  drawTrades(c);
-  drawFleet();
-  drawWf();
-  drawHealth(c);
-  $("foot").textContent = `payload ${ist(D.generated,true)} IST · all times IST · read-only page, it cannot trade`;
 }
 
 function drawEquity(c) {
@@ -443,21 +456,39 @@ function applyQuotes() {
     p.to_target_pct = (p.target_px / p.mark - 1) * 100;
     if (p.next_skim_px) p.to_skim_pct = (p.next_skim_px / p.mark - 1) * 100;
   });
-  if (all && c.cash != null) {
-    c.equity = c.cash + held; c.live_equity = true; c.net = c.equity - c.start;
+  const live = c.cash != null ? c.cash + held : null, ref = c.bot_equity;
+  // Guard: a live value more than 3% from the bot's own last equity means the cash and holdings snapshots
+  // disagree (a trade between them), not a real move; keep the bot's value and say so.
+  c.live_mismatch = !!(all && live && ref && Math.abs(live / ref - 1) > 0.03);
+  if (all && live && !c.live_mismatch) {
+    c.equity = live; c.live_equity = true; c.net = c.equity - c.start;
     c.ret_pct = (c.equity / c.start - 1) * 100; c.dd_pct = (c.equity / Math.max(c.peak || c.equity, c.equity) - 1) * 100;
+  } else if (ref) {
+    c.equity = ref; c.live_equity = false; c.net = ref - c.start; c.ret_pct = (ref / c.start - 1) * 100;
+    c.dd_pct = (ref / Math.max(c.peak || ref, ref) - 1) * 100;
   }
   (D.radar?.rows || []).forEach(r => { const q = Q.quotes[r.symbol]; if (q && q.last) r.price = q.last; });
 }
 
 async function loadQuotes() {
-  try { const r = await fetch("/api/quotes", {cache:"no-store"}); Q = await r.json(); if (D) { applyQuotes(); render(); } }
+  try { const r = await fetch("/api/quotes", {cache:"no-store"}); Q = await r.json(); if (D) { applyQuotes(); renderLive(); } }
   catch (e) { Q = {error: String(e)}; }
 }
 
+let loading = false;
 async function load() {
-  try { const r = await fetch("/api/desk", {cache:"no-store"}); D = await r.json(); applyQuotes(); render(); }
-  catch (e) { $("banners").innerHTML = `<div class="banner">Desk API unreachable: ${esc(e)}</div>`; }
+  if (loading) return;
+  loading = true;
+  const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 20000);
+  try { const r = await fetch("/api/desk", {cache:"no-store", signal: ctl.signal}); D = await r.json(); applyQuotes(); render(); }
+  catch (e) {
+    $("banners").innerHTML = `<div class="banner">Desk API ${e.name==="AbortError"?"timed out after 20 s":"unreachable: "+esc(e)}; retrying in 5 s</div>`;
+    setTimeout(() => { loading = false; load(); }, 5000);
+    clearTimeout(timer);
+    return;
+  }
+  clearTimeout(timer);
+  loading = false;
 }
 load(); setInterval(load, 30000);
 loadQuotes(); setInterval(loadQuotes, 3000);
