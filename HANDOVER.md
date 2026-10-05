@@ -2,22 +2,22 @@
 
 Current state only. The full history of sessions to 2026-09-23 is archived at `docs/archive/HANDOVER_2026-09-23.md`; older section references in code and configs point there.
 
-## CURRENT STATE 2026-10-05 20:15 IST / 14:45Z (read this first; everything below is history)
+## CURRENT STATE 2026-10-05 21:35 IST / 16:05Z (read this first; everything below is history)
 
 ### The competition account
-- Unit `roostoo-live@competition_r4` on EC2 (config sha `29eb2e576f124279`, EC2 at `cdc1693`+): the regime contenders rule long-only, 30m, n = 3. Equity about 98,070 (-1.9% since the 100k start); leaderboard 20:12 IST had us second last, the top-20 line at -0.1% and the top-10 line at +0.3%.
-- Holdings: ADA ~0.51 (cost 0.2725), ENA ~0.24 (cost 0.2571), FIL ~0.15 (cost 1.0921), cash 9,957 (held names are never topped up; the cash goes to the rule's next fresh entry, likely AAVE or PEPE).
-- Operator guards in force (all in `config/competition_r4.yaml`, all recorded in DECISIONS): `live_min_hold_bars: 12` + `live_hold_no_trim` (no exit or trim for 6 h after entry: ENA/FIL until the 18:00Z bar), `live_no_loss_exit_max: 0.05` (no sell below cost unless down >5%), `live_hold_below_cost: [ENAUSDT]` (ENA held at ANY loss: the riskiest setting; recommended removal at the day-3 check). `seed_bar` is a past bar (inert).
-- Fixed today: same-cycle rotation underfill (`#same-cycle-rotation-underfill-2026-10-05`, proven on the 18:00 IST rotation). Desk: shared snapshot cache, 60 s EC2 refresh, relabelled radar, rule-book positions.
+- Unit `roostoo-live@competition_r4` on EC2 at `64f7cfb`: the regime contenders rule long-only, 30m, n = 3. Equity about 96,250-96,550 (-3.5% since the 100k start). Leaderboard 20:12 IST (`run/leaderboard.json`): #1 +6.0%, #10 +0.3%, top-20 line -0.1%, us second last.
+- Holdings: ADA ~0.50 (cost 0.2725), ENA ~0.24 (cost 0.2571), AAVE ~0.09 (bought 20:30 IST with idle cash), FIL ~0.08 (cost 1.0921), cash 7,289. Market regime DOWN since the 15:00Z bar: the rule's target is {AAVE 0.5} and it makes no new longs until the regime leaves DOWN.
+- Operator guards (all in `config/competition_r4.yaml`, all in DECISIONS): 6 h hold + no trims after entry (ENA/FIL until the 18:00Z bar), no sale below cost unless down >5% (`live_no_loss_exit_max`), ENA held at any loss (`live_hold_below_cost`). Cost of the guards so far: at 21:00 IST the paper copy `regime_ls_30m` cut to AAVE only and rose (+2.40% to +2.75%) while the live book fell about a point.
+- Bugs fixed today (each with a test): same-cycle rotation underfill (`#same-cycle-rotation-underfill-2026-10-05`); guards crowding held positions down to fit the gross cap (`#guard-crowding-fix-2026-10-05`, sold FIL at 21:00; an ENA sell was cancelled with `deploy/cancel_pending.py`); blotter reading an externally cancelled order as a fill (cancel tool now journals `cancelled_external`).
 
 ### Next actions
-1. Freeze the live book (recommended to the operator 20:12 IST): no more live changes until the day-3 check.
-2. 17:30 IST 10-07: compare `competition_r4` with `ride_5m` / `ride_z25_zrank_5m` and decide regime vs ride once; remove `live_hold_below_cost`.
-3. Paper PEPE tick scalper (`bot/tick_scalper.py`, Mac, `live/tick_scalp_pepe/state.json`, desk panel): read after 12 h against its decision rule in `config/tick_scalp_pepe.yaml`; a live sleeve needs separate accounting.
-4. AWS SSO lasts 8-12 h: `! python3 deploy/aws_login.py` and approve at once (device codes expire in 10 min). Keep the Mac on mains (on battery the Mac books throttle and the progress report drops them).
+1. Freeze the live book; no more live changes until the day-3 check (17:30 IST 10-07), where regime vs `ride_5m` is decided once on data. Recommend removing `live_hold_below_cost` (and probably the other guards) there: the rule's own exits beat the guards today.
+2. Paper tick-scalper grid (`bot/tick_scalper.py`, Mac, 48 cells, declared in `config/tick_scalp_pepe.yaml`): read about 08:30 IST 10-06 by its decision rule. At 68 min only PEPE touch (+250 over 28 trips) stood out; nothing survived the trade-through rule; EDEN lost -384 on one stuck lot. It runs on the Mac, so the Mac must stay on mains.
+3. AWS SSO lasts 8-12 h: `! python3 deploy/aws_login.py`, approve at once (codes expire in 10 min).
 
-### Lessons from 10-05 (also in DECISIONS)
-- Every hand-timed live move today lost: the 13:09 switch (cash in the 13:00 rally), the 14:00 seed (wave top), the ENA rotation bug, holding a laggard (NEAR -559). The rule's own entries (ADA, FIL) are the ones in profit; the paper copy that never changed made +3.8%.
+### Lessons from 10-05
+- Every hand-timed live move lost (13:09 switch, 14:00 seed, holding a laggard); the paper copy that never changed made money. Guards that block the rule's exits also block its risk control.
+- Any new guard must be tested against the others (the crowding bug came from two guards each rescaling the target).
 - Before any live change, snapshot the current signals and every book first (operator feedback).
 
 ## CURRENT STATE 2026-10-05 13:25 IST / 07:55Z (superseded)
