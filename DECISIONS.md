@@ -5378,3 +5378,16 @@ Operator 2026-10-05 11:55 IST: backtest the lone-burst filter. Full text in `con
 ## ride-lone-burst-outcome
 
 NULL (`results/ride_lone_burst.json`, `python3 -m archive.gates.ride_lone_burst`). Median over 12 offsets, return / max DD / Sharpe, wins against LIVE: 14 days LIVE +21.66% / -10.35% / 6.08 (worst +16.4%), LONE2 +19.65% / -12.05% / 5.58 (4 of 12), LONE4 +18.11% / -11.71% / 5.37 (4 of 12); 3 days LIVE +2.15%, LONE2 +2.57% (5 of 12), LONE4 +1.79% (0 of 12). Waves are only 2-3% of bars, and skipping them also skips the waves that start a move; the one day of waves that lost on 10-05 does not generalise. Two trials recorded.
+
+## ride-slots-more-declaration
+
+Operator 2026-10-05 12:00 IST, after top-5 books showed 6 to 45 positions: test 4 and 6 slots. Full text in `config/ride_slots_more.yaml`, scored by `python3 -m archive.gates.ride_slots_more`. N4 / N6 against the live N2 over 12 start offsets; candidate only with at least 8 of 12 wins in both the 14-day and 3-day windows and no deeper median drawdown. Written before any number. Two trials.
+
+## ride-slots-more-outcome
+
+NULL by the rule (`results/ride_slots_more.json`), with a risk profile worth paper time. Median over 12 offsets, return / max DD / Sharpe / worst offset, wins against N2:
+| window | N2 (live) | N4 | N6 |
+|---|---|---|---|
+| 14 days | +17.70% / -11.58% / 5.35 / +6.5% | +19.02% / **-10.39%** / **6.44** / **+9.3%**, 6 of 12 | +16.46% / -9.96% / 5.66 / +4.0%, 4 of 12 |
+| 3 days | +2.57% / -5.30% / 5.24 / -2.5% | +3.15% / **-4.82%** / **7.99** / **-1.4%**, 5 of 12 | +1.66% / -4.63% / 4.61 / -2.8%, 3 of 12 |
+N4 wins only half the offsets (the rule needed 8 of 12), but its median return is higher, its median drawdown shallower, its Sharpe higher and its worst offset better in both windows: about the same return with less risk, which is what Screen 3 scores. N6 dilutes too far. Not adopted; a paper book of the live rule with 4 slots is the next step if the operator wants forward evidence. Also fixed: `archive/gates/ride_lone_burst.py` was committed with lint errors (one-line statements); reformatted with this script. Two trials recorded.

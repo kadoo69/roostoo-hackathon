@@ -1,0 +1,55 @@
+{
+ "spans": {
+  "14D": {
+   "LIVE": {
+    "median_ret": 17.7,
+    "median_dd": -11.58,
+    "median_sharpe": 5.35,
+    "wins": 0,
+    "worst": 6.51
+   },
+   "N4": {
+    "median_ret": 19.02,
+    "median_dd": -10.39,
+    "median_sharpe": 6.44,
+    "wins": 6,
+    "worst": 9.26
+   },
+   "N6": {
+    "median_ret": 16.46,
+    "median_dd": -9.96,
+    "median_sharpe": 5.66,
+    "wins": 4,
+    "worst": 4.01
+   }
+  },
+  "3D": {
+   "LIVE": {
+    "median_ret": 2.57,
+    "median_dd": -5.3,
+    "median_sharpe": 5.24,
+    "wins": 0,
+    "worst": -2.49
+   },
+   "N4": {
+    "median_ret": 3.15,
+    "median_dd": -4.82,
+    "median_sharpe": 7.99,
+    "wins": 5,
+    "worst": -1.35
+   },
+   "N6": {
+    "median_ret": 1.66,
+    "median_dd": -4.63,
+    "median_sharpe": 4.61,
+    "wins": 3,
+    "worst": -2.76
+   }
+  }
+ },
+ "candidate": {
+  "N4": false,
+  "N6": false
+ },
+ "ref": "DECISIONS.md#ride-slots-more-declaration"
+}

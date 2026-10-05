@@ -1,0 +1,15 @@
+meta:
+  name: ride_slots_more
+  frozen: true
+  declared_utc: '2026-10-05T06:30:00Z'
+  requested_by: 'operator 2026-10-05 12:00 IST: run the 4 and 6 slot test (after seeing top-5 books holding 6 to 45 positions)'
+  declared_ref: DECISIONS.md#ride-slots-more-declaration
+  written_before_any_number: true
+mechanism: 'more, smaller slots make each laggard cheaper and raise the chance of owning the day''s runner, so the 24 h hold is stuck less often and the equity path is smoother (higher Sharpe for Screen 3)'
+failure_mode: 'the earlier slots test found 2 beat 3 (#ride-hold-slots-outcome): more slots take more of the weak later triggers and dilute the strong first ones'
+harness: 'archive.gates.ride_partial_trim book, the live rule (rank by z, no churn), ladder, maker fees, 27 coins, 12 start offsets 2 h apart'
+arms: {N2: 'live, 2 slots of 1/2', N4: '4 slots of 1/4', N6: '6 slots of 1/6'}
+decision_rule: >
+  An arm is a CANDIDATE if it beats N2's return in at least 8 of 12 offsets in BOTH the 14-day and 3-day windows with no
+  deeper median drawdown in either; Sharpe reported. Candidate -> paper book; live only on the operator's decision.
+trials: 2
