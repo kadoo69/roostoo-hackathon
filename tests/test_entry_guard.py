@@ -165,3 +165,15 @@ def test_protect_losses_keeps_a_small_loser_and_lets_a_big_one_go():
     deep = {**prices, "ENAUSDT": 0.2571 * 0.94}
     assert protect_losses(target, current, deep, entries, 0.05)[1] == []
     assert protect_losses(target, current, prices, {}, 0.05)[1] == []
+
+
+def test_no_floor_symbol_is_kept_at_any_loss():
+    from bot.entry_guard import protect_losses
+    current = {"ENAUSDT": 0.24, "ADAUSDT": 0.50}
+    entries = {"ENAUSDT": 0.2571, "ADAUSDT": 0.2725}
+    target = {"ADAUSDT": 0.40}
+    deep = {"ENAUSDT": 0.2571 * 0.90, "ADAUSDT": 0.2725 * 0.90}
+    out, kept = protect_losses(target, current, deep, entries, 0.05, no_floor={"ENAUSDT"})
+    assert kept == ["ENAUSDT"] and out["ENAUSDT"] == 0.24 and out["ADAUSDT"] == 0.40
+    above = {"ENAUSDT": 0.27, "ADAUSDT": 0.2725 * 0.90}
+    assert protect_losses(target, current, above, entries, 0.05, no_floor={"ENAUSDT"})[1] == []
