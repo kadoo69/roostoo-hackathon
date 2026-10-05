@@ -5391,3 +5391,7 @@ NULL by the rule (`results/ride_slots_more.json`), with a risk profile worth pap
 | 14 days | +17.70% / -11.58% / 5.35 / +6.5% | +19.02% / **-10.39%** / **6.44** / **+9.3%**, 6 of 12 | +16.46% / -9.96% / 5.66 / +4.0%, 4 of 12 |
 | 3 days | +2.57% / -5.30% / 5.24 / -2.5% | +3.15% / **-4.82%** / **7.99** / **-1.4%**, 5 of 12 | +1.66% / -4.63% / 4.61 / -2.8%, 3 of 12 |
 N4 wins only half the offsets (the rule needed 8 of 12), but its median return is higher, its median drawdown shallower, its Sharpe higher and its worst offset better in both windows: about the same return with less risk, which is what Screen 3 scores. N6 dilutes too far. Not adopted; a paper book of the live rule with 4 slots is the next step if the operator wants forward evidence. Also fixed: `archive/gates/ride_lone_burst.py` was committed with lint errors (one-line statements); reformatted with this script. Two trials recorded.
+
+## ride-n4-paper-2026-10-05
+
+Operator 2026-10-05 12:15 IST, after `#ride-slots-more-outcome`: start the 4-slot book, evenly from the current positions, with new slots going to the strongest next signal. Paper only (keyless, `config/ride_z25_n4_5m.yaml`, the live rule with `n: 4`); the competition book is unchanged. Seeded at start from the live book: UNI, ONDO, PUMP and LTC at 1/4 of 100,000 each at their current marks, with the live ride records (entry bar, signal close, target) and weight 1/4, so their exits match the live ones; each freed 1/4 goes to the highest-z fresh trigger. Compared with `ride_z25_zrank_5m` (the live twin) at the day-3 check.

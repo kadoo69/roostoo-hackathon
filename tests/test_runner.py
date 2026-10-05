@@ -151,3 +151,10 @@ def test_zrank_paper_book_is_the_live_rule_ranked_by_z():
     assert load("config/ride_z25_churn_5m.yaml").dry_run
     s = load("config/ride_z25_zrank_5m.yaml")
     assert s.keyset is None and s.dry_run and "probe_entry" not in zr["adaptive"]
+
+
+def test_n4_paper_book_is_the_live_rule_with_four_slots():
+    live = next(iter(_cfg("competition_z25")["adaptive"]["burst_arms"].values()))
+    n4 = next(iter(_cfg("ride_z25_n4_5m")["adaptive"]["burst_arms"].values()))
+    assert {k: v for k, v in n4.items() if k != "n"} == {k: v for k, v in live.items() if k != "n"} and n4["n"] == 4
+    assert load("config/ride_z25_n4_5m.yaml").dry_run and load("config/ride_z25_n4_5m.yaml").keyset is None
