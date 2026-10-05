@@ -28,6 +28,7 @@ adaptive:
         min_age_bars: 12
         max_positions: 4
         ref: DECISIONS.md#competition-trim-churn-2026-10-05
+        keep_strong: true
       regime_gate:
         min_breadth: 0.4
         bars: 288

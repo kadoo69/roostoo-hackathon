@@ -24,7 +24,7 @@ OPEN = pd.Timestamp("2026-10-04 12:00", tz="UTC")
 
 def book(c: np.ndarray, h: np.ndarray, z: np.ndarray, dvol: np.ndarray, cfg: dict,
          trim: float | None, zmax: float | None, churn_tpk: float | None = None,
-         allow: np.ndarray | None = None) -> tuple[np.ndarray, int]:
+         allow: np.ndarray | None = None, keep_strong: bool = False) -> tuple[np.ndarray, int]:
     """Equity path (start 1.0) and the number of entries. A position is [qty, entry, target, age, skim_ref].
     `churn_tpk`: a trim-funded entry takes this x dvol as its target instead of `tp_vol_k` (a quicker profit that
     recycles the capital). DECISIONS.md#ride-trim-recent-declaration"""
@@ -74,7 +74,8 @@ def book(c: np.ndarray, h: np.ndarray, z: np.ndarray, dvol: np.ndarray, cfg: dic
             entries += 1
             trig = [x for x in trig if x[1] != j]
         if trim and trig and free <= 0 and len(pos) < MAX_POS:
-            losers = [j for j, p in pos.items() if p[3] >= 12 and np.isfinite(c[t, j]) and c[t, j] < p[1]]
+            losers = [j for j, p in pos.items() if p[3] >= 12 and np.isfinite(c[t, j]) and c[t, j] < p[1]
+                      and not (keep_strong and np.isfinite(z[t, j]) and z[t, j] >= trig[0][0])]
             if losers:
                 for j in losers:
                     sold = pos[j][0] * trim

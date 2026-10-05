@@ -26,6 +26,7 @@ adaptive:
         min_age_bars: 12
         max_positions: 4
         ref: DECISIONS.md#competition-trim-churn-2026-10-05
+        keep_strong: true
   allow_cash: false
   lookback_days: 3
   reselect_minutes: 60

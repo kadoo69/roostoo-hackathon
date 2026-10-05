@@ -332,3 +332,19 @@ def test_regime_gate_blocks_new_entries_and_churn_in_a_broad_down_market_but_nev
     old = str(down.index[-300])
     held = {"C5": [old, float(down["C5"].iloc[-1]), 0.05, 0.5]}       # 24 h old: must exit even when gated
     assert live_step(down, down, cfg, held, {})[0] == {}
+
+
+def test_keep_strong_leaves_a_losing_holding_that_is_bursting_harder_than_the_trigger():
+    """DECISIONS.md#churn-keep-strong-2026-10-05: ONDO at z 3.4 must not be trimmed to buy XLM at z 2.5."""
+    from signals.burst_rider import live_step
+    close = _churn_frame()
+    z_new = _z(close, "NEW")
+    held = _held(close)
+    close.iloc[-1, close.columns.get_loc("LOS1")] = close["LOS1"].iloc[-4] * 1.03     # LOS1 bursts harder
+    held["LOS1"][1] = float(close["LOS1"].iloc[-1]) * 1.05                           # still below its entry
+    assert _z(close, "LOS1") > z_new >= 2.5
+    cfg = {**CHURN_CFG, "trim_churn": {**CHURN_CFG["trim_churn"], "keep_strong": True}}
+    out = live_step(close, close, cfg, held, {})[0]
+    assert out["LOS1"][3] == 1 / 3 and out["LOS2"][3] == 1 / 6 and "NEW" in out and abs(out["NEW"][3] - 1 / 6) < 1e-12
+    plain = live_step(close, close, CHURN_CFG, _held(close) | {"LOS1": held["LOS1"]}, {})[0]
+    assert plain["LOS1"][3] == 1 / 6

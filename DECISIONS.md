@@ -5330,3 +5330,7 @@ NULL: two slots stay (`results/ride_concentrate.json`, `python3 -m archive.gates
 | 14 days | +16.93% / -11.39% / 5.08 | +25.98% / -14.60% / 6.46 | 7 of 12 | +4.4% / -0.9% |
 | 3 days | **+1.85%** / -6.81% / **3.63** | +0.53% / -6.18% / 2.17 | **3 of 12** | -5.9% / -8.2% |
 One slot raises the 14-day median but wins only 7 of 12 offsets (the rule needed 8), its spread runs from -0.9% to +44%, and it loses 9 of 12 recent 3-day windows: in the current chop, a single position is mostly a coin flip on one burst. The live book stays as it is and frozen. One trial.
+
+## churn-keep-strong-2026-10-05
+
+Operator 2026-10-05 09:10 IST: if a held coin's signal stays stronger than the next out-of-book trigger, hold it. Seen live: ONDO (bought by the churn at 08:20 IST) was bursting at z 3.41 while below its entry and over 12 bars old, so a weaker trigger (XLM building toward 2.5) would have trimmed it. `trim_churn.keep_strong: true` (`signals.burst_rider.trim_churn`): a losing holding whose current z is at least the trigger's is left whole; the other losers are trimmed as before. Tested after the request, not pre-declared: over 12 start offsets it ties the churn rule in 10 of 12 three-day and 12 of 12 one-day windows, and over 14 days wins 5, ties 2, loses 5 (median +17.8% vs +18.7%, drawdown -12.1% vs -13.2%), so it is neutral on history and only removes a backwards trade. Test: `tests/test_burst_rider_live.py::test_keep_strong_leaves_a_losing_holding_that_is_bursting_harder_than_the_trigger`. Also on the paper twins `ride_z25_churn_5m` and `ride_z25_gate_5m`.

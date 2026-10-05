@@ -159,6 +159,8 @@ def trim_churn(close: pd.DataFrame, cfg: dict, keep: dict[str, list], last: dict
     trigger with the freed weight (capped at 1/n), its target `churn_tpk` x one day of its volatility instead of
     `tp_vol_k`. Winners and young positions are untouched, nothing is sold whole, and at most `max_positions` are held.
     The same rule as `archive.gates.ride_partial_trim.book` with `churn_tpk` (PT50C, `#ride-trim-recent-outcome`).
+    With `keep_strong`, a losing holding whose current z is at least the trigger's is left whole
+    (`#churn-keep-strong-2026-10-05`).
     Operator-ordered for the competition book: DECISIONS.md#competition-trim-churn-2026-10-05"""
     t = close.index[-1]
     step = close.index[-1] - close.index[-2]
@@ -180,8 +182,15 @@ def trim_churn(close: pd.DataFrame, cfg: dict, keep: dict[str, list], last: dict
         cand.append((z, close.columns.get_loc(s), s))
     if not cand:
         return keep, last
+    best_z = max(cand)[0]
+
+    def zh(s: str) -> float:
+        lv = float(lvl[s]) if s in lvl and np.isfinite(lvl[s]) and lvl[s] > 0 else float("nan")
+        return float(r3[s]) / (lv / k) if np.isfinite(lv) and np.isfinite(r3[s]) else float("nan")
+    # A holding whose own burst is at least as strong as the trigger is not trimmed for it (operator 09:10 IST).
     losers = [s for s, v in keep.items() if s in close and np.isfinite(close[s].iloc[-1])
-              and round((t - pd.Timestamp(v[0])) / step) >= age_min and float(close[s].iloc[-1]) < float(v[1])]
+              and round((t - pd.Timestamp(v[0])) / step) >= age_min and float(close[s].iloc[-1]) < float(v[1])
+              and not (churn.get("keep_strong") and np.isfinite(zh(s)) and zh(s) >= best_z)]
     if not losers:
         return keep, last
     out = {s: list(v) for s, v in keep.items()}
