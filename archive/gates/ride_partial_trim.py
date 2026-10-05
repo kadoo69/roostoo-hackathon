@@ -24,7 +24,8 @@ OPEN = pd.Timestamp("2026-10-04 12:00", tz="UTC")
 
 def book(c: np.ndarray, h: np.ndarray, z: np.ndarray, dvol: np.ndarray, cfg: dict,
          trim: float | None, zmax: float | None, churn_tpk: float | None = None,
-         allow: np.ndarray | None = None, keep_strong: bool = False) -> tuple[np.ndarray, int]:
+         allow: np.ndarray | None = None, keep_strong: bool = False,
+         flat: np.ndarray | None = None) -> tuple[np.ndarray, int]:
     """Equity path (start 1.0) and the number of entries. A position is [qty, entry, target, age, skim_ref].
     `churn_tpk`: a trim-funded entry takes this x dvol as its target instead of `tp_vol_k` (a quicker profit that
     recycles the capital). DECISIONS.md#ride-trim-recent-declaration"""
@@ -55,6 +56,11 @@ def book(c: np.ndarray, h: np.ndarray, z: np.ndarray, dvol: np.ndarray, cfg: dic
                 q -= sold
                 ref = c[t, j]
             pos[j] = [q, px, tp, age, ref]
+        if flat is not None and flat[t] and pos:
+            for j in list(pos):          # regime says cash: sell everything at this close
+                if np.isfinite(c[t, j]):
+                    cash += pos[j][0] * c[t, j] * (1 - FEE)
+                    del pos[j], slot[j]
         value = cash + sum(p[0] * (c[t, j] if np.isfinite(c[t, j]) else p[1]) for j, p in pos.items())
         trig = sorted([(z[t, j], j) for j in range(N) if j not in pos and np.isfinite(z[t, j]) and np.isfinite(c[t, j])
                        and np.isfinite(dvol[t, j]) and z[t, j] >= k and (zmax is None or z[t, j] < zmax)

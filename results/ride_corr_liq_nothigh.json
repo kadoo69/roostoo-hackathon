@@ -1,0 +1,36 @@
+{
+ "14D": {
+  "live": [
+   24.15,
+   -11.43
+  ],
+  "not_high": [
+   16.53,
+   -12.41
+  ],
+  "wins": 5,
+  "ties": 0,
+  "worst": [
+   8.4,
+   -1.3
+  ]
+ },
+ "3D": {
+  "live": [
+   2.45,
+   -5.77
+  ],
+  "not_high": [
+   6.23,
+   -5.32
+  ],
+  "wins": 6,
+  "ties": 5,
+  "worst": [
+   -2.5,
+   -2.5
+  ]
+ },
+ "candidate": false,
+ "ref": "DECISIONS.md#ride-corr-liq-nothigh-declaration"
+}

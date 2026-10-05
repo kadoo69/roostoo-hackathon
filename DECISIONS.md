@@ -5338,3 +5338,26 @@ Operator 2026-10-05 09:10 IST: if a held coin's signal stays stronger than the n
 ## competition-churn-off-2026-10-05
 
 Operator 2026-10-05 09:58 IST: "yes go ahead and deploy it", the fallback from the churn. Evidence, over 12 start offsets on the explicit book (ranked by z, ladder, maker fees): no churn +18.45% median over 14 days (drawdown -12.33%, Sharpe 5.55) against the churn with keep_strong +14.67% (-12.50%, 4.37), the churn winning 4 of 12; 3 days a tie (+1.99% vs +2.04%, 6 of 12); 24 h the churn ahead (+0.81% vs +1.35%, 8 of 12). The +35% single-window result in `#ride-trim-recent-outcome` was one start offset. Live, the one churn trade (08:20 IST, half of LTC and PUMP sold at a loss for ONDO) was about -0.3% by 09:55 IST. `config/competition_z25.yaml`: `trim_churn` removed (and with it the z >= 5 skip it carried); kept: `rank_by: z`, `underfill_max_chase`, the escalation fix. The book keeps its current sizes (LTC and PUMP at 1/6, ONDO and UNI at 1/3) and exits them under the normal rule. `ride_z25_churn_5m` keeps running as the churn's paper record; `ride_z25_gate_5m` now tests the gate on the plain rule; `ride_z25_zrank_5m` is again the live twin.
+
+## ride-corr-liq-regime-declaration
+
+Operator 2026-10-05 10:30 IST: analyse a risk regime from cross-coin correlation and liquidity (high correlation and thin volume = high risk, cash; low correlation and deep volume = low risk, trade). Full text in `config/ride_corr_liq_regime.yaml`, scored by `python3 -m archive.gates.ride_corr_liq_regime`. Features point in time: CORR (mean pairwise 5m-return correlation over 24 h) and LIQ (pool quote volume over 24 h against its 7-day median), each against its own trailing 7-day median. Arms against the live rule: LOW_ONLY, LOW_ONLY_CASH (the operator's rule), NOT_HIGH_CASH; plus a per-regime diagnostic of trigger outcomes. Candidate: wins at least 8 of 12 offsets in both the 14-day and 3-day windows with no deeper median drawdown. Written before any number. Three trials.
+
+## ride-corr-liq-regime-outcome
+
+FAIL for all three declared arms (`results/ride_corr_liq_regime.json`). Median over 12 start offsets, return / max DD / Sharpe, wins against LIVE:
+| arm | 14 days | 3 days |
+|---|---|---|
+| LIVE | **+24.15%** / -11.43% / 6.29 (worst +8.4%) | +2.45% / -5.77% / 5.13 |
+| LOW_ONLY | -7.54% / -14.33% / -4.44, 0 of 12 | -1.05% / -1.82% / -9.83, 2 of 12 |
+| LOW_ONLY_CASH (the operator's rule) | -6.17% / -13.06% / -3.61, 0 of 12 | -1.05% / -1.82% / -9.83, 2 of 12 |
+| NOT_HIGH_CASH | +1.09% / -17.05% / 0.75, 0 of 12 | +5.21% / -5.32% / 10.29, 7 of 12 |
+LOW_RISK is only 27% of the last 30 days (HIGH 18%, MID 55%), and trading only there sits out most of the bursts that pay; forcing cash at every HIGH bar sells positions into dips they recover from and pays a round trip each time. The diagnostic does support part of the idea: the 24 h ride of z >= 2.5 triggers by regime over 30 days is HIGH_RISK +0.30% (n 810, 47% won), LOW_RISK +1.40% (n 955, 54%), MID +1.49% (n 1771, 58%) - triggers in high correlation on thin volume are the weak ones, but low-risk triggers are no better than the middle. Regime at the read: MID (CORR 0.62 vs 7-day median 0.65, LIQ 0.59). Three trials recorded.
+
+## ride-corr-liq-nothigh-declaration
+
+Suggested by the diagnostic above, so declared after seeing it and counted as its own trial: NOT_HIGH, the live rule with no new entries while HIGH_RISK (high correlation and thin volume) and no forced cash; positions keep their normal exits. Same candidate rule as `#ride-corr-liq-regime-declaration` (8 of 12 offsets in both windows, no deeper median drawdown). One trial.
+
+## ride-corr-liq-nothigh-outcome
+
+FAIL (`results/ride_corr_liq_nothigh.json`). Median over 12 offsets: 14 days LIVE +24.15% / -11.43% against NOT_HIGH +16.53% / -12.41%, NOT_HIGH winning 5 of 12 with a worst offset of -1.3% against +8.4%; 3 days +2.45% against +6.23%, 6 wins and 5 ties. The weak average of high-risk triggers does not survive as a filter: skipping them also skips the few high-correlation bursts that start a market-wide move. One trial.

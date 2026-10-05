@@ -1,0 +1,98 @@
+{
+ "spans": {
+  "14D": {
+   "LIVE": {
+    "median_ret": 24.15,
+    "median_dd": -11.43,
+    "median_sharpe": 6.29,
+    "wins_vs_live": 0,
+    "worst": 8.38
+   },
+   "LOW_ONLY": {
+    "median_ret": -7.54,
+    "median_dd": -14.33,
+    "median_sharpe": -4.44,
+    "wins_vs_live": 0,
+    "worst": -7.6
+   },
+   "LOW_ONLY_CASH": {
+    "median_ret": -6.17,
+    "median_dd": -13.06,
+    "median_sharpe": -3.61,
+    "wins_vs_live": 0,
+    "worst": -6.23
+   },
+   "NOT_HIGH_CASH": {
+    "median_ret": 1.09,
+    "median_dd": -17.05,
+    "median_sharpe": 0.75,
+    "wins_vs_live": 0,
+    "worst": -2.3
+   }
+  },
+  "3D": {
+   "LIVE": {
+    "median_ret": 2.45,
+    "median_dd": -5.77,
+    "median_sharpe": 5.13,
+    "wins_vs_live": 0,
+    "worst": -2.47
+   },
+   "LOW_ONLY": {
+    "median_ret": -1.05,
+    "median_dd": -1.82,
+    "median_sharpe": -9.83,
+    "wins_vs_live": 2,
+    "worst": -1.11
+   },
+   "LOW_ONLY_CASH": {
+    "median_ret": -1.05,
+    "median_dd": -1.82,
+    "median_sharpe": -9.83,
+    "wins_vs_live": 2,
+    "worst": -1.11
+   },
+   "NOT_HIGH_CASH": {
+    "median_ret": 5.21,
+    "median_dd": -5.32,
+    "median_sharpe": 10.29,
+    "wins_vs_live": 7,
+    "worst": -1.2
+   }
+  }
+ },
+ "verdict": {
+  "LOW_ONLY": false,
+  "LOW_ONLY_CASH": false,
+  "NOT_HIGH_CASH": false
+ },
+ "diagnostic": {
+  "HIGH_RISK": {
+   "n": 810,
+   "mean_ride": 0.003,
+   "win_rate": 0.4716
+  },
+  "LOW_RISK": {
+   "n": 955,
+   "mean_ride": 0.014,
+   "win_rate": 0.5372
+  },
+  "MID": {
+   "n": 1771,
+   "mean_ride": 0.0149,
+   "win_rate": 0.5782
+  }
+ },
+ "regime_share_30d": {
+  "MID": 0.547,
+  "LOW_RISK": 0.272,
+  "HIGH_RISK": 0.181
+ },
+ "now": {
+  "CORR": 0.619,
+  "CORR_7d_median": 0.651,
+  "LIQ": 0.588,
+  "regime_now": "MID"
+ },
+ "ref": "DECISIONS.md#ride-corr-liq-regime-declaration"
+}

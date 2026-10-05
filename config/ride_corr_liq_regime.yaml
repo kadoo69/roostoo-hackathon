@@ -1,0 +1,23 @@
+meta:
+  name: ride_corr_liq_regime
+  frozen: true
+  declared_utc: '2026-10-05T05:05:00Z'
+  requested_by: 'operator 2026-10-05 10:30 IST: analyse the regime: high risk when correlation across all coins is high and liquidity is low, low risk when correlation is low and liquidity is high; trade in low risk, stay in cash in high risk'
+  declared_ref: DECISIONS.md#ride-corr-liq-regime-declaration
+  written_before_any_number: true
+mechanism: 'when every coin moves together on thin volume, a burst is the whole market twitching, not coin news, and it reverts; when coins move independently on deep volume, a coin''s burst carries its own information and continues'
+failure_mode: 'correlation spikes in sell-offs and in rallies alike (the market moves as one when it trends), so a high-correlation filter also sits out the trend days that carry the ride; regime overlays reversed out of sample five times before'
+features: 'point in time on the 27-coin pool, 5m Binance bars: CORR = mean pairwise correlation of 5m returns over the last 288 bars (24 h); LIQ = pool quote volume over the last 288 bars divided by its median over the previous 7 days (2016 bars); thresholds: each feature against its own trailing 7-day median (above / below)'
+regimes: {HIGH_RISK: 'CORR above its 7-day median and LIQ below 1 (thinner than usual)', LOW_RISK: 'CORR below its 7-day median and LIQ above 1', MID: 'anything else'}
+harness: 'archive.gates.ride_partial_trim book, the live rule (rank by z, no churn), ladder, maker fees, 27 coins, 12 start offsets 2 h apart'
+arms:
+  LIVE: 'always trade'
+  LOW_ONLY: 'new entries only in LOW_RISK; positions keep their normal exits'
+  LOW_ONLY_CASH: 'new entries only in LOW_RISK; sell everything at the first HIGH_RISK bar (the operator''s rule)'
+  NOT_HIGH_CASH: 'new entries except in HIGH_RISK; sell everything at the first HIGH_RISK bar'
+diagnostic: 'mean 24 h ride return (live exits) of every z >= 2.5 trigger by the regime at its bar, last 30 days, with counts'
+decision_rule: >
+  An arm is a CANDIDATE against LIVE if it beats LIVE's return in at least 8 of 12 offsets in BOTH the 14-day and the
+  3-day windows and its median max drawdown is no deeper in either. A candidate goes to a paper book first; the live
+  book changes only on the operator's decision. Otherwise NULL.
+trials: 3
