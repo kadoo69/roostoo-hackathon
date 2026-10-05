@@ -75,7 +75,7 @@ def build(bot: str) -> dict:
     journal = Journal(bot)
     orders = journal.read("orders")
     skims = _skim_times(journal)
-    cancelled = {o.get("order_id") for o in orders if o.get("event") == "cancelled_stale"}
+    cancelled = {o.get("order_id") for o in orders if o.get("event") in ("cancelled_stale", "cancelled_external")}
     fills = [f for f in (_fill(o) for o in orders if o.get("order_id") not in cancelled) if f]
     fills.sort(key=lambda x: x["ts"])
 

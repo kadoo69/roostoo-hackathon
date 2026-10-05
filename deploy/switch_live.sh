@@ -30,7 +30,7 @@ for u in $(systemctl list-units --type=service --state=active --no-legend 'roost
 done
 
 echo "== resting orders on the comp keys"
-sudo -u roostoo "$PY" deploy/cancel_pending.py comp --cancel
+sudo -u roostoo "$PY" deploy/cancel_pending.py comp --cancel --book "$FROM"
 
 echo "== start $TO"
 systemctl enable "roostoo-live@$TO" >/dev/null 2>&1
