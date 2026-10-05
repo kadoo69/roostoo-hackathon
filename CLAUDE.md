@@ -51,6 +51,7 @@ Skills: `roostoo-live-report` (the 30-minute report), `roostoo-incident` (live f
 - An entry completed in a later cycle pays the later price: PUMP's trigger bought 4.4k at 0.006492 and the completion bought 29.4k at 0.006636 thirty minutes later (+2.2%), while the take-profit stays anchored to the trigger close; PUMP was most of the 10-04 night drawdown.
 - A day-one rank is noise: Screen 2 is the top 20 on 14-day raw return, and one coin moves a book several places; do not change the rule to chase rank.
 - A hand deploy on EC2 (`sudo git reset`) leaves pulled files root-owned and `gates.progress` then fails with PermissionError; run `deploy/ec2_bootstrap.sh` or `chown -R roostoo:roostoo /opt/roostoo-hackathon` after any manual pull.
+- A tool call the operator rejects may already have run on EC2 (SSM sends the script at once): after any interrupted deploy, check the unit's start time and the lifecycle `config_sha` before saying nothing changed (`#live-gate-rollback-2026-10-05`).
 - Every competition unit switch costs the first bar's trigger (cold-start guard) and resets state; switch only with a committed reason, never to chase a single move.
 - Exit tuning is exhausted on the ride (trails, locks, shorter holds, rotation, nearer targets all null on 10-04); the edge is the entry trigger and staying fully invested.
 - Hand-placed orders on the COMP keys are banned (FAQ Q28); a "probe" entry in code was borderline, do not repeat it.
