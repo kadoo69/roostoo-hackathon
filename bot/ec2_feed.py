@@ -40,9 +40,23 @@ for b in BOOKS:
         s = json.loads((d / "state.json").read_text())
     except (OSError, ValueError):
         s = {}
+    cyc_marks = {}
+    try:
+        cf = d / f"cycles-{day}.jsonl"
+        cyc_marks = json.loads(cf.read_text().splitlines()[-1]).get("marks") or {} if cf.exists() else {}
+    except (OSError, ValueError, IndexError):
+        pass
+    try:
+        cs = json.loads((d / "cash_sleeve.json").read_text())
+        s = {**s, "cash": float(s.get("cash") or 0.0) + float(cs.get("cash") or 0.0),
+             "holdings": {**(s.get("holdings") or {}), **{k: v for k, v in (cs.get("units") or {}).items() if v}}}
+        rec["cash_sleeve"] = {"cash": cs.get("cash"), "units": cs.get("units"), "riding": sorted(cs.get("held") or {}),
+                              "stopped": cs.get("stopped"), "budget": cs.get("budget")}
+    except (OSError, ValueError):
+        pass
     try:
         curve = s.get("equity_curve") or []
-        marks = s.get("last_marks") or {}
+        marks = {**cyc_marks, **(s.get("last_marks") or {})}
         eq = curve[-1] if curve else None
         rec.update({"start_equity": curve[0] if curve else None, "equity": eq, "peak": max(curve) if curve else None,
                     "cash": s.get("cash"), "last_bar": s.get("last_bar"),
