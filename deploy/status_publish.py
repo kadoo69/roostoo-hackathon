@@ -35,7 +35,11 @@ def rows(book: str, stream: str, n: int = 2) -> list[dict]:
 
 
 def checks(book: str, holdings: set[str], led: dict) -> dict:
+    import sys
+
     import pandas as pd
+    if str(ROOT) not in sys.path:
+        sys.path.insert(0, str(ROOT))
 
     from bot import feed
     st = json.loads((ROOT / "live" / book / "state.json").read_text())
