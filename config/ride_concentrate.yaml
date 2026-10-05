@@ -1,0 +1,18 @@
+meta:
+  name: ride_concentrate
+  frozen: true
+  declared_utc: '2026-10-05T03:30:00Z'
+  requested_by: 'operator 2026-10-05 09:00 IST: we fell to rank 19-20, want top 5; "whatever is most suitable you have the control" -> live frozen, concentration tested'
+  declared_ref: DECISIONS.md#ride-concentrate-declaration
+  written_before_any_number: true
+mechanism: 'behind the leaders with 12 days left, the rank-optimal policy takes more variance; one slot puts the whole book in the strongest fresh burst, so a winning ride moves the book twice as much'
+failure_mode: 'one bad ride is the whole book; drawdown roughly doubles, which can drop the book out of the top 20 and costs Screen 3 (risk-adjusted)'
+harness: 'archive.gates.ride_partial_trim book with the live churn and ranking (trim 1/2, churn 1 x dvol, z cap 5), ladder, maker fees, 27 coins; robustness over 12 start offsets 2 h apart'
+arms: {LIVE: 'n = 2 (live)', N1: 'n = 1, the whole book in one position'}
+windows: {last_14d: '14 days', last_3d: '3 days', each: 'scored at 12 start offsets 2 h apart'}
+decision_rule: >
+  N1 is a CANDIDATE only if it beats LIVE's return in at least 8 of 12 offsets in BOTH the 14-day and the 3-day
+  windows, AND its median max drawdown is no more than 5 pp deeper in both (extra variance is the point, so the
+  drawdown allowance is wider than the usual 2 pp, and stated here before any number). Otherwise NULL. The live book
+  stays frozen until the operator decides on a candidate.
+trials: 1

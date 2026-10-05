@@ -5317,3 +5317,16 @@ Operator 2026-10-05 08:55 IST: build the regime-aware entry filter for the live 
 ## live-gate-rollback-2026-10-05
 
 At 08:51 IST (03:21Z) a deploy command for the regime gate that the operator rejected in the session had in fact already run on EC2: the instance pulled `62360af` and restarted `competition_z25` with the gate config (sha `5573523f4cfdf803`). Found at 08:53 IST from the unit's start time and the lifecycle config hash. The gate was open (breadth 0.74) and made no decision (no `regime_gate` event, no order). Restored at 08:54 IST (03:24Z) to the no-gate config of `5fa0c44` (sha `57ce76e7c354dfc9`, the same as before), the book resumed unchanged (LTC, ONDO, PUMP, UNI; 0 orders). The gate runs only as the paper book `ride_z25_gate_5m`.
+
+## ride-concentrate-declaration
+
+Operator 2026-10-05 09:00 IST, rank 19-20 and wanting top 5, handed the call to the agent: the live book is frozen and concentration is tested. Full text in `config/ride_concentrate.yaml`, scored by `python3 -m archive.gates.ride_concentrate`. N1 (one slot, the whole book in the strongest burst) against LIVE (two slots), both with the live churn and ranking, over 12 start offsets for 14 days and 3 days. Candidate only if N1 wins at least 8 of 12 offsets in both windows with a median drawdown no more than 5 pp deeper. Written before any number. One trial.
+
+## ride-concentrate-outcome
+
+NULL: two slots stay (`results/ride_concentrate.json`, `python3 -m archive.gates.ride_concentrate`). Over 12 start offsets, median return / max DD / Sharpe:
+| window | LIVE (2 slots) | N1 (1 slot) | N1 wins | worst offset LIVE / N1 |
+|---|---|---|---|---|
+| 14 days | +16.93% / -11.39% / 5.08 | +25.98% / -14.60% / 6.46 | 7 of 12 | +4.4% / -0.9% |
+| 3 days | **+1.85%** / -6.81% / **3.63** | +0.53% / -6.18% / 2.17 | **3 of 12** | -5.9% / -8.2% |
+One slot raises the 14-day median but wins only 7 of 12 offsets (the rule needed 8), its spread runs from -0.9% to +44%, and it loses 9 of 12 recent 3-day windows: in the current chop, a single position is mostly a coin flip on one burst. The live book stays as it is and frozen. One trial.
