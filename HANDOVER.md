@@ -2,7 +2,25 @@
 
 Current state only. The full history of sessions to 2026-09-23 is archived at `docs/archive/HANDOVER_2026-09-23.md`; older section references in code and configs point there.
 
-## CURRENT STATE 2026-10-05 12:25 IST / 06:55Z (read this first; everything below is history)
+## CURRENT STATE 2026-10-05 13:25 IST / 07:55Z (read this first; everything below is history)
+
+### The competition account
+- Unit `roostoo-live@competition_r4` on EC2 since 13:09 IST (07:39Z), config sha `3e530af1c364a8d3`, EC2 at `1af9b99`. Rule: the regime contenders rule long-only on 30m bars (top 3 breakouts by 40-bar momentum, at most 0.5 each, no new longs while the market regime is DOWN, no shorts), 3%/15% ladder, exit escalation, 1% underfill chase cap (`#competition-r4-2026-10-05`, `#competition-r4-live-2026-10-05`).
+- `competition_z25` (the ride) is stopped and disabled, staged as the revert. One live unit per account: `deploy/switch_live.sh FROM TO` (run on the instance as root after pulling) stops the old unit, cancels resting COMP orders (`deploy/cancel_pending.py`) and starts the new one.
+- At the switch all four ride positions were sold; the account is in cash (100,075, +0.08% since the open) until the rule opens a fresh name. Paper record of the same rule: `regime_ls_30m` (shorts on; its target now ADA, SUI, NEAR, all old entries the live book will not chase).
+- Why: since the open `regime_ls_30m` +5.66% against the live ride +0.35%, the lead all long side. Caveat on record: on 14-day replays the ride is stronger (+17.7% vs +6.5% median); the forward window decides.
+
+### Next actions
+1. Watch the first entries: tail `live/competition_r4/cycles-*.jsonl` and `orders-*.jsonl` on EC2 through `deploy/ssm_shell.py`, or the desk at 8787.
+2. 17:30 IST 10-07 day-3 check, plus daily: revert to `competition_z25` if `competition_r4` trails the ride twin `ride_z25_zrank_5m` by more than 2 points from 13:09 IST 10-05; trailing `regime_ls_30m` by more than 2 points is an execution fault, investigate first.
+3. Daily: `python3 deploy/export_logs.py`, commit `logs/`.
+
+### Settled today (do not re-test without new evidence)
+- n = 4 on the regime rule loses to n = 3 at every one of 12 offsets (14 d and 3 d).
+- A +1.5% exit on 30m breakouts: 92% top below +1.5% before a 1.5-std pullback, but the 24 h drift (+0.76% mean) beats the capped exit (+0.52%). Volatility has fallen: median 30m std 0.49% vs 0.78% the 4 days before.
+- Everything in the 12:25 section below still holds for the ride research.
+
+## CURRENT STATE 2026-10-05 12:25 IST / 06:55Z (superseded)
 
 ### The competition account
 - Unit `roostoo-live@competition_z25` on EC2, running since 09:56 IST with config sha `0bb985ffae5259f9` (EC2 checkout `6c47778`). Rule: per-coin 2.5-sigma burst ride, 2 slots of 1/2, target 2 x daily vol, 24 h hold, 3%/15% ladder, simultaneous triggers ranked by z (`rank_by: z`), 1% cap on completing a cash-capped entry (`underfill_max_chase`), exit escalation that reads fills from `CoinChange`. No churn, no gate, probe spent.
