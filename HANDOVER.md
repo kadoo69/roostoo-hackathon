@@ -2,6 +2,33 @@
 
 Current state only. The full history of sessions to 2026-09-23 is archived at `docs/archive/HANDOVER_2026-09-23.md`; older section references in code and configs point there.
 
+## CURRENT STATE 2026-10-05 12:25 IST / 06:55Z (read this first; everything below is history)
+
+### The competition account
+- Unit `roostoo-live@competition_z25` on EC2, running since 09:56 IST with config sha `0bb985ffae5259f9` (EC2 checkout `6c47778`). Rule: per-coin 2.5-sigma burst ride, 2 slots of 1/2, target 2 x daily vol, 24 h hold, 3%/15% ladder, simultaneous triggers ranked by z (`rank_by: z`), 1% cap on completing a cash-capped entry (`underfill_max_chase`), exit escalation that reads fills from `CoinChange`. No churn, no gate, probe spent.
+- Holdings: UNI 1/3 (exit by 20:05 IST), LTC 1/6 (20:10), PUMP 1/6 (21:15), ONDO 1/3 (08:25 IST 10-06), unless targets hit first. Equity about 99,900 (-0.1%); leaderboard about 40th at 10:35 IST (field compressed).
+- The live book is FROZEN on the operator's instruction ("just monitor"); change it only with a declared test over 12 start offsets plus paper time, and the operator's yes.
+
+### What changed live on 10-05 (all committed, DECISIONS anchors)
+`#underfill-chase-cap-2026-10-05` (01:47), `#competition-zrank-2026-10-05` (08:12), `#competition-trim-churn-2026-10-05` (08:25, WITHDRAWN 09:56 by `#competition-churn-off-2026-10-05`: churn loses 8 of 12 fourteen-day offsets), `#escalation-fill-field-2026-10-05` (08:36, a real bug: Roostoo reports FilledQuantity = Quantity on unfilled orders), `#churn-keep-strong-2026-10-05` (09:13, moot after the churn came off), `#live-gate-rollback-2026-10-05` (an interrupted deploy had restarted live with the gate; rolled back in 3 minutes, no decision made under it).
+
+### Paper books on EC2 (compare at the day-3 check)
+- `ride_z25_zrank_5m` = live twin; `ride_z25_n4_5m` = live rule with 4 slots, seeded 12:17 IST from the live positions at 1/4 each (`#ride-n4-paper-2026-10-05`); `ride_z25_gate_5m` = live + breadth gate (`#ride-regime-gate-outcome`, 9 of 12 offsets); `ride_z25_churn_5m` = churn record; `ride_z25_5m` (old ranking) and `ride_z25_swap_5m` (full swaps, about -2.9%, the worst book); plus regime_ls_30m (best forward book, +8.6%), ride_z3_5m, ride_5m, wf_live, sleeves, split_tilt.
+- Desk 8787 on the Mac: competition-first view with live venue quotes every 3 s and a trigger radar (`#desk-revamp-2026-10-05`, `#desk-live-quotes-2026-10-05`).
+
+### Next actions
+1. 20:05-21:15 IST: UNI, LTC, PUMP exit (or hit targets); watch the first fresh 1/2 entry and compare with `ride_z25_n4_5m`.
+2. 17:30 IST 10-07: `python3 -m archive.gates.day3_fleet_forward` on EC2 (and on the Mac with `--live-return=... --live-dd=... "--live-subs=a,b,c"`); decide by `#day3-fleet-forward-declaration`. Candidates to weigh there: 4 slots, breadth gate, regime_ls long-only (R4).
+3. Daily: `python3 deploy/export_logs.py`, commit `logs/`. The exported CSVs now skip stale-cancelled orders (`#code-review-fixes-2026-10-05`).
+
+### Research state 10-05 (do not re-test without new evidence; all over 12 start offsets unless noted)
+- NULL: partial trims, churn (PT50C; its +35% single window was luck), nearer targets, ride1_wide (64 coins, +1% trigger), concentration (1 slot), z >= 5 skip, correlation-liquidity regime (all arms; high-risk triggers ride about 0% but filtering them fails), lone-burst filter, 6 slots, full swaps (paper A/B).
+- Passed or near: ranking by z (live), breadth gate (paper), 4 slots (same return, lower drawdown, higher Sharpe; half the offsets).
+- Missed-trigger audit: of 90 triggers since the open, 10 hit target, mean -0.08%; top-5 books hold 6-45 positions.
+
+### Lessons (also in CLAUDE.md)
+- Judge every change over many start offsets; one window flips sign. Do not stack live changes under rank pressure. A rejected tool call may already have run on EC2: check unit start time and lifecycle config_sha after any interrupted deploy. Keep the Mac on mains; renew AWS with `python3 deploy/aws_login.py`.
+
 ## CURRENT STATE 2026-10-05 01:20 IST / 2026-10-04 19:50Z (read this first; everything below is history)
 
 ### The competition account
