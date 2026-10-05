@@ -122,7 +122,9 @@ def test_competition_z25_is_competition_z3_at_two_and_a_half_sigma():
     assert a25["sigma_k"] == 2.5 and a25["tp_vol_k"] == 2.0 and a25["n"] == 2
     assert {k: v for k, v in a25.items() if k not in ("sigma_k", "tp_vol_k", "n", "rank_by", "trim_churn", "regime_gate")} == {k: v for k, v in a3.items() if k not in ("sigma_k", "n")}
     assert a25["trim_churn"]["trim"] == 0.5 and a25["trim_churn"]["churn_tpk"] == 1.0  # #competition-trim-churn-2026-10-05
-    assert a25["regime_gate"]["min_breadth"] == 0.4  # #competition-regime-gate-2026-10-05
+    assert "regime_gate" not in a25  # paper only, operator 09:10 IST (#competition-regime-gate-2026-10-05)
+    gate = next(iter(_cfg("ride_z25_gate_5m")["adaptive"]["burst_arms"].values()))
+    assert {k: v for k, v in gate.items() if k != "regime_gate"} == a25 and gate["regime_gate"]["min_breadth"] == 0.4
     assert a25["rank_by"] == "z"  # DECISIONS.md#competition-zrank-2026-10-05
     s = load("config/competition_z25.yaml")
     assert s.keyset == "comp" and s.exit_escalation and bot_class(z25).__name__ == "AdaptiveScalperBot"

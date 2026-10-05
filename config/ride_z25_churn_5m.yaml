@@ -5,8 +5,7 @@ meta:
   paper_only: true
   requested_by: 'operator 2026-10-05 08:40 IST: run the z vs return ranking test and
     judge on forward paper too'
-  description: PAPER twin of the live competition_z25 rule (rank by z, trim_churn,
-    regime_gate)
+  description: PAPER twin of the live competition_z25 rule (rank by z, trim_churn)
   declared_ref: DECISIONS.md#competition-trim-churn-2026-10-05
 adaptive:
   burst_arms:
@@ -27,10 +26,6 @@ adaptive:
         min_age_bars: 12
         max_positions: 4
         ref: DECISIONS.md#competition-trim-churn-2026-10-05
-      regime_gate:
-        min_breadth: 0.4
-        bars: 288
-        ref: DECISIONS.md#competition-regime-gate-2026-10-05
   allow_cash: false
   lookback_days: 3
   reselect_minutes: 60

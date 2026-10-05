@@ -1,15 +1,14 @@
 meta:
-  name: competition_z25
+  name: ride_z25_gate_5m
   frozen: true
-  declared_utc: '2026-10-04T13:45:00Z'
-  paper_only: false
-  venue: roostoo
-  keyset: comp
-  requested_by: 'operator 2026-10-04 19:03 IST: loosen the conditions a little for an agile bot that skims profits'
-  changes_from_source: 'config/competition_z3.yaml with sigma_k 2.5 (A25 of #ride-agile-declaration); everything else unchanged'
-  description: 'LIVE, competition account: the per-coin ride at 2.5 sigma: buy when a coin''s 3-bar 5m return reaches 2.5
-    x its own 24 h std of 3-bar returns, hold for +5% or up to 24 h, 3 names, 12-bar cooldown, 3%/15% booking ladder.'
-  declared_ref: DECISIONS.md#competition-z25-2026-10-04
+  declared_utc: '2026-10-05T03:45:00Z'
+  paper_only: true
+  requested_by: 'operator 2026-10-05 08:40 IST: run the z vs return ranking test and
+    judge on forward paper too'
+  description: 'PAPER: the live competition_z25 rule plus the breadth regime gate
+    (no new entries or churn while < 40% of coins are up over 24 h); operator: test
+    on paper, not live'
+  declared_ref: DECISIONS.md#competition-regime-gate-2026-10-05
 adaptive:
   burst_arms:
     ride_z25|+5%|24h:
@@ -29,15 +28,16 @@ adaptive:
         min_age_bars: 12
         max_positions: 4
         ref: DECISIONS.md#competition-trim-churn-2026-10-05
+      regime_gate:
+        min_breadth: 0.4
+        bars: 288
+        ref: DECISIONS.md#competition-regime-gate-2026-10-05
   allow_cash: false
   lookback_days: 3
   reselect_minutes: 60
   switch_margin_pp: 1.0
   start_variant: ride_z25|+5%|24h
   use_decision_point: false
-  probe_entry:
-    min_z: 2.0
-    ref: DECISIONS.md#competition-probe-2026-10-04
 contenders:
   min_hold_bars: 3
   min_hold_ref: DECISIONS.md#min-hold-5m
@@ -109,16 +109,17 @@ booking:
   recycle: false
   min_skim_notional: 10.0
   shorts: true
-  underfill_max_chase: 0.01
-  underfill_max_chase_ref: DECISIONS.md#underfill-chase-cap-2026-10-05
   added_utc: '2026-09-22'
   added_by: operator instruction to book profits on every bot, controls included
   parameters_ref: DECISIONS.md#alpha-flow-declaration
-  parameters_basis: 3 percent step with a 15 percent slice. Tightening the step alone is the only statistically significant
-    effect in the ladder grid and it is harmful - holdout P(>20%) falls 0.168 to 0.070 at a 1 percent step, p=0.004. Cutting
-    the slice at the same time removes that cost. Step and slice move together or not at all.
-  honest_status: Not a validated improvement. The holdout return gain is p=0.14 and the drawdown gain is reproduced by a random-timing
-    nonsense control, so it is exposure reduction rather than timing.
+  parameters_basis: 3 percent step with a 15 percent slice. Tightening the step alone
+    is the only statistically significant effect in the ladder grid and it is harmful
+    - holdout P(>20%) falls 0.168 to 0.070 at a 1 percent step, p=0.004. Cutting the
+    slice at the same time removes that cost. Step and slice move together or not
+    at all.
+  honest_status: Not a validated improvement. The holdout return gain is p=0.14 and
+    the drawdown gain is reproduced by a random-timing nonsense control, so it is
+    exposure reduction rather than timing.
   confound_warning: paper-only comparison book, nobody's control.
 short:
   enabled: true
@@ -134,15 +135,16 @@ short:
   execution: MARKET both legs, open at MaxBid, close at MinAsk, 0.1% per side
   topped_up: false
   laddered: true
-  note: 'short-only book; entries come from the contenders rule with sides: short (switch always on); the regime fields feed
-    only the engine log'
+  note: 'short-only book; entries come from the contenders rule with sides: short
+    (switch always on); the regime fields feed only the engine log'
   declared_ref: DECISIONS.md#short-accel-declaration
   enabled_utc: '2026-10-01'
   enabled_ref: DECISIONS.md#dynamic-bot-shorts-and-ride-2026-10-01
 target_lock:
   enabled: false
   disabled_utc: '2026-09-26'
-  disabled_by: 'operator: the best books should be able to reach +20k; the lock caps them at +5% on the window anchor'
+  disabled_by: 'operator: the best books should be able to reach +20k; the lock caps
+    them at +5% on the window anchor'
   disabled_ref: DECISIONS.md#short-term-lock-off-2026-09-26
   window_start_utc: '2026-09-24T00:00:00+00:00'
   window_end_utc: '2026-10-08T00:00:00+00:00'

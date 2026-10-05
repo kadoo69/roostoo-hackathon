@@ -110,7 +110,6 @@ It changed during the competition as the rules allow (FAQ Q28); every change is 
 | 10-05 01:47 | complete a cut-short entry only within 1% of its order price (execution guard) | `#underfill-chase-cap-2026-10-05` |
 | 10-05 08:20 | simultaneous triggers ranked by z instead of 15-minute return | `#ride-rank-regime-outcome`, `#competition-zrank-2026-10-05` |
 | 10-05 09:30 | with no free slot, trim half of each old loser to buy the top fresh trigger (2.5 <= z < 5) with a 1 x dvol target; z >= 5 entries skipped | `#ride-trim-recent-outcome`, `#competition-trim-churn-2026-10-05` |
-| 10-05 09:00 | no new entries or churn while fewer than 40% of coins are up over 24 h (breadth gate) | `#ride-regime-gate-outcome`, `#competition-regime-gate-2026-10-05` |
 Rejected the same day after declared tests: sizing by signal strength, a 64-coin universe, nearer take-profits, shorter holds (`#ride-scaled-entry-outcome`, `#ride-z3-wide-outcome`, `#ride-agile-outcome`, `#ride-laggard-exits-outcome`).
 
 ## 4. Setup and how to run
