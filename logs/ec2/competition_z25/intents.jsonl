@@ -14,3 +14,17 @@
 {"event": "resolved", "intent_id": "a2c2bf6d310d4e7793656a", "outcome": "placed", "utc": "2026-10-04T16:13:18.787509+00:00", "detail": {"order_id": 3422031, "status": "PENDING"}}
 {"event": "intent", "intent_id": "69079927b7e144259d4f9c", "utc": "2026-10-04T16:15:07.073996+00:00", "pair": "PUMP/USD", "side": "BUY", "quantity": 4436228.0, "price": 0.006638, "type": "LIMIT", "symbol": "PUMPUSDT"}
 {"event": "resolved", "intent_id": "69079927b7e144259d4f9c", "outcome": "placed", "utc": "2026-10-04T16:15:07.262374+00:00", "detail": {"order_id": 3422037, "status": "FILLED"}}
+{"event": "intent", "intent_id": "e90722ed806343e98b4bd6", "utc": "2026-10-05T02:55:07.817162+00:00", "pair": "LTC/USD", "side": "SELL", "quantity": 227.588, "price": 70.54, "type": "LIMIT", "symbol": "LTCUSDT"}
+{"event": "resolved", "intent_id": "e90722ed806343e98b4bd6", "outcome": "placed", "utc": "2026-10-05T02:55:08.007541+00:00", "detail": {"order_id": 3423939, "status": "PENDING"}}
+{"event": "intent", "intent_id": "f6aafd2765764785a3441d", "utc": "2026-10-05T02:55:08.011113+00:00", "pair": "PUMP/USD", "side": "SELL", "quantity": 2486660.0, "price": 0.006379, "type": "LIMIT", "symbol": "PUMPUSDT"}
+{"event": "resolved", "intent_id": "f6aafd2765764785a3441d", "outcome": "placed", "utc": "2026-10-05T02:55:08.212411+00:00", "detail": {"order_id": 3423940, "status": "PENDING"}}
+{"event": "intent", "intent_id": "aea2345ab05c438ea76f62", "utc": "2026-10-05T02:55:08.214869+00:00", "pair": "ONDO/USD", "side": "BUY", "quantity": 2353.2, "price": 0.5057, "type": "LIMIT", "symbol": "ONDOUSDT"}
+{"event": "resolved", "intent_id": "aea2345ab05c438ea76f62", "outcome": "placed", "utc": "2026-10-05T02:55:08.404551+00:00", "detail": {"order_id": 3423941, "status": "FILLED"}}
+{"event": "intent", "intent_id": "994b861f8a8e401d8e4a9e", "utc": "2026-10-05T03:00:10.795281+00:00", "pair": "ONDO/USD", "side": "BUY", "quantity": 31430.2, "price": 0.5042, "type": "LIMIT", "symbol": "ONDOUSDT"}
+{"event": "resolved", "intent_id": "994b861f8a8e401d8e4a9e", "outcome": "placed", "utc": "2026-10-05T03:00:11.004527+00:00", "detail": {"order_id": 3423951, "status": "FILLED"}}
+{"event": "intent", "intent_id": "200a3d2e862042b59895e3", "utc": "2026-10-05T03:05:08.357214+00:00", "pair": "LTC/USD", "side": "SELL", "quantity": 227.722, "price": 70.45, "type": "LIMIT", "symbol": "LTCUSDT"}
+{"event": "resolved", "intent_id": "200a3d2e862042b59895e3", "outcome": "placed", "utc": "2026-10-05T03:05:08.544365+00:00", "detail": {"order_id": 3423974, "status": "PENDING"}}
+{"event": "intent", "intent_id": "286ddf3c9e9147c29424dd", "utc": "2026-10-05T03:05:08.547274+00:00", "pair": "ONDO/USD", "side": "BUY", "quantity": 15.8, "price": 0.502, "type": "LIMIT", "symbol": "ONDOUSDT"}
+{"event": "resolved", "intent_id": "286ddf3c9e9147c29424dd", "outcome": "placed", "utc": "2026-10-05T03:05:08.734437+00:00", "detail": {"order_id": 3423975, "status": "PENDING"}}
+{"event": "intent", "intent_id": "7f6f433f2a8741b9ab7333", "utc": "2026-10-05T03:10:06.026815+00:00", "pair": "ONDO/USD", "side": "BUY", "quantity": 31939.0, "price": 0.5018, "type": "LIMIT", "symbol": "ONDOUSDT"}
+{"event": "resolved", "intent_id": "7f6f433f2a8741b9ab7333", "outcome": "placed", "utc": "2026-10-05T03:10:06.223516+00:00", "detail": {"order_id": 3423981, "status": "PENDING"}}
