@@ -11,7 +11,7 @@ from bot.blotter import DUST_NOTIONAL
 
 GROUPS = (("live", "LIVE on Roostoo - real orders"), ("scalper", "PAPER - the dynamic bot and fixed-clock baselines"))
 LIVE_BOOKS = {"competition", "competition_split", "competition_wf", "competition_ride", "competition_z3", "competition_z25", "competition_rehearsal"}
-SCALPER_BOOKS = {"momentum_top3_30m", "wf_live", "blend_30m_ride", "resid_30m", "htf0_30m", "ride1_5m", "wide_30m", "ride1_wide_5m", "ride_5m", "regime_ls_30m", "ride_z3_5m", "sleeves_z3_5m", "split_tilt_5m", "ride_z25_5m", "ride_z25_swap_5m", "ride_z25_zrank_5m"}
+SCALPER_BOOKS = {"momentum_top3_30m", "wf_live", "blend_30m_ride", "resid_30m", "htf0_30m", "ride1_5m", "wide_30m", "ride1_wide_5m", "ride_5m", "regime_ls_30m", "ride_z3_5m", "sleeves_z3_5m", "split_tilt_5m", "ride_z25_5m", "ride_z25_swap_5m", "ride_z25_zrank_5m", "ride_z25_churn_5m"}
 DESK_GROUPS = ("live", "scalper")
 TOTALS_GROUPS = ("live",)
 STALE_S = 300

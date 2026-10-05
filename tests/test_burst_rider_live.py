@@ -228,3 +228,74 @@ def test_rank_by_z_takes_the_more_unusual_of_two_simultaneous_triggers():
     by_ret = live_step(close, close, {**cfg, "n": 1}, {}, {})[0]
     by_z = live_step(close, close, {**cfg, "n": 1, "rank_by": "z"}, {}, {})[0]
     assert set(by_ret) == {"WILD"} and set(by_z) == {"CALM"}
+
+
+def _churn_frame(burst_coin="NEW", burst=1.012, seed=3):
+    import numpy as np
+    import pandas as pd
+    idx = pd.date_range("2026-10-01", periods=400, freq="5min", tz="UTC")
+    rng = np.random.default_rng(seed)
+    cols = {c: 100 * np.exp(np.cumsum(rng.normal(0, 0.002, 400))) for c in ("LOS1", "LOS2", "WIN", "NEW", "BIG")}
+    df = pd.DataFrame(cols, index=idx)
+    df.iloc[-1, df.columns.get_loc(burst_coin)] = df[burst_coin].iloc[-4] * burst
+    return df
+
+
+CHURN_CFG = {"sigma_k": 2.5, "sigma_bars": 288, "tp_vol_k": 2.0, "n": 2, "hold_bars": 288, "cooldown_bars": 12,
+             "rank_by": "z", "trim_churn": {"trim": 0.5, "churn_tpk": 1.0, "zmax": 5.0, "min_age_bars": 12,
+                                            "max_positions": 4}}
+
+
+def _held(close, losers_old=True):
+    t = close.index[-30] if losers_old else close.index[-5]
+    return {"LOS1": [str(t), float(close["LOS1"].iloc[-1]) * 1.05, 0.05, 1 / 3],
+            "LOS2": [str(t), float(close["LOS2"].iloc[-1]) * 1.02, 0.05, 1 / 3],
+            "WIN": [str(close.index[-30]), float(close["WIN"].iloc[-1]) * 0.97, 0.05, 1 / 3]}
+
+
+def _z(close, s):
+    from signals.burst_rider import trigger_level
+    r3 = close / close.shift(3) - 1
+    return float(r3[s].iloc[-1] / (trigger_level(r3, CHURN_CFG).iloc[-1][s] / 2.5))
+
+
+def test_trim_churn_halves_old_losers_and_buys_the_trigger_with_a_one_dvol_target():
+    """DECISIONS.md#competition-trim-churn-2026-10-05: the PT50C rule in the live step."""
+    import numpy as np
+
+    from signals.burst_rider import entry_sd, live_step
+    close = _churn_frame()
+    assert 2.5 <= _z(close, "NEW") < 5
+    held, last, w = live_step(close, close, CHURN_CFG, _held(close), {})
+    assert held["LOS1"][3] == 1 / 6 and held["LOS2"][3] == 1 / 6 and held["WIN"][3] == 1 / 3
+    assert set(held) == {"LOS1", "LOS2", "WIN", "NEW"} and abs(held["NEW"][3] - 1 / 3) < 1e-12
+    sd = entry_sd(close / close.shift(3) - 1, CHURN_CFG)["NEW"].iloc[-1]
+    assert abs(held["NEW"][2] - sd * np.sqrt(96)) < 1e-12 and last["NEW"] == str(close.index[-1])
+
+
+def test_trim_churn_does_nothing_without_a_trigger_with_young_losers_or_at_the_position_cap():
+    from signals.burst_rider import live_step
+    calm = _churn_frame(burst=1.0)
+    assert live_step(calm, calm, CHURN_CFG, _held(calm), {})[0] == _held(calm)
+    close = _churn_frame()
+    young = _held(close, losers_old=False)
+    assert live_step(close, close, CHURN_CFG, young, {})[0] == young
+    four = {**_held(close), "BIG": [str(close.index[-30]), float(close["BIG"].iloc[-1]) * 1.1, 0.05, 0.0]}
+    assert set(live_step(close, close, CHURN_CFG, four, {})[0]) == set(four)
+
+
+def test_trim_churn_skips_exhausted_triggers_and_cooldown():
+    from signals.burst_rider import live_step
+    hot = _churn_frame(burst=1.08)
+    assert _z(hot, "NEW") >= 5
+    assert live_step(hot, hot, CHURN_CFG, _held(hot), {})[0] == _held(hot)
+    close = _churn_frame()
+    cooling = {"NEW": str(close.index[-5])}
+    assert live_step(close, close, CHURN_CFG, _held(close), cooling)[0] == _held(close)
+
+
+def test_with_trim_churn_a_free_slot_skips_exhausted_triggers_as_tested():
+    from signals.burst_rider import live_step
+    hot = _churn_frame(burst=1.08)
+    assert live_step(hot, hot, CHURN_CFG, {}, {})[0] == {}
+    assert "NEW" in live_step(hot, hot, {k: v for k, v in CHURN_CFG.items() if k != "trim_churn"}, {}, {})[0]

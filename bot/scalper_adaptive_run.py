@@ -244,6 +244,13 @@ class AdaptiveScalperBot(ContendersBot):
         state = {"held": {s: v for s, v in state["held"].items() if current.get(s, 0.0) >= HELD_MIN},
                  "last": dict(state["last"])}
         held, last, target = burst_rider.live_step(close, high, self.variants[vid]["cc"], state["held"], state["last"])
+        cut = {s: [round(float(v[3]), 4), round(float(held[s][3]), 4)] for s, v in state["held"].items()
+               if s in held and len(v) > 3 and float(held[s][3]) < float(v[3]) - 1e-9}
+        if cut:
+            fresh = sorted(set(held) - set(state["held"]))
+            self.journal.write("signals", {"event": "trim_churn", "bar": bar, "trimmed": cut,
+                                           "bought": {s: held[s] for s in fresh},
+                                           "ref": "DECISIONS.md#competition-trim-churn-2026-10-05"})
         probe = (getattr(self, "ad", None) or {}).get("probe_entry") or {}
         probed = bool(rec and rec.get("probe_done") and rec.get("probe_bar") != bar)
         fired = False

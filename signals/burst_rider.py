@@ -111,6 +111,8 @@ def live_step(close: pd.DataFrame, high: pd.DataFrame, cfg: dict, held: dict[str
             keep[s] = [str(at), px, tp, wt]
     new_last = dict(last)
     free = int((1.0 - sum(v[3] for v in keep.values()) + 1e-9) * n)
+    churn = cfg.get("trim_churn") or {}
+    zmax = float(churn["zmax"]) if churn.get("zmax") else None
     swap = cfg.get("repeat_swap") or {}
     if free <= 0 and swap and keep and len(close) > 3:
         keep, new_last = repeat_swap(close, cfg, keep, new_last, swap)
@@ -121,6 +123,8 @@ def live_step(close: pd.DataFrame, high: pd.DataFrame, cfg: dict, held: dict[str
         for s, r in r3.items():
             if s in keep or not np.isfinite(r) or not np.isfinite(lvl[s]) or r < lvl[s]:
                 continue
+            if zmax is not None and float(r) / (float(lvl[s]) / float(cfg["sigma_k"])) >= zmax:
+                continue
             if s in last and round((t - pd.Timestamp(last[s])) / step) < cool:
                 continue
             score = float(r) / (float(lvl[s]) / float(cfg["sigma_k"])) if cfg.get("rank_by") == "z" and cfg.get("sigma_k") else float(r)
@@ -128,9 +132,57 @@ def live_step(close: pd.DataFrame, high: pd.DataFrame, cfg: dict, held: dict[str
         for _, _, s in sorted(cand, reverse=True)[:free]:
             keep[s] = [str(t), float(close[s].iloc[-1]), target_pct(cfg, float(sd[s].iloc[-1])), 1.0 / n]
             new_last[s] = str(t)
+    elif free <= 0 and churn and keep and len(close) > 3:
+        keep, new_last = trim_churn(close, cfg, keep, new_last, churn)
     floor = t - step * (cool + hold)
     new_last = {s: at for s, at in new_last.items() if s in keep or pd.Timestamp(at) > floor}
     return keep, new_last, {s: v[3] for s, v in keep.items()}
+
+
+def trim_churn(close: pd.DataFrame, cfg: dict, keep: dict[str, list], last: dict[str, str],
+               churn: dict) -> tuple[dict[str, list], dict[str, str]]:
+    """With no free slot and a fresh trigger at `sigma_k` <= z < `zmax` (outside its cooldown, not held): cut every
+    holding that is below its entry and at least `min_age_bars` old by `trim` of its weight, and buy the highest-z such
+    trigger with the freed weight (capped at 1/n), its target `churn_tpk` x one day of its volatility instead of
+    `tp_vol_k`. Winners and young positions are untouched, nothing is sold whole, and at most `max_positions` are held.
+    The same rule as `archive.gates.ride_partial_trim.book` with `churn_tpk` (PT50C, `#ride-trim-recent-outcome`).
+    Operator-ordered for the competition book: DECISIONS.md#competition-trim-churn-2026-10-05"""
+    t = close.index[-1]
+    step = close.index[-1] - close.index[-2]
+    n, cool, k = int(cfg.get("n", 3)), int(cfg.get("cooldown_bars", 12)), float(cfg["sigma_k"])
+    trim, age_min = float(churn.get("trim", 0.5)), int(churn.get("min_age_bars", 12))
+    zmax, max_pos = float(churn.get("zmax", 5.0)), int(churn.get("max_positions", 4))
+    if len(keep) >= max_pos:
+        return keep, last
+    r3f = close / close.shift(3) - 1.0
+    lvl = trigger_level(r3f, cfg).iloc[-1]
+    r3 = r3f.iloc[-1]
+    cand = []
+    for s, r in r3.items():
+        if s in keep or not np.isfinite(r) or not np.isfinite(lvl[s]) or lvl[s] <= 0:
+            continue
+        z = float(r) / (float(lvl[s]) / k)
+        if z < k or z >= zmax or (s in last and round((t - pd.Timestamp(last[s])) / step) < cool):
+            continue
+        cand.append((z, close.columns.get_loc(s), s))
+    if not cand:
+        return keep, last
+    losers = [s for s, v in keep.items() if s in close and np.isfinite(close[s].iloc[-1])
+              and round((t - pd.Timestamp(v[0])) / step) >= age_min and float(close[s].iloc[-1]) < float(v[1])]
+    if not losers:
+        return keep, last
+    out = {s: list(v) for s, v in keep.items()}
+    freed = 0.0
+    for s in losers:
+        cut = out[s][3] * trim
+        out[s][3] -= cut
+        freed += cut
+    _, _, s = max(cand)
+    sd = entry_sd(r3f, cfg)
+    sd_s = float(sd[s].iloc[-1])
+    tp = float(churn.get("churn_tpk", 1.0)) * sd_s * float(np.sqrt(96)) if np.isfinite(sd_s) and sd_s > 0 else float(cfg.get("tp_pct", 2.0)) / 100
+    out[s] = [str(t), float(close[s].iloc[-1]), tp, min(freed, 1.0 / n)]
+    return out, {**last, s: str(t)}
 
 
 def repeat_swap(close: pd.DataFrame, cfg: dict, keep: dict[str, list], last: dict[str, str],
