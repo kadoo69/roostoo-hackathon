@@ -121,7 +121,7 @@ footer{color:var(--faint);font-size:11px;margin-top:16px;display:flex;gap:16px;f
   </div>
 
   <div class="card" style="margin-bottom:12px">
-    <h2>Trigger radar <span class="help" title="z = the coin's 3-bar (15 min) 5m return divided by the std of its 3-bar returns over the previous 24 h. The bot buys at z ≥ 2.5 on a closed bar when a slot is free and the coin is out of its 1 h cooldown. Above z 5 (hatched) moves have historically been exhausted (~0% average ride).">?</span>
+    <h2><span id="radartitle">Trigger radar</span> <span class="help" title="z = the coin's 3-bar (15 min) 5m return divided by the std of its 3-bar returns over the previous 24 h. The bot buys at z ≥ 2.5 on a closed bar when a slot is free and the coin is out of its 1 h cooldown. Above z 5 (hatched) moves have historically been exhausted (~0% average ride).">?</span>
       <span class="r" id="radarnote"></span>
       <div class="tabs" id="radartabs"><button data-k="z_forming" class="on">sort: forming z</button><button data-k="z_max_1h">max z 1h</button><button data-k="ret_open">since open</button><button data-k="fired_6h">triggers 6h</button></div>
     </h2>
@@ -235,7 +235,7 @@ function drawKpis(c) {
     kpi("vs BTC", `<span class="${cls(exBtc)}">${pct(exBtc)}</span>`, `BTC ${pct(b.btc_open)} since the open`, "", "Our return minus BTC's since the open."),
     kpi("vs median coin", `<span class="${cls(exMed)}">${pct(exMed)}</span>`, `${b.pool_up}/${b.pool_n} coins up · median ${pct(b.pool_median_open)}`, "", "Against the median coin of the bot's 27-coin universe."),
     kpi("P&amp;L split", `<span class="${cls(realised)}">${fmt(realised,0)}</span>`, `realised · open <span class="${cls(open)}">${fmt(open,0)}</span>`),
-    kpi("Slots", `${c.slots_free} / ${c.slots} free`, `${fmt(c.weight_used*100,0)}% of the book in positions · cash ${fmt(c.cash,0)}`, "", "Each new entry takes 1/2 of the book. With no free slot, new triggers are ignored until a position exits."),
+    kpi(isRuleBook(c) ? "Invested" : "Slots", isRuleBook(c) ? `${fmt(c.weight_used*100,0)}%` : `${c.slots_free} / ${c.slots} free`, `${isRuleBook(c) ? c.positions.length+" of 3 names" : fmt(c.weight_used*100,0)+"% of the book in positions"} · cash ${fmt(c.cash,0)}`, "", isRuleBook(c) ? "Regime rule: up to 3 names sized by 40-bar momentum (at most 0.5 each); held names are never topped up, so cash waits for the next fresh 30m breakout." : "Each new entry takes 1/2 of the book. With no free slot, new triggers are ignored until a position exits."),
     kpi("Rank", me ? `#${me.rank}` : "–", me ? `${pct(me.ret_pct,1)} · as of ${ist(lb.at,true)} IST` : "paste into run/leaderboard.json"),
     kpi("Competition", `Day ${clk.day} / ${clk.days}`, `${fmt(clk.hours_left,0)} h left<div class="clockbar"><i style="width:${(clk.elapsed_frac*100).toFixed(1)}%"></i></div>`),
   ].join("");
@@ -290,6 +290,8 @@ function drawBoard(c) {
   $("lbnote").textContent = "manual snapshot";
 }
 
+function isRuleBook(c) { return !!c && (/r4/.test(c.bot || "") || (c.positions || []).some(p => p.target_px == null)); }
+
 function drawPositions(c, r) {
   const rowOf = Object.fromEntries((r.rows||[]).map(x => [x.symbol, x]));
   let h = "";
@@ -336,7 +338,7 @@ function drawPositions(c, r) {
       <div class="tbar" title="time held vs the 24 h limit"><i style="width:${(tl*100).toFixed(0)}%"></i></div>
     </div>`;
   });
-  const ruleBook = c.positions.some(p => p.target_px == null) || /r4/.test(c.bot||"");
+  const ruleBook = isRuleBook(c);
   if (!ruleBook) for (let i = 0; i < c.slots_free; i++) h += `<div class="slot-empty">Free slot (1/${c.slots} of the book)<br>the next coin to close a bar at z ≥ ${D.radar?.sigma_k??2.5} is bought</div>`;
   else if (c.weight_used < 0.999) h += `<div class="slot-empty">${fmt((1-c.weight_used)*100,0)}% cash<br>the regime rule buys the next 30m breakout (top 3 by 40-bar momentum, none while the market regime is DOWN)</div>`;
   if (!c.positions.length && !c.slots_free) h = `<div class="muted">No positions.</div>`;
@@ -377,7 +379,11 @@ function drawRadar(c, r) {
   });
   $("radar").innerHTML = h;
   const firing = rows.filter(x => (x.z_forming??0) >= k && !x.held).map(x=>x.symbol);
-  $("radarnote").textContent = `${rows.length} coins · ${c.slots_free ? c.slots_free+" slot(s) free, a trigger is bought" : "book full, triggers are ignored"}${firing.length?" · forming over "+k+": "+firing.join(", "):""} · ${ist(r.at)} IST`;
+  const rule = isRuleBook(c);
+  $("radartitle").textContent = rule ? "Ride-rule trigger radar (paper books only)" : "Trigger radar";
+  const mode = rule ? "the live book trades the 30m regime rule; these 5m ride triggers feed the paper ride books, not live"
+                    : (c.slots_free ? c.slots_free+" slot(s) free, a trigger is bought" : "book full, triggers are ignored");
+  $("radarnote").textContent = `${rows.length} coins · ${mode}${firing.length?" · forming over "+k+": "+firing.join(", "):""} · ${ist(r.at)} IST`;
 }
 
 function drawMarket(c, r) {
