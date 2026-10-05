@@ -1,0 +1,120 @@
+{
+ "windows": {
+  "W1": [
+   "2026-09-05 00:00:00+00:00",
+   "2026-09-19 00:00:00+00:00"
+  ],
+  "W2": [
+   "2026-09-19 00:00:00+00:00",
+   "2026-10-05 02:25:00+00:00"
+  ],
+  "last_3d": [
+   "2026-10-02 02:25:00+00:00",
+   "2026-10-05 02:25:00+00:00"
+  ],
+  "since_open": [
+   "2026-10-04 12:00:00+00:00",
+   "2026-10-05 02:25:00+00:00"
+  ]
+ },
+ "arms": {
+  "B2": {
+   "W1": {
+    "total_pct": 10.94,
+    "max_dd_pct": -13.36,
+    "sharpe": 3.64,
+    "entries_per_day": 2.21
+   },
+   "W2": {
+    "total_pct": 47.43,
+    "max_dd_pct": -9.8,
+    "sharpe": 8.99,
+    "entries_per_day": 2.3
+   },
+   "last_3d": {
+    "total_pct": 0.6,
+    "max_dd_pct": -7.59,
+    "sharpe": 1.39,
+    "entries_per_day": 2.67
+   },
+   "since_open": {
+    "total_pct": 0.87,
+    "max_dd_pct": -0.81,
+    "sharpe": 25.48,
+    "entries_per_day": 3.33
+   }
+  },
+  "R1W": {
+   "W1": {
+    "total_pct": -3.25,
+    "max_dd_pct": -34.03,
+    "sharpe": -0.36,
+    "entries_per_day": 5.07
+   },
+   "W2": {
+    "total_pct": 0.79,
+    "max_dd_pct": -18.25,
+    "sharpe": 0.75,
+    "entries_per_day": 4.6
+   },
+   "last_3d": {
+    "total_pct": -7.37,
+    "max_dd_pct": -12.03,
+    "sharpe": -9.36,
+    "entries_per_day": 4.33
+   },
+   "since_open": {
+    "total_pct": 3.99,
+    "max_dd_pct": -1.79,
+    "sharpe": 38.59,
+    "entries_per_day": 6.66
+   }
+  },
+  "R1": {
+   "W1": {
+    "total_pct": 28.51,
+    "max_dd_pct": -22.78,
+    "sharpe": 6.79,
+    "entries_per_day": 5.07
+   },
+   "W2": {
+    "total_pct": 15.0,
+    "max_dd_pct": -12.92,
+    "sharpe": 3.59,
+    "entries_per_day": 4.22
+   },
+   "last_3d": {
+    "total_pct": -1.92,
+    "max_dd_pct": -11.12,
+    "sharpe": -2.12,
+    "entries_per_day": 5.0
+   },
+   "since_open": {
+    "total_pct": 1.47,
+    "max_dd_pct": -1.65,
+    "sharpe": 14.11,
+    "entries_per_day": 6.66
+   }
+  }
+ },
+ "verdict": {
+  "R1W": {
+   "return_wins": 0,
+   "sharpe_wins": 0,
+   "dd_within_2pp": false,
+   "pass": false
+  },
+  "R1_control": {
+   "return_wins": 1,
+   "sharpe_wins": 1,
+   "dd_within_2pp": false,
+   "pass": false
+  },
+  "n_coins": {
+   "pool27": 27,
+   "pool64": 64
+  },
+  "recommended": false
+ },
+ "ref": "DECISIONS.md#ride1-wide-vs-live-declaration"
+}

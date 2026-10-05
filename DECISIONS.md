@@ -5221,3 +5221,18 @@ FAIL, NULL: the live rule stays (`results/ride_partial_trim.json`, `python3 -m a
 | PT33 (trim 1/3 of losers) | +24.66% / -11.53% / 7.85 / 4.1 | +41.68% / -12.56% / 8.69 / 4.0 | +0.05% / -5.36% / 0.22 / 4.3 | +0.92% / -0.76% |
 | PT50 (trim 1/2 of losers) | +25.33% / -11.48% / 7.94 / 4.1 | +34.42% / -15.13% / 7.63 / 4.0 | **+1.68%** / **-5.21%** / 3.79 / 4.3 | +0.96% / -0.79% |
 PT50, the better trim arm by worst-window Sharpe, beats B2 on Sharpe and return in W1 and the last 3 days but loses W2 by 12.6 pp with a drawdown 5.9 pp deeper, which breaks the 2 pp drawdown condition: in the trend window the losers it trims recover and the fresh bursts it buys revert, the same failure as the full swaps and today's swap A/B. Trimming does cut the chop drawdown (-5.2% vs -7.6% over the last 3 days), at the cost of the trend windows where the ride earns. The exhaustion cap control (B2X) also fails, and badly in W2 (-18 pp): in that window the z >= 5 entries carried the book, so the 30-day "z >= 5 rides about 0%" average must not be turned into a skip rule. Four trials recorded.
+
+## ride1-wide-vs-live-declaration
+
+Operator 2026-10-05 08:30 IST: backtest ride1_wide_5m (the +1% / +5% / 3-slot ride on all 64 venue coins, +3.98% since the open on paper) against the live rule. Full text in `config/ride1_wide_vs_live.yaml`, scored by `python3 -m archive.gates.ride1_wide_vs_live`. Arms: B2 (live), R1W (ride1_wide), R1 (ride1 on the 27-coin pool, isolating universe from trigger); all with the ladder and maker fees, ranked by 3-bar return as live. R1W passes only with higher return in 2 of 3 windows, higher Sharpe in 2 of 3, and drawdown never more than 2 pp deeper; otherwise NULL. Forward numbers seen before writing (stated in the config); no backtest number seen. Two trials.
+
+## ride1-wide-vs-live-outcome
+
+FAIL, NULL: the live rule stays (`results/ride1_wide_vs_live.json`, `python3 -m archive.gates.ride1_wide_vs_live`). Total return / max DD / Sharpe / entries a day, ladder and maker fees on every arm, ranked by 3-bar return:
+| arm | W1 (09-05..09-19) | W2 (09-19..10-05 03:10Z) | last 3 days | since the open (context) |
+|---|---|---|---|---|
+| B2 (live, 27 coins, 2.5 sigma) | **+10.94%** / -13.36% / 3.64 / 2.2 | **+47.43%** / **-9.80%** / **8.99** / 2.3 | **+0.60%** / **-7.59%** / 1.39 / 2.7 | +0.87% / -0.81% |
+| R1W (ride1_wide, 64 coins, +1%) | -3.25% / -34.03% / -0.36 / 5.1 | +0.79% / -18.25% / 0.75 / 4.6 | -7.37% / -12.03% / -9.36 / 4.3 | **+3.99%** / -1.79% |
+| R1 (ride1 on 27 coins) | +28.51% / -22.78% / 6.79 / 5.1 | +15.00% / -12.92% / 3.59 / 4.2 | -1.92% / -11.12% / -2.12 / 5.0 | +1.47% / -1.65% |
+R1W loses every window on return and Sharpe, with drawdowns of -34% and -18%; its +3.99% since the open (which the harness reproduces, so the paper book is not a data error) is one good day in a rule that is flat to negative over five weeks. The fixed +1% trigger is the bigger problem (R1 on 27 coins is also worse in W2 and the last 3 days with deeper drawdowns), and the 64-coin pool makes it worse again, as in `#ride-z3-wide-outcome`. Two trials recorded.
+Noted for a separate declared test, not acted on: B2 ranked by 3-bar return (as the live code does) made +10.94% in W1 here, against +19.83% when the `#ride-partial-trim-outcome` harness ranked by z; W2 and the last 3 days were similar (+47.4 vs +47.0, +0.6 vs +1.0). Which of two simultaneous triggers to take may matter.

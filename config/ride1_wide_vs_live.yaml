@@ -1,0 +1,23 @@
+meta:
+  name: ride1_wide_vs_live
+  frozen: true
+  declared_utc: '2026-10-05T03:05:00Z'
+  requested_by: 'operator 2026-10-05 08:30 IST: backtest ride1_wide_5m against the live rule'
+  declared_ref: DECISIONS.md#ride1-wide-vs-live-declaration
+  written_before_any_number: false
+  numbers_seen_before_writing: 'forward only: since the open (10-04 12:00Z) ride1_wide_5m +3.98% (Mac paper, missed about 5 h of bars while the Mac slept) vs the live book +0.67%; ride1_wide_5m since 09-30 +9.3%, 20 trades, 80% won. No backtest number of this pair has been seen.'
+mechanism: 'a fixed +1% burst trigger fires on more coins than the per-coin 2.5-sigma trigger, and 64 coins give more bursts to choose from, so the book is less often stuck in stale positions and catches more of the day''s movers (FET, ADA)'
+failure_mode: 'a fixed 1% threshold is noise for volatile small coins (it fires on every wiggle) and the wider pool adds illiquid names whose bursts revert; the wide-pool idea failed twice before (#ride-z3-wide-outcome, the retired momentum_top3_30m_wide)'
+harness: 'archive.gates.ride_partial_trim book generalised: 5m Binance bars, maker fee 0.05% per side, target filled at its price when the bar high reaches it, 24 h hold, 3%/15% skim ladder on every arm, candidates ranked by 3-bar return as the live code does'
+arms:
+  B2: 'the live rule: 27-coin pool, z >= 2.5 per-coin trigger, target 2 x dvol, 2 slots of 1/2'
+  R1W: 'ride1_wide_5m: every tradable venue pair with Binance bars (the 64 of its universe file), 3-bar return >= 1%, target +5%, 3 slots of 1/3, cooldown 12'
+  R1: 'control: the same ride1 rule on the 27-coin pool (isolates the universe from the trigger)'
+universe_note: 'the 64 coins are today''s venue list, so coins that were delisted before today are missing (survivorship); stated, not corrected'
+windows: {W1: '2026-09-05..2026-09-19', W2: '2026-09-19..now', last_3d: 'the last 72 hours'}
+decision_rule: >
+  R1W is RECOMMENDED as a candidate for the competition book only if, against B2, it has higher total return in at
+  least 2 of the 3 windows, higher Sharpe in at least 2 of the 3, and a max drawdown never more than 2 pp deeper.
+  R1 is reported to say whether a pass comes from the trigger or the universe. Otherwise NULL. A pass goes to the
+  operator; going live is a unit switch with its known costs (#competition-z25-2026-10-04), operator decision only.
+trials: 2
