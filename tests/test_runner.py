@@ -165,7 +165,9 @@ def test_competition_r4_is_the_long_only_regime_rule_on_the_comp_keys():
     """DECISIONS.md#competition-r4-2026-10-05"""
     r4, paper, live = _cfg("competition_r4"), _cfg("regime_ls_30m"), _cfg("competition_z25")
     assert bot_class(r4).__name__ == "RegimeLSBot"
-    assert r4["contenders"] == paper["contenders"] and r4["strategy"] == paper["strategy"]
+    seed = {"seed_bar", "seed_ref"}
+    assert {k: v for k, v in r4["contenders"].items() if k not in seed} == paper["contenders"]
+    assert r4["strategy"] == paper["strategy"]
     assert r4["regime"] == paper["regime"]
     assert r4["risk"] == live["risk"] and r4["execution"] == live["execution"]
     s = load("config/competition_r4.yaml")

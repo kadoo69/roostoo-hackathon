@@ -34,6 +34,8 @@ contenders:
   skip_source: frozen from the 30m fit period, DECISIONS.md#lowtf-exhaustion-outcome
   regime_note: '4h confirmation off on both sides: the regime switch is the higher-timeframe filter; short stretch filter
     off (it blocked almost every short, #crash-shorts-outcome)'
+  seed_bar: '2026-10-05 08:00:00+00:00'
+  seed_ref: DECISIONS.md#competition-r4-seed-2026-10-05
 strategy:
   interval: 30m
   entry_bars: 20

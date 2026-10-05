@@ -101,3 +101,27 @@ def test_wake_up_replay_of_2026_09_25_0525(monkeypatch):
     out = book.guard({"PUMP": -0.5}, w2, {}, 3)
     assert out == {"PUMP": 0.5, "TAO": 0.5}
     assert book.events[-1]["event"] == "live_min_hold"
+
+
+def test_seed_bar_lifts_the_stale_guard_on_that_one_decision_only():
+    from bot.entry_guard import seed_now
+    bar = pd.Timestamp("2026-10-05 08:00", tz="UTC")
+    cfg = {"seed_bar": "2026-10-05 08:00:00+00:00"}
+    assert seed_now(cfg, bar, {}) and seed_now(cfg, bar, {"ADA": 0.3})
+    assert not seed_now(cfg, bar + pd.Timedelta("30min"), {})
+    assert not seed_now(cfg, bar - pd.Timedelta("30min"), {})
+    assert not seed_now({}, bar, {})
+
+
+def test_seed_bar_keeps_old_entries_that_the_guard_would_drop():
+    book = _Book(IDX[-2])
+    book.cc = {"seed_bar": str(IDX[-1])}
+    book.matrix = pd.DataFrame(1.0, index=IDX, columns=["ADA", "SUI"])
+    w = pd.DataFrame({"ADA": [0.5] * 5, "SUI": [0.3] * 5}, index=IDX)
+    out = book.guard({"ADA": 0.5, "SUI": 0.3}, w, {}, 0)
+    assert out == {"ADA": 0.5, "SUI": 0.3}
+    assert any(e.get("event") == "seed_entry" for e in book.events)
+    book2 = _Book(IDX[-2])
+    book2.cc = {}
+    book2.matrix = book.matrix
+    assert book2.guard({"ADA": 0.5, "SUI": 0.3}, w, {}, 0) == {}

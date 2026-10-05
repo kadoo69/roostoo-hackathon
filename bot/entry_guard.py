@@ -72,6 +72,14 @@ def keep_young(target: dict[str, float], current: dict[str, float], opened: dict
     return {**{s: w * scale for s, w in rest.items()}, **kept}, sorted(kept)
 
 
+def seed_now(cfg: dict, bar: pd.Timestamp, current: dict[str, float]) -> bool:
+    """True only on the decision for `cfg["seed_bar"]`: that one decision buys the rule's whole
+    current target instead of only its fresh entries (guard A off once); held names stay as they are.
+    DECISIONS.md#competition-r4-seed-2026-10-05"""
+    seed = cfg.get("seed_bar")
+    return bool(seed) and pd.Timestamp(seed) == pd.Timestamp(bar)
+
+
 class GuardedTarget:
     """Mixin for Bot subclasses that keep `self.matrix`: records the previous processed bar and
     applies A and B to a target built from the rule's weight matrix `w`."""
@@ -100,7 +108,10 @@ class GuardedTarget:
         first = not getattr(self, "guard_seen_decision", False)
         self.guard_seen_decision = True
         late = first or is_catch_up(getattr(self, "prev_processed", None), m.index, now, step)
-        if len(w) > 1:
+        if seed_now(getattr(self, "cc", None) or {}, bar, current):
+            self.journal.write("signals", {"event": "seed_entry", "bar": str(bar), "target": target,
+                                           "ref": "DECISIONS.md#competition-r4-seed-2026-10-05"})
+        elif len(w) > 1:
             retry = set() if late else set(getattr(self, "pending_entries", {}) or {})
             prev_row = {s: float(v) for s, v in w.iloc[-2].items() if abs(v) > 1e-9 and s not in retry}
             target, dropped = drop_stale_entries(target, current, prev_row)
