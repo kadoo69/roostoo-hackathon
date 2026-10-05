@@ -199,3 +199,28 @@ def test_first_decision_after_a_start_blocks_entries_the_path_took_earlier():
     assert again == {"NEW": 0.5}
     b.pending_entries = {"OLD": 0.5}
     assert b.guard({"OLD": 0.5, "NEW": 0.5}, w, {}, 0) == {"OLD": 0.5, "NEW": 0.5}
+
+
+def test_a_cash_capped_entry_stays_pending_until_it_is_mostly_filled():
+    """2026-10-05 17:00 IST: a rotation sold SUI and NEAR and bought ENA in one cycle; the buy was cut
+    to the 50 USD of cash on hand, ENA then counted as held, was never retried, and the next close
+    dropped it as a stale entry. DECISIONS.md#same-cycle-rotation-underfill-2026-10-05"""
+    target = {"ADAUSDT": 0.42, "ENAUSDT": 0.43, "NEARUSDT": 0.15}
+    holdings = {"ADAUSDT": 0.50, "ENAUSDT": 0.0005, "NEARUSDT": 0.15}
+    pending = next_pending(fresh=True, halt=False, target=target, pending={}, holdings=holdings,
+                           suppressed=set(), cash_frac=0.35, underfilled={"ENAUSDT"})
+    assert pending == {"ENAUSDT": 0.43}
+    assert next_pending(fresh=True, halt=False, target=target, pending={}, holdings=holdings,
+                        suppressed=set(), cash_frac=0.35) == {}
+    t = carry_target(holdings, pending, cash_frac=0.35, underfilled={"ENAUSDT"})
+    assert t["ENAUSDT"] == 0.43 and t["ADAUSDT"] == 0.50
+    done = {**holdings, "ENAUSDT": 0.40}
+    assert next_pending(fresh=False, halt=False, target={}, pending=pending, holdings=done,
+                        suppressed=set(), cash_frac=0.02, underfilled={"ENAUSDT"}) == {}
+
+
+def test_a_held_position_that_shrank_by_price_is_never_topped_up():
+    holdings = {"PUMPUSDT": 0.20}
+    assert next_pending(fresh=True, halt=False, target={"PUMPUSDT": 0.33}, pending={}, holdings=holdings,
+                        suppressed=set(), cash_frac=0.3, underfilled=set()) == {}
+    assert carry_target(holdings, {"PUMPUSDT": 0.33}, cash_frac=0.3, underfilled=set()) == holdings

@@ -74,31 +74,41 @@ def venue_quote(specs: dict) -> str:
 
 
 def carry_target(current: dict[str, float], pending: dict[str, float],
-                 cash_frac: float) -> dict[str, float]:
-    """The held book carried between bar closes, plus entries the last close wanted and did not get.
+                 cash_frac: float, underfilled: set[str] | frozenset[str] = frozenset()) -> dict[str, float]:
+    """The held book carried between bar closes, plus entries the last close wanted and did not get,
+    including a cash-capped entry still short of its target (`unfinished`).
 
-    DECISIONS.md#execution-gaps-2026-09-23
+    DECISIONS.md#execution-gaps-2026-09-23, DECISIONS.md#same-cycle-rotation-underfill-2026-10-05
     """
     target = dict(current)
     if cash_frac < RETRY_MIN_CASH_FRAC:
         return target
     for sym, w in pending.items():
-        if current.get(sym, 0.0) <= 0.0:
+        if unfinished(sym, w, current, underfilled):
             target[sym] = w
     return target
 
 
-def next_pending(fresh: bool, halt: bool, target: dict[str, float], pending: dict[str, float],
-                 holdings: dict[str, float], suppressed: set[str], cash_frac: float) -> dict[str, float]:
-    """Entries still wanted and not held. A bar close replaces them; a halt clears them.
+def unfinished(sym: str, wanted: float, held: dict[str, float], underfilled: set[str] | frozenset[str]) -> bool:
+    """Not held, or a cash-capped entry below 1 - UNDERFILL_DONE of what it wanted. A position that
+    shrank by price is held and is never topped up. DECISIONS.md#same-cycle-rotation-underfill-2026-10-05"""
+    h = held.get(sym, 0.0)
+    return h <= 0.0 or (sym in underfilled and h < wanted * (1.0 - UNDERFILL_DONE))
 
-    DECISIONS.md#execution-gaps-2026-09-23
+
+def next_pending(fresh: bool, halt: bool, target: dict[str, float], pending: dict[str, float],
+                 holdings: dict[str, float], suppressed: set[str], cash_frac: float,
+                 underfilled: set[str] | frozenset[str] = frozenset()) -> dict[str, float]:
+    """Entries still wanted and not held, or cash-capped and still short of their target. A bar close
+    replaces them; a halt clears them.
+
+    DECISIONS.md#execution-gaps-2026-09-23, DECISIONS.md#same-cycle-rotation-underfill-2026-10-05
     """
     if halt:
         return {}
     base = target if fresh else pending
     return {s: w for s, w in base.items()
-            if w > 1e-9 and holdings.get(s, 0.0) <= 0.0 and s not in suppressed}
+            if w > 1e-9 and unfinished(s, w, holdings, underfilled) and s not in suppressed}
 
 
 MAX_DEFERRALS = 3
@@ -624,7 +634,7 @@ class Bot:
             # must carry the held book forward and let only the ladder move it.
             # This flattened three books on 2026-09-22 before it was caught.
             # DECISIONS.md#booking-flattened-the-book
-            target = carry_target(current_w, self.pending_entries, cash_frac)
+            target = carry_target(current_w, self.pending_entries, cash_frac, self.underfilled)
         if self.s.shorts_enabled:
             target = portfolio.hold_shorts(target, current_w)
         # The skim ladder is a shared capability, not a property of one bot:
@@ -741,7 +751,7 @@ class Bot:
             self.pending_entries = next_pending(
                 fresh, guard["halt"] or bool(guard.get("freeze")), target, self.pending_entries,
                 portfolio.current_weights(self.holdings, prices, equity),
-                {o["symbol"] for o in suppressed}, cash_frac)
+                {o["symbol"] for o in suppressed}, cash_frac, self.underfilled)
 
         # Marks are journaled only for symbols a markout could need: what is held,
         # plus what was traded recently, so an EXIT still has forward marks after
