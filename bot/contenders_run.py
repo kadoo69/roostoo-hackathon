@@ -50,7 +50,15 @@ class ContendersBot(GuardedTarget, Bot):
         if self.cc.get("absorb_idle"):
             target = absorb_idle(target, self.current_weights(prices), float(self.cc["max_weight"]))
         target = {s: math.copysign(math.floor(abs(v) * derisk * 1e8) / 1e8, v) for s, v in target.items()}
-        return self.guard(target, w, prices, int(self.cc.get("min_hold_bars") or 0))
+        return self.guard(target, w, prices, live_min_hold(self.cc))
+
+
+def live_min_hold(cc: dict) -> int:
+    """Bars a live position is kept after its entry whatever the rule's target says (guard B):
+    `live_min_hold_bars` when set, which leaves the rule's own path untouched, else `min_hold_bars`.
+    DECISIONS.md#live-min-hold-6h-2026-10-05"""
+    v = cc.get("live_min_hold_bars")
+    return int(v if v is not None else (cc.get("min_hold_bars") or 0))
 
 
 def absorb_idle(target: dict[str, float], current: dict[str, float], cap: float) -> dict[str, float]:

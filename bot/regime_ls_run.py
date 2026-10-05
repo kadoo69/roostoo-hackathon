@@ -15,7 +15,7 @@ import pandas as pd
 import yaml
 
 from bot import feed
-from bot.contenders_run import ContendersBot
+from bot.contenders_run import ContendersBot, live_min_hold
 from bot.settings import ROOT, load
 from signals import contenders, regime_ls
 
@@ -55,7 +55,7 @@ class RegimeLSBot(ContendersBot):
                                        "target": {s: round(float(v), 5) for s, v in last.items() if abs(v) > 1e-9}})
         target = {s: math.copysign(math.floor(abs(float(v)) * derisk * 1e8) / 1e8, float(v))
                   for s, v in last.items() if abs(v) > 1e-9}
-        return self.guard(target, w, prices, int(self.cc.get("min_hold_bars") or 0))
+        return self.guard(target, w, prices, live_min_hold(self.cc))
 
 
 def main() -> int:

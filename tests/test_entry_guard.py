@@ -125,3 +125,11 @@ def test_seed_bar_keeps_old_entries_that_the_guard_would_drop():
     book2.cc = {}
     book2.matrix = book.matrix
     assert book2.guard({"ADA": 0.5, "SUI": 0.3}, w, {}, 0) == {}
+
+
+def test_live_min_hold_overrides_only_the_live_guard():
+    from bot.contenders_run import live_min_hold
+    assert live_min_hold({"live_min_hold_bars": 12, "min_hold_bars": 3}) == 12
+    assert live_min_hold({"min_hold_bars": 3}) == 3
+    assert live_min_hold({}) == 0
+    assert live_min_hold({"live_min_hold_bars": 0, "min_hold_bars": 3}) == 0
