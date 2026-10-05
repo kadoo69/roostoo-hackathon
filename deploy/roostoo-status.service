@@ -1,0 +1,8 @@
+[Unit]
+Description=Roostoo live status to the ntfy feed (read-only)
+
+[Service]
+Type=oneshot
+User=roostoo
+WorkingDirectory=/opt/roostoo-hackathon
+ExecStart=/opt/roostoo-hackathon/.venv/bin/python deploy/status_publish.py --book competition_r4

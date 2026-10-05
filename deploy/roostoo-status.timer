@@ -1,0 +1,10 @@
+[Unit]
+Description=Roostoo live status to the ntfy feed every 10 minutes
+
+[Timer]
+OnBootSec=3min
+OnCalendar=*:0/10:50
+Persistent=true
+
+[Install]
+WantedBy=timers.target
