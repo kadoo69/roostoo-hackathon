@@ -1,0 +1,23 @@
+meta:
+  name: ride_trim_recent
+  frozen: true
+  declared_utc: '2026-10-05T02:50:00Z'
+  requested_by: 'operator 2026-10-05 08:20 IST: cut some loss in PUMP and LTC, get into the new highest-signal coin and churn that capital: get in, book profit, repeat'
+  declared_ref: DECISIONS.md#ride-trim-recent-declaration
+  written_before_any_number: false
+  numbers_seen_before_writing: '#ride-partial-trim-outcome on W1/W2/last 3 days (PT50 last 3 days +1.68% vs +0.99%, W2 -12.6 pp); not yet scored on the last 14 days or 24 h'
+  why_a_new_trial: 'the operator''s recency rule (last 14 d / 3 d / 24 h) now judges every ride change (#ride-rank-regime-declaration); the trims were judged on the older windows, so they are re-scored on the same recent windows as a new, counted trial, not a reversal of the earlier verdict'
+mechanism: 'in a trending day a full book of stale losers misses the new bursts; part of each loser funds the strongest fresh trigger, and a quicker target on that slice books profit and frees the capital for the next one'
+failure_mode: 'the bursts revert (the swap A/B is -1.3% vs +0.5% today); churn pays fees; a quicker target caps the winners that carry the ride'
+harness: 'archive.gates.ride_partial_trim book (ladder, maker fees, ranked by z as the live rule now is), 27 coins'
+arms:
+  B2: 'the live rule (ranked by z)'
+  PT33: 'trim 1/3 of each loser (below entry, at least 12 bars old) to fund the top fresh trigger (2.5 <= z < 5), normal target'
+  PT50: 'the same with 1/2'
+  PT50C: 'PT50 with the trim-funded entry targeting 1 x dvol instead of 2 x (churn: book quicker, recycle)'
+windows: {last_14d: 'the 14 days to now', last_3d: 'the 72 hours to now', last_1d: 'the 24 hours to now'}
+decision_rule: >
+  An arm is a CANDIDATE against B2 if its return is higher in at least 2 of the 3 windows including last_3d, its
+  Sharpe is higher in at least 2 of the 3, and its last-14-day drawdown is no more than 2 pp deeper. A candidate goes
+  to a forward paper book first (it changes sizing and adds trades, unlike the ranking change). Otherwise NULL.
+trials: 3

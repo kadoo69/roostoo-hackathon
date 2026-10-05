@@ -23,8 +23,10 @@ OPEN = pd.Timestamp("2026-10-04 12:00", tz="UTC")
 
 
 def book(c: np.ndarray, h: np.ndarray, z: np.ndarray, dvol: np.ndarray, cfg: dict,
-         trim: float | None, zmax: float | None) -> tuple[np.ndarray, int]:
-    """Equity path (start 1.0) and the number of entries. A position is [qty, entry, target, age, skim_ref]."""
+         trim: float | None, zmax: float | None, churn_tpk: float | None = None) -> tuple[np.ndarray, int]:
+    """Equity path (start 1.0) and the number of entries. A position is [qty, entry, target, age, skim_ref].
+    `churn_tpk`: a trim-funded entry takes this x dvol as its target instead of `tp_vol_k` (a quicker profit that
+    recycles the capital). DECISIONS.md#ride-trim-recent-declaration"""
     n, hold, cool = int(cfg["n"]), int(cfg["hold_bars"]), int(cfg["cooldown_bars"])
     k, tpk = float(cfg["sigma_k"]), float(cfg["tp_vol_k"])
     T, N = c.shape
@@ -79,7 +81,7 @@ def book(c: np.ndarray, h: np.ndarray, z: np.ndarray, dvol: np.ndarray, cfg: dic
                 alloc = min(value / n, cash)
                 if alloc > value * 0.05:
                     _, j = trig[0]
-                    pos[j] = [alloc * (1 - FEE) / c[t, j], c[t, j], tpk * dvol[t, j], 0, c[t, j]]
+                    pos[j] = [alloc * (1 - FEE) / c[t, j], c[t, j], (churn_tpk or tpk) * dvol[t, j], 0, c[t, j]]
                     slot[j] = alloc / value
                     cash -= alloc
                     last[j] = t

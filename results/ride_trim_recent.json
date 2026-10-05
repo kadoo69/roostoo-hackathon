@@ -1,0 +1,111 @@
+{
+ "end": "2026-10-05 02:40:00+00:00",
+ "arms": {
+  "B2": {
+   "last_14d": {
+    "total_pct": 11.06,
+    "max_dd_pct": -16.37,
+    "sharpe": 3.32,
+    "entries_per_day": 2.14
+   },
+   "last_3d": {
+    "total_pct": 1.05,
+    "max_dd_pct": -7.59,
+    "sharpe": 2.28,
+    "entries_per_day": 2.67
+   },
+   "last_1d": {
+    "total_pct": 0.54,
+    "max_dd_pct": -2.95,
+    "sharpe": 5.11,
+    "entries_per_day": 2.0
+   }
+  },
+  "PT33": {
+   "last_14d": {
+    "total_pct": 10.51,
+    "max_dd_pct": -12.93,
+    "sharpe": 3.51,
+    "entries_per_day": 4.0
+   },
+   "last_3d": {
+    "total_pct": 0.19,
+    "max_dd_pct": -5.36,
+    "sharpe": 0.57,
+    "entries_per_day": 4.33
+   },
+   "last_1d": {
+    "total_pct": 0.29,
+    "max_dd_pct": -1.95,
+    "sharpe": 5.17,
+    "entries_per_day": 5.0
+   }
+  },
+  "PT50": {
+   "last_14d": {
+    "total_pct": 11.04,
+    "max_dd_pct": -13.24,
+    "sharpe": 3.44,
+    "entries_per_day": 4.07
+   },
+   "last_3d": {
+    "total_pct": 1.87,
+    "max_dd_pct": -5.21,
+    "sharpe": 4.18,
+    "entries_per_day": 4.33
+   },
+   "last_1d": {
+    "total_pct": 0.31,
+    "max_dd_pct": -1.56,
+    "sharpe": 6.83,
+    "entries_per_day": 5.0
+   }
+  },
+  "PT50C": {
+   "last_14d": {
+    "total_pct": 35.45,
+    "max_dd_pct": -11.75,
+    "sharpe": 8.67,
+    "entries_per_day": 4.79
+   },
+   "last_3d": {
+    "total_pct": 0.68,
+    "max_dd_pct": -8.42,
+    "sharpe": 1.36,
+    "entries_per_day": 7.33
+   },
+   "last_1d": {
+    "total_pct": 2.24,
+    "max_dd_pct": -1.56,
+    "sharpe": 17.67,
+    "entries_per_day": 7.0
+   }
+  }
+ },
+ "verdict": {
+  "PT33": {
+   "return_wins": [],
+   "sharpe_wins": 2,
+   "dd_14d_within_2pp": true,
+   "candidate": false
+  },
+  "PT50": {
+   "return_wins": [
+    "last_3d"
+   ],
+   "sharpe_wins": 3,
+   "dd_14d_within_2pp": true,
+   "candidate": false
+  },
+  "PT50C": {
+   "return_wins": [
+    "last_14d",
+    "last_1d"
+   ],
+   "sharpe_wins": 2,
+   "dd_14d_within_2pp": true,
+   "candidate": false
+  }
+ },
+ "ref": "DECISIONS.md#ride-trim-recent-declaration"
+}

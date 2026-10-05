@@ -5254,3 +5254,18 @@ B2Z beats B2 on return and Sharpe over 14 days and 3 days with the same drawdown
 ## competition-zrank-2026-10-05
 
 Operator 2026-10-05 08:20 IST: "yes go ahead and deploy it", after `#ride-rank-regime-outcome` and the argument that 24 h of paper would most likely tie (no simultaneous triggers in the last 24 h) while the book is full until about 20:05 IST anyway. `config/competition_z25.yaml` ride arm `rank_by: z`: when several coins trigger on one bar, the free slots go to the highest z instead of the highest 3-bar return. Entries, sizes, exits and the ladder are unchanged. The unit restarts with its saved state. From here `ride_z25_5m` (ranked by return) is the old-ranking reference and `ride_z25_zrank_5m` the twin of the live rule.
+
+## ride-trim-recent-declaration
+
+Operator 2026-10-05 08:20 IST: cut some loss in PUMP and LTC, buy the highest-signal coin and churn that capital (book profit, repeat). Full text in `config/ride_trim_recent.yaml`, scored by `python3 -m archive.gates.ride_trim_recent`. The trims of `#ride-partial-trim-outcome` re-scored on the operator's recent windows (last 14 d / 3 d / 24 h), as a new counted trial, plus PT50C (the trim-funded entry targets 1 x dvol, a quicker profit that recycles the capital). Candidate rule as `#ride-rank-regime-declaration`; a candidate goes to forward paper first. Older-window numbers were seen before writing (stated in the config). Three trials.
+
+## ride-trim-recent-outcome
+
+NULL by the declared rule; no candidate (`results/ride_trim_recent.json`, `python3 -m archive.gates.ride_trim_recent`). Total return / max DD / Sharpe / entries a day, 27 coins, ladder, maker fees, all ranked by z as the live rule now is:
+| arm | last 14 days | last 3 days | last 24 h |
+|---|---|---|---|
+| B2 (live) | +11.06% / -16.37% / 3.32 / 2.1 | +1.05% / -7.59% / 2.28 / 2.7 | +0.54% / -2.95% / 5.11 / 2.0 |
+| PT33 | +10.51% / -12.93% / 3.51 / 4.0 | +0.19% / -5.36% / 0.57 / 4.3 | +0.29% / -1.95% / 5.17 / 5.0 |
+| PT50 | +11.04% / -13.24% / 3.44 / 4.1 | **+1.87%** / -5.21% / 4.18 / 4.3 | +0.31% / -1.56% / 6.83 / 5.0 |
+| PT50C (churn: trim-funded entry targets 1 x dvol) | **+35.45%** / **-11.75%** / **8.67** / 4.8 | +0.68% / -8.42% / 1.36 / 7.3 | **+2.24%** / -1.56% / **17.67** / 7.0 |
+PT50 has the better Sharpe in all three windows and shallower drawdowns but wins return only in the last 3 days (it ties 14 days, -0.02 pp). PT50C wins 14 days (+24 pp, drawdown 4.6 pp shallower, Sharpe 8.7 vs 3.3) and the last 24 h, but loses the last 3 days by 0.37 pp, the window the rule requires, so it is not a candidate. Its result rests on many more, smaller round trips (4.8 to 7.3 entries a day), so it is more exposed to fills and fees than the harness models (target filled at its price, maker fee). Three trials recorded.
