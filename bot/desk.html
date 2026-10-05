@@ -121,6 +121,11 @@ footer{color:var(--faint);font-size:11px;margin-top:16px;display:flex;gap:16px;f
   </div>
 
   <div class="card" style="margin-bottom:12px">
+    <h2>PEPE tick scalper (paper, no orders) <span class="help" title="Rests a buy at the bid and a sell one tick higher on PEPE, filled from the live Roostoo LastPrice, with a unit the size of the live book's idle cash. Touch = fills when LastPrice reaches the order; through = only when it trades past it (conservative). ARB is a control whose tick is below the 0.10% maker round trip and should not pay. Live use needs separate accounting and the operator's go. DECISIONS.md#tick-scalp-paper-2026-10-05">?</span> <span class="r" id="scalpnote"></span></h2>
+    <div class="scroll"><table id="scalp"></table></div>
+  </div>
+
+  <div class="card" style="margin-bottom:12px">
     <h2><span id="radartitle">Trigger radar</span> <span class="help" title="z = the coin's 3-bar (15 min) 5m return divided by the std of its 3-bar returns over the previous 24 h. The bot buys at z ≥ 2.5 on a closed bar when a slot is free and the coin is out of its 1 h cooldown. Above z 5 (hatched) moves have historically been exhausted (~0% average ride).">?</span>
       <span class="r" id="radarnote"></span>
       <div class="tabs" id="radartabs"><button data-k="z_forming" class="on">sort: forming z</button><button data-k="z_max_1h">max z 1h</button><button data-k="ret_open">since open</button><button data-k="fired_6h">triggers 6h</button></div>
@@ -514,6 +519,21 @@ async function load() {
 }
 load(); setInterval(load, 30000);
 loadQuotes(); setInterval(loadQuotes, 3000);
+async function loadScalp() {
+  try {
+    const r = await fetch("/api/scalp", {cache: "no-store"}); const S = await r.json();
+    if (S.error) { $("scalpnote").textContent = S.error; $("scalp").innerHTML = ""; return; }
+    const hrs_ = (Date.now() - Date.parse(S.started)) / 3.6e6;
+    $("scalpnote").textContent = `running ${hrs_.toFixed(1)} h · ${S.polls} polls every ${S.poll_seconds}s · unit $${fmt(S.unit_usd,0)} · updated ${ist(S.updated)} IST`;
+    let h = `<tr><th>pair · fill rule</th><th>net P&amp;L</th><th>net bps of unit</th><th>round trips</th><th>maker / taker fills</th><th>fees</th><th>open lot</th><th>tick</th><th>price flips</th></tr>`;
+    Object.entries(S.books).forEach(([k, b]) => {
+      const [pair, rule] = k.split("|"), q = (S.quotes || {})[pair] || {};
+      h += `<tr><td>${pair.replace("/USD","")} · ${rule}${pair === S.arm ? "" : " <span class=\"faint\">(control)</span>"}</td><td class="${cls(b.net_pnl_usd)} num">${b.net_pnl_usd >= 0 ? "+" : ""}${fmt(b.net_pnl_usd,2)}</td><td class="num">${fmt(b.net_bps_of_unit,1)}</td><td class="num">${b.round_trips}</td><td class="num">${b.maker_fills} / ${b.taker_fills}</td><td class="num">${fmt(b.fees_usd,2)}</td><td class="num">${b.open_lots ? "1 @ " + px(b.open_entry) : "–"}</td><td class="num">${q.tick_bps != null ? fmt(q.tick_bps,1) + " bps" : "–"}</td><td class="num">${(S.flips || {})[pair] ?? "–"}</td></tr>`;
+    });
+    $("scalp").innerHTML = h;
+  } catch (e) { $("scalpnote").textContent = "scalper feed unavailable"; }
+}
+loadScalp(); setInterval(loadScalp, 10000);
 window.addEventListener("resize", () => D && D.competition && drawEquity(D.competition));
 </script>
 </body>

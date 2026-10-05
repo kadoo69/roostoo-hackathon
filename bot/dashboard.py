@@ -343,6 +343,13 @@ class Handler(BaseHTTPRequestHandler):
             from bot.live_quotes import payload as quotes_payload
             self._json(quotes_payload())
             return
+        if self.path.startswith("/api/scalp"):
+            f = ROOT / "live" / "tick_scalp_pepe" / "state.json"
+            try:
+                self._json(json.loads(f.read_text()))
+            except (OSError, ValueError):
+                self._json({"error": "tick scalper not running (python3 -m bot.tick_scalper)"})
+            return
         if self.path.startswith("/api/heatmap"):
             from bot.heatmap import payload as heatmap_payload
             self._json(heatmap_payload())
