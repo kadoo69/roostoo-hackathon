@@ -267,6 +267,22 @@ def strategy_logic(bots: list[dict]) -> list[dict]:
     return rows
 
 
+SNAP_TTL_S = 15.0
+_SNAP_LOCK = threading.Lock()
+_SNAP: dict = {"ts": 0.0, "data": None}
+
+
+def cached_snapshot() -> dict:
+    """One `snapshot` shared by every request for SNAP_TTL_S, built by one request at a time: several
+    open pages each rebuilding it (4-6 s of journal and config parsing) piled up past the desk's
+    20 s timeout on 2026-10-05."""
+    with _SNAP_LOCK:
+        if _SNAP["data"] is None or time.time() - _SNAP["ts"] > SNAP_TTL_S:
+            _SNAP["data"] = snapshot()
+            _SNAP["ts"] = time.time()
+        return _SNAP["data"]
+
+
 def snapshot() -> dict:
     bots = []
     for n, c in BOTS.items():
@@ -313,14 +329,14 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         if self.path.startswith("/api/state"):
-            self._json(snapshot())
+            self._json(cached_snapshot())
             return
         if self.path.startswith("/api/desk"):
             from bot.desk import payload as desk_payload
-            self._json(desk_payload(snapshot()))
+            self._json(desk_payload(cached_snapshot()))
             return
         if self.path.startswith("/api/analysis"):
-            snap = snapshot()
+            snap = cached_snapshot()
             self._json(analysis_payload(snap["bots"], CONTROL_OF))
             return
         if self.path.startswith("/api/quotes"):
