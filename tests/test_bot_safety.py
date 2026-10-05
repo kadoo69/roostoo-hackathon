@@ -362,3 +362,36 @@ def test_only_the_live_pair_escalates_exits():
     from bot.settings import load
     assert load("config/competition.yaml").exit_escalation and load("config/competition_rehearsal.yaml").exit_escalation
     assert not load("config/momentum_top3_30m.yaml").exit_escalation
+
+
+def test_a_stale_exit_with_roostoo_s_bogus_filled_quantity_is_still_escalated(tmp_path):
+    """DECISIONS.md#escalation-fill-field-2026-10-05: Roostoo reported FilledQuantity == Quantity for the unfilled
+    LTC trim; the real fill is CoinChange 0, so the whole order must be re-sent at market."""
+    from bot.execution import venue_filled_qty
+    live = {"Pair": "LTC/USD", "OrderID": 3423939, "Status": "CANCELED", "Side": "SELL", "Type": "LIMIT",
+            "Price": 70.54, "Quantity": 227.588, "FilledQuantity": 227.588, "FilledAverPrice": 0, "CoinChange": 0}
+    assert venue_filled_qty(live) == 0.0
+    assert venue_filled_qty({**live, "CoinChange": -100.0, "FilledAverPrice": 70.5}) == 100.0
+    assert venue_filled_qty({"Quantity": 5.0, "FilledQuantity": 2.0}) == 2.0
+    seen = {}
+    ex, spec = _wide_tick_executor(tmp_path)
+
+    class Client:
+        def query_order(self, pending_only=None, **kw):
+            return {"OrderDetails": [{**live, "Pair": "PEPE/USD", "OrderID": 7, "Status": "PENDING",
+                                      "Quantity": 3967877190.0, "FilledQuantity": 3967877190.0,
+                                      "Price": 0.00000443, "CreateTimestamp": 0}]}
+
+        def cancel_order(self, order_id=None, pair=None):
+            seen.setdefault("cancel", []).append(order_id)
+            return {}
+
+        def place_order(self, pair, side, quantity, price=None, client_order_id=None):
+            seen.setdefault("place", []).append((pair, side, quantity, price))
+            return {"OrderDetail": {"OrderID": 8, "Status": "FILLED", "FilledQuantity": quantity}}
+    ex.client = Client()
+    ex.settings = replace(settings(), dry_run=False, exit_escalation=True)
+    ex.pending_pairs = {"PEPEUSD"}
+    out = ex.sweep_unfilled()
+    assert seen["cancel"] == [7] and seen["place"] and seen["place"][0][1] == "SELL" and seen["place"][0][3] is None
+    assert out[-1]["reason"] == "exit_escalation"

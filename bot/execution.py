@@ -17,6 +17,20 @@ ERROR_WINDOW = 40
 ERROR_MIN_CALLS = 8
 
 
+
+def venue_filled_qty(o: dict) -> float:
+    """The quantity an order has really filled. Roostoo reports `FilledQuantity` equal to the whole order even
+    when nothing filled (a cancelled LTC sell on 2026-10-05: Quantity 227.588, FilledQuantity 227.588,
+    FilledAverPrice 0, CoinChange 0), so the coin actually moved (`CoinChange`) is the fill, and a zero average
+    price means nothing filled; only without either field is `FilledQuantity` trusted (Binance testnet shape).
+    This made every exit escalation compute a zero rest and skip since 2026-10-02.
+    DECISIONS.md#escalation-fill-field-2026-10-05"""
+    if o.get("CoinChange") is not None:
+        return abs(float(o.get("CoinChange") or 0.0))
+    if o.get("FilledAverPrice") is not None and float(o.get("FilledAverPrice") or 0.0) == 0.0:
+        return 0.0
+    return float(o.get("FilledQuantity") or 0.0)
+
 class Executor:
     def __init__(self, client: RoostooClient, specs: dict[str, PairSpec],
                  settings: Settings, journal: Journal):
@@ -284,7 +298,7 @@ class Executor:
         spec = self.specs.get(pair)
         if spec is None:
             return None
-        rest = spec.round_qty(float(o.get("Quantity") or 0) - float(o.get("FilledQuantity") or 0))
+        rest = spec.round_qty(float(o.get("Quantity") or 0) - venue_filled_qty(o))
         price = float(o.get("Price") or 0)
         if rest <= 0 or rest * price < spec.min_order:
             return self.journal.write("orders", {"event": "escalation_skipped", "pair": pair,
