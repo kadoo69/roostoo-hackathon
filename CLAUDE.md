@@ -52,6 +52,10 @@ Skills: `roostoo-live-report` (the 30-minute report), `roostoo-incident` (live f
 - A day-one rank is noise: Screen 2 is the top 20 on 14-day raw return, and one coin moves a book several places; do not change the rule to chase rank.
 - A hand deploy on EC2 (`sudo git reset`) leaves pulled files root-owned and `gates.progress` then fails with PermissionError; run `deploy/ec2_bootstrap.sh` or `chown -R roostoo:roostoo /opt/roostoo-hackathon` after any manual pull.
 - A tool call the operator rejects may already have run on EC2 (SSM sends the script at once): after any interrupted deploy, check the unit's start time and the lifecycle `config_sha` before saying nothing changed (`#live-gate-rollback-2026-10-05`).
+- Day-two lessons (10-05): judge every change over many start offsets (12 x 2 h); one window flips sign (the same rule read +35% and +18% over 14 days 40 minutes apart).
+- Rotating out of losers into new bursts (swaps, trims, churn, regime cash) loses in chop: of 90 missed triggers since the open only 10 hit target and the mean was -0.08%; waves where many coins trigger on one bar mostly revert.
+- Do not stack live changes under rank pressure: five live changes plus one accidental deploy in 8 hours cost more than they made; freeze and let paper books collect evidence.
+- Roostoo reports FilledQuantity = Quantity on unfilled orders; read fills from CoinChange (`bot.execution.venue_filled_qty`).
 - Every competition unit switch costs the first bar's trigger (cold-start guard) and resets state; switch only with a committed reason, never to chase a single move.
 - Exit tuning is exhausted on the ride (trails, locks, shorter holds, rotation, nearer targets all null on 10-04); the edge is the entry trigger and staying fully invested.
 - Hand-placed orders on the COMP keys are banned (FAQ Q28); a "probe" entry in code was borderline, do not repeat it.
