@@ -10,6 +10,13 @@ Current state only. The full history of sessions to 2026-09-23 is archived at `d
 - Operator guards (all in `config/competition_r4.yaml`, all in DECISIONS): 6 h hold + no trims after entry (ENA/FIL until the 18:00Z bar), no sale below cost unless down >5% (`live_no_loss_exit_max`), ENA held at any loss (`live_hold_below_cost`). Cost of the guards so far: at 21:00 IST the paper copy `regime_ls_30m` cut to AAVE only and rose (+2.40% to +2.75%) while the live book fell about a point.
 - Bugs fixed today (each with a test): same-cycle rotation underfill (`#same-cycle-rotation-underfill-2026-10-05`); guards crowding held positions down to fit the gross cap (`#guard-crowding-fix-2026-10-05`, sold FIL at 21:00; an ENA sell was cancelled with `deploy/cancel_pending.py`); blotter reading an externally cancelled order as a fill (cancel tool now journals `cancelled_external`).
 
+### Cash ride sleeve (live since 22:40 IST, `f3649e9`)
+- `competition_r4` now runs as `CashSleeveRegimeBot` (`bot/cash_sleeve_run.py`): the host rule, guards and ladder are unchanged and see the wallet minus the sleeve; 7,000 of the 7,289 cash rides `ride_5m`'s rule (+2%/15m on 5m bars, +5% target, 24 h hold, 3 slots, 3%/15% ladder) in its own ledger `live/competition_r4/cash_sleeve.json` (`#cash-ride-sleeve-2026-10-05`).
+- Cycle rows now report the whole account: `equity`, `cash` (wallet), `positions` (host and sleeve coins as account weights), plus `host_cash` and a `cash_sleeve` block. Sleeve orders carry `book: cash_sleeve`.
+- Stops opening rides below 5,600; judged against `ride_5m` at the 10-07 day-3 check. E2E: `python3 deploy/checks/cash_sleeve_e2e.py` (simulated wallet, real prices).
+- A handover (host rule enters a sleeve coin) lends the host the sleeve's cash: host cash can go negative until the host sells, and sleeve buys are capped at the wallet's free cash.
+- Deploy note: the SSM shell is `ssm-user`, so `chown` needs `sudo`.
+
 ### Next actions
 0. Operator 22:20 IST: hold ADA/ENA/FIL for "at least some recovery"; guards stay. Advised against (holding is the same bet as buying them now, the rule ranks only AAVE and TRX, regime DOWN). Agreed decision lines on the watch: equity 98,000 = partial recovery, lift the guards then; 95,000 = recovery bet failed, lift the guards. Operator decides at either line.
 1. Freeze the live book; no more live changes until the day-3 check (17:30 IST 10-07), where regime vs `ride_5m` is decided once on data. Recommend removing `live_hold_below_cost` (and probably the other guards) there: the rule's own exits beat the guards today.
