@@ -158,3 +158,15 @@ def test_n4_paper_book_is_the_live_rule_with_four_slots():
     n4 = next(iter(_cfg("ride_z25_n4_5m")["adaptive"]["burst_arms"].values()))
     assert {k: v for k, v in n4.items() if k != "n"} == {k: v for k, v in live.items() if k != "n"} and n4["n"] == 4
     assert load("config/ride_z25_n4_5m.yaml").dry_run and load("config/ride_z25_n4_5m.yaml").keyset is None
+
+
+def test_competition_r4_is_the_long_only_regime_rule_on_the_comp_keys():
+    """DECISIONS.md#competition-r4-2026-10-05"""
+    r4, paper, live = _cfg("competition_r4"), _cfg("regime_ls_30m"), _cfg("competition_z25")
+    assert bot_class(r4).__name__ == "RegimeLSBot"
+    assert r4["contenders"] == paper["contenders"] and r4["strategy"] == paper["strategy"]
+    assert r4["regime"] == paper["regime"]
+    assert r4["risk"] == live["risk"] and r4["execution"] == live["execution"]
+    s = load("config/competition_r4.yaml")
+    assert s.keyset == "comp" and s.exit_escalation and not s.shorts_enabled
+    assert not r4["meta"]["paper_only"] and r4["booking"]["underfill_max_chase"] == 0.01

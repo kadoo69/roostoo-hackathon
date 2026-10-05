@@ -14,7 +14,7 @@ import json
 import subprocess
 from pathlib import Path
 
-UNITS = ("competition_z25", "competition_z3", "competition_ride", "competition_wf", "competition_split")
+UNITS = ("competition_r4", "competition_z25", "competition_z3", "competition_ride", "competition_wf", "competition_split")
 STALE_CYCLE_S = 300
 DRAWDOWN_ALERT = 0.05
 

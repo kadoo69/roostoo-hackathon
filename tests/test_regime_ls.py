@@ -51,3 +51,24 @@ def test_shorts_only_in_down_and_no_new_longs_there():
     assert (w.to_numpy()[down_rows] < 0).any()
     new_long = (w > 0) & (w.shift(1).fillna(0.0) <= 0)
     assert not new_long.to_numpy()[down_rows].any()
+
+
+def test_shorts_off_keeps_the_long_block_and_never_shorts():
+    """The R4 arm the competition_r4 config runs: same long side, no shorts.
+    DECISIONS.md#competition-r4-2026-10-05"""
+    rng = np.random.default_rng(1)
+    up = np.cumprod(1 + rng.normal(0.004, 0.003, 120))
+    down = up[-1] * np.cumprod(1 + rng.normal(-0.006, 0.003, 60))
+    c = _panel(np.concatenate([up, down]), 8)
+    c = c * pd.Series(np.linspace(1.0, 1.05, 8), index=c.columns)
+    qv = pd.DataFrame(1e6, index=c.index, columns=c.columns)
+    cc = {"n": 3, "momentum_bars": 40, "breadth_max": 0.4, "max_weight": 0.5, "sticky": True, "skip_short_z": []}
+    w_ls, reg = regime_targets(c, qv, c.iloc[::8], cc, CFG, 20, 10)
+    w_lo, reg_lo = regime_targets(c, qv, c.iloc[::8], cc, CFG, 20, 10, shorts=False)
+    down_rows = (reg == "DOWN").to_numpy()
+    assert (reg == reg_lo).all() and down_rows.any()
+    assert (w_lo.to_numpy() >= 0).all()
+    new_long = (w_lo > 0) & (w_lo.shift(1).fillna(0.0) <= 0)
+    assert not new_long.to_numpy()[down_rows].any()
+    before = ~down_rows & (np.cumsum(down_rows) == 0)
+    assert np.allclose(w_lo.to_numpy()[before], w_ls.to_numpy()[before])

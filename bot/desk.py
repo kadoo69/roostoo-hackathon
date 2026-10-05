@@ -10,7 +10,7 @@ from __future__ import annotations
 from bot.blotter import DUST_NOTIONAL
 
 GROUPS = (("live", "LIVE on Roostoo - real orders"), ("scalper", "PAPER - the dynamic bot and fixed-clock baselines"))
-LIVE_BOOKS = {"competition", "competition_split", "competition_wf", "competition_ride", "competition_z3", "competition_z25", "competition_rehearsal"}
+LIVE_BOOKS = {"competition", "competition_split", "competition_wf", "competition_ride", "competition_z3", "competition_z25", "competition_r4", "competition_rehearsal"}
 SCALPER_BOOKS = {"momentum_top3_30m", "wf_live", "blend_30m_ride", "resid_30m", "htf0_30m", "ride1_5m", "wide_30m", "ride1_wide_5m", "ride_5m", "regime_ls_30m", "ride_z3_5m", "sleeves_z3_5m", "split_tilt_5m", "ride_z25_5m", "ride_z25_swap_5m", "ride_z25_zrank_5m", "ride_z25_churn_5m", "ride_z25_gate_5m", "ride_z25_n4_5m"}
 DESK_GROUPS = ("live", "scalper")
 TOTALS_GROUPS = ("live",)
@@ -208,7 +208,36 @@ def alerts(books: list[dict]) -> list[dict]:
 
 COMP_OPEN = "2026-10-04T12:00:00+00:00"
 COMP_END = "2026-10-18T12:00:00+00:00"
+COMP_START_EQUITY = 100_000.0
 BAR_MIN = 5
+
+
+def rule_positions(bk: dict, lots: dict[str, list[float]], marks: dict, now) -> list[dict]:
+    """Positions of a live book without a ride ledger (the regime rule): average cost over the open
+    FIFO lots, live mark and P&L; no take-profit or timed exit, the rule exits on its 10-bar channel.
+    DECISIONS.md#competition-r4-2026-10-05"""
+    import datetime as dt
+    first: dict[str, str] = {}
+    for lot in bk.get("open_lots") or []:
+        s = lot["symbol"].replace("USDT", "")
+        if lot.get("entry_ts") and (s not in first or lot["entry_ts"] < first[s]):
+            first[s] = lot["entry_ts"]
+    out = []
+    for s, w in (bk.get("positions") or {}).items():
+        ent = (bk.get("entries") or {}).get(s, {})
+        qty = ent.get("qty")
+        fill = lots[s][1] / lots[s][0] if s in lots and lots[s][0] > 0 else ent.get("entry")
+        at = dt.datetime.fromisoformat(first[s]) if s in first else None
+        mark = marks.get(s)
+        row = {"symbol": s, "qty": qty, "weight_now": w, "slot_weight": w, "entry_bar": at.isoformat() if at else None,
+               "signal_px": None, "fill_px": fill, "target_pct": None, "target_px": None, "exit_at": None,
+               "hours_left": None, "held_h": round((now - at).total_seconds() / 3600, 2) if at else None,
+               "mark": mark, "next_skim_px": None, "exit_rule": "close below the prior 10-bar low (30m)"}
+        if mark and fill:
+            row.update({"pnl_pct": round((mark / fill - 1) * 100, 2),
+                        "pnl_usd": round(qty * (mark - fill), 2) if qty else None})
+        out.append(row)
+    return out
 
 
 def competition_view(ec2: dict | None, radar: dict) -> dict | None:
@@ -234,7 +263,7 @@ def competition_view(ec2: dict | None, radar: dict) -> dict | None:
     for r in radar.get("rows") or []:
         marks.setdefault(r["symbol"], r.get("price"))
     eq = bk.get("equity") or mon.get("equity")
-    start = bk.get("start_equity") or 100_000.0
+    start = COMP_START_EQUITY
     hold = int(radar.get("hold_bars") or 288)
     slots = int(radar.get("slots") or 2)
     lots: dict[str, list[float]] = {}
@@ -270,7 +299,10 @@ def competition_view(ec2: dict | None, radar: dict) -> dict | None:
                         "progress": round((mark - sig_px) / (tgt_px - sig_px), 3) if tgt_px > sig_px else None,
                         "to_skim_pct": round((ref * 1.03 / mark - 1) * 100, 2) if ref else None})
         pos.append(row)
-    pos.sort(key=lambda r: r["hours_left"])
+    if not held:
+        pos = rule_positions(bk, lots, marks, now)
+        slots = int(bk.get("n_positions") or 3)
+    pos.sort(key=lambda r: r["hours_left"] if r["hours_left"] is not None else 1e9)
     used = sum(r["slot_weight"] for r in pos)
     rows = radar.get("rows") or []
     btc = next((r for r in rows if r["symbol"] == "BTC"), {})

@@ -266,7 +266,7 @@ function drawEquity(c) {
   c.closed.forEach(t => { marks.push({t:t.exit_ts, k:"x", txt:`${t.kind==="skim"?"skim":"exit"} ${t.symbol} ${pct(t.ret_pct)} (${fmt(t.net,0)})`}); });
   const seen = new Set();
   c.closed.forEach(t => { const k=t.symbol+t.entry_ts; if(!seen.has(k)){seen.add(k); marks.push({t:t.entry_ts,k:"e",txt:`entry ${t.symbol} at ${px(t.entry)}`});} });
-  c.positions.forEach(p => marks.push({t:p.entry_bar, k:"e", txt:`entry ${p.symbol} (signal ${px(p.signal_px)}, fill ${px(p.fill_px)})`}));
+  c.positions.filter(p => p.entry_bar).forEach(p => marks.push({t:p.entry_bar, k:"e", txt:`entry ${p.symbol} (signal ${px(p.signal_px)}, fill ${px(p.fill_px)})`}));
   const at = t => { let best=pts[0]; for (const p of pts) if (p[0] <= t) best = p; return best[1]; };
   marks.forEach(m => { const t = toD(m.t)?.getTime(); if(!t||t<x0) return; const x=X(t), y=Y(at(t));
     g += m.k==="e" ? `<path d="M${x-4},${y+9}L${x+4},${y+9}L${x},${y+3}Z" fill="var(--info)"><title>${esc(m.txt)} · ${ist(m.t,true)} IST</title></path>`
@@ -294,6 +294,21 @@ function drawPositions(c, r) {
   const rowOf = Object.fromEntries((r.rows||[]).map(x => [x.symbol, x]));
   let h = "";
   c.positions.forEach(p => {
+    if (p.target_px == null) {
+      h += `<div class="pc">
+      <div class="top"><span class="sym">${p.symbol}</span><span class="tag">${fmt((p.weight_now??p.slot_weight)*100,1)}% of book</span>
+        <span class="pnl ${cls(p.pnl_pct)} num">${pct(p.pnl_pct)}</span></div>
+      <div class="muted num" style="text-align:right;margin-top:-2px">${p.pnl_usd!=null?(p.pnl_usd>0?"+":"")+fmt(p.pnl_usd,0):""}</div>
+      <div class="meta num">
+        <span>avg fill</span><b>${px(p.fill_px)}</b>
+        <span>mark (live)</span><b>${px(p.mark)}${p.bid?` <span class="faint">${px(p.bid)} / ${px(p.ask)}</span>`:""}</b>
+        <span>exit</span><b>${p.exit_rule||"rule exit"}</b>
+        <span>entered</span><b>${p.entry_bar?ist(p.entry_bar,true)+" IST":"–"}</b>
+        <span>held</span><b>${p.held_h!=null?hrs(p.held_h):"–"}</b>
+      </div>
+    </div>`;
+      return;
+    }
     const prog = p.progress ?? 0, clamp = Math.max(-0.5, Math.min(1, prog));
     const zeroAt = 33.3, w = (v) => (v/1.5*100);
     const fillL = clamp >= 0 ? zeroAt : zeroAt + w(clamp), fillW = Math.abs(w(clamp));
@@ -321,11 +336,13 @@ function drawPositions(c, r) {
       <div class="tbar" title="time held vs the 24 h limit"><i style="width:${(tl*100).toFixed(0)}%"></i></div>
     </div>`;
   });
-  for (let i = 0; i < c.slots_free; i++) h += `<div class="slot-empty">Free slot (1/${c.slots} of the book)<br>the next coin to close a bar at z ≥ ${D.radar?.sigma_k??2.5} is bought</div>`;
+  const ruleBook = c.positions.some(p => p.target_px == null) || /r4/.test(c.bot||"");
+  if (!ruleBook) for (let i = 0; i < c.slots_free; i++) h += `<div class="slot-empty">Free slot (1/${c.slots} of the book)<br>the next coin to close a bar at z ≥ ${D.radar?.sigma_k??2.5} is bought</div>`;
+  else if (c.weight_used < 0.999) h += `<div class="slot-empty">${fmt((1-c.weight_used)*100,0)}% cash<br>the regime rule buys the next 30m breakout (top 3 by 40-bar momentum, none while the market regime is DOWN)</div>`;
   if (!c.positions.length && !c.slots_free) h = `<div class="muted">No positions.</div>`;
   $("pos").innerHTML = h;
   const nextExit = c.positions.length ? c.positions[0] : null;
-  $("posnote").textContent = nextExit ? `next scheduled exit ${nextExit.symbol} at ${ist(nextExit.exit_at)} IST unless its target hits first` : "";
+  $("posnote").textContent = nextExit && nextExit.exit_at ? `next scheduled exit ${nextExit.symbol} at ${ist(nextExit.exit_at)} IST unless its target hits first` : (ruleBook ? "regime rule: exits on the 10-bar low, no timed exit" : "");
 }
 
 function spark(vals, w=90, h=20) {
@@ -450,8 +467,10 @@ function applyQuotes() {
     p.mark = q.last; p.bid = q.bid; p.ask = q.ask;
     p.pnl_pct = (p.mark / p.fill_px - 1) * 100;
     if (p.qty) { p.pnl_usd = p.qty * (p.mark - p.fill_px); held += p.qty * p.mark; } else all = false;
-    p.progress = p.target_px > p.signal_px ? (p.mark - p.signal_px) / (p.target_px - p.signal_px) : null;
-    p.to_target_pct = (p.target_px / p.mark - 1) * 100;
+    if (p.target_px != null) {
+      p.progress = p.target_px > p.signal_px ? (p.mark - p.signal_px) / (p.target_px - p.signal_px) : null;
+      p.to_target_pct = (p.target_px / p.mark - 1) * 100;
+    }
     if (p.next_skim_px) p.to_skim_pct = (p.next_skim_px / p.mark - 1) * 100;
   });
   const live = c.cash != null ? c.cash + held : null, ref = c.bot_equity;

@@ -1,5 +1,7 @@
-"""Regime long/short book (paper): the contenders rule whose short side is switched on, and long
+"""Regime long/short book: the contenders rule whose short side is switched on, and long
 entries switched off, only while the market regime is DOWN (`signals.regime_ls.state`).
+With `short.enabled: false` the short side stays off and only the long block acts (the R4 arm of
+`#regime-competition-outcome`, `#competition-r4-2026-10-05`).
 Everything else (guards, ladder, kill switches, state) is inherited from ContendersBot.
 DECISIONS.md#regime-ls-declaration
 """
@@ -19,8 +21,9 @@ from signals import contenders, regime_ls
 
 
 def regime_targets(close: pd.DataFrame, qv: pd.DataFrame, close4: pd.DataFrame, cc: dict, rcfg: dict,
-                   entry: int, exit_lb: int) -> tuple[pd.DataFrame, pd.Series]:
-    """Weights of the regime book on `close` and the regime per row."""
+                   entry: int, exit_lb: int, shorts: bool = True) -> tuple[pd.DataFrame, pd.Series]:
+    """Weights of the regime book on `close` and the regime per row; `shorts=False` keeps the
+    long block in DOWN and never shorts."""
     reg = regime_ls.state(close, rcfg)
     down = reg == "DOWN"
     members = pd.DataFrame(True, index=close.index, columns=close.columns)
@@ -29,7 +32,8 @@ def regime_targets(close: pd.DataFrame, qv: pd.DataFrame, close4: pd.DataFrame, 
         pd.DataFrame(True, index=close.index, columns=close.columns)
     block_long = pd.DataFrame(down.to_numpy()[:, None].repeat(close.shape[1], axis=1), index=close.index,
                               columns=close.columns) & is_long
-    return contenders.targets(close, members, cc, entry, exit_lb, short_on=down, entry_ok=ok & ~block_long), reg
+    short_on = down if shorts else pd.Series(False, index=close.index)
+    return contenders.targets(close, members, cc, entry, exit_lb, short_on=short_on, entry_ok=ok & ~block_long), reg
 
 
 class RegimeLSBot(ContendersBot):
@@ -44,7 +48,8 @@ class RegimeLSBot(ContendersBot):
         frames = feed.bar_frame(list(m.columns), self.s.interval, len(m) + 1)
         qv = pd.DataFrame({s: f.set_index("open_time")["quote_volume"] for s, f in frames.items() if len(f)})
         c4 = feed.close_matrix(feed.bar_frame(list(m.columns), "4h", 60))
-        w, reg = regime_targets(m, qv, c4, self.cc, self.rcfg, self.s.entry_bars, self.s.exit_bars)
+        w, reg = regime_targets(m, qv, c4, self.cc, self.rcfg, self.s.entry_bars, self.s.exit_bars,
+                                shorts=self.s.shorts_enabled)
         last = w.iloc[-1]
         self.journal.write("signals", {"event": "contenders", "bar": str(m.index[-1]), "regime": str(reg.iloc[-1]),
                                        "target": {s: round(float(v), 5) for s, v in last.items() if abs(v) > 1e-9}})
