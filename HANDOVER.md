@@ -10,6 +10,11 @@ Current state only. The full history of sessions to 2026-09-23 is archived at `d
 - Operator guards (all in `config/competition_r4.yaml`, all in DECISIONS): 6 h hold + no trims after entry (ENA/FIL until the 18:00Z bar), no sale below cost unless down >5% (`live_no_loss_exit_max`), ENA held at any loss (`live_hold_below_cost`). Cost of the guards so far: at 21:00 IST the paper copy `regime_ls_30m` cut to AAVE only and rose (+2.40% to +2.75%) while the live book fell about a point.
 - Bugs fixed today (each with a test): same-cycle rotation underfill (`#same-cycle-rotation-underfill-2026-10-05`); guards crowding held positions down to fit the gross cap (`#guard-crowding-fix-2026-10-05`, sold FIL at 21:00; an ENA sell was cancelled with `deploy/cancel_pending.py`); blotter reading an externally cancelled order as a fill (cancel tool now journals `cancelled_external`).
 
+### Freeze until 101,000 (operator 2026-10-06 00:12 IST)
+- "just focus on riding the profits right now we need to break above 101k atleast before changing anything": no config or live changes until equity is above 101,000. Loss guards stay (ADA, ENA held below cost).
+- FIL sold 00:00 IST at 1.1088 (+1.5% over cost) by the rule's own exit once FIL was above cost.
+- A profit guard (trailing stop after the rule's exit) was tested on 39 profitable rule exits and rejected: 1%/2%/3% trails averaged -0.26/-0.69/-0.65% against the rule's exit.
+
 ### Cash ride sleeve (live since 22:40 IST, `f3649e9`)
 - `competition_r4` now runs as `CashSleeveRegimeBot` (`bot/cash_sleeve_run.py`): the host rule, guards and ladder are unchanged and see the wallet minus the sleeve; 7,000 of the 7,289 cash rides `ride_5m`'s rule (+2%/15m on 5m bars, +5% target, 24 h hold, 3 slots, 3%/15% ladder) in its own ledger `live/competition_r4/cash_sleeve.json` (`#cash-ride-sleeve-2026-10-05`).
 - Cycle rows now report the whole account: `equity`, `cash` (wallet), `positions` (host and sleeve coins as account weights), plus `host_cash` and a `cash_sleeve` block. Sleeve orders carry `book: cash_sleeve`.
