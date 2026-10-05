@@ -23,7 +23,8 @@ OPEN = pd.Timestamp("2026-10-04 12:00", tz="UTC")
 
 
 def book(c: np.ndarray, h: np.ndarray, z: np.ndarray, dvol: np.ndarray, cfg: dict,
-         trim: float | None, zmax: float | None, churn_tpk: float | None = None) -> tuple[np.ndarray, int]:
+         trim: float | None, zmax: float | None, churn_tpk: float | None = None,
+         allow: np.ndarray | None = None) -> tuple[np.ndarray, int]:
     """Equity path (start 1.0) and the number of entries. A position is [qty, entry, target, age, skim_ref].
     `churn_tpk`: a trim-funded entry takes this x dvol as its target instead of `tp_vol_k` (a quicker profit that
     recycles the capital). DECISIONS.md#ride-trim-recent-declaration"""
@@ -58,6 +59,8 @@ def book(c: np.ndarray, h: np.ndarray, z: np.ndarray, dvol: np.ndarray, cfg: dic
         trig = sorted([(z[t, j], j) for j in range(N) if j not in pos and np.isfinite(z[t, j]) and np.isfinite(c[t, j])
                        and np.isfinite(dvol[t, j]) and z[t, j] >= k and (zmax is None or z[t, j] < zmax)
                        and t - last[j] >= cool], reverse=True)
+        if allow is not None and not allow[t]:
+            trig = []                    # regime gate: no new entry and no churn this bar (exits and ladder still run)
         used = sum(slot.values())
         free = int((1.0 - used + 1e-9) * n)
         for _, j in trig[:max(free, 0)]:

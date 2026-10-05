@@ -299,3 +299,36 @@ def test_with_trim_churn_a_free_slot_skips_exhausted_triggers_as_tested():
     hot = _churn_frame(burst=1.08)
     assert live_step(hot, hot, CHURN_CFG, {}, {})[0] == {}
     assert "NEW" in live_step(hot, hot, {k: v for k, v in CHURN_CFG.items() if k != "trim_churn"}, {}, {})[0]
+
+
+def _breadth_frame(up_share: float, n_coins: int = 10, seed: int = 5):
+    import numpy as np
+    import pandas as pd
+    idx = pd.date_range("2026-10-01", periods=400, freq="5min", tz="UTC")
+    rng = np.random.default_rng(seed)
+    cols = {}
+    for i in range(n_coins):
+        drift = 0.0004 if i < round(up_share * n_coins) else -0.0004
+        cols[f"C{i}"] = 100 * np.exp(np.cumsum(rng.normal(drift, 0.001, 400)))
+    df = pd.DataFrame(cols, index=idx)
+    df.iloc[-1, 0] = df.iloc[-4, 0] * 1.015          # a burst on an up coin
+    return df
+
+
+def test_breadth_counts_coins_up_over_the_window():
+    from signals.burst_rider import breadth
+    assert breadth(_breadth_frame(0.3)) == 0.3 and breadth(_breadth_frame(0.8)) == 0.8
+    assert breadth(_breadth_frame(0.3).iloc[:100]) == 1.0          # not enough history: gate open
+
+
+def test_regime_gate_blocks_new_entries_and_churn_in_a_broad_down_market_but_never_exits():
+    """DECISIONS.md#competition-regime-gate-2026-10-05"""
+    from signals.burst_rider import live_step
+    cfg = {"sigma_k": 2.5, "sigma_bars": 288, "tp_vol_k": 2.0, "n": 2, "hold_bars": 288, "cooldown_bars": 12,
+           "rank_by": "z", "regime_gate": {"min_breadth": 0.4, "bars": 288}}
+    down, up = _breadth_frame(0.3), _breadth_frame(0.8)
+    assert live_step(down, down, cfg, {}, {})[0] == {}
+    assert "C0" in live_step(up, up, cfg, {}, {})[0]
+    old = str(down.index[-300])
+    held = {"C5": [old, float(down["C5"].iloc[-1]), 0.05, 0.5]}       # 24 h old: must exit even when gated
+    assert live_step(down, down, cfg, held, {})[0] == {}

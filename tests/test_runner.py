@@ -120,8 +120,9 @@ def test_competition_z25_is_competition_z3_at_two_and_a_half_sigma():
     assert z25["booking"]["underfill_max_chase"] == 0.01
     a25, a3 = next(iter(z25["adaptive"]["burst_arms"].values())), next(iter(z3["adaptive"]["burst_arms"].values()))
     assert a25["sigma_k"] == 2.5 and a25["tp_vol_k"] == 2.0 and a25["n"] == 2
-    assert {k: v for k, v in a25.items() if k not in ("sigma_k", "tp_vol_k", "n", "rank_by", "trim_churn")} == {k: v for k, v in a3.items() if k not in ("sigma_k", "n")}
+    assert {k: v for k, v in a25.items() if k not in ("sigma_k", "tp_vol_k", "n", "rank_by", "trim_churn", "regime_gate")} == {k: v for k, v in a3.items() if k not in ("sigma_k", "n")}
     assert a25["trim_churn"]["trim"] == 0.5 and a25["trim_churn"]["churn_tpk"] == 1.0  # #competition-trim-churn-2026-10-05
+    assert a25["regime_gate"]["min_breadth"] == 0.4  # #competition-regime-gate-2026-10-05
     assert a25["rank_by"] == "z"  # DECISIONS.md#competition-zrank-2026-10-05
     s = load("config/competition_z25.yaml")
     assert s.keyset == "comp" and s.exit_escalation and bot_class(z25).__name__ == "AdaptiveScalperBot"
@@ -131,7 +132,7 @@ def test_swap_paper_pair_is_the_live_rule_with_and_without_the_repeat_swap():
     live, ctl, swp = _cfg("competition_z25"), _cfg("ride_z25_5m"), _cfg("ride_z25_swap_5m")
     a_live, a_ctl, a_swp = (next(iter(c["adaptive"]["burst_arms"].values())) for c in (live, ctl, swp))
     # The pair was declared as the live rule before it ranked by z (#competition-zrank-2026-10-05).
-    live_then = {k: v for k, v in a_live.items() if k not in ("rank_by", "trim_churn")}
+    live_then = {k: v for k, v in a_live.items() if k not in ("rank_by", "trim_churn", "regime_gate")}
     assert a_ctl == live_then and {k: v for k, v in a_swp.items() if k != "repeat_swap"} == live_then
     assert a_swp["repeat_swap"] == {"window_bars": 72, "min_gap_bars": 12, "min_age_bars": 12}
     for name in ("ride_z25_5m", "ride_z25_swap_5m"):
@@ -142,7 +143,7 @@ def test_swap_paper_pair_is_the_live_rule_with_and_without_the_repeat_swap():
 def test_zrank_paper_book_is_the_live_rule_ranked_by_z():
     live, zr = _cfg("competition_z25"), _cfg("ride_z25_zrank_5m")
     a_live, a_zr = (next(iter(c["adaptive"]["burst_arms"].values())) for c in (live, zr))
-    assert a_zr == {k: v for k, v in a_live.items() if k != "trim_churn"} and a_zr["rank_by"] == "z"
+    assert a_zr == {k: v for k, v in a_live.items() if k not in ("trim_churn", "regime_gate")} and a_zr["rank_by"] == "z"
     churn = next(iter(_cfg("ride_z25_churn_5m")["adaptive"]["burst_arms"].values()))
     assert churn == a_live and load("config/ride_z25_churn_5m.yaml").dry_run
     s = load("config/ride_z25_zrank_5m.yaml")

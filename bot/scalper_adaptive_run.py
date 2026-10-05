@@ -244,6 +244,13 @@ class AdaptiveScalperBot(ContendersBot):
         state = {"held": {s: v for s, v in state["held"].items() if current.get(s, 0.0) >= HELD_MIN},
                  "last": dict(state["last"])}
         held, last, target = burst_rider.live_step(close, high, self.variants[vid]["cc"], state["held"], state["last"])
+        gate = self.variants[vid]["cc"].get("regime_gate") or {}
+        if gate:
+            br = burst_rider.breadth(close, int(gate.get("bars", 288)))
+            self.journal.write("signals", {"event": "regime_gate", "bar": bar, "breadth": round(br, 4),
+                                           "min_breadth": float(gate["min_breadth"]), "bars_in_frame": len(close),
+                                           "open": br >= float(gate["min_breadth"]),
+                                           "ref": "DECISIONS.md#competition-regime-gate-2026-10-05"})
         cut = {s: [round(float(v[3]), 4), round(float(held[s][3]), 4)] for s, v in state["held"].items()
                if s in held and len(v) > 3 and float(held[s][3]) < float(v[3]) - 1e-9}
         if cut:

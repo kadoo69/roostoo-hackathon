@@ -5294,3 +5294,22 @@ Every nearer target gives up 13-20 pp over 14 days: it books the small wins but 
 ## escalation-fill-field-2026-10-05
 
 Found live 2026-10-05 08:31 IST: the first churn trim's LTC sell (227.588 at 70.54, LIMIT) went stale and was cancelled, and the exit escalation logged `escalation_skipped` with `rest: 0.0`. A read-only query of the order (from the EC2 host, competition keys, `query_order`) returned `Quantity 227.588, FilledQuantity 227.588, FilledAverPrice 0, CoinChange 0`: Roostoo reports the whole quantity as filled on an order that filled nothing. Every escalation since `#exit-escalation-2026-10-02` therefore computed a zero rest and skipped (BNB 10-04, PUMP 10-05 01:35, LTC 10-05 03:00); exits were only re-placed on the next decision. Fix: `bot.execution.venue_filled_qty` takes the fill from `CoinChange` (or zero when the average price is zero) and trusts `FilledQuantity` only without those fields. Test: `tests/test_bot_safety.py::test_a_stale_exit_with_roostoo_s_bogus_filled_quantity_is_still_escalated`. Checked the other readers: the `placed` journal record and `bot.blotter._fill` read it for reporting only (the blotter already falls back to the order quantity and price); no other trading decision uses it.
+
+## ride-regime-gate-declaration
+
+Operator 2026-10-05 08:55 IST: build the regime-aware entry filter for the live bot. Jev itself is not used (external non-deterministic LLM, no backtest, its own repo keeps the regime arm log-only, and the operator's global rule bars LLMs from signal paths); its two strongest state features are computed as deterministic Python: market-wide breakout follow-through (FT, share of the last 24 h's triggers whose 1 h forward return was positive, outcome-known only) and breadth (BR, share of coins up over 24 h). Full text in `config/ride_regime_gate.yaml`, scored by `python3 -m archive.gates.ride_regime_gate`. Arms against the live rule with the churn: G_FT (no new entry or churn while FT < 0.5), G_BR (while BR < 0.4), G_BOTH. Thresholds a priori. Candidate rule as `#ride-rank-regime-declaration`. Written before any number. Three trials.
+
+## ride-regime-gate-outcome
+
+G_BR is a CANDIDATE; G_FT and G_BOTH are not (`results/ride_regime_gate.json`, `python3 -m archive.gates.ride_regime_gate`). Total return / max DD / Sharpe / share of bars the gate was open, live rule with the churn:
+| arm | last 14 days | last 3 days | last 24 h |
+|---|---|---|---|
+| LIVE | +17.84% / -14.38% / 5.06 | -2.43% / -7.99% / -4.21 | +1.75% / -0.86% / 18.69 |
+| G_FT (follow-through >= 0.5) | +15.94% / -12.67% / 7.23 / 18% | +5.55% / -1.68% / 16.02 / 7% | -0.05% / -1.02% / -1.94 / 13% |
+| G_BR (breadth >= 0.4) | **+31.18%** / **-7.81%** / **8.83** / 72% | **+3.25%** / -7.99% / 5.81 / 69% | +1.75% (same) / 100% |
+| G_BOTH | +6.80% / -12.19% / 3.51 / 15% | -0.05% / -1.02% / -1.13 / 5% | -0.05% / -1.02% / -1.94 / 13% |
+The follow-through gate is closed most of the time (18% open over 14 days): fewer than half of all bursts follow through within an hour, so a 0.5 bar mostly sits out. Robustness, added after the result because the same LIVE arm read +34.8% and +17.8% over 14 days 40 minutes apart (a different start reshuffles every later trade): over 12 start offsets 2 h apart, G_BR beats LIVE in 9 of 12 fourteen-day windows (median +20.1% vs +17.0%, Sharpe 6.0 vs 4.9, drawdown -12.2% vs -12.9%) and 8 of 12 three-day windows (median +3.0% vs +1.9%). Against: regime overlays reversed out of sample in five earlier projects (timing overlays on longer horizons); this gate only refuses new burst entries in a broad down market and never forces an exit. Three trials recorded.
+
+## competition-regime-gate-2026-10-05
+
+Operator 2026-10-05 08:55 IST: build the regime-aware entry filter for the live bot; deployed on that instruction after `#ride-regime-gate-outcome`. `config/competition_z25.yaml` ride arm `regime_gate: {min_breadth: 0.4, bars: 288}` (`signals.burst_rider.breadth`, gate in `live_step`): while fewer than 40% of the universe's coins are up over the last 24 h, the ride opens nothing, swaps nothing and churns nothing; exits, the 24 h limit and the skim ladder always run. Each decision journals `regime_gate` (breadth, bars in frame, open). Breadth at deploy was 0.74 (open), so it changes nothing until the market turns broadly down. E2E: the real runner on the live rule (paper) journaled breadth 0.7407 from 347 bars. Tests: `tests/test_burst_rider_live.py`. Paper twin `ride_z25_churn_5m` carries the same gate.

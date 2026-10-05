@@ -1,0 +1,129 @@
+{
+ "end": "2026-10-05 03:10:00+00:00",
+ "arms": {
+  "LIVE": {
+   "last_14d": {
+    "total_pct": 17.84,
+    "max_dd_pct": -14.38,
+    "sharpe": 5.06,
+    "entries_per_day": 5.5,
+    "gate_open_share": null
+   },
+   "last_3d": {
+    "total_pct": -2.43,
+    "max_dd_pct": -7.99,
+    "sharpe": -4.21,
+    "entries_per_day": 5.67,
+    "gate_open_share": null
+   },
+   "last_1d": {
+    "total_pct": 1.75,
+    "max_dd_pct": -0.86,
+    "sharpe": 18.69,
+    "entries_per_day": 7.0,
+    "gate_open_share": null
+   }
+  },
+  "G_FT": {
+   "last_14d": {
+    "total_pct": 15.94,
+    "max_dd_pct": -12.67,
+    "sharpe": 7.23,
+    "entries_per_day": 1.93,
+    "gate_open_share": 0.18
+   },
+   "last_3d": {
+    "total_pct": 5.55,
+    "max_dd_pct": -1.68,
+    "sharpe": 16.02,
+    "entries_per_day": 2.33,
+    "gate_open_share": 0.07
+   },
+   "last_1d": {
+    "total_pct": -0.05,
+    "max_dd_pct": -1.02,
+    "sharpe": -1.94,
+    "entries_per_day": 5.0,
+    "gate_open_share": 0.13
+   }
+  },
+  "G_BR": {
+   "last_14d": {
+    "total_pct": 31.18,
+    "max_dd_pct": -7.81,
+    "sharpe": 8.83,
+    "entries_per_day": 4.64,
+    "gate_open_share": 0.72
+   },
+   "last_3d": {
+    "total_pct": 3.25,
+    "max_dd_pct": -7.99,
+    "sharpe": 5.81,
+    "entries_per_day": 5.67,
+    "gate_open_share": 0.69
+   },
+   "last_1d": {
+    "total_pct": 1.75,
+    "max_dd_pct": -0.86,
+    "sharpe": 18.69,
+    "entries_per_day": 7.0,
+    "gate_open_share": 1.0
+   }
+  },
+  "G_BOTH": {
+   "last_14d": {
+    "total_pct": 6.8,
+    "max_dd_pct": -12.19,
+    "sharpe": 3.51,
+    "entries_per_day": 1.79,
+    "gate_open_share": 0.15
+   },
+   "last_3d": {
+    "total_pct": -0.05,
+    "max_dd_pct": -1.02,
+    "sharpe": -1.13,
+    "entries_per_day": 1.67,
+    "gate_open_share": 0.05
+   },
+   "last_1d": {
+    "total_pct": -0.05,
+    "max_dd_pct": -1.02,
+    "sharpe": -1.94,
+    "entries_per_day": 5.0,
+    "gate_open_share": 0.13
+   }
+  }
+ },
+ "verdict": {
+  "G_FT": {
+   "return_wins": [
+    "last_3d"
+   ],
+   "sharpe_wins": 2,
+   "dd_14d_within_2pp": true,
+   "candidate": false
+  },
+  "G_BR": {
+   "return_wins": [
+    "last_14d",
+    "last_3d"
+   ],
+   "sharpe_wins": 2,
+   "dd_14d_within_2pp": true,
+   "candidate": true
+  },
+  "G_BOTH": {
+   "return_wins": [
+    "last_3d"
+   ],
+   "sharpe_wins": 1,
+   "dd_14d_within_2pp": true,
+   "candidate": false
+  }
+ },
+ "features_now": {
+  "FT": 0.5,
+  "BR": 0.741
+ },
+ "ref": "DECISIONS.md#ride-regime-gate-declaration"
+}

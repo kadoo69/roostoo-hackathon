@@ -22,6 +22,10 @@ adaptive:
       sigma_bars: 288
       tp_vol_k: 2.0
       rank_by: z
+      regime_gate:
+        min_breadth: 0.4
+        bars: 288
+        ref: DECISIONS.md#competition-regime-gate-2026-10-05
       trim_churn:
         trim: 0.5
         churn_tpk: 1.0

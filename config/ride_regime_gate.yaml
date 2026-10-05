@@ -1,0 +1,25 @@
+meta:
+  name: ride_regime_gate
+  frozen: true
+  declared_utc: '2026-10-05T03:25:00Z'
+  requested_by: 'operator 2026-10-05 08:55 IST: build the regime-aware entry filter for the live bot'
+  declared_ref: DECISIONS.md#ride-regime-gate-declaration
+  written_before_any_number: true
+  why_not_jev: 'Jev (~/roostoo-jev) is an external non-deterministic LLM with no backtest, its own repo keeps the regime arm log-only, and the operator''s global rule bars LLMs from signal paths; its two strongest state features (market-wide breakout follow-through, breadth) are computed here as deterministic Python instead'
+  prior_record: 'regime overlays reversed out of sample in five prior projects and the trend-gated rotation (RG) failed on 10-05 (#ride-entry-regime-outcome)'
+mechanism: 'bursts continue when the market is following through on breakouts and revert in chop; refusing new entries (and churn) when recent triggers have not followed through avoids buying bursts that revert, and keeps the trimmed losers'' capital'
+failure_mode: 'follow-through is measured on the past 24 h, so it lags the turn; the gate sits out the first bursts of a new trend, which are the ones that pay'
+features: 'all on the 27-coin pool, 5m bars, point in time: FT = share of z >= 2.5 triggers of the last 288 bars whose 12-bar forward return is positive, counting only triggers at least 12 bars old (outcome known); BR = share of coins whose 288-bar return is positive'
+harness: 'archive.gates.ride_partial_trim book with the live churn (trim 1/2, churn 1 x dvol, z cap 5, ranked by z), ladder, maker fees; the gate only blocks new entries and churn, never exits or the ladder'
+arms:
+  LIVE: 'the live rule (no gate)'
+  G_FT: 'block entries while FT < 0.5 (fewer than half of the recent bursts followed through)'
+  G_BR: 'block entries while BR < 0.4 (broad down market)'
+  G_BOTH: 'block entries while FT < 0.5 or BR < 0.4'
+thresholds: 'set a priori (0.5 = coin flip; 0.4 / 0.6 the breadth bands of the Jev regime question), not fitted'
+windows: {last_14d: 'the 14 days to now', last_3d: 'the 72 hours to now', last_1d: 'the 24 hours to now'}
+decision_rule: >
+  An arm is a CANDIDATE against LIVE if its return is higher in at least 2 of the 3 windows including last_3d, its
+  Sharpe is higher in at least 2 of the 3, and its last-14-day drawdown is no more than 2 pp deeper. A candidate goes
+  to the live book only on the operator's decision. Otherwise NULL and no gate.
+trials: 3

@@ -111,13 +111,16 @@ def live_step(close: pd.DataFrame, high: pd.DataFrame, cfg: dict, held: dict[str
             keep[s] = [str(at), px, tp, wt]
     new_last = dict(last)
     free = int((1.0 - sum(v[3] for v in keep.values()) + 1e-9) * n)
+    gate = cfg.get("regime_gate") or {}
+    # Broad down market: no new entry, swap or churn this bar; the exits above have already run.
+    gated = bool(gate) and breadth(close, int(gate.get("bars", 288))) < float(gate["min_breadth"])
     churn = cfg.get("trim_churn") or {}
     zmax = float(churn["zmax"]) if churn.get("zmax") else None
     swap = cfg.get("repeat_swap") or {}
-    if free <= 0 and swap and keep and len(close) > 3:
+    if not gated and free <= 0 and swap and keep and len(close) > 3:
         keep, new_last = repeat_swap(close, cfg, keep, new_last, swap)
         free = 0
-    if free > 0 and len(close) > 3:
+    if not gated and free > 0 and len(close) > 3:
         r3, lvl = r3f.iloc[-1], trigger_level(r3f, cfg).iloc[-1]
         cand = []
         for s, r in r3.items():
@@ -132,11 +135,21 @@ def live_step(close: pd.DataFrame, high: pd.DataFrame, cfg: dict, held: dict[str
         for _, _, s in sorted(cand, reverse=True)[:free]:
             keep[s] = [str(t), float(close[s].iloc[-1]), target_pct(cfg, float(sd[s].iloc[-1])), 1.0 / n]
             new_last[s] = str(t)
-    elif free <= 0 and churn and keep and len(close) > 3:
+    elif not gated and free <= 0 and churn and keep and len(close) > 3:
         keep, new_last = trim_churn(close, cfg, keep, new_last, churn)
     floor = t - step * (cool + hold)
     new_last = {s: at for s, at in new_last.items() if s in keep or pd.Timestamp(at) > floor}
     return keep, new_last, {s: v[3] for s, v in keep.items()}
+
+
+def breadth(close: pd.DataFrame, bars: int = 288) -> float:
+    """Share of coins whose return over the last `bars` bars is positive, at the last bar (coins without the
+    history are left out). The regime gate's state. DECISIONS.md#competition-regime-gate-2026-10-05"""
+    if len(close) <= bars:
+        return 1.0
+    r = close.iloc[-1] / close.iloc[-1 - bars] - 1.0
+    r = r.dropna()
+    return float((r > 0).mean()) if len(r) else 1.0
 
 
 def trim_churn(close: pd.DataFrame, cfg: dict, keep: dict[str, list], last: dict[str, str],
