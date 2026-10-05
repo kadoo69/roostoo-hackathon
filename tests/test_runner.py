@@ -133,3 +133,11 @@ def test_swap_paper_pair_is_the_live_rule_with_and_without_the_repeat_swap():
     for name in ("ride_z25_5m", "ride_z25_swap_5m"):
         s = load(f"config/{name}.yaml")
         assert s.keyset is None and s.dry_run and "probe_entry" not in _cfg(name)["adaptive"]
+
+
+def test_zrank_paper_book_is_the_live_rule_ranked_by_z():
+    live, zr = _cfg("competition_z25"), _cfg("ride_z25_zrank_5m")
+    a_live, a_zr = (next(iter(c["adaptive"]["burst_arms"].values())) for c in (live, zr))
+    assert {k: v for k, v in a_zr.items() if k != "rank_by"} == a_live and a_zr["rank_by"] == "z"
+    s = load("config/ride_z25_zrank_5m.yaml")
+    assert s.keyset is None and s.dry_run and "probe_entry" not in zr["adaptive"]

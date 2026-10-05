@@ -20,8 +20,10 @@ OPEN = pd.Timestamp("2026-10-04 12:00", tz="UTC")
 
 
 def book(c: np.ndarray, h: np.ndarray, r3: np.ndarray, lvl: np.ndarray, tp: np.ndarray,
-         n: int, hold: int, cool: int) -> tuple[np.ndarray, int]:
-    """Equity path and entries. Entry when r3 >= lvl (per bar and coin), ranked by r3; target `tp` fixed at entry."""
+         n: int, hold: int, cool: int, rank: np.ndarray | None = None) -> tuple[np.ndarray, int]:
+    """Equity path and entries. Entry when r3 >= lvl (per bar and coin), ranked by `rank` (default r3, as the live
+    code); target `tp` fixed at entry."""
+    rank = r3 if rank is None else rank
     T, N = c.shape
     cash, eq = 1.0, np.ones(T)
     pos: dict[int, list] = {}
@@ -49,7 +51,7 @@ def book(c: np.ndarray, h: np.ndarray, r3: np.ndarray, lvl: np.ndarray, tp: np.n
         value = cash + sum(p[0] * (c[t, j] if np.isfinite(c[t, j]) else p[1]) for j, p in pos.items())
         free = n - len(pos)
         if free > 0:
-            cand = sorted([(r3[t, j], j) for j in range(N) if j not in pos and np.isfinite(r3[t, j])
+            cand = sorted([(rank[t, j], j) for j in range(N) if j not in pos and np.isfinite(r3[t, j])
                            and np.isfinite(lvl[t, j]) and np.isfinite(tp[t, j]) and np.isfinite(c[t, j])
                            and r3[t, j] >= lvl[t, j] and t - last[j] >= cool], reverse=True)
             for _, j in cand[:free]:

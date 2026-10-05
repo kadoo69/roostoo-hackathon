@@ -8,6 +8,8 @@ study assumed. Operator override of a failed test: DECISIONS.md#burst-rider-over
 With `sigma_k` set, the trigger is per coin: the 3-bar return must reach `sigma_k` times the std of
 that coin's 3-bar returns over the previous `sigma_bars` bars, in place of `thresh_pct`.
 DECISIONS.md#ride-z3-declaration
+Simultaneous triggers are ranked by 3-bar return, or by z (return over the trigger std) with `rank_by: z`.
+DECISIONS.md#ride-rank-regime-declaration
 """
 from __future__ import annotations
 
@@ -62,7 +64,8 @@ def weights(close: pd.DataFrame, high: pd.DataFrame, cfg: dict) -> pd.DataFrame:
         held = ~np.isnan(entry)
         free = n - int(held.sum())
         if free > 0:
-            cand = [(r3[t, j], j) for j in range(N)
+            key = r3[t] / (lvl[t] / float(cfg["sigma_k"])) if cfg.get("rank_by") == "z" and cfg.get("sigma_k") else r3[t]
+            cand = [(key[j], j) for j in range(N)
                     if not held[j] and np.isfinite(r3[t, j]) and np.isfinite(lvl[t, j]) and r3[t, j] >= lvl[t, j] and t - last[j] >= cool]
             for _, j in sorted(cand, reverse=True)[:free]:
                 entry[j], age[j], last[j], tpj[j] = c[t, j], 0, t, target_pct(cfg, sd[t, j])
@@ -120,7 +123,8 @@ def live_step(close: pd.DataFrame, high: pd.DataFrame, cfg: dict, held: dict[str
                 continue
             if s in last and round((t - pd.Timestamp(last[s])) / step) < cool:
                 continue
-            cand.append((float(r), close.columns.get_loc(s), s))
+            score = float(r) / (float(lvl[s]) / float(cfg["sigma_k"])) if cfg.get("rank_by") == "z" and cfg.get("sigma_k") else float(r)
+            cand.append((score, close.columns.get_loc(s), s))
         for _, _, s in sorted(cand, reverse=True)[:free]:
             keep[s] = [str(t), float(close[s].iloc[-1]), target_pct(cfg, float(sd[s].iloc[-1])), 1.0 / n]
             new_last[s] = str(t)

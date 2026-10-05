@@ -209,3 +209,22 @@ def test_repeat_swap_sells_the_weakest_losing_holding_for_a_coin_that_triggers_a
     assert set(burst_rider.live_step(close, high, no_swap, held, {})[0]) == {"A", "B"}
     winners = {"A": [str(idx[10]), 99.0, 0.05, 0.5], "B": [str(idx[10]), 99.0, 0.05, 0.5]}
     assert set(burst_rider.live_step(close, high, cfg, winners, {})[0]) == {"A", "B"}
+
+
+def test_rank_by_z_takes_the_more_unusual_of_two_simultaneous_triggers():
+    """DECISIONS.md#ride-rank-regime-declaration: a calm coin's burst outranks a volatile coin's larger one by z."""
+    import numpy as np
+    import pandas as pd
+
+    from signals.burst_rider import live_step
+    idx = pd.date_range("2026-10-01", periods=400, freq="5min", tz="UTC")
+    rng = np.random.default_rng(1)
+    calm = 100 * np.exp(np.cumsum(rng.normal(0, 0.001, 400)))
+    wild = 100 * np.exp(np.cumsum(rng.normal(0, 0.006, 400)))
+    calm[-1] = calm[-4] * 1.02      # +2% burst on a coin that moves 0.1% a bar: very high z
+    wild[-1] = wild[-4] * 1.06      # +6% on a coin that moves 0.6% a bar: lower z, larger return
+    close = pd.DataFrame({"CALM": calm, "WILD": wild}, index=idx)
+    cfg = {"sigma_k": 2.5, "sigma_bars": 288, "tp_vol_k": 2.0, "n": 2, "hold_bars": 288, "cooldown_bars": 12}
+    by_ret = live_step(close, close, {**cfg, "n": 1}, {}, {})[0]
+    by_z = live_step(close, close, {**cfg, "n": 1, "rank_by": "z"}, {}, {})[0]
+    assert set(by_ret) == {"WILD"} and set(by_z) == {"CALM"}

@@ -1,0 +1,121 @@
+{
+ "windows": {
+  "last_14d": [
+   "2026-09-21 02:30:00+00:00",
+   "2026-10-05 02:30:00+00:00"
+  ],
+  "last_3d": [
+   "2026-10-02 02:30:00+00:00",
+   "2026-10-05 02:30:00+00:00"
+  ],
+  "last_1d": [
+   "2026-10-04 02:30:00+00:00",
+   "2026-10-05 02:30:00+00:00"
+  ],
+  "since_open": [
+   "2026-10-04 12:00:00+00:00",
+   "2026-10-05 02:30:00+00:00"
+  ]
+ },
+ "arms": {
+  "B2": {
+   "last_14d": {
+    "total_pct": 5.28,
+    "max_dd_pct": -16.37,
+    "sharpe": 1.8,
+    "entries_per_day": 2.21
+   },
+   "last_3d": {
+    "total_pct": 0.36,
+    "max_dd_pct": -7.59,
+    "sharpe": 0.91,
+    "entries_per_day": 2.67
+   },
+   "last_1d": {
+    "total_pct": 0.57,
+    "max_dd_pct": -2.95,
+    "sharpe": 5.29,
+    "entries_per_day": 2.0
+   },
+   "since_open": {
+    "total_pct": 0.78,
+    "max_dd_pct": -0.81,
+    "sharpe": 23.7,
+    "entries_per_day": 3.31
+   }
+  },
+  "B2Z": {
+   "last_14d": {
+    "total_pct": 10.81,
+    "max_dd_pct": -16.37,
+    "sharpe": 3.26,
+    "entries_per_day": 2.14
+   },
+   "last_3d": {
+    "total_pct": 0.62,
+    "max_dd_pct": -7.59,
+    "sharpe": 1.43,
+    "entries_per_day": 2.67
+   },
+   "last_1d": {
+    "total_pct": 0.57,
+    "max_dd_pct": -2.95,
+    "sharpe": 5.29,
+    "entries_per_day": 2.0
+   },
+   "since_open": {
+    "total_pct": 0.78,
+    "max_dd_pct": -0.81,
+    "sharpe": 23.7,
+    "entries_per_day": 3.31
+   }
+  },
+  "RIDE5": {
+   "last_14d": {
+    "total_pct": 10.95,
+    "max_dd_pct": -12.29,
+    "sharpe": 3.28,
+    "entries_per_day": 4.0
+   },
+   "last_3d": {
+    "total_pct": -2.37,
+    "max_dd_pct": -8.15,
+    "sharpe": -4.48,
+    "entries_per_day": 3.33
+   },
+   "last_1d": {
+    "total_pct": 2.43,
+    "max_dd_pct": -1.8,
+    "sharpe": 21.04,
+    "entries_per_day": 5.0
+   },
+   "since_open": {
+    "total_pct": 1.87,
+    "max_dd_pct": -1.71,
+    "sharpe": 29.24,
+    "entries_per_day": 6.62
+   }
+  }
+ },
+ "verdict": {
+  "B2Z": {
+   "return_wins": [
+    "last_14d",
+    "last_3d"
+   ],
+   "sharpe_wins": 2,
+   "dd_14d_within_2pp": true,
+   "candidate": true
+  },
+  "RIDE5": {
+   "return_wins": [
+    "last_14d",
+    "last_1d"
+   ],
+   "sharpe_wins": 2,
+   "dd_14d_within_2pp": true,
+   "candidate": false
+  }
+ },
+ "ref": "DECISIONS.md#ride-rank-regime-declaration"
+}

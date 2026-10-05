@@ -5236,3 +5236,17 @@ FAIL, NULL: the live rule stays (`results/ride1_wide_vs_live.json`, `python3 -m 
 | R1 (ride1 on 27 coins) | +28.51% / -22.78% / 6.79 / 5.1 | +15.00% / -12.92% / 3.59 / 4.2 | -1.92% / -11.12% / -2.12 / 5.0 | +1.47% / -1.65% |
 R1W loses every window on return and Sharpe, with drawdowns of -34% and -18%; its +3.99% since the open (which the harness reproduces, so the paper book is not a data error) is one good day in a rule that is flat to negative over five weeks. The fixed +1% trigger is the bigger problem (R1 on 27 coins is also worse in W2 and the last 3 days with deeper drawdowns), and the 64-coin pool makes it worse again, as in `#ride-z3-wide-outcome`. Two trials recorded.
 Noted for a separate declared test, not acted on: B2 ranked by 3-bar return (as the live code does) made +10.94% in W1 here, against +19.83% when the `#ride-partial-trim-outcome` harness ranked by z; W2 and the last 3 days were similar (+47.4 vs +47.0, +0.6 vs +1.0). Which of two simultaneous triggers to take may matter.
+
+## ride-rank-regime-declaration
+
+Operator 2026-10-05 08:40 IST: run the z vs return ranking test, and judge on the current regime, not only history (ride_5m has led in the last 2-3 days). Full text in `config/ride_rank_regime.yaml`, scored by `python3 -m archive.gates.ride_rank_regime`. Arms against the live rule (B2, ranked by 3-bar return): B2Z (ranked by z) and RIDE5 (ride_5m: +2% trigger, +5% target, 3 slots). Windows: last 14 days, last 3 days, last 24 h (W1 and older not scored, per the operator's recency rule). Candidate: higher return in 2 of 3 including the last 3 days, higher Sharpe in 2 of 3, last-14-day drawdown no more than 2 pp deeper. B2Z also goes to a forward paper book on EC2 either way. Forward numbers seen before writing are stated in the config. Two trials.
+
+## ride-rank-regime-outcome
+
+B2Z is a CANDIDATE, RIDE5 is not (`results/ride_rank_regime.json`, `python3 -m archive.gates.ride_rank_regime`). Total return / max DD / Sharpe / entries a day, 27 coins, ladder and maker fees:
+| arm | last 14 days | last 3 days | last 24 h | since the open (context) |
+|---|---|---|---|---|
+| B2 (live, ranked by return) | +5.28% / -16.37% / 1.80 / 2.2 | +0.36% / -7.59% / 0.91 / 2.7 | +0.57% / -2.95% / 5.29 / 2.0 | +0.78% / -0.81% |
+| B2Z (ranked by z) | **+10.81%** / -16.37% / **3.26** / 2.1 | **+0.62%** / -7.59% / **1.43** / 2.7 | +0.57% / -2.95% / 5.29 / 2.0 | +0.78% / -0.81% |
+| RIDE5 (ride_5m, +2% / +5% / 3 slots) | +10.95% / -12.29% / 3.28 / 4.0 | -2.37% / -8.15% / -4.48 / 3.3 | **+2.43%** / -1.80% / **21.04** / 5.0 | +1.87% / -1.71% |
+B2Z beats B2 on return and Sharpe over 14 days and 3 days with the same drawdown, and ties the last 24 h (no simultaneous triggers decided differently); it also led W1 in the earlier harness (+19.8% vs +10.9%), so the effect is in both the recent and the older history. RIDE5 leads the last 24 h and 14 days but loses the last 3 days (-2.37% vs +0.36%), so its edge is about one day of the new regime, not three; it stays a paper book. Per the declaration, B2Z starts as a forward paper book on EC2 (`ride_z25_zrank_5m`, `rank_by: z` in `signals.burst_rider`); the competition book changes only on the operator's decision after at least 24 h of forward paper. Two trials recorded.

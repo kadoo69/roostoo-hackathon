@@ -1,0 +1,26 @@
+meta:
+  name: ride_rank_regime
+  frozen: true
+  declared_utc: '2026-10-05T03:15:00Z'
+  requested_by: 'operator 2026-10-05 08:40 IST: run the z vs return ranking test; do not depend only on history, regimes change, ride_5m is doing well in the last 2-3 days because the regime changed'
+  declared_ref: DECISIONS.md#ride-rank-regime-declaration
+  written_before_any_number: false
+  numbers_seen_before_writing: 'forward since the open (10-04 12:00Z..10-05 02:35Z): regime_ls_30m +4.76%, ride_5m +1.80%, ride_z3_5m +1.70%, live +0.77%; the ranking difference seen in W1 only (z rank +19.8% vs return rank +10.9% in two harnesses that also differ slightly)'
+recency: 'per the operator (memory feedback_recent_market_over_history): judged on the latest market, the last 14 days, the last 3 days and the last 24 hours, plus forward paper books; W1 and older history are not scored'
+mechanism:
+  B2Z: 'when several coins trigger on one bar, the one with the highest z is the move most unusual for that coin, which a burst rider wants; ranking by raw return favours volatile coins whose 2% is ordinary for them'
+  RIDE5: 'in the regime since about 10-02 a fixed +2% burst with a +5% target and 3 slots catches more of the broad moves than the per-coin 2.5-sigma trigger'
+failure_mode: 'ranking changes only which of simultaneous triggers is taken, so the effect may be noise; ride_5m''s recent lead may be one regime that reverts'
+harness: 'archive.gates.ride1_wide_vs_live book (ladder, maker fees, target filled at its price, 24 h hold), 27-coin pool'
+arms:
+  B2: 'live: 2.5 sigma, 2 x dvol target, 2 slots, ranked by 3-bar return (as the live code)'
+  B2Z: 'the same ranked by z'
+  RIDE5: 'ride_5m: 3-bar return >= 2%, +5% target, 3 slots, cooldown 12'
+windows: {last_14d: 'the 14 days to now', last_3d: 'the 72 hours to now', last_1d: 'the 24 hours to now', since_open: '10-04 12:00Z to now (context, overlaps the others)'}
+decision_rule: >
+  An arm is a CANDIDATE against B2 if its return is higher in at least 2 of (last_14d, last_3d, last_1d) including
+  last_3d, its Sharpe is higher in at least 2 of the 3, and its max drawdown in last_14d is no more than 2 pp deeper.
+  B2Z is started as a forward paper book on EC2 regardless (ride_z25_zrank_5m, keyless), because the change is one key
+  and forward evidence is what the operator weighs; RIDE5 already runs as paper (ride_5m). The competition book changes
+  only on the operator's decision after both the backtest and at least 24 h of forward paper.
+trials: 2
