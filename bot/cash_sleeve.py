@@ -111,10 +111,12 @@ def release(led: Ledger, s: str, px: float) -> float:
 
 
 def decide(led: Ledger, close: pd.DataFrame, high: pd.DataFrame, cfg: dict, px: dict[str, float],
-           host: set[str], stop_frac: float, ladder: dict) -> dict:
+           host: set[str], stop_frac: float, ladder: dict, no_loss_exit: bool = False) -> dict:
     """One ride decision at the last closed 5m bar of `close`. Updates the ledger's targets in place. A held
     ride whose slot weight the rule cut (the churn trim, `signals.burst_rider.trim_churn`) is sold down in the
-    same proportion. DECISIONS.md#sleeve-churn-ride-2026-10-06"""
+    same proportion. DECISIONS.md#sleeve-churn-ride-2026-10-06
+    With `no_loss_exit` a ride the rule exits while its price is below the entry close is kept whole, slot
+    included, until a later decision exits it at or above entry. DECISIONS.md#sleeve-no-loss-exit-2026-10-06"""
     bar = str(close.index[-1])
     cols = [c for c in close.columns if c not in host or c in led.held]
     held = {s: v for s, v in led.held.items() if s in cols and (led.units.get(s, 0.0) * px.get(s, 0.0) >= DUST_USD
@@ -123,10 +125,14 @@ def decide(led: Ledger, close: pd.DataFrame, high: pd.DataFrame, cfg: dict, px: 
     eq = led.equity(px)
     if not led.stopped and eq < led.budget * stop_frac:
         led.stopped = True
-    entered, exited, skimmed = [], [], []
+    entered, exited, skimmed, kept = [], [], [], []
     free = max(0.0, led.cash)
     for s in sorted(led.owned() | set(held)):
         if s not in new_held:
+            if no_loss_exit and s in held and px.get(s) and px[s] < float(held[s][1]) and led.units.get(s, 0.0) > 0:
+                new_held[s] = list(held[s])
+                kept.append(s)
+                continue
             led.target[s] = 0.0
             led.entry.pop(s, None)
             exited.append(s)
@@ -160,7 +166,7 @@ def decide(led: Ledger, close: pd.DataFrame, high: pd.DataFrame, cfg: dict, px: 
             led.ref[s] = p
             skimmed.append(s)
     led.held, led.last, led.bar = new_held, new_last, bar
-    return {"bar": bar, "entered": entered, "exited": exited, "skimmed": skimmed, "stopped": led.stopped,
+    return {"bar": bar, "entered": entered, "exited": exited, "skimmed": skimmed, "loss_kept": kept, "stopped": led.stopped,
             "equity": round(eq, 2), "cash": round(led.cash, 2)}
 
 

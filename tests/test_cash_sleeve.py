@@ -165,3 +165,18 @@ def test_decide_sells_a_ride_down_when_the_churn_trim_cuts_its_weight(monkeypatc
     monkeypatch.setattr(cash_sleeve.burst_rider, "live_step", churned)
     ev = cash_sleeve.decide(led, close, high, RIDE, px, set(), 0.0, LADDER)
     assert led.target["AAAUSDT"] == pytest.approx(10.0) and "AAAUSDT" in ev["skimmed"]
+
+
+def test_no_loss_exit_keeps_an_expired_ride_below_entry_and_lets_one_above_go():
+    close, high = frames({})
+    px = {s: float(close[s].iloc[-1]) for s in close}
+    old = str(close.index[-300])
+    held = {"AAAUSDT": [old, px["AAAUSDT"] * 1.05, 0.5, 0.5], "CCCUSDT": [old, px["CCCUSDT"] * 0.95, 0.5, 0.5]}
+    led = Ledger(cash=0.0, budget=6000.0, units={"AAAUSDT": 20.0, "CCCUSDT": 20.0},
+                 target={"AAAUSDT": 20.0, "CCCUSDT": 20.0}, ref={"AAAUSDT": 1e9, "CCCUSDT": 1e9}, held=dict(held))
+    ev = cash_sleeve.decide(led, close, high, RIDE, px, set(), 0.0, LADDER, no_loss_exit=True)
+    assert ev["loss_kept"] == ["AAAUSDT"] and led.target["AAAUSDT"] == 20.0 and "AAAUSDT" in led.held
+    assert ev["exited"] == ["CCCUSDT"] and led.target["CCCUSDT"] == 0.0
+    led2 = Ledger(cash=0.0, budget=6000.0, units={"AAAUSDT": 20.0}, target={"AAAUSDT": 20.0}, ref={"AAAUSDT": 1e9},
+                  held={"AAAUSDT": held["AAAUSDT"]})
+    assert cash_sleeve.decide(led2, close, high, RIDE, px, set(), 0.0, LADDER)["exited"] == ["AAAUSDT"]

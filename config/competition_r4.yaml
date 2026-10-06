@@ -121,6 +121,8 @@ cash_sleeve:
   stop_equity_frac: 0.8
   entry_window_bars: 2
   entry_chase_max: 0.01
+  no_loss_exit: true
+  no_loss_exit_ref: DECISIONS.md#sleeve-no-loss-exit-2026-10-06
   top_up_usd: 38500
   top_up_tag: 2026-10-06-churn
   ride:
@@ -132,13 +134,6 @@ cash_sleeve:
     sigma_bars: 288
     tp_vol_k: 2.0
     rank_by: z
-    trim_churn:
-      trim: 0.5
-      churn_tpk: 1.0
-      zmax: 5.0
-      min_age_bars: 12
-      max_positions: 4
-      keep_strong: true
   ladder:
     step_pct: 0.03
     skim_fraction: 0.15
