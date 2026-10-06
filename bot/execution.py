@@ -46,6 +46,10 @@ class Executor:
         self.pending_pairs: set[str] = set()
         self.calls: deque[bool] = deque(maxlen=ERROR_WINDOW)
         self.sent_at: dict[str, float] = {}
+        # symbol -> (lo, hi) price band in which a stale exit must not be market-sold, from the book's
+        # no-loss guard. DECISIONS.md#no-loss-escalation-2026-10-06
+        self.exit_band = None
+        self.quotes: dict = {}
 
     def spec(self, symbol: str) -> PairSpec | None:
         return self.by_symbol.get(symbol)
@@ -75,6 +79,7 @@ class Executor:
             return {"skipped": "shorts_not_enabled", "symbol": order["symbol"], "pair": spec.pair}
         if short and not hasattr(self.client, "short_open"):
             return {"skipped": "venue_has_no_shorts", "symbol": order["symbol"], "pair": spec.pair}
+        self.quotes = quotes
         q = quotes[spec.pair]
         try:
             bid, ask, last = (float(q[k]) for k in ("MaxBid", "MinAsk", "LastPrice"))
@@ -303,6 +308,10 @@ class Executor:
         kept a position its rule had left (PEPE on the rehearsal, 2026-10-02 12:00Z). Exits must
         complete; entries are never chased, so a stale BUY is only cancelled.
         DECISIONS.md#exit-escalation-2026-10-02
+        A book with a no-loss guard supplies `exit_band`; while the bid sits inside a held name's band the
+        rest is not market-sold (the next decision re-checks the guard). An exit placed above cost
+        escalated to a -0.52% market sale of AAVE at 10:35 IST 2026-10-06.
+        DECISIONS.md#no-loss-escalation-2026-10-06
         """
         pair = o.get("Pair")
         spec = self.specs.get(pair)
@@ -313,6 +322,15 @@ class Executor:
         if rest <= 0 or rest * price < spec.min_order:
             return self.journal.write("orders", {"event": "escalation_skipped", "pair": pair,
                                                  "order_id": o.get("OrderID"), "rest": rest})
+        band = self.exit_band(spec.binance_symbol) if self.exit_band else None
+        if band:
+            bid = float((self.quotes.get(pair) or {}).get("MaxBid") or 0.0)
+            lo, hi = band
+            if not bid or lo <= bid < hi:
+                return self.journal.write("orders", {"event": "escalation_held_below_cost", "pair": pair,
+                                                     "symbol": spec.binance_symbol, "order_id": o.get("OrderID"),
+                                                     "rest": rest, "bid": bid or None, "band": [round(lo, 10), round(hi, 10)],
+                                                     "ref": "DECISIONS.md#no-loss-escalation-2026-10-06"})
         self.pending_pairs.discard(pair.replace("/", ""))
         self.pending_pairs.discard(spec.binance_symbol)
         return self.send({"pair": pair, "symbol": spec.binance_symbol, "side": "SELL", "type": "MARKET",

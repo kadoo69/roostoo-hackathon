@@ -224,3 +224,13 @@ def test_guard_weights_use_the_books_own_equity_not_the_account():
     plain = SimpleNamespace(equity_curve=[98_000.0], holdings={"ENAUSDT": 95_818.0}, shorts={},
                             book_offset=lambda: 0.0)
     assert GuardedTarget.current_weights(plain, {"ENAUSDT": 0.2474})["ENAUSDT"] == pytest.approx(95_818.0 * 0.2474 / 98_000.0)
+
+
+def test_a_sale_at_cost_that_only_pays_the_fees_is_held():
+    """DECISIONS.md#no-loss-net-of-fees-2026-10-06: ETH sold at 2716.86 against a 2716.83 entry, -0.10% net,
+    14:30 IST 2026-10-06."""
+    from bot.entry_guard import NO_LOSS_FEE_BUFFER, protect_losses
+    current, entries, target = {"ETHUSDT": 0.12}, {"ETHUSDT": 2716.83}, {}
+    assert protect_losses(target, current, {"ETHUSDT": 2716.86}, entries, 0.05)[1] == ["ETHUSDT"]
+    clear = 2716.83 * (1 + NO_LOSS_FEE_BUFFER) * 1.0001
+    assert protect_losses(target, current, {"ETHUSDT": clear}, entries, 0.05)[1] == []

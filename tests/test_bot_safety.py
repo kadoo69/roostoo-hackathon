@@ -419,3 +419,28 @@ def test_the_blotter_skips_a_stale_cancelled_order_so_an_escalated_exit_is_booke
     monkeypatch.setattr(journal_mod, "ROOT", tmp_path)
     out = blotter.build("b")
     assert len(out["closed"]) == 1 and out["closed"][0]["exit_price"] == 70.5 and not out["open"]
+
+
+def test_a_stale_exit_is_not_market_sold_inside_the_no_loss_band(tmp_path):
+    """DECISIONS.md#no-loss-escalation-2026-10-06: AAVE's exit rested at 183.43 over a 183.35 cost, then
+    escalated to a market sale at 182.68 (-0.52%) at 10:35 IST 2026-10-06."""
+    def sweep(bid, band):
+        seen = {}
+        ex, _ = _wide_tick_executor(tmp_path)
+        ex.client = _stale_client("SELL", 1e9, 0.0, seen)
+        ex.settings = replace(settings(), dry_run=False, exit_escalation=True)
+        ex.pending_pairs = {"PEPEUSD"}
+        ex.exit_band = band
+        ex.quotes = {"PEPE/USD": {"MaxBid": bid, "MinAsk": bid * 1.01, "LastPrice": bid}}
+        return seen, ex.sweep_unfilled()
+
+    band = lambda s: (4.0e-6 * 0.95, 4.0e-6 * 1.002)  # noqa: E731
+    seen, out = sweep(3.99e-6, band)
+    assert seen["cancel"] == [7] and "place" not in seen
+    assert out[-1]["event"] == "escalation_held_below_cost"
+    seen, _ = sweep(4.01e-6, band)
+    assert "place" in seen, "above the line the exit completes"
+    seen, _ = sweep(3.7e-6, band)
+    assert "place" in seen, "past the max loss the exit completes"
+    seen, _ = sweep(3.99e-6, lambda s: None)
+    assert "place" in seen, "a name without a band escalates as before"

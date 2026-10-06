@@ -5536,3 +5536,21 @@ Operator 14:10 IST: "fix the fill rate position sizing and time should be accura
 ## sleeve-lends-to-host-2026-10-06
 
 Operator 14:37 IST: "yes let it use the sleeve cash for FIL". At 14:30 IST the regime rule's fresh target was FIL 0.50 of the host book, but the host had about 2k of cash (all its cash had gone into the sleeve), so FIL was bought for 2,027 and left underfilled while the sleeve held 31.7k idle for its second slot. Change (`cash_sleeve.lend_to_host: true`, `CashSleeveRegimeBot.lend_to_host`, `bot.cash_sleeve.lend`): while the sleeve has a free slot, an underfilled fresh host entry draws its shortfall (target weight of the host book less what it holds, less the host's own cash) from the sleeve's cash for good; the sleeve's budget shrinks with it and its rides are untouched. The host completes the entry through its own underfill path and 1% chase cap (`#underfill-chase-cap-2026-10-05`), so a coin that ran more than 1% past its first fill is not chased. Tests: `tests/test_cash_sleeve.py` (lend; shortfall only, only with a free slot).
+
+## pending-before-wallet-2026-10-06
+
+Bug, 14:31-14:35 IST 2026-10-06. FIL's completion buy (order 3432349, 2,720.55 at 1.1872) was resting. It filled after the cycle's wallet read and before its pending-order query, so the query no longer listed FIL while holdings and cash still showed the order unfilled. The bot sent the same buy again (order 3432363, filled at once), and both filled. The host overdrew 3,232 USD of the sleeve's cash (host cash -3,232; the sleeve's ADA ride was capped 3.2k short at 14:45 IST).
+Fix (`Bot.cycle`): resting orders are read before the wallet, and not again before placing. An order that fills after the query is still pending to this cycle, so its pair is skipped; the next cycle reads a wallet that already holds the fill. The same order applies to the sleeve's orders, which use the same pending set.
+Tests: `tests/test_entry_retry.py` (cycle reads pending, then wallet, then marks). E2E: `deploy/checks/cash_sleeve_e2e.py` phase 4: a resting entry fills right after the wallet read; with the old order the check fails with a second buy, with the fix it passes.
+
+## no-loss-net-of-fees-2026-10-06
+
+Bug against the operator's no-loss rule (`#live-no-loss-exit-2026-10-05`, `#sleeve-no-loss-exit-2026-10-06`). Both guards compared the price with the entry and ignored fees, so a sale at the entry price passed. ETH was sold at 2716.86 against a 2716.83 entry at 14:30 IST 2026-10-06, -0.10% net.
+Fix: the no-loss line is the entry plus a taker round trip of fees (`bot.entry_guard.NO_LOSS_FEE_BUFFER = 0.002`, `loss_band`), for the host guard and the sleeve's ride exit alike. The 5% max-loss floor and the no-floor list are unchanged.
+Tests: `tests/test_entry_guard.py` (the ETH sale is held; above the line it goes), `tests/test_cash_sleeve.py`; the E2E exit phase now sets the ride in profit.
+
+## no-loss-escalation-2026-10-06
+
+Bug. The rule's AAVE exit at 10:30 IST 2026-10-06 was a limit at 183.43, above the 183.35 cost, so the no-loss guard let it through. It rested 5 minutes unfilled, and exit escalation (`#exit-escalation-2026-10-02`) sold it at market at 182.68, -0.52%. Escalation never consulted the guard.
+Fix: a book with a no-loss guard gives the executor `exit_band(symbol)` (`GuardedTarget.exit_band`, `CashSleeveRegimeBot.exit_band` for sleeve rides). A stale exit is not market-sold while the bid is inside the band (between the max-loss floor and the fee line); it is journaled `escalation_held_below_cost`, and the next decision re-checks the guard. Below the max-loss floor, above the fee line, and for books without the guard, escalation is unchanged.
+Tests: `tests/test_bot_safety.py` (held inside the band; escalates above it, past max loss, and without a band).

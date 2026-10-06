@@ -97,6 +97,7 @@ def test_a_live_cycle_reads_the_wallet_before_it_marks_or_decides(monkeypatch):
     b.refresh_universe = lambda now: None
     b.client = type("C", (), {"last_ticker_server_time_ms": 0, "_timestamp": lambda self: 0})()
     b.adopt_wallet = lambda: calls.append("wallet")
+    b.executor = type("E", (), {"submission_blocked": False, "refresh_pending": lambda self: calls.append("pending")})()
     b.wallet_ok = True
     b.gap_state = {}
     b.journal = type("J", (), {"write": lambda self, stream, rec: None})()
@@ -111,7 +112,7 @@ def test_a_live_cycle_reads_the_wallet_before_it_marks_or_decides(monkeypatch):
     monkeypatch.setattr(run.feed, "roostoo_quotes", lambda client: {})
     with pytest.raises(Stop):
         b.cycle()
-    assert calls == ["wallet", "mark"]
+    assert calls == ["pending", "wallet", "mark"]
 
 
 def test_cash_is_read_in_the_venue_quote_only():
@@ -161,6 +162,7 @@ def test_a_live_cycle_without_a_readable_wallet_does_nothing(monkeypatch):
         b.wallet_ok = False
 
     b.adopt_wallet = adopt
+    b.executor = type("E", (), {"submission_blocked": False, "refresh_pending": lambda self: set()})()
     b.gap_state = {}
     b.equity_curve = [100_000.0]
     b.journal = type("J", (), {"write": lambda self, stream, rec: written.append((stream, rec)) or rec})()

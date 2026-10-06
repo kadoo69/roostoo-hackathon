@@ -15,6 +15,18 @@ from __future__ import annotations
 import pandas as pd
 
 HELD_MIN = 0.01
+# A sale at the entry price still loses both fees (0.05% maker, 0.1% taker each side), so the no-loss
+# line sits a taker round trip above entry: ETH sold at 2716.86 against a 2716.83 entry for -0.10% net
+# at 14:30 IST 2026-10-06. DECISIONS.md#no-loss-net-of-fees-2026-10-06
+NO_LOSS_FEE_BUFFER = 0.002
+
+
+def loss_band(entry: float, max_loss: float, no_floor: bool,
+              fee_buffer: float = NO_LOSS_FEE_BUFFER) -> tuple[float, float]:
+    """Prices `[lo, hi)` at which the no-loss guard keeps a long: below `hi`, the entry plus a round trip
+    of fees, and not deeper than `max_loss` under entry (`lo`), or at any depth for a `no_floor` name.
+    DECISIONS.md#live-no-loss-exit-2026-10-05"""
+    return (0.0 if no_floor else entry * (1.0 - max_loss)), entry * (1.0 + fee_buffer)
 
 
 def is_catch_up(prev_bar: pd.Timestamp | None, index: pd.DatetimeIndex, now: pd.Timestamp,
@@ -74,15 +86,16 @@ def protect_losses(target: dict[str, float], current: dict[str, float], prices: 
                    entries: dict[str, float], max_loss: float,
                    max_gross: float = 1.0, no_floor: frozenset[str] | set[str] = frozenset()) -> tuple[dict[str, float], list[str]]:
     """A long the target would sell or shrink is kept at its current weight while its price is below
-    its entry but no more than `max_loss` below it; the rest of the target is scaled to fit `max_gross`.
-    Past `max_loss`, or at or above entry, the rule's target stands; a symbol in `no_floor` is kept at any
+    its entry plus a round trip of fees but no more than `max_loss` below entry (`loss_band`); the rest of
+    the target is scaled to fit `max_gross`. Past `max_loss`, or above that line, the rule's target stands; a symbol in `no_floor` is kept at any
     depth below entry. DECISIONS.md#live-no-loss-exit-2026-10-05, DECISIONS.md#ena-no-floor-2026-10-05"""
     kept = {}
     for s, w in current.items():
         e, px = entries.get(s), prices.get(s)
         if w < HELD_MIN or not e or not px:
             continue
-        if target.get(s, 0.0) < w and px < e and (s in no_floor or px >= e * (1.0 - max_loss)):
+        lo, hi = loss_band(e, max_loss, s in no_floor)
+        if target.get(s, 0.0) < w and lo <= px < hi:
             kept[s] = w
     if not kept:
         return target, []
@@ -179,6 +192,19 @@ class GuardedTarget:
                                                "ref": "DECISIONS.md#live-no-loss-exit-2026-10-05"})
         self.last_decision_bar = str(bar)
         return target
+
+    def exit_band(self, symbol: str) -> tuple[float, float] | None:
+        """The no-loss band of a held long (`loss_band`), or None when the book has no such guard or no
+        entry for it. The executor reads it before escalating a stale exit to MARKET.
+        DECISIONS.md#no-loss-escalation-2026-10-06"""
+        cc = getattr(self, "cc", None) or {}
+        max_loss = cc.get("live_no_loss_exit_max")
+        if max_loss is None:
+            return None
+        e = self.entry_prices().get(symbol)
+        if not e:
+            return None
+        return loss_band(e, float(max_loss), symbol in set(cc.get("live_hold_below_cost") or []))
 
     def entry_prices(self) -> dict[str, float]:
         """Average cost of each open long from the book's own fills (`bot.blotter`); empty on any

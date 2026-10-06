@@ -4,7 +4,8 @@ Runs the real `CashSleeveRegimeBot` cycle (host `competition_r4` rule, guards an
 live mode against a simulated Roostoo wallet: public endpoints (prices, pair specs, server time) are the real
 venue and Binance bars are real; balance, orders and fills are simulated, every order filling at its limit price
 with a 0.1% fee. The host starts with the live book's coins and 7,289 USD cash. The sleeve's trigger is lowered
-to 0.05% so it enters on the current bar. Four phases: entry, steady state, host handover, exit.
+to 0.05% so it enters on the current bar. Phases: entry, steady state, host handover, exit, and a resting entry
+that fills between the bot's pending-order and wallet reads (DECISIONS.md#pending-before-wallet-2026-10-06).
 Checks every cycle: the reported equity equals the wallet's value at the marks, sleeve cash plus host cash equals
 the wallet's cash, and the host never trades a sleeve coin. Writes only to temporary live/e2e_* and config files,
 removed afterwards. No competition or TEST keys are read. Usage: python3 deploy/checks/cash_sleeve_e2e.py
@@ -14,6 +15,7 @@ import json
 import os
 import shutil
 import sys
+import time
 from pathlib import Path
 
 import pandas as pd
@@ -41,13 +43,34 @@ def main() -> int:
             super().__init__(None, None)
             self.wallet: dict[str, float] = {}
             self.trades: list[dict] = []
+            self.rest_buys = False
+            self.resting: list[dict] = []
+            self.locked = 0.0
+            self.fill_after_balance = False
 
         def balance(self) -> dict:
-            return {c: {"Free": q, "Lock": 0.0} for c, q in self.wallet.items()}
+            snap = {c: {"Free": q, "Lock": self.locked if c == "USD" else 0.0} for c, q in self.wallet.items()}
+            if self.fill_after_balance:
+                # The resting order fills right after this read, as FIL's did at 14:35 IST 2026-10-06.
+                self.fill_after_balance = False
+                for o in self.resting:
+                    self.locked -= o["cost"]
+                    self.wallet[o["coin"]] = self.wallet.get(o["coin"], 0.0) + o["qty"]
+                self.resting = []
+            return snap
 
         def place_order(self, pair, side, quantity, price=None, client_order_id=None):
             coin = pair.split("/")[0]
             q, p = float(quantity), float(price or self.ticker()[pair]["LastPrice"])
+            if side == "BUY" and self.rest_buys:
+                oid = next(self.ids)
+                self.wallet["USD"] -= q * p * 1.001
+                self.locked += q * p * 1.001
+                self.resting.append({"id": oid, "pair": pair, "coin": coin, "qty": q, "price": p,
+                                     "cost": q * p * 1.001, "ts": time.time()})
+                self.trades.append({"pair": pair, "side": side, "qty": q, "price": p, "resting": True})
+                return {"OrderDetail": {"OrderID": oid, "Status": "PENDING", "Role": "MAKER",
+                                        "FilledQuantity": 0.0, "FilledAverPrice": 0.0, "CommissionPercent": 0.0005}}
             if side == "BUY":
                 self.wallet["USD"] -= q * p * 1.001
                 self.wallet[coin] = self.wallet.get(coin, 0.0) + q
@@ -59,7 +82,10 @@ def main() -> int:
                                     "FilledQuantity": q, "FilledAverPrice": p, "CommissionPercent": 0.001}}
 
         def query_order(self, order_id=None, pair=None, pending_only=None):
-            return {"Success": True, "OrderDetails": []}
+            return {"Success": True, "OrderDetails": [
+                {"OrderID": o["id"], "Pair": o["pair"], "Side": "BUY", "Type": "LIMIT", "Quantity": o["qty"],
+                 "Price": o["price"], "FilledQuantity": 0.0, "Status": "PENDING",
+                 "CreateTimestamp": o["ts"] * 1000.0} for o in self.resting]}
 
         def cancel_order(self, order_id=None, pair=None):
             return {"Success": True}
@@ -97,10 +123,10 @@ def main() -> int:
         bot = CashSleeveRegimeBot(load(str(cfg_path)), mode="once")
 
         def wallet_value(marks: dict[str, float]) -> float:
-            return venue.wallet["USD"] + sum(q * marks.get(c + "USDT", 0.0) for c, q in venue.wallet.items()
+            return venue.wallet["USD"] + venue.locked + sum(q * marks.get(c + "USDT", 0.0) for c, q in venue.wallet.items()
                                              if c != "USD")
 
-        def cycle(label: str) -> dict:
+        def cycle(label: str, slack: float = 0.0) -> dict:
             n0 = len(venue.trades)
             snap = bot.cycle()
             bot.adopt_wallet()
@@ -110,11 +136,11 @@ def main() -> int:
             print(f"{label}: equity {snap['equity']:.2f}, host cash {bot.cash:.2f}, sleeve "
                   f"{json.dumps(snap.get('cash_sleeve'))}, trades {new}")
             fees = sum(t["qty"] * t["price"] for t in new) * 0.001
-            check(abs(snap["equity"] - wallet_value(marks)) < 2.0 + 1.5 * fees,
+            check(abs(snap["equity"] - wallet_value(marks)) < 2.0 + 1.5 * fees + slack,
                   f"reported equity {snap['equity']:.2f} = wallet value {wallet_value(marks):.2f}")
             check(venue.wallet["USD"] >= -1e-6, f"wallet cash never negative ({venue.wallet['USD']:.2f})")
-            check(abs(bot.cash + led.cash - venue.wallet["USD"]) < 0.01,
-                  f"host cash + sleeve cash = wallet cash {venue.wallet['USD']:.2f}")
+            check(abs(bot.cash + led.cash - venue.wallet["USD"] - venue.locked) < 0.01,
+                  f"host cash + sleeve cash = wallet cash {venue.wallet['USD'] + venue.locked:.2f}")
             check(not (set(bot.holdings) & led.owned()), "no coin is both host and sleeve")
             return {"snap": snap, "trades": new}
 
@@ -167,6 +193,9 @@ def main() -> int:
         bot.sleeve_cfg["ride"]["sigma_k"] = 500.0
         for s in led.held:
             led.held[s][0] = str(pd.Timestamp(led.held[s][0]) - pd.Timedelta(days=2))
+            # In profit past the fee line, so the no-loss exit lets the hold expiry sell it
+            # (DECISIONS.md#no-loss-net-of-fees-2026-10-06).
+            led.held[s][1] = float(led.held[s][1]) * 0.99
         led.bar = None
         r = cycle("cycle 4 (hold expired)")
         sells = [t for t in r["trades"] if t["side"] == "SELL"]
@@ -174,6 +203,39 @@ def main() -> int:
         r = cycle("cycle 5")
         check(led.units == {} and led.owned() == set(), "sleeve flat after the exits")
         check(39500 < led.cash < 39800, f"sleeve cash after a round trip {led.cash:.2f}")
+        print("phase 4: a resting entry fills between the bot's reads")
+        fresh_coin = next(s for s in sorted(bot.universe) if s not in bot.holdings and s not in led.owned()
+                          and s in bot.sleeve_px)
+
+        def host_adds(self, channels, derisk, prices):
+            return {**{s: w for s, w in HOST_W.items()}, fresh_coin: 0.05}
+        RegimeLSBot.compute_target = host_adds
+        bot.last_bar = bar30 - pd.Timedelta(minutes=30)
+        venue.rest_buys = True
+        venue.wallet["USD"] += 10_000.0
+        first = []
+        for k in range(3):
+            r = cycle(f"cycle 6.{k} (host enters {fresh_coin}, the order rests)")
+            if k == 0:
+                RegimeLSBot.compute_target = orig
+            first += [t for t in r["trades"] if t["pair"].split("/")[0] + "USDT" == fresh_coin and t["side"] == "BUY"]
+            if venue.resting:
+                break
+        if not venue.resting:
+            print("  events:", [json.loads(x).get("event") for f in d.glob("*-*.jsonl") for x in f.read_text().splitlines()][-30:])
+        check(len(first) == 1 and venue.resting, f"one resting {fresh_coin} buy ({first})")
+        venue.fill_after_balance = True
+        # The cycle's equity is read before the fill and checked after it: allow the fee and the mark-to-limit gap.
+        r = cycle("cycle 7 (it fills right after the wallet read)", slack=0.005 * first[0]["qty"] * first[0]["price"])
+        again = [t for t in r["trades"] if t["pair"].split("/")[0] + "USDT" == fresh_coin and t["side"] == "BUY"]
+        check(again == [], f"no second {fresh_coin} buy while the first was filling ({again})")
+        r = cycle("cycle 8")
+        again = [t for t in r["trades"] if t["pair"].split("/")[0] + "USDT" == fresh_coin and t["side"] == "BUY"]
+        held_usd = bot.holdings.get(fresh_coin, 0.0) * bot.sleeve_px[fresh_coin]
+        check(again == [] and abs(held_usd - first[0]["qty"] * first[0]["price"]) < 1.0,
+              f"{fresh_coin} held once ({held_usd:.0f} USD), nothing re-sent")
+        venue.rest_buys = False
+
         rows = [json.loads(x) for f in d.glob("orders-*.jsonl") for x in f.read_text().splitlines()]
         tagged = [o for o in rows if o.get("event") == "placed" and o.get("book") == "cash_sleeve"]
         check(len(tagged) == 3, f"sleeve orders are journaled with book: cash_sleeve ({len(tagged)})")

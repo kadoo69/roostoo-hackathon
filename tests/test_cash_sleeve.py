@@ -217,3 +217,18 @@ def test_host_borrows_only_its_shortfall_and_only_with_a_free_sleeve_slot(tmp_pa
     bot.cash = 0.0
     CashSleeveRegimeBot.lend_to_host(bot, led2)
     assert bot.cash == 0.0 and led2.cash == 31700.0
+
+
+def test_no_loss_ride_exit_waits_for_the_fees_and_the_escalation_band_matches():
+    """DECISIONS.md#no-loss-net-of-fees-2026-10-06, DECISIONS.md#no-loss-escalation-2026-10-06"""
+    from types import SimpleNamespace
+
+    from bot.cash_sleeve_run import CashSleeveRegimeBot
+    from bot.entry_guard import NO_LOSS_FEE_BUFFER
+    led = Ledger(cash=0.0, budget=1.0, units={"ADAUSDT": 100.0},
+                 held={"ADAUSDT": ["2026-10-06 09:10:00+00:00", 0.2816, 0.09, 0.5]})
+    bot = SimpleNamespace(sleeve=led, sleeve_cfg={"no_loss_exit": True})
+    lo, hi = CashSleeveRegimeBot.exit_band(bot, "ADAUSDT")
+    assert lo == 0.0 and hi == pytest.approx(0.2816 * (1 + NO_LOSS_FEE_BUFFER))
+    bot.sleeve_cfg = {}
+    assert CashSleeveRegimeBot.exit_band(bot, "ADAUSDT") is None

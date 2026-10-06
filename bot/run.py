@@ -166,6 +166,7 @@ class Bot:
         self.client.sync_time()
         self.specs = self.client.exchange_info()
         self.executor = Executor(self.client, self.specs, settings, self.journal)
+        self.executor.exit_band = getattr(self, "exit_band", None)
         # Live orders were blocked outright until this existed. Every unresolved
         # intent from a previous process is settled against the venue before a
         # single new order may be sent, and if any cannot be settled the block
@@ -563,6 +564,11 @@ class Bot:
                                              "ref": "DECISIONS.md#clock-resync-2026-10-03"})
         if not self.s.dry_run:
             self.settle_blocked_submission()
+            # Resting orders are read BEFORE the wallet. Read after it, an order that filled in between was
+            # neither pending nor in the holdings, and the same buy went out again: FIL 2,720 units twice at
+            # 14:31-14:35 IST 2026-10-06, 3.2k of the sleeve's cash. An order that fills after this read is
+            # still pending to this cycle, so its pair is skipped. DECISIONS.md#pending-before-wallet-2026-10-06
+            self.executor.refresh_pending()
             self.adopt_wallet()
             if not self.wallet_ok:
                 return self.journal.write("waiting", {
@@ -710,7 +716,6 @@ class Bot:
         if fresh:
             self.cold_start = False
 
-        self.executor.refresh_pending()
         placed = []
         spendable = self.cash
         aborted = None

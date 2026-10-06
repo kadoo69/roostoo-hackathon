@@ -17,6 +17,7 @@ import yaml
 
 from bot import cash_sleeve
 from bot.regime_ls_run import RegimeLSBot
+from bot.entry_guard import NO_LOSS_FEE_BUFFER
 from bot.run import venue_quote
 from bot.scalper_adaptive_run import bars_needed, load_clock
 from bot.settings import ROOT, load
@@ -109,6 +110,17 @@ class CashSleeveRegimeBot(RegimeLSBot):
                                              "for": sorted(self.underfilled), "host_cash": round(self.cash, 2),
                                              "sleeve_cash": round(led.cash, 2),
                                              "ref": "DECISIONS.md#sleeve-lends-to-host-2026-10-06"})
+
+    def exit_band(self, symbol: str) -> tuple[float, float] | None:
+        """A sleeve ride with `no_loss_exit` is never market-sold below its entry close plus a round trip of
+        fees, at any depth; host coins take the host guard's band. DECISIONS.md#no-loss-escalation-2026-10-06"""
+        led = self.sleeve
+        if led is not None and symbol in led.owned():
+            rec = led.held.get(symbol)
+            if not self.sleeve_cfg.get("no_loss_exit") or not rec:
+                return None
+            return 0.0, float(rec[1]) * (1.0 + NO_LOSS_FEE_BUFFER)
+        return super().exit_band(symbol)
 
     def mark(self, quotes: dict) -> tuple[float, dict[str, float]]:
         self.sleeve_quotes = quotes

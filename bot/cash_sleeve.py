@@ -23,6 +23,7 @@ from pathlib import Path
 
 import pandas as pd
 
+from bot.entry_guard import NO_LOSS_FEE_BUFFER
 from signals import burst_rider
 
 DUST_USD = 1.0
@@ -125,8 +126,9 @@ def decide(led: Ledger, close: pd.DataFrame, high: pd.DataFrame, cfg: dict, px: 
     """One ride decision at the last closed 5m bar of `close`. Updates the ledger's targets in place. A held
     ride whose slot weight the rule cut (the churn trim, `signals.burst_rider.trim_churn`) is sold down in the
     same proportion. DECISIONS.md#sleeve-churn-ride-2026-10-06
-    With `no_loss_exit` a ride the rule exits while its price is below the entry close is kept whole, slot
-    included, until a later decision exits it at or above entry. DECISIONS.md#sleeve-no-loss-exit-2026-10-06
+    With `no_loss_exit` a ride the rule exits while its price is below the entry close plus a round trip of fees
+    is kept whole, slot included, until a later decision exits it above that line.
+    DECISIONS.md#sleeve-no-loss-exit-2026-10-06, DECISIONS.md#no-loss-net-of-fees-2026-10-06
     Rides in `weightless` keep riding to their own exits but hold no slot weight. DECISIONS.md#sleeve-legacy-slots-2026-10-06"""
     bar = str(close.index[-1])
     cols = [c for c in close.columns if c not in host or c in led.held]
@@ -140,7 +142,8 @@ def decide(led: Ledger, close: pd.DataFrame, high: pd.DataFrame, cfg: dict, px: 
     free = max(0.0, led.cash)
     for s in sorted(led.owned() | set(held)):
         if s not in new_held:
-            if no_loss_exit and s in held and px.get(s) and px[s] < float(held[s][1]) and led.units.get(s, 0.0) > 0:
+            if (no_loss_exit and s in held and px.get(s) and px[s] < float(held[s][1]) * (1.0 + NO_LOSS_FEE_BUFFER)
+                    and led.units.get(s, 0.0) > 0):
                 new_held[s] = list(held[s])
                 kept.append(s)
                 continue
