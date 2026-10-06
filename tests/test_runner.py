@@ -171,7 +171,9 @@ def test_competition_r4_is_the_long_only_regime_rule_on_the_comp_keys():
     assert {k: v for k, v in r4["contenders"].items() if k not in seed} == paper["contenders"]
     assert r4["strategy"] == paper["strategy"]
     assert r4["regime"] == paper["regime"]
-    assert r4["risk"] == live["risk"] and r4["execution"] == live["execution"]
+    extra = {"exit_timeout_s", "exit_timeout_ref"}
+    assert r4["risk"] == live["risk"]
+    assert {k: v for k, v in r4["execution"].items() if k not in extra} == live["execution"]
     s = load("config/competition_r4.yaml")
     assert s.keyset == "comp" and s.exit_escalation and not s.shorts_enabled
     assert not r4["meta"]["paper_only"] and r4["booking"]["underfill_max_chase"] == 0.01

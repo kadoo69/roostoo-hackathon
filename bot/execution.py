@@ -261,7 +261,7 @@ class Executor:
         self.calls.append(False)
         for o in pending.get("OrderDetails", []) or []:
             age = time.time() - float(o.get("CreateTimestamp", 0)) / 1000.0
-            if age < self.settings.limit_timeout_s:
+            if age < self.timeout_for(o):
                 continue
             try:
                 # Binance requires `symbol` on a cancel and Roostoo does not.
@@ -285,6 +285,16 @@ class Executor:
                     "event": "cancel_error", "error": str(exc),
                     "order_id": o.get("OrderID")}))
         return out
+
+    def timeout_for(self, o: dict) -> float:
+        """How long a resting order may wait: `exit_timeout_s` for a SELL when exits escalate and it is set,
+        else `limit_timeout_s`. A falling coin left a resting exit five minutes behind the market before the
+        market order (ADA, ENA, ETH, AAVE on 2026-10-06, about 0.2-0.3% each).
+        DECISIONS.md#exit-timeout-2026-10-06"""
+        quick = getattr(self.settings, "exit_timeout_s", 0)
+        if quick and self.settings.exit_escalation and str(o.get("Side", "")).upper() == "SELL":
+            return float(quick)
+        return float(self.settings.limit_timeout_s)
 
     def escalate_exit(self, o: dict) -> dict | None:
         """Re-send the unfilled rest of a cancelled stale SELL at MARKET.

@@ -71,3 +71,15 @@ def test_untradable_pair_is_rejected(tmp_path, changes):
     executor = make_executor(tmp_path, **changes)
     plan = executor.prepare({"symbol": "BTCUSDT", "side": "BUY", "quantity": 1}, {"BTC/USD": {}})
     assert plan["skipped"] == "pair_not_tradable"
+
+
+def test_exits_escalate_after_the_exit_timeout_and_entries_wait_the_limit_timeout():
+    """DECISIONS.md#exit-timeout-2026-10-06"""
+    from types import SimpleNamespace
+
+    from bot.execution import Executor
+    ex = SimpleNamespace(settings=SimpleNamespace(exit_timeout_s=60, exit_escalation=True, limit_timeout_s=300))
+    assert Executor.timeout_for(ex, {"Side": "SELL"}) == 60.0
+    assert Executor.timeout_for(ex, {"Side": "BUY"}) == 300.0
+    ex.settings.exit_timeout_s = 0
+    assert Executor.timeout_for(ex, {"Side": "SELL"}) == 300.0

@@ -64,7 +64,8 @@ def review(book: str, now: pd.Timestamp, window_h: float = 24.0) -> dict:
     orders = j.read("orders")
     sent = [o for o in orders if o.get("event") in ("placed", "dry_run")]
     failed = [o for o in orders if o.get("event") in ("error", "submission_unknown")]
-    stale = [o for o in orders if o.get("event") == "cancelled_stale"]
+    escalated = {o.get("escalated_from") for o in orders if o.get("reason") == "exit_escalation" and o.get("status") == "FILLED"}
+    stale = [o for o in orders if o.get("event") == "cancelled_stale" and o.get("order_id") not in escalated]
     bl = build(book)
     closed = [t for t in bl["closed"] if pd.Timestamp(t["exit_ts"]) >= since]
     skims = [t for t in closed if t.get("exit_kind") == "skim"]

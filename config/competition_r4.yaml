@@ -65,6 +65,8 @@ execution:
   poll_seconds: 30
   exit_escalation: true
   exit_escalation_ref: DECISIONS.md#exit-escalation-2026-10-02
+  exit_timeout_s: 60
+  exit_timeout_ref: DECISIONS.md#exit-timeout-2026-10-06
 risk:
   max_drawdown: 0.25
   max_error_rate: 0.25
