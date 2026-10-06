@@ -2,7 +2,15 @@
 
 Current state only. The full history of sessions to 2026-09-23 is archived at `docs/archive/HANDOVER_2026-09-23.md`; older section references in code and configs point there.
 
-## CURRENT STATE 2026-10-06 15:15 IST / 09:45Z (read this first; everything below is history)
+## CURRENT STATE 2026-10-06 18:00 IST / 12:30Z (read this first; everything below is history)
+
+- EC2 runs `a4b1535` (config sha `07a1fe6d488240df`, deployed 17:55 IST; the 16:20 deploy attempt died when the Mac slept).
+- No SELL of any kind leaves inside the no-loss band, which runs from cost plus 0.2% fees down to any depth. The check is `Executor.below_cost`; the drawdown halt is the only exception (`#no-sale-below-cost-anywhere-2026-10-06`).
+- No new buys while account equity is below 100,000; exits above cost and skims go on (`#entry-pause-below-100k-2026-10-06`). Both rules were ordered by the operator.
+- Since 15:15 IST the only trade has been a profitable AVAX sale (301.51 at 11.444 against an 11.061 cost, 17:30 IST). There have been no sales below cost. Equity 97,576 at 17:57 IST, wallet cash 3,447 (held by the pause).
+- Desk fix `80e4968`: sleeve rides now show their own entry, target and 24 h exit.
+
+## CURRENT STATE 2026-10-06 15:15 IST / 09:45Z (superseded)
 
 ### Live: EC2 at `8e89151`, config sha `95d6d864a6510309`
 - **No sale below cost at any depth** (operator 15:10 IST, `#no-loss-any-depth-2026-10-06`): `live_no_loss_exit_max` 0.05 -> 1.0. The no-loss line is cost plus a 0.2% fee round trip (`#no-loss-net-of-fees-2026-10-06`), and a stale exit is never market-escalated inside it (`#no-loss-escalation-2026-10-06`). The sleeve never exits a ride below its entry plus fees either. There is no stop now; only the 25% drawdown kill switch remains.
