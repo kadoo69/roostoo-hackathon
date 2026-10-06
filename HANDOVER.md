@@ -9,6 +9,7 @@ Current state only. The full history of sessions to 2026-09-23 is archived at `d
 - No new buys while account equity is below 100,000; exits above cost and skims go on (`#entry-pause-below-100k-2026-10-06`). Both rules were ordered by the operator.
 - Since 15:15 IST the only trade has been a profitable AVAX sale (301.51 at 11.444 against an 11.061 cost, 17:30 IST). There have been no sales below cost. Equity 97,576 at 17:57 IST, wallet cash 3,447 (held by the pause).
 - Desk fix `80e4968`: sleeve rides now show their own entry, target and 24 h exit.
+- 18:35 IST, `7158817` live (config sha `5f707e7d0b6d4a3a`): **no SELL of any kind while account equity is below 102,000** (operator: "Hold all until account hits +2%", `#hold-all-below-102k-2026-10-06`). Held exits and skims go out together once the account crosses 102k; the cost-plus-fees band still applies after that. With the 100k buy pause, the account just rides its current coins.
 - Operator 18:10 IST: keep no-loss-at-any-depth and the 100k entry pause until the day-3 check. Before then they were told plainly that holding below cost does not avoid the loss, since the leaderboard counts equity; on the full window the paper rule is +4.6% against the live account's -2.4%. Recommendation for the day-3 check (10-07 17:30 IST): restore the rule's own exits and drop the entry pause, keeping the three execution fixes. Show the guarded and unguarded results side by side first.
 
 ## CURRENT STATE 2026-10-06 15:15 IST / 09:45Z (superseded)
