@@ -234,3 +234,14 @@ def test_a_sale_at_cost_that_only_pays_the_fees_is_held():
     assert protect_losses(target, current, {"ETHUSDT": 2716.86}, entries, 0.05)[1] == ["ETHUSDT"]
     clear = 2716.83 * (1 + NO_LOSS_FEE_BUFFER) * 1.0001
     assert protect_losses(target, current, {"ETHUSDT": clear}, entries, 0.05)[1] == []
+
+
+def test_the_live_book_never_sells_below_cost_at_any_depth():
+    """DECISIONS.md#no-loss-any-depth-2026-10-06"""
+    import yaml
+
+    from bot.entry_guard import protect_losses
+    cc = yaml.safe_load(open("config/competition_r4.yaml"))["contenders"]
+    deep = {"FILUSDT": 1.1815 * 0.40}
+    assert protect_losses({}, {"FILUSDT": 0.11}, deep, {"FILUSDT": 1.1815},
+                          float(cc["live_no_loss_exit_max"]))[1] == ["FILUSDT"]
