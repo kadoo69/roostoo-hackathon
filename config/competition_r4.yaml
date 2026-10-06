@@ -121,21 +121,30 @@ cash_sleeve:
   stop_equity_frac: 0.8
   entry_window_bars: 2
   entry_chase_max: 0.01
-  universe_mode: venue_all
-  top_up_usd: 27000
-  top_up_tag: 2026-10-06-wide
+  top_up_usd: 38500
+  top_up_tag: 2026-10-06-churn
   ride:
-    thresh_pct: 1.0
     tp_pct: 5.0
     hold_bars: 288
-    n: 3
+    n: 2
     cooldown_bars: 12
+    sigma_k: 2.5
+    sigma_bars: 288
+    tp_vol_k: 2.0
+    rank_by: z
+    trim_churn:
+      trim: 0.5
+      churn_tpk: 1.0
+      zmax: 5.0
+      min_age_bars: 12
+      max_positions: 4
+      keep_strong: true
   ladder:
     step_pct: 0.03
     skim_fraction: 0.15
-  rule_source: config/ride1_wide_5m.yaml from 2026-10-06 (1% trigger, venue_all universe; was config/ride_5m.yaml,
-    2% on the host's 27 coins); +5% target, 288-bar hold, 3 slots, 12-bar cooldown, 3%/15% ladder
-  rule_changed_ref: DECISIONS.md#sleeve-wide-ride-2026-10-06
+  rule_source: config/ride_z25_churn_5m.yaml from 2026-10-06 09:30 IST (per-coin 2.5-sigma trigger ranked by z, 2 slots,
+    target 2 x daily vol, 24 h hold, trim churn; host's universe); before that ride1_wide (07:31 IST) and ride_5m
+  rule_changed_ref: DECISIONS.md#sleeve-churn-ride-2026-10-06
   requested_by: 'operator 2026-10-05 22:20-22:30 IST: "the remaining cash we have use it as well in the triggers and
     follow our best paper bot", chose ride_5m; "think of this 7 8k as loss cushion"'
   declared_ref: DECISIONS.md#cash-ride-sleeve-2026-10-05

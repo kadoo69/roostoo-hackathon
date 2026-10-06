@@ -47,16 +47,21 @@ def checks(book: str, holdings: set[str], led: dict) -> dict:
     st = json.loads((ROOT / "live" / book / "state.json").read_text())
     uni = (led or {}).get("universe") or st.get("universe") or []
     sleeve_cfg = (yaml.safe_load((ROOT / "config" / f"{book}.yaml").read_text()) or {}).get("cash_sleeve") or {}
-    thresh = float((sleeve_cfg.get("ride") or {}).get("thresh_pct", 2.0)) / 100
-    fr = feed.bar_frame(uni, "5m", 20)
+    from signals import burst_rider
+    ride = sleeve_cfg.get("ride") or {"thresh_pct": 2.0}
+    fr = feed.bar_frame(uni, "5m", 320)
     c = pd.DataFrame({s: f.set_index("open_time")["close"] for s, f in fr.items() if len(f)}).sort_index()
-    r3 = (c / c.shift(3) - 1).iloc[-6:]
+    r3f = c / c.shift(3) - 1
+    lvl = burst_rider.trigger_level(r3f, ride)
+    r3, lv = r3f.iloc[-6:], lvl.iloc[-6:]
+    n = int(ride.get("n", 3))
+    free = int((1.0 - sum(float(v[3]) for v in (led or {}).get("held", {}).values()) + 1e-9) * n) if led else 0
     missed = []
     for t, row in r3.iterrows():
         for s, v in row.items():
-            if v >= thresh and s not in holdings and led and str(t) <= str(led.get("bar")):
+            if v >= lv.at[t, s] > 0 and s not in holdings and led and str(t) <= str(led.get("bar")):
                 took = s in led["held"] or led["last"].get(s) == str(t) or s in led["units"]
-                if not took and len(led["held"]) < 3 and not led["stopped"] and led["cash"] > 5:
+                if not took and free > 0 and not led["stopped"] and led["cash"] > 5:
                     missed.append(f"{s}@{t:%H:%M}Z {v * 100:.2f}%")
     out = {"sleeve_missed": missed, "best_15m_pct": round(float(r3.max().max()) * 100, 2)}
     con = [x for x in rows(book, "signals", 1) if x.get("event") == "contenders"]

@@ -68,7 +68,8 @@ def main() -> int:
     run.make_client = lambda settings: venue
     cfg = yaml.safe_load((ROOT / "config/competition_r4.yaml").read_text())
     cfg["meta"]["name"] = NAME
-    cfg["cash_sleeve"]["ride"]["thresh_pct"] = 0.05
+    cfg["cash_sleeve"]["ride"]["sigma_k"] = 0.05
+    cfg["cash_sleeve"]["ride"].pop("trim_churn", None)
     cfg_path = ROOT / "config" / f"{NAME}.yaml"
     d = ROOT / "live" / NAME
     shutil.rmtree(d, ignore_errors=True)
@@ -120,13 +121,13 @@ def main() -> int:
         print("phase 1: entry")
         r = cycle("cycle 1")
         led = bot.sleeve
-        check(led is not None and abs(led.budget - 34000.0) < 1e-6, f"sleeve budget 7,000 + 27,000 top-up (got {led and led.budget})")
-        check(led.top_ups == ["2026-10-06-wide"] and abs(bot.cash - (CASH - 34000.0)) < 10.0, f"top-up applied once, host cash {bot.cash:.2f}")
-        check(len(led.universe) > 40, f"sleeve rides the wide venue universe ({len(led.universe)} coins)")
-        check(all(abs(t["qty"] * t["price"] - 34000.0 / 3) < 400 for t in r["trades"] if t["side"] == "BUY"),
-              f"each ride is a third of the sleeve: {[round(t['qty'] * t['price']) for t in r['trades']]}")
+        check(led is not None and abs(led.budget - 39800.0) < 1e-6, f"sleeve budget 7,000 + 32,800 top-up (got {led and led.budget})")
+        check(led.top_ups == ["2026-10-06-churn"] and abs(bot.cash - 200.0) < 10.0, f"top-up applied once, host cash {bot.cash:.2f}")
+        check(20 <= len(led.universe) <= 30, f"sleeve rides the host's universe ({len(led.universe)} coins)")
+        check(all(abs(t["qty"] * t["price"] - 39800.0 / 2) < 600 for t in r["trades"] if t["side"] == "BUY"),
+              f"each ride is half of the sleeve: {[round(t['qty'] * t['price']) for t in r['trades']]}")
         buys = [t for t in r["trades"] if t["side"] == "BUY"]
-        check(len(buys) == 3, f"sleeve bought 3 rides on the forced trigger (got {len(buys)})")
+        check(len(buys) == 2, f"sleeve bought 2 rides on the forced trigger (got {len(buys)})")
         check(not any(t["pair"].split("/")[0] + "USDT" in units for t in r["trades"]),
               "no order on a host coin")
         r = cycle("cycle 2")
@@ -135,7 +136,7 @@ def main() -> int:
               and abs(sum(pos.values()) + r["snap"]["cash"] / r["snap"]["equity"] - 1) < 0.002,
               f"reported positions cover host and sleeve coins and, with cash, sum to the account {pos}")
         check(all(abs(bot.holdings[s] - units[s]) < 1e-9 for s in units), "host holdings unchanged")
-        check(len(led.units) == 3 and all(v > 0 for v in led.units.values()), "sleeve owns its 3 coins")
+        check(len(led.units) == 2 and all(v > 0 for v in led.units.values()), "sleeve owns its 2 coins")
         check(r["trades"] == [], "steady state sends nothing")
 
         print("phase 2: host enters a sleeve coin")
@@ -151,31 +152,31 @@ def main() -> int:
         r = cycle("cycle 3a (host wants 0.04, less than the ride)")
         check(coin in led.owned() and abs(led.units[coin] - moved) < 1e-9, f"small host target leaves {coin} with the sleeve")
         check(not [t for t in r["trades"] if t["pair"].split("/")[0] + "USDT" == coin], "host bought none of it")
-        want_w["w"] = 0.20
+        want_w["w"] = 0.40
         bot.last_bar = bar30 - pd.Timedelta(minutes=30)
         r = cycle("cycle 3b (host wants 0.20, more than the ride)")
         RegimeLSBot.compute_target = orig
         check(coin not in led.owned(), f"sleeve released {coin}")
         check(bot.holdings.get(coin, 0.0) >= moved - 1e-9, f"host holds the released {coin} units")
         host_buy = [t for t in r["trades"] if t["pair"].split("/")[0] + "USDT" == coin and t["side"] == "BUY"]
-        want = 0.20 * (r["snap"]["equity"] - led.equity(bot.sleeve_px))
+        want = 0.40 * (r["snap"]["equity"] - led.equity(bot.sleeve_px))
         got = moved * bot.sleeve_px[coin] + sum(t["qty"] * t["price"] for t in host_buy)
-        check(got <= want * 1.02, f"host never holds more than its 0.20 target ({got:.0f} vs {want:.0f})")
+        check(got <= want * 1.02, f"host never holds more than its 0.40 target ({got:.0f} vs {want:.0f})")
 
         print("phase 3: exit")
-        bot.sleeve_cfg["ride"]["thresh_pct"] = 50.0
+        bot.sleeve_cfg["ride"]["sigma_k"] = 500.0
         for s in led.held:
             led.held[s][0] = str(pd.Timestamp(led.held[s][0]) - pd.Timedelta(days=2))
         led.bar = None
         r = cycle("cycle 4 (hold expired)")
         sells = [t for t in r["trades"] if t["side"] == "SELL"]
-        check(len(sells) == 2, f"sleeve sold its 2 remaining rides (got {len(sells)})")
+        check(len(sells) == 1, f"sleeve sold its 1 remaining ride (got {len(sells)})")
         r = cycle("cycle 5")
         check(led.units == {} and led.owned() == set(), "sleeve flat after the exits")
-        check(33800 < led.cash < 34000, f"sleeve cash after a round trip {led.cash:.2f}")
+        check(39500 < led.cash < 39800, f"sleeve cash after a round trip {led.cash:.2f}")
         rows = [json.loads(x) for f in d.glob("orders-*.jsonl") for x in f.read_text().splitlines()]
         tagged = [o for o in rows if o.get("event") == "placed" and o.get("book") == "cash_sleeve"]
-        check(len(tagged) == 5, f"sleeve orders are journaled with book: cash_sleeve ({len(tagged)})")
+        check(len(tagged) == 3, f"sleeve orders are journaled with book: cash_sleeve ({len(tagged)})")
         errs = [json.loads(x) for f in d.glob("errors-*.jsonl") for x in f.read_text().splitlines()]
         check(not [e for e in errs if e.get("event") == "cash_sleeve_error"], "no cash_sleeve_error")
     finally:

@@ -151,3 +151,17 @@ def test_ledger_files_from_before_top_ups_still_load(tmp_path):
                                                  "held": {}, "last": {}, "entry": {}, "bar": None, "stopped": False}))
     led = Ledger.load(tmp_path / "s.json")
     assert led.top_ups == [] and led.universe == []
+
+
+def test_decide_sells_a_ride_down_when_the_churn_trim_cuts_its_weight(monkeypatch):
+    close, high = frames({})
+    px = {s: float(close[s].iloc[-1]) for s in close}
+    old = str(close.index[-20])
+    led = Ledger(cash=0.0, budget=6000.0, units={"AAAUSDT": 20.0}, target={"AAAUSDT": 20.0}, ref={"AAAUSDT": 1e9},
+                 held={"AAAUSDT": [old, 1e6, 10.0, 0.5]})
+
+    def churned(close, high, cfg, held, last):
+        return {"AAAUSDT": [old, 1e6, 10.0, 0.25], "BBBUSDT": [str(close.index[-1]), 100.0, 0.05, 0.25]}, last, {}
+    monkeypatch.setattr(cash_sleeve.burst_rider, "live_step", churned)
+    ev = cash_sleeve.decide(led, close, high, RIDE, px, set(), 0.0, LADDER)
+    assert led.target["AAAUSDT"] == pytest.approx(10.0) and "AAAUSDT" in ev["skimmed"]

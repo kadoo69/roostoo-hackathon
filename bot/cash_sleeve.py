@@ -112,7 +112,9 @@ def release(led: Ledger, s: str, px: float) -> float:
 
 def decide(led: Ledger, close: pd.DataFrame, high: pd.DataFrame, cfg: dict, px: dict[str, float],
            host: set[str], stop_frac: float, ladder: dict) -> dict:
-    """One ride decision at the last closed 5m bar of `close`. Updates the ledger's targets in place."""
+    """One ride decision at the last closed 5m bar of `close`. Updates the ledger's targets in place. A held
+    ride whose slot weight the rule cut (the churn trim, `signals.burst_rider.trim_churn`) is sold down in the
+    same proportion. DECISIONS.md#sleeve-churn-ride-2026-10-06"""
     bar = str(close.index[-1])
     cols = [c for c in close.columns if c not in host or c in led.held]
     held = {s: v for s, v in led.held.items() if s in cols and (led.units.get(s, 0.0) * px.get(s, 0.0) >= DUST_USD
@@ -143,6 +145,11 @@ def decide(led: Ledger, close: pd.DataFrame, high: pd.DataFrame, cfg: dict, px: 
         led.ref[s] = float(close[s].iloc[-1])
         led.entry[s] = [bar, float(close[s].iloc[-1])]
         entered.append(s)
+    for s in sorted(set(new_held) & set(held)):
+        old_w, new_w = float(held[s][3]), float(new_held[s][3])
+        if new_w < old_w - 1e-12 and led.units.get(s, 0.0) > 0 and s not in led.entry:
+            led.target[s] = led.units[s] * new_w / old_w
+            skimmed.append(s)
     step, frac = float(ladder.get("step_pct", 0.03)), float(ladder.get("skim_fraction", 0.15))
     for s in sorted(new_held):
         u, p, r = led.units.get(s, 0.0), px.get(s), led.ref.get(s)
