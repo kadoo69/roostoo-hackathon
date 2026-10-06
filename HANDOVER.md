@@ -2,7 +2,35 @@
 
 Current state only. The full history of sessions to 2026-09-23 is archived at `docs/archive/HANDOVER_2026-09-23.md`; older section references in code and configs point there.
 
-## CURRENT STATE 2026-10-05 21:55 IST / 16:25Z (read this first; everything below is history)
+## CURRENT STATE 2026-10-06 14:55 IST / 09:25Z (read this first; everything below is history)
+
+### The competition account
+- Unit `roostoo-live@competition_r4` on EC2 at `c2f9581`, bot class `CashSleeveRegimeBot` (`bot/cash_sleeve_run.py`). Equity about 99,000 (-1.0% since the 100k start) at 14:31 IST; leaderboard 00:09 IST had us #54 of 55 at -2.8% with the top-20 cut near 0.0%.
+- Two books in one account, separately accounted (`bot/cash_sleeve.py`, ledger `live/competition_r4/cash_sleeve.json`):
+  - Host: the regime contenders rule on 30m bars (top 3 breakouts, no new longs while the regime is DOWN), loss guards (no sale below cost unless down >5%, ENA held at any loss). Holds AVAX (15% skimmed at +3%), ENA (below cost), FIL (fresh 30m breakout at 14:30 IST, underfilled at about 2k against a 0.50 target).
+  - Sleeve (budget 72,500): the 2.5-sigma 5m ride of `competition_z25` (z-ranked, 2 slots of 1/2, target 2 x daily vol, 24 h hold, 3%/15% ladder), never exits a ride below entry, churn trim off. Riding NEAR (6,908.6 at 5.234, 13:15 IST, a valid 2.55-sigma signal sized at exactly half the sleeve) plus slot-free legacy PUMP and WLD; about 31.7k cash.
+- Pending check at 15:03 IST: `lend_to_host` (`#sleeve-lends-to-host-2026-10-06`) should lend FIL's shortfall (about 25-28k) from the sleeve to the host after the 09:00Z bar decision, and the host should complete FIL under its 1% chase cap (ref 1.1949, FIL 1.1799 at 14:51). Verify with `$CLAUDE_JOB_DIR/tmp/filchk.sh`-style reads: lifecycle `cash_sleeve_lend`, orders BUY FILUSDT.
+
+### What changed since 10-05 21:55 IST (all in DECISIONS.md)
+- Bugs fixed, each with a test: guard room (held names reserved their target, zeroing FIL/UNI at 00:30, `#held-room-fix-2026-10-06`); guard weights against the account instead of the book (sold a third of AAVE/ENA/ETH each bar 08:00-09:05, about -820 USD, `#guard-weight-base-fix-2026-10-06`); oversized handover (`#sleeve-wide-ride-2026-10-06`).
+- Operator-ordered changes: cash sleeve (`#cash-ride-sleeve-2026-10-05`), FIL re-sync seed (`#fil-resync-seed-2026-10-06`, fired at 07:00 IST and bought ETH because FIL had left the path), wide 1% ride (replaced), churn ride then no-loss exit (`#sleeve-churn-ride-2026-10-06`, `#sleeve-no-loss-exit-2026-10-06`), legacy rides slot-free (`#sleeve-legacy-slots-2026-10-06`), exits escalate after 60 s (`#exit-timeout-2026-10-06`), sleeve lends to host (`#sleeve-lends-to-host-2026-10-06`).
+- Evidence on record: a profit-guard trailing exit lost on 39 rule exits (rejected); the 2.5-sigma trigger averaged -0.19% a ride since the open and -0.76% over the 24 h to 09:30 IST (+0.54% over 16 days, all from the 09-19..25 trend).
+
+### Monitoring
+- EC2 `roostoo-status.timer` posts status and alerts every 10 min to the private ntfy topic in the instance `.env` (`STATUS_NTFY_TOPIC`; read with Python urllib, the Mac shell filter truncates curl). Its checks recompute the sleeve trigger and the rule's new longs from raw bars.
+- Cloud routine `trig_016DFoScCbC5GCK1jjQxEeTN` emails the operator hourly until 00:07 IST 10-07, then expires (disable at claude.ai/code/routines).
+- AWS SSO lasts about 8 h: sign out of the portal, sign in, `python3 deploy/aws_login.py`, approve within 10 min.
+
+### Next actions
+1. Verify the 15:03 IST FIL lend and completion; if the lend did not happen, check `host_target_w` is set (it is in memory and fills at the first fresh bar after a restart).
+2. Operator freeze on strategy changes until equity > 101,000; bug fixes are allowed with a test and the E2E (`deploy/checks/cash_sleeve_e2e.py`).
+3. 10-07 17:30 IST day-3 check: compare the live book with `regime_ls_30m` and `ride_z25_churn_5m`; show the operator guarded vs unguarded results before any guard decision.
+
+### Lessons from 10-06
+- A new accounting layer (book vs account equity) must be audited everywhere equity is read; the guard read the account curve and sold the book down.
+- Every operator-ordered rule change landed with tests and the E2E, but three of the day's losses came from interactions between features, not from signals; run the E2E with the live config after every change.
+
+## CURRENT STATE 2026-10-05 21:55 IST / 16:25Z (superseded)
 
 ### The competition account
 - Unit `roostoo-live@competition_r4` on EC2 at `64f7cfb`: the regime contenders rule long-only, 30m, n = 3. Equity 96,019 at 21:51 IST (-4.0% since the 100k start), sliding with a market-wide selloff (regime DOWN since the 15:00Z bar); the paper copy, already cut to AAVE, is flat at +2.74%. Leaderboard 20:12 IST (`run/leaderboard.json`): #1 +6.0%, #10 +0.3%, top-20 line -0.1%, us second last.
