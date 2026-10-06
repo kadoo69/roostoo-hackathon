@@ -122,14 +122,15 @@ def release(led: Ledger, s: str, px: float) -> float:
 
 def decide(led: Ledger, close: pd.DataFrame, high: pd.DataFrame, cfg: dict, px: dict[str, float],
            host: set[str], stop_frac: float, ladder: dict, no_loss_exit: bool = False,
-           weightless: frozenset[str] | set[str] = frozenset()) -> dict:
+           weightless: frozenset[str] | set[str] = frozenset(), paused: bool = False) -> dict:
     """One ride decision at the last closed 5m bar of `close`. Updates the ledger's targets in place. A held
     ride whose slot weight the rule cut (the churn trim, `signals.burst_rider.trim_churn`) is sold down in the
     same proportion. DECISIONS.md#sleeve-churn-ride-2026-10-06
     With `no_loss_exit` a ride the rule exits while its price is below the entry close plus a round trip of fees
     is kept whole, slot included, until a later decision exits it above that line.
     DECISIONS.md#sleeve-no-loss-exit-2026-10-06, DECISIONS.md#no-loss-net-of-fees-2026-10-06
-    Rides in `weightless` keep riding to their own exits but hold no slot weight. DECISIONS.md#sleeve-legacy-slots-2026-10-06"""
+    Rides in `weightless` keep riding to their own exits but hold no slot weight. DECISIONS.md#sleeve-legacy-slots-2026-10-06
+    With `paused` no ride opens (the account is below its entry floor). DECISIONS.md#entry-pause-below-100k-2026-10-06"""
     bar = str(close.index[-1])
     cols = [c for c in close.columns if c not in host or c in led.held]
     held = {s: ([*v[:3], 0.0] if s in weightless else v) for s, v in led.held.items()
@@ -152,7 +153,7 @@ def decide(led: Ledger, close: pd.DataFrame, high: pd.DataFrame, cfg: dict, px: 
             exited.append(s)
     for s in sorted(set(new_held) - set(held)):
         p = px.get(s)
-        spend = min(float(new_held[s][3]) * eq, free) if p and not led.stopped else 0.0
+        spend = min(float(new_held[s][3]) * eq, free) if p and not led.stopped and not paused else 0.0
         if spend < MIN_ORDER_USD:
             new_held.pop(s)
             if s in led.last:

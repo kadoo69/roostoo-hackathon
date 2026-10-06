@@ -50,6 +50,8 @@ class Executor:
         # no-loss guard. DECISIONS.md#no-loss-escalation-2026-10-06
         self.exit_band = None
         self.quotes: dict = {}
+        # True only in a cycle whose drawdown kill switch fired: the one case a sale inside the band may go.
+        self.allow_loss_exits = False
 
     def spec(self, symbol: str) -> PairSpec | None:
         return self.by_symbol.get(symbol)
@@ -176,9 +178,33 @@ class Executor:
                               for o in (resp.get("OrderDetails") or [])}
         return self.pending_pairs
 
+    def below_cost(self, plan: dict) -> dict | None:
+        """The no-loss band check every SELL passes before it is sent, whatever produced it: the rule's exit,
+        a skim, a guard's resize, an escalation or a sleeve exit. Inside the symbol's band (`exit_band`, from
+        the book's no-loss guard) the order is not sent; a MARKET sale is judged at the bid, a LIMIT at its
+        price, and a sale with no price to judge is held. Only a drawdown halt (`allow_loss_exits`) passes.
+        DECISIONS.md#no-sale-below-cost-anywhere-2026-10-06"""
+        if plan.get("side") != "SELL" or not self.exit_band or self.allow_loss_exits:
+            return None
+        band = self.exit_band(plan.get("symbol"))
+        if not band:
+            return None
+        if plan.get("type") == "LIMIT" and plan.get("price"):
+            px = float(plan["price"])
+        else:
+            px = float((self.quotes.get(plan.get("pair")) or {}).get("MaxBid") or 0.0)
+        lo, hi = band
+        if px and not lo <= px < hi:
+            return None
+        return {"skipped": "below_cost_hold", "judged_px": px or None,
+                "band": [round(lo, 10), round(hi, 10)], "ref": "DECISIONS.md#no-sale-below-cost-anywhere-2026-10-06"}
+
     def send(self, plan: dict) -> dict:
         if plan.get("skipped"):
             return self.journal.write("orders", {"event": "skipped", **plan})
+        held = self.below_cost(plan)
+        if held:
+            return self.journal.write("orders", {"event": "skipped", **plan, **held})
         if (plan.get("symbol") in self.pending_pairs
                 or str(plan.get("pair") or "").replace("/", "") in self.pending_pairs):
             return self.journal.write("orders", {"event": "skipped",
@@ -308,9 +334,8 @@ class Executor:
         kept a position its rule had left (PEPE on the rehearsal, 2026-10-02 12:00Z). Exits must
         complete; entries are never chased, so a stale BUY is only cancelled.
         DECISIONS.md#exit-escalation-2026-10-02
-        A book with a no-loss guard supplies `exit_band`; while the bid sits inside a held name's band the
-        rest is not market-sold (the next decision re-checks the guard). An exit placed above cost
-        escalated to a -0.52% market sale of AAVE at 10:35 IST 2026-10-06.
+        The market sale passes `below_cost` in `send` like every SELL: inside a held name's no-loss band it is
+        not sent (an exit placed above cost escalated to a -0.52% market sale of AAVE at 10:35 IST 2026-10-06).
         DECISIONS.md#no-loss-escalation-2026-10-06
         """
         pair = o.get("Pair")
@@ -322,15 +347,6 @@ class Executor:
         if rest <= 0 or rest * price < spec.min_order:
             return self.journal.write("orders", {"event": "escalation_skipped", "pair": pair,
                                                  "order_id": o.get("OrderID"), "rest": rest})
-        band = self.exit_band(spec.binance_symbol) if self.exit_band else None
-        if band:
-            bid = float((self.quotes.get(pair) or {}).get("MaxBid") or 0.0)
-            lo, hi = band
-            if not bid or lo <= bid < hi:
-                return self.journal.write("orders", {"event": "escalation_held_below_cost", "pair": pair,
-                                                     "symbol": spec.binance_symbol, "order_id": o.get("OrderID"),
-                                                     "rest": rest, "bid": bid or None, "band": [round(lo, 10), round(hi, 10)],
-                                                     "ref": "DECISIONS.md#no-loss-escalation-2026-10-06"})
         self.pending_pairs.discard(pair.replace("/", ""))
         self.pending_pairs.discard(spec.binance_symbol)
         return self.send({"pair": pair, "symbol": spec.binance_symbol, "side": "SELL", "type": "MARKET",

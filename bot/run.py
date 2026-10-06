@@ -532,6 +532,13 @@ class Bot:
     def snapshot_extra(self) -> dict:
         return {}
 
+    def entries_paused(self) -> float | None:
+        """The floor while the account (this book plus any sleeve) is below `live_entry_pause_below`, else
+        None: no new position opens and none grows, exits and skims go on. DECISIONS.md#entry-pause-below-100k-2026-10-06"""
+        floor = (getattr(self, "cc", None) or {}).get("live_entry_pause_below")
+        eq = self.equity_curve[-1] if getattr(self, "equity_curve", None) else None
+        return float(floor) if floor is not None and eq is not None and eq < float(floor) else None
+
     def regime_closes(self, matrix: pd.DataFrame) -> pd.Series:
         """BTC closes for the short regime, fetched on their own when BTC is not in the pool,
         so the regime never adds BTC to what the book may trade."""
@@ -716,6 +723,16 @@ class Bot:
         if fresh:
             self.cold_start = False
 
+        self.executor.allow_loss_exits = bool(guard["halt"])
+        paused = self.entries_paused()
+        if paused:
+            opening = [o["symbol"] for o in orders if o["side"] in OPENS]
+            orders = [o for o in orders if o["side"] not in OPENS]
+            if opening and fresh:
+                self.journal.write("signals", {"event": "entries_paused", "symbols": sorted(opening),
+                                               "account_equity": round(self.equity_curve[-1], 2),
+                                               "floor": paused,
+                                               "ref": "DECISIONS.md#entry-pause-below-100k-2026-10-06"})
         placed = []
         spendable = self.cash
         aborted = None

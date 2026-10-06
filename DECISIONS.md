@@ -5559,3 +5559,16 @@ Tests: `tests/test_bot_safety.py` (held inside the band; escalates above it, pas
 
 Operator 15:10 IST 2026-10-06, with the account falling (97.6k): "make sure the bot just rides it right now we are going down", then "make sure no exits on loss continue on cloud now and make the mends there". Change: `contenders.live_no_loss_exit_max` 0.05 -> 1.0 in `config/competition_r4.yaml`, so the host never sells a long below its cost plus fees (`#no-loss-net-of-fees-2026-10-06`) at any depth, like ENA (`live_hold_below_cost`) and the sleeve's rides (`#sleeve-no-loss-exit-2026-10-06`). Exits above that line, the +3% ladder skims and the escalation band (`#no-loss-escalation-2026-10-06`, whose floor is now 0) follow from it.
 Risk on record: the book has no stop at all now. A name the rule has left keeps its weight however far it falls, and its slot and cash stay locked until it recovers. The drawdown kill switch (`risk.max_drawdown: 0.25`) is the only backstop. Evidence from 10-05: the rule's own exits beat the guards (`#live-no-loss-exit-2026-10-05` follow-ups); this is the operator's call, made knowing that.
+
+## no-sale-below-cost-anywhere-2026-10-06
+
+Operator 15:40 IST 2026-10-06: "no lose booking till we are in green", then "make sure it is again because it has been slipping". Losses had slipped past the guard through paths it did not see (an escalation, `#no-loss-escalation-2026-10-06`; fees, `#no-loss-net-of-fees-2026-10-06`).
+Change: one check in `Executor.send` (`below_cost`) that every SELL passes, whatever produced it: the rule's exit, a skim, a guard's resize, an escalation, a sleeve exit. Inside the symbol's no-loss band (`exit_band`: host coins from `GuardedTarget.exit_band` over the blotter cost; sleeve rides from the higher of the entry close and the average fill), plus 0.2% fees, the order is not sent and is journaled `skipped: below_cost_hold`. A MARKET sale is judged at the bid, a LIMIT at its price, and a sale with no price is held.
+The one exception is a cycle whose drawdown kill switch fired (`risk.max_drawdown: 0.25`, `allow_loss_exits`), kept as the only backstop.
+Tests: `tests/test_bot_safety.py`.
+
+## entry-pause-below-100k-2026-10-06
+
+Operator 15:42 IST 2026-10-06, asked what to do with cash from exits while the account is down (about 97.7k), chose "No new buys until >100k". Forward evidence given first: since 10-05 12:00 IST the live sleeve twin was +0.34%, the stricter 3-sigma twin -1.74%, the breadth-gated twin +0.05%, and the regime rule's paper copy -4.15%. No stricter signal had done better.
+Change: `contenders.live_entry_pause_below: 100000`. While the account's equity (host plus sleeve, the last point of the equity curve) is below it, no host BUY is sent (`Bot.entries_paused`; `entries_paused` is journaled on bar closes), and the sleeve opens no ride (`cash_sleeve.decide(paused=True)`) and sends no BUY. Exits above cost and skims go on, so cash builds until the account is above 100,000, when the current rules resume unchanged.
+Tests: `tests/test_cash_sleeve.py` (a paused sleeve opens no ride).

@@ -112,14 +112,16 @@ class CashSleeveRegimeBot(RegimeLSBot):
                                              "ref": "DECISIONS.md#sleeve-lends-to-host-2026-10-06"})
 
     def exit_band(self, symbol: str) -> tuple[float, float] | None:
-        """A sleeve ride with `no_loss_exit` is never market-sold below its entry close plus a round trip of
-        fees, at any depth; host coins take the host guard's band. DECISIONS.md#no-loss-escalation-2026-10-06"""
+        """A sleeve ride with `no_loss_exit` is never sold below the higher of its entry close and its average
+        fill, plus a round trip of fees, at any depth; host coins take the host guard's band.
+        DECISIONS.md#no-loss-escalation-2026-10-06, DECISIONS.md#no-sale-below-cost-anywhere-2026-10-06"""
         led = self.sleeve
         if led is not None and symbol in led.owned():
             rec = led.held.get(symbol)
             if not self.sleeve_cfg.get("no_loss_exit") or not rec:
                 return None
-            return 0.0, float(rec[1]) * (1.0 + NO_LOSS_FEE_BUFFER)
+            cost = max(float(rec[1]), self.entry_prices().get(symbol, 0.0))
+            return 0.0, cost * (1.0 + NO_LOSS_FEE_BUFFER)
         return super().exit_band(symbol)
 
     def mark(self, quotes: dict) -> tuple[float, dict[str, float]]:
@@ -212,7 +214,8 @@ class CashSleeveRegimeBot(RegimeLSBot):
                 ev = cash_sleeve.decide(led, close, high, cfg["ride"], px, host | self.host_target,
                                         float(cfg["stop_equity_frac"]), cfg["ladder"],
                                         no_loss_exit=bool(cfg.get("no_loss_exit")),
-                                        weightless=set(cfg.get("weightless_rides") or []))
+                                        weightless=set(cfg.get("weightless_rides") or []),
+                                        paused=self.entries_paused() is not None)
                 led.save(self.sleeve_path)
                 if ev["entered"] or ev["exited"] or ev["skimmed"] or ev["loss_kept"]:
                     self.journal.write("signals", {"event": "cash_sleeve_decision", **ev,
@@ -224,6 +227,8 @@ class CashSleeveRegimeBot(RegimeLSBot):
             self.journal.write("signals", {"event": "cash_sleeve_entry_closed", "symbols": closed,
                                            "units": {s: led.units.get(s, 0.0) for s in closed},
                                            "ref": "DECISIONS.md#cash-ride-sleeve-2026-10-05"})
+        if self.entries_paused() is not None:
+            orders = [o for o in orders if o["side"] != "BUY"]
         spendable = self.free_cash(led) if any(o["side"] == "BUY" for o in orders) else 0.0
         for o in orders:
             plan = self.executor.prepare(o, self.sleeve_quotes)

@@ -437,10 +437,26 @@ def test_a_stale_exit_is_not_market_sold_inside_the_no_loss_band(tmp_path):
     band = lambda s: (4.0e-6 * 0.95, 4.0e-6 * 1.002)  # noqa: E731
     seen, out = sweep(3.99e-6, band)
     assert seen["cancel"] == [7] and "place" not in seen
-    assert out[-1]["event"] == "escalation_held_below_cost"
+    assert out[-1]["event"] == "skipped" and out[-1]["skipped"] == "below_cost_hold"
     seen, _ = sweep(4.01e-6, band)
     assert "place" in seen, "above the line the exit completes"
     seen, _ = sweep(3.7e-6, band)
     assert "place" in seen, "past the max loss the exit completes"
     seen, _ = sweep(3.99e-6, lambda s: None)
     assert "place" in seen, "a name without a band escalates as before"
+
+
+def test_no_sell_of_any_kind_leaves_inside_the_band_unless_the_drawdown_halt_fired(tmp_path):
+    """DECISIONS.md#no-sale-below-cost-anywhere-2026-10-06"""
+    ex, spec = executor(tmp_path)
+    ex.settings = replace(settings(), dry_run=False)
+    ex.exit_band = lambda s: (0.0, 100.2)
+    ex.quotes = {spec.pair: {"MaxBid": 99.0, "MinAsk": 99.1, "LastPrice": 99.0}}
+    sell = {"pair": spec.pair, "symbol": "BTCUSDT", "side": "SELL", "quantity": 1.0, "price": 100.1, "type": "LIMIT"}
+    assert ex.send(sell)["skipped"] == "below_cost_hold"
+    assert ex.send({**sell, "type": "MARKET", "price": None})["skipped"] == "below_cost_hold"
+    assert ex.send({**sell, "side": "BUY"}).get("skipped") != "below_cost_hold"
+    ex.allow_loss_exits = True
+    assert ex.below_cost(sell) is None
+    ex.allow_loss_exits = False
+    assert ex.below_cost({**sell, "price": 100.3}) is None

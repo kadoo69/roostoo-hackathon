@@ -41,6 +41,8 @@ contenders:
   live_hold_no_trim: true
   live_no_loss_exit_max: 1.0
   live_no_loss_exit_ref: 'DECISIONS.md#no-loss-any-depth-2026-10-06 (was 0.05)'
+  live_entry_pause_below: 100000
+  live_entry_pause_ref: DECISIONS.md#entry-pause-below-100k-2026-10-06
   live_hold_below_cost:
   - ENAUSDT
 strategy:

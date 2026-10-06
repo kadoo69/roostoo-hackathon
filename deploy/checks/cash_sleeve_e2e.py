@@ -212,7 +212,7 @@ def main() -> int:
         RegimeLSBot.compute_target = host_adds
         bot.last_bar = bar30 - pd.Timedelta(minutes=30)
         venue.rest_buys = True
-        venue.wallet["USD"] += 10_000.0
+        venue.wallet["USD"] += 40_000.0  # host sells are held at cost (no-sale-below-cost), so fund the entry directly
         first = []
         for k in range(3):
             r = cycle(f"cycle 6.{k} (host enters {fresh_coin}, the order rests)")

@@ -227,8 +227,17 @@ def test_no_loss_ride_exit_waits_for_the_fees_and_the_escalation_band_matches():
     from bot.entry_guard import NO_LOSS_FEE_BUFFER
     led = Ledger(cash=0.0, budget=1.0, units={"ADAUSDT": 100.0},
                  held={"ADAUSDT": ["2026-10-06 09:10:00+00:00", 0.2816, 0.09, 0.5]})
-    bot = SimpleNamespace(sleeve=led, sleeve_cfg={"no_loss_exit": True})
+    bot = SimpleNamespace(sleeve=led, sleeve_cfg={"no_loss_exit": True}, entry_prices=lambda: {"ADAUSDT": 0.2808})
     lo, hi = CashSleeveRegimeBot.exit_band(bot, "ADAUSDT")
     assert lo == 0.0 and hi == pytest.approx(0.2816 * (1 + NO_LOSS_FEE_BUFFER))
     bot.sleeve_cfg = {}
     assert CashSleeveRegimeBot.exit_band(bot, "ADAUSDT") is None
+
+
+def test_a_paused_sleeve_opens_no_ride():
+    """DECISIONS.md#entry-pause-below-100k-2026-10-06"""
+    close, high = frames({"AAAUSDT": 0.03, "BBBUSDT": 0.03})
+    px = {s: float(close[s].iloc[-1]) for s in close}
+    led = Ledger(cash=6000.0, budget=6000.0)
+    ev = cash_sleeve.decide(led, close, high, RIDE, px, set(), 0.8, LADDER, paused=True)
+    assert ev["entered"] == [] and not led.target and led.cash == 6000.0
