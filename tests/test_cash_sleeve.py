@@ -129,3 +129,25 @@ def test_runner_routes_a_cash_sleeve_config_to_the_sleeve_bot():
 def test_plain_books_report_no_offset():
     from bot.run import Bot
     assert Bot.book_offset(object()) == 0.0 and Bot.snapshot_extra(object()) == {}
+
+
+def test_top_up_adds_cash_once_and_shrinks_open_ride_weights():
+    led = Ledger(cash=360.0, budget=7000.0, units={"AAAUSDT": 20.0, "BBBUSDT": 20.0, "CCCUSDT": 20.0},
+                 held={s: ["2026-10-05 20:00:00+00:00", 100.0, 0.05, 1 / 3] for s in ("AAAUSDT", "BBBUSDT", "CCCUSDT")})
+    px = {"AAAUSDT": 110.0, "BBBUSDT": 115.0, "CCCUSDT": 115.0}
+    assert cash_sleeve.top_up(led, 27000.0, "t1", {}) == 0.0
+    assert cash_sleeve.top_up(led, 27000.0, "t1", px) == 27000.0
+    assert led.cash == 27360.0 and led.budget == 34000.0 and led.top_ups == ["t1"]
+    k = 7160.0 / 34160.0
+    assert all(abs(rec[3] - k / 3) < 1e-12 for rec in led.held.values())
+    assert cash_sleeve.top_up(led, 27000.0, "t1", px) == 0.0 and led.cash == 27360.0
+    free = int((1.0 - sum(rec[3] for rec in led.held.values()) + 1e-9) * 3)
+    assert free == 2
+
+
+def test_ledger_files_from_before_top_ups_still_load(tmp_path):
+    import json
+    (tmp_path / "s.json").write_text(json.dumps({"cash": 1.0, "budget": 7000.0, "units": {}, "target": {}, "ref": {},
+                                                 "held": {}, "last": {}, "entry": {}, "bar": None, "stopped": False}))
+    led = Ledger.load(tmp_path / "s.json")
+    assert led.top_ups == [] and led.universe == []

@@ -121,8 +121,11 @@ cash_sleeve:
   stop_equity_frac: 0.8
   entry_window_bars: 2
   entry_chase_max: 0.01
+  universe_mode: venue_all
+  top_up_usd: 27000
+  top_up_tag: 2026-10-06-wide
   ride:
-    thresh_pct: 2.0
+    thresh_pct: 1.0
     tp_pct: 5.0
     hold_bars: 288
     n: 3
@@ -130,7 +133,9 @@ cash_sleeve:
   ladder:
     step_pct: 0.03
     skim_fraction: 0.15
-  rule_source: config/ride_5m.yaml (adaptive.burst_arms ride|+5%|24h and its booking ladder)
+  rule_source: config/ride1_wide_5m.yaml from 2026-10-06 (1% trigger, venue_all universe; was config/ride_5m.yaml,
+    2% on the host's 27 coins); +5% target, 288-bar hold, 3 slots, 12-bar cooldown, 3%/15% ladder
+  rule_changed_ref: DECISIONS.md#sleeve-wide-ride-2026-10-06
   requested_by: 'operator 2026-10-05 22:20-22:30 IST: "the remaining cash we have use it as well in the triggers and
     follow our best paper bot", chose ride_5m; "think of this 7 8k as loss cushion"'
   declared_ref: DECISIONS.md#cash-ride-sleeve-2026-10-05

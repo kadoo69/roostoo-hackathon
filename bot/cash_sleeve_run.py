@@ -35,6 +35,8 @@ class CashSleeveRegimeBot(RegimeLSBot):
         self.sleeve_quotes: dict = {}
         self.wallet_cash = 0.0
         self.host_target: set[str] = set()
+        self.sleeve_universe: list[str] = []
+        self.sleeve_universe_at = 0.0
         super().__init__(settings, mode=mode)
 
     def adopt_wallet(self) -> None:
@@ -65,10 +67,22 @@ class CashSleeveRegimeBot(RegimeLSBot):
                                           "ref": "DECISIONS.md#cash-ride-sleeve-2026-10-05"})
         self.cash = self.cash - led.cash
         self.state = {s: True for s in self.holdings}
+        tag = self.sleeve_cfg.get("top_up_tag")
+        if tag and tag not in led.top_ups:
+            want = float(self.sleeve_cfg.get("top_up_usd", 0.0))
+            amount = min(want, max(0.0, self.cash - float(self.sleeve_cfg.get("host_reserve_usd", 0.0))))
+            added = cash_sleeve.top_up(led, amount, tag, self.sleeve_px)
+            if added:
+                self.cash -= added
+                led.save(self.sleeve_path)
+                self.journal.write("lifecycle", {"event": "cash_sleeve_top_up", "tag": tag, "added": round(added, 2),
+                                                 "budget": round(led.budget, 2), "host_cash": round(self.cash, 2),
+                                                 "held_weights": {k: round(float(v[3]), 4) for k, v in led.held.items()},
+                                                 "ref": "DECISIONS.md#sleeve-wide-ride-2026-10-06"})
 
     def mark(self, quotes: dict) -> tuple[float, dict[str, float]]:
         self.sleeve_quotes = quotes
-        names = set(self.universe) | (self.sleeve.owned() if self.sleeve else set())
+        names = set(self.universe) | set(self.sleeve_universe) | (self.sleeve.owned() if self.sleeve else set())
         for s in names:
             spec = self.executor.spec(s)
             if spec and spec.pair in quotes and float(quotes[spec.pair].get("LastPrice") or 0.0) > 0:
@@ -109,6 +123,12 @@ class CashSleeveRegimeBot(RegimeLSBot):
             p = prices.get(s) or self.sleeve_px.get(s)
             if not p:
                 continue
+            if led.units.get(s, 0.0) * p > target[s] * equity:
+                target[s] = 0.0
+                self.journal.write("signals", {"event": "cash_sleeve_kept", "symbol": s, "units": led.units.get(s, 0.0),
+                                               "host_target": round(float(target[s]), 5),
+                                               "ref": "DECISIONS.md#sleeve-wide-ride-2026-10-06"})
+                continue
             u = cash_sleeve.release(led, s, p)
             self.holdings[s] = self.holdings.get(s, 0.0) + u
             self.cash -= u * p
@@ -138,10 +158,12 @@ class CashSleeveRegimeBot(RegimeLSBot):
             return
         cfg = self.sleeve_cfg
         px = self.sleeve_px
+        uni = self.refresh_sleeve_universe()
+        led.universe = uni
         last_closed = pd.Timestamp.now(tz="UTC").floor("5min") - STEP
         if led.bar is None or pd.Timestamp(led.bar) < last_closed:
             host = {s for s, q in self.holdings.items() if q * px.get(s, 0.0) >= cash_sleeve.DUST_USD}
-            d5 = load_clock(sorted(self.universe), "5m", bars_needed({"cc": cfg["ride"]}), False)
+            d5 = load_clock(uni, "5m", bars_needed({"cc": cfg["ride"]}), False)
             close, high = d5["close"], d5["high"]
             if len(close) > 3 and close.index[-1] == last_closed:
                 ev = cash_sleeve.decide(led, close, high, cfg["ride"], px, host | self.host_target,
@@ -168,6 +190,23 @@ class CashSleeveRegimeBot(RegimeLSBot):
                     spendable -= plan["notional"] * (1.0 + cash_sleeve.FEE)
             self.executor.send({**plan, "book": "cash_sleeve"})
         led.save(self.sleeve_path)
+
+    def refresh_sleeve_universe(self) -> list[str]:
+        """The host's universe, or with `universe_mode: venue_all` every tradable Roostoo crypto pair that
+        prints Binance bars (`bot.universe.select`), refreshed daily. DECISIONS.md#sleeve-wide-ride-2026-10-06"""
+        mode = self.sleeve_cfg.get("universe_mode")
+        if not mode:
+            return sorted(self.universe)
+        if not self.sleeve_universe or time.time() - self.sleeve_universe_at > 86_400:
+            from types import SimpleNamespace
+
+            from bot import universe
+            sel = universe.select(SimpleNamespace(universe_mode=mode), self.specs)["selected"]
+            if sel:
+                self.sleeve_universe, self.sleeve_universe_at = sorted(sel), time.time()
+                self.journal.write("universe", {"event": "cash_sleeve_universe", "mode": mode, "n": len(sel),
+                                                "ref": "DECISIONS.md#sleeve-wide-ride-2026-10-06"})
+        return self.sleeve_universe or sorted(self.universe)
 
     def free_cash(self, led: cash_sleeve.Ledger) -> float:
         """What a sleeve buy may spend: its own cash, but never more than the wallet's free cash, which is

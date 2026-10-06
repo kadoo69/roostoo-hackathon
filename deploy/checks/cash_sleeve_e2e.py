@@ -23,7 +23,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 NAME = "e2e_cash_sleeve"
 HOST_W = {"AAVEUSDT": 0.095, "ADAUSDT": 0.502, "ENAUSDT": 0.244, "FILUSDT": 0.084}
-EQUITY, CASH = 96_574.0, 7_289.41
+EQUITY, CASH = 96_574.0, 40_000.0
 
 
 def main() -> int:
@@ -120,7 +120,11 @@ def main() -> int:
         print("phase 1: entry")
         r = cycle("cycle 1")
         led = bot.sleeve
-        check(led is not None and abs(led.budget - 7000.0) < 1e-6, f"sleeve budget 7,000 (got {led and led.budget})")
+        check(led is not None and abs(led.budget - 34000.0) < 1e-6, f"sleeve budget 7,000 + 27,000 top-up (got {led and led.budget})")
+        check(led.top_ups == ["2026-10-06-wide"] and abs(bot.cash - (CASH - 34000.0)) < 10.0, f"top-up applied once, host cash {bot.cash:.2f}")
+        check(len(led.universe) > 40, f"sleeve rides the wide venue universe ({len(led.universe)} coins)")
+        check(all(abs(t["qty"] * t["price"] - 34000.0 / 3) < 400 for t in r["trades"] if t["side"] == "BUY"),
+              f"each ride is a third of the sleeve: {[round(t['qty'] * t['price']) for t in r['trades']]}")
         buys = [t for t in r["trades"] if t["side"] == "BUY"]
         check(len(buys) == 3, f"sleeve bought 3 rides on the forced trigger (got {len(buys)})")
         check(not any(t["pair"].split("/")[0] + "USDT" in units for t in r["trades"]),
@@ -134,23 +138,29 @@ def main() -> int:
         check(len(led.units) == 3 and all(v > 0 for v in led.units.values()), "sleeve owns its 3 coins")
         check(r["trades"] == [], "steady state sends nothing")
 
-        print("phase 2: handover")
+        print("phase 2: host enters a sleeve coin")
         coin = sorted(led.units)[0]
         moved = led.units[coin]
         orig = RegimeLSBot.compute_target
+        want_w = {"w": 0.04}
 
         def host_wants(self, channels, derisk, prices):
-            return {**{s: w for s, w in HOST_W.items()}, coin: 0.04}
+            return {**{s: w for s, w in HOST_W.items()}, coin: want_w["w"]}
         RegimeLSBot.compute_target = host_wants
         bot.last_bar = bar30 - pd.Timedelta(minutes=30)
-        r = cycle("cycle 3 (host enters a sleeve coin)")
+        r = cycle("cycle 3a (host wants 0.04, less than the ride)")
+        check(coin in led.owned() and abs(led.units[coin] - moved) < 1e-9, f"small host target leaves {coin} with the sleeve")
+        check(not [t for t in r["trades"] if t["pair"].split("/")[0] + "USDT" == coin], "host bought none of it")
+        want_w["w"] = 0.20
+        bot.last_bar = bar30 - pd.Timedelta(minutes=30)
+        r = cycle("cycle 3b (host wants 0.20, more than the ride)")
         RegimeLSBot.compute_target = orig
         check(coin not in led.owned(), f"sleeve released {coin}")
         check(bot.holdings.get(coin, 0.0) >= moved - 1e-9, f"host holds the released {coin} units")
         host_buy = [t for t in r["trades"] if t["pair"].split("/")[0] + "USDT" == coin and t["side"] == "BUY"]
-        want = 0.04 * (r["snap"]["equity"] - led.equity(bot.sleeve_px))
+        want = 0.20 * (r["snap"]["equity"] - led.equity(bot.sleeve_px))
         got = moved * bot.sleeve_px[coin] + sum(t["qty"] * t["price"] for t in host_buy)
-        check(got <= want * 1.02, f"host never holds more than its 0.04 target ({got:.0f} vs {want:.0f})")
+        check(got <= want * 1.02, f"host never holds more than its 0.20 target ({got:.0f} vs {want:.0f})")
 
         print("phase 3: exit")
         bot.sleeve_cfg["ride"]["thresh_pct"] = 50.0
@@ -162,7 +172,7 @@ def main() -> int:
         check(len(sells) == 2, f"sleeve sold its 2 remaining rides (got {len(sells)})")
         r = cycle("cycle 5")
         check(led.units == {} and led.owned() == set(), "sleeve flat after the exits")
-        check(6950 < led.cash < 7000, f"sleeve cash after a round trip {led.cash:.2f}")
+        check(33800 < led.cash < 34000, f"sleeve cash after a round trip {led.cash:.2f}")
         rows = [json.loads(x) for f in d.glob("orders-*.jsonl") for x in f.read_text().splitlines()]
         tagged = [o for o in rows if o.get("event") == "placed" and o.get("book") == "cash_sleeve"]
         check(len(tagged) == 5, f"sleeve orders are journaled with book: cash_sleeve ({len(tagged)})")

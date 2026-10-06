@@ -42,6 +42,8 @@ class Ledger:
     entry: dict[str, list] = field(default_factory=dict)
     bar: str | None = None
     stopped: bool = False
+    top_ups: list = field(default_factory=list)
+    universe: list = field(default_factory=list)
 
     def owned(self) -> set[str]:
         return set(self.units) | set(self.target)
@@ -83,6 +85,21 @@ def reconcile(led: Ledger, wallet: dict[str, float], px: dict[str, float], fee: 
         if w * p < DUST_USD and led.target.get(s, 0.0) * p < DUST_USD and s not in led.entry:
             led.drop(s)
     return fills
+
+
+def top_up(led: Ledger, amount: float, tag: str, px: dict[str, float]) -> float:
+    """Add `amount` of host cash to the sleeve once per `tag`. Open rides keep their units, and their slot
+    weights shrink to their share of the larger sleeve, so the new cash opens slots now instead of after
+    the old rides exit. DECISIONS.md#sleeve-wide-ride-2026-10-06"""
+    if amount <= 0 or tag in led.top_ups or any(s not in px for s in led.units):
+        return 0.0
+    eq0 = led.equity(px)
+    led.cash += amount
+    led.budget += amount
+    k = eq0 / (eq0 + amount) if eq0 + amount > 0 else 1.0
+    led.held = {s: [*rec[:3], float(rec[3]) * k] if len(rec) > 3 else rec for s, rec in led.held.items()}
+    led.top_ups.append(tag)
+    return amount
 
 
 def release(led: Ledger, s: str, px: float) -> float:
