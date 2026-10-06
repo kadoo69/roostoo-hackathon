@@ -6,7 +6,8 @@ files only (never calls Roostoo, never writes to a book) and posts one compact J
 signal, the unit down, a halt) it also posts a high-priority plain-text alert. The topic name is read from
 `STATUS_NTFY_TOPIC` in the instance's `.env` and is never committed. Two checks recompute the rules from raw
 Binance bars: a +2%/15m trigger on a coin outside the host book that the cash sleeve did not take, and a new
-long in the rule's latest 30m target with no BUY and no journaled reason.
+long in the rule's latest 30m target with no BUY and no journaled reason. The sleeve check uses the sleeve's own
+universe and trigger from its ledger and config.
 DECISIONS.md#status-feed-2026-10-06
 Usage: python3 deploy/status_publish.py [--book competition_r4] [--dry]
 """
@@ -42,15 +43,18 @@ def checks(book: str, holdings: set[str], led: dict) -> dict:
         sys.path.insert(0, str(ROOT))
 
     from bot import feed
+    import yaml
     st = json.loads((ROOT / "live" / book / "state.json").read_text())
-    uni = st.get("universe") or []
+    uni = (led or {}).get("universe") or st.get("universe") or []
+    sleeve_cfg = (yaml.safe_load((ROOT / "config" / f"{book}.yaml").read_text()) or {}).get("cash_sleeve") or {}
+    thresh = float((sleeve_cfg.get("ride") or {}).get("thresh_pct", 2.0)) / 100
     fr = feed.bar_frame(uni, "5m", 20)
     c = pd.DataFrame({s: f.set_index("open_time")["close"] for s, f in fr.items() if len(f)}).sort_index()
     r3 = (c / c.shift(3) - 1).iloc[-6:]
     missed = []
     for t, row in r3.iterrows():
         for s, v in row.items():
-            if v >= 0.02 and s not in holdings and led and str(t) <= str(led.get("bar")):
+            if v >= thresh and s not in holdings and led and str(t) <= str(led.get("bar")):
                 took = s in led["held"] or led["last"].get(s) == str(t) or s in led["units"]
                 if not took and len(led["held"]) < 3 and not led["stopped"] and led["cash"] > 5:
                     missed.append(f"{s}@{t:%H:%M}Z {v * 100:.2f}%")
