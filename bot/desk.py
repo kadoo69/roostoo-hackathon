@@ -218,6 +218,7 @@ def rule_positions(bk: dict, lots: dict[str, list[float]], marks: dict, now) -> 
     DECISIONS.md#competition-r4-2026-10-05"""
     import datetime as dt
     first: dict[str, str] = {}
+    sleeve = (bk.get("cash_sleeve") or {}).get("held") or {}
     for lot in bk.get("open_lots") or []:
         s = lot["symbol"].replace("USDT", "")
         if lot.get("entry_ts") and (s not in first or lot["entry_ts"] < first[s]):
@@ -233,6 +234,18 @@ def rule_positions(bk: dict, lots: dict[str, list[float]], marks: dict, now) -> 
                "signal_px": None, "fill_px": fill, "target_pct": None, "target_px": None, "exit_at": None,
                "hours_left": None, "held_h": round((now - at).total_seconds() / 3600, 2) if at else None,
                "mark": mark, "next_skim_px": None, "exit_rule": "close below the prior 10-bar low (30m)"}
+        ride = sleeve.get(s + "USDT")
+        if ride:
+            # A cash-sleeve ride: its own entry bar and exits, not the host's 10-bar channel.
+            # DECISIONS.md#cash-ride-sleeve-2026-10-05
+            at = dt.datetime.fromisoformat(str(ride[0]).replace(" ", "T"))
+            sig, tgt = float(ride[1]), float(ride[2])
+            exit_at = at + dt.timedelta(hours=24)
+            row.update({"entry_bar": at.isoformat(), "signal_px": sig, "target_pct": round(tgt * 100, 2),
+                        "target_px": sig * (1 + tgt), "exit_at": exit_at.isoformat(),
+                        "hours_left": round((exit_at - now).total_seconds() / 3600, 2),
+                        "held_h": round((now - at).total_seconds() / 3600, 2),
+                        "exit_rule": f"sleeve ride: bar high at +{tgt * 100:.1f}% or 24 h, never below entry + fees"})
         if mark and fill:
             row.update({"pnl_pct": round((mark / fill - 1) * 100, 2),
                         "pnl_usd": round(qty * (mark - fill), 2) if qty else None})

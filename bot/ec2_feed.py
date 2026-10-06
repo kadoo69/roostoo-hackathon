@@ -51,6 +51,7 @@ for b in BOOKS:
         s = {**s, "cash": float(s.get("cash") or 0.0) + float(cs.get("cash") or 0.0),
              "holdings": {**(s.get("holdings") or {}), **{k: v for k, v in (cs.get("units") or {}).items() if v}}}
         rec["cash_sleeve"] = {"cash": cs.get("cash"), "units": cs.get("units"), "riding": sorted(cs.get("held") or {}),
+                              "held": cs.get("held") or {},
                               "stopped": cs.get("stopped"), "budget": cs.get("budget")}
     except (OSError, ValueError):
         pass

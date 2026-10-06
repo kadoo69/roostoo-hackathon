@@ -349,7 +349,7 @@ function drawPositions(c, r) {
   if (!c.positions.length && !c.slots_free) h = `<div class="muted">No positions.</div>`;
   $("pos").innerHTML = h;
   $("posfoot").innerHTML = ruleBook
-    ? "Regime rule: a position exits when a 30m bar closes below its prior 10-bar low, with no timed exit; 15% is booked at every +3%. Live guards (config/competition_r4.yaml): a 6 h hold with no trims after entry, no sale below cost unless the loss passes 5% (ENA: at any loss). P&amp;L is against the actual average fill."
+    ? "Regime rule: a position exits when a 30m bar closes below its prior 10-bar low, with no timed exit; 15% is booked at every +3%. Cash-sleeve rides exit on their target or after 24 h. Live guards (config/competition_r4.yaml): a 6 h hold with no trims after entry, and no sale below cost plus fees at any depth, host and sleeve alike. P&amp;L is against the actual average fill."
     : "Bar: price from the signal close (0%) to the take-profit (100%); red means below the signal price. The bot sells when a bar's high reaches the target, or after 24 h, and books 15% at every +3% step (next skim). P&amp;L is against the actual average fill.";
   const nextExit = c.positions.length ? c.positions[0] : null;
   $("posnote").textContent = nextExit && nextExit.exit_at ? `next scheduled exit ${nextExit.symbol} at ${ist(nextExit.exit_at)} IST unless its target hits first` : (ruleBook ? "regime rule: exits on the 10-bar low, no timed exit" : "");

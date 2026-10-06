@@ -161,3 +161,22 @@ def test_ec2_card_counts_config_changes_as_notes_not_errors():
             {"event": "cycle_error", "error": "ReadTimeout: HTTPSConnectionPool"}, {"event": "order_rejected", "error": "x"}]
     assert error_counts({"errors_today_rows": rows}) == {"errors_today": 1, "notes_today": 3}
     assert error_counts({"errors_today": 2}) == {"errors_today": 2, "notes_today": 0}
+
+
+def test_a_sleeve_ride_on_the_rule_book_shows_its_own_entry_and_exit():
+    """2026-10-06 15:00 IST: ADA, a sleeve ride bought at 14:40 IST, showed the host's old ADA entry
+    (05 Oct 14:00) and the 10-bar-low exit. DECISIONS.md#cash-ride-sleeve-2026-10-05"""
+    import datetime as dt
+
+    from bot.desk import rule_positions
+    now = dt.datetime(2026, 10, 6, 9, 40, tzinfo=dt.UTC)
+    bk = {"positions": {"ADA": 0.29, "AVAX": 0.12},
+          "open_lots": [{"symbol": "ADAUSDT", "entry_ts": "2026-10-05T08:30:00+00:00"},
+                        {"symbol": "AVAXUSDT", "entry_ts": "2026-10-05T22:30:00+00:00"}],
+          "entries": {"ADA": {"qty": 101341.2}, "AVAX": {"qty": 1000.0}},
+          "cash_sleeve": {"held": {"ADAUSDT": ["2026-10-06 09:10:00+00:00", 0.2816, 0.0896, 0.5]}}}
+    rows = {r["symbol"]: r for r in rule_positions(bk, {"ADA": [1.0, 0.2808], "AVAX": [1.0, 11.06]},
+                                                  {"ADA": 0.2748, "AVAX": 11.27}, now)}
+    assert rows["ADA"]["entry_bar"].startswith("2026-10-06T09:10") and rows["ADA"]["held_h"] == 0.5
+    assert rows["ADA"]["exit_rule"].startswith("sleeve ride") and rows["ADA"]["hours_left"] == 23.5
+    assert rows["AVAX"]["exit_rule"] == "close below the prior 10-bar low (30m)"
