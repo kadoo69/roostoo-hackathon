@@ -126,6 +126,8 @@ cash_sleeve:
   no_loss_exit: true
   weightless_rides: [FILUSDT, PUMPUSDT, WLDUSDT]
   weightless_ref: DECISIONS.md#sleeve-legacy-slots-2026-10-06
+  lend_to_host: true
+  lend_to_host_ref: DECISIONS.md#sleeve-lends-to-host-2026-10-06
   no_loss_exit_ref: DECISIONS.md#sleeve-no-loss-exit-2026-10-06
   top_up_usd: 38500
   top_up_tag: 2026-10-06-churn

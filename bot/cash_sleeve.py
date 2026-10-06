@@ -102,6 +102,15 @@ def top_up(led: Ledger, amount: float, tag: str, px: dict[str, float]) -> float:
     return amount
 
 
+def lend(led: Ledger, amount: float) -> float:
+    """Move up to `amount` of the sleeve's cash to the host book for good (the inverse of `top_up`); the
+    sleeve's budget shrinks with it and its open rides are untouched. DECISIONS.md#sleeve-lends-to-host-2026-10-06"""
+    amount = max(0.0, min(amount, led.cash))
+    led.cash -= amount
+    led.budget -= amount
+    return amount
+
+
 def release(led: Ledger, s: str, px: float) -> float:
     """Hand coin `s` to the host book at `px`: the sleeve's cash rises by its value. Returns the units."""
     u = led.units.get(s, 0.0)

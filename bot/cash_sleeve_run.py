@@ -35,6 +35,7 @@ class CashSleeveRegimeBot(RegimeLSBot):
         self.sleeve_quotes: dict = {}
         self.wallet_cash = 0.0
         self.host_target: set[str] = set()
+        self.host_target_w: dict[str, float] = {}
         self.sleeve_universe: list[str] = []
         self.sleeve_universe_at = 0.0
         super().__init__(settings, mode=mode)
@@ -67,6 +68,7 @@ class CashSleeveRegimeBot(RegimeLSBot):
                                           "ref": "DECISIONS.md#cash-ride-sleeve-2026-10-05"})
         self.cash = self.cash - led.cash
         self.state = {s: True for s in self.holdings}
+        self.lend_to_host(led)
         tag = self.sleeve_cfg.get("top_up_tag")
         if tag and tag not in led.top_ups:
             want = float(self.sleeve_cfg.get("top_up_usd", 0.0))
@@ -79,6 +81,34 @@ class CashSleeveRegimeBot(RegimeLSBot):
                                                  "budget": round(led.budget, 2), "host_cash": round(self.cash, 2),
                                                  "held_weights": {k: round(float(v[3]), 4) for k, v in led.held.items()},
                                                  "ref": "DECISIONS.md#sleeve-wide-ride-2026-10-06"})
+
+    def lend_to_host(self, led: cash_sleeve.Ledger) -> None:
+        """Fund the host's fresh entries that venue cash cut short (`underfilled`) from the sleeve's cash while
+        the sleeve has a free slot: the shortfall is each such name's target weight of the host book less what it
+        holds, valued at the mark. The host completes the entry under its own 1% chase cap.
+        DECISIONS.md#sleeve-lends-to-host-2026-10-06"""
+        if not self.sleeve_cfg.get("lend_to_host") or not self.underfilled or not self.host_target_w:
+            return
+        px = self.sleeve_px
+        n = int(self.sleeve_cfg["ride"].get("n", 2))
+        light = set(self.sleeve_cfg.get("weightless_rides") or [])
+        used = sum(float(v[3]) for k, v in led.held.items() if k not in light and len(v) > 3)
+        if int((1.0 - used + 1e-9) * n) < 1:
+            return
+        host_eq = self.cash + sum(q * px.get(s, 0.0) for s, q in self.holdings.items())
+        need = sum(max(0.0, self.host_target_w.get(s, 0.0) * host_eq - self.holdings.get(s, 0.0) * px.get(s, 0.0))
+                   for s in self.underfilled if s in px)
+        need -= max(0.0, self.cash)
+        if need < 50.0:
+            return
+        lent = cash_sleeve.lend(led, need)
+        if lent > 0:
+            self.cash += lent
+            led.save(self.sleeve_path)
+            self.journal.write("lifecycle", {"event": "cash_sleeve_lend", "lent": round(lent, 2),
+                                             "for": sorted(self.underfilled), "host_cash": round(self.cash, 2),
+                                             "sleeve_cash": round(led.cash, 2),
+                                             "ref": "DECISIONS.md#sleeve-lends-to-host-2026-10-06"})
 
     def mark(self, quotes: dict) -> tuple[float, dict[str, float]]:
         self.sleeve_quotes = quotes
@@ -115,6 +145,7 @@ class CashSleeveRegimeBot(RegimeLSBot):
     def compute_target(self, channels: dict, derisk: float, prices: dict[str, float]) -> dict[str, float]:
         target = super().compute_target(channels, derisk, prices)
         self.host_target = {s for s, v in target.items() if v > 0}
+        self.host_target_w = {s: float(v) for s, v in target.items() if v > 0}
         led = self.sleeve
         if led is None:
             return target

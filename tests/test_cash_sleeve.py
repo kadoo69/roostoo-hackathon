@@ -191,3 +191,29 @@ def test_weightless_legacy_rides_keep_riding_but_free_their_slot_weight():
     cfg = {**RIDE, "n": 2}
     ev = cash_sleeve.decide(led, close, high, cfg, px, set(), 0.0, LADDER, weightless={"CCCUSDT"})
     assert ev["entered"] == ["AAAUSDT", "BBBUSDT"] and "CCCUSDT" in led.held and led.target["CCCUSDT"] == 20.0
+
+
+def test_lend_moves_cash_and_budget_to_the_host_and_never_overdraws():
+    led = Ledger(cash=31700.0, budget=72500.0, units={"NEARUSDT": 7000.0})
+    assert cash_sleeve.lend(led, 20000.0) == 20000.0 and led.cash == 11700.0 and led.budget == 52500.0
+    assert cash_sleeve.lend(led, 50000.0) == 11700.0 and led.cash == 0.0 and led.units == {"NEARUSDT": 7000.0}
+
+
+def test_host_borrows_only_its_shortfall_and_only_with_a_free_sleeve_slot(tmp_path):
+    from types import SimpleNamespace
+
+    from bot.cash_sleeve_run import CashSleeveRegimeBot
+    led = Ledger(cash=31700.0, budget=72500.0, units={"NEARUSDT": 7000.0},
+                 held={"NEARUSDT": ["2026-10-06 07:40:00+00:00", 5.238, 0.128, 0.5]})
+    bot = SimpleNamespace(sleeve_cfg={"lend_to_host": True, "ride": {"n": 2}, "weightless_rides": []},
+                          underfilled={"FILUSDT"}, host_target_w={"FILUSDT": 0.5}, sleeve_px={"FILUSDT": 1.19, "AVAXUSDT": 11.4},
+                          cash=0.0, holdings={"FILUSDT": 1705.77, "AVAXUSDT": 1000.0}, sleeve_path=tmp_path / "s.json",
+                          journal=SimpleNamespace(write=lambda *a, **k: None))
+    CashSleeveRegimeBot.lend_to_host(bot, led)
+    host_eq = 1705.77 * 1.19 + 1000.0 * 11.4
+    need = 0.5 * host_eq - 1705.77 * 1.19
+    assert bot.cash == pytest.approx(need) and led.cash == pytest.approx(31700.0 - need)
+    led2 = Ledger(cash=31700.0, budget=72500.0, held={"A": ["x", 1, 1, 0.5], "B": ["x", 1, 1, 0.5]})
+    bot.cash = 0.0
+    CashSleeveRegimeBot.lend_to_host(bot, led2)
+    assert bot.cash == 0.0 and led2.cash == 31700.0
