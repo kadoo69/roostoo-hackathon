@@ -212,3 +212,15 @@ def test_a_held_name_reserves_only_what_it_holds_so_new_entries_are_bought():
     assert out["FILUSDT"] + out["UNIUSDT"] == pytest.approx(room)
     assert out["FILUSDT"] / out["UNIUSDT"] == pytest.approx(0.5 / 0.15215)
     assert out["ADAUSDT"] == 0.541 and out["ENAUSDT"] == 0.265 and out["AAVEUSDT"] == 0.34785
+
+
+def test_guard_weights_use_the_books_own_equity_not_the_account():
+    """2026-10-06 08:00-09:05 IST: with 34k of the account in the cash sleeve, the guards measured kept
+    positions against the whole account and the cycle sized them on the book, selling a third each bar."""
+    book = SimpleNamespace(equity_curve=[98_000.0], holdings={"ENAUSDT": 95_818.0}, shorts={},
+                           book_offset=lambda: 34_000.0)
+    w = GuardedTarget.current_weights(book, {"ENAUSDT": 0.2474})
+    assert w["ENAUSDT"] == pytest.approx(95_818.0 * 0.2474 / 64_000.0)
+    plain = SimpleNamespace(equity_curve=[98_000.0], holdings={"ENAUSDT": 95_818.0}, shorts={},
+                            book_offset=lambda: 0.0)
+    assert GuardedTarget.current_weights(plain, {"ENAUSDT": 0.2474})["ENAUSDT"] == pytest.approx(95_818.0 * 0.2474 / 98_000.0)

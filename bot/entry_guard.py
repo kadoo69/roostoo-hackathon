@@ -131,8 +131,12 @@ class GuardedTarget:
         return due
 
     def current_weights(self, prices: dict[str, float]) -> dict[str, float]:
+        """Weights of the book's own holdings against the book's own equity: the equity curve counts the
+        whole account (`Bot.book_offset`), so the cash sleeve's part is taken off; against the account the
+        guards kept a position at a weight the cycle then sized on the smaller book, selling a third of every
+        kept name each bar (2026-10-06 08:00-09:05 IST). DECISIONS.md#guard-weight-base-fix-2026-10-06"""
         from bot import portfolio
-        equity = self.equity_curve[-1] if self.equity_curve else 0.0
+        equity = (self.equity_curve[-1] - self.book_offset()) if self.equity_curve else 0.0
         return portfolio.current_weights(self.holdings, prices, equity, self.shorts) if equity > 0 else {}
 
     def guard(self, target: dict[str, float], w: pd.DataFrame, prices: dict[str, float],
