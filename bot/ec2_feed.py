@@ -196,7 +196,8 @@ def refresh_once() -> None:
     except Exception as exc:                                  # noqa: BLE001
         msg = repr(exc)
         if any(k in msg for k in ("ExpiredToken", "RequestExpired", "UnrecognizedClient", "Forbidden", "(403)",
-                                  "InvalidClientTokenId", "NoCredentials", "ProfileNotFound")) or "credentials" in msg.lower():
+                                  "InvalidClientTokenId", "NoCredentials", "ProfileNotFound", "TokenRetrievalError",
+                                  "Token has expired")) or "credentials" in msg.lower():
             msg = "AWS sign-in expired: run python3 deploy/aws_login.py and approve in the browser"
         with _LOCK:
             _STATE.update({"error": msg[:300]})

@@ -180,3 +180,15 @@ def test_a_sleeve_ride_on_the_rule_book_shows_its_own_entry_and_exit():
     assert rows["ADA"]["entry_bar"].startswith("2026-10-06T09:10") and rows["ADA"]["held_h"] == 0.5
     assert rows["ADA"]["exit_rule"].startswith("sleeve ride") and rows["ADA"]["hours_left"] == 23.5
     assert rows["AVAX"]["exit_rule"] == "close below the prior 10-bar low (30m)"
+
+
+def test_an_expired_sso_token_reads_as_a_sign_in_prompt(monkeypatch):
+    """2026-10-06 22:50 IST: the desk showed a raw botocore TokenRetrievalError traceback."""
+    from bot import ec2_feed
+
+    def boom(timeout=240):
+        raise RuntimeError("fetch child rc=1: botocore.exceptions.TokenRetrievalError: Error when retrieving "
+                           "token from sso: Token has expired and refresh failed")
+    monkeypatch.setattr(ec2_feed, "fetch_isolated", boom)
+    ec2_feed.refresh_once()
+    assert ec2_feed._STATE["error"].startswith("AWS sign-in expired")
