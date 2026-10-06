@@ -10,6 +10,11 @@ Current state only. The full history of sessions to 2026-09-23 is archived at `d
 - Operator guards (all in `config/competition_r4.yaml`, all in DECISIONS): 6 h hold + no trims after entry (ENA/FIL until the 18:00Z bar), no sale below cost unless down >5% (`live_no_loss_exit_max`), ENA held at any loss (`live_hold_below_cost`). Cost of the guards so far: at 21:00 IST the paper copy `regime_ls_30m` cut to AAVE only and rose (+2.40% to +2.75%) while the live book fell about a point.
 - Bugs fixed today (each with a test): same-cycle rotation underfill (`#same-cycle-rotation-underfill-2026-10-05`); guards crowding held positions down to fit the gross cap (`#guard-crowding-fix-2026-10-05`, sold FIL at 21:00; an ENA sell was cancelled with `deploy/cancel_pending.py`); blotter reading an externally cancelled order as a fill (cancel tool now journals `cancelled_external`).
 
+### 2026-10-06 09:35 IST (read first)
+- 08:00-09:05 IST bug: guards weighed holdings against the account, not the book, and sold a third of AAVE/ENA/ETH each bar (about -820 USD, ENA below cost); fixed 4bf558c (`#guard-weight-base-fix-2026-10-06`).
+- Sleeve (0d4ddc1): the 2.5-sigma z-ranked 5m ride (competition_z25 arm, 2 slots of 1/2, 2 x daily-vol target, 24 h hold), budget 72,500 after the second top-up, never exits a ride below entry (`#sleeve-churn-ride-2026-10-06`, `#sleeve-no-loss-exit-2026-10-06`). Host keeps AVAX/ENA/AAVE/ETH with about 200 cash.
+- Cloud routine re-enabled for today (hourly to 00:07 IST) with the new sizes; status feed checks the sleeve's own sigma trigger.
+
 ### 2026-10-06 morning (07:35 IST)
 - Overnight: rule sold ADA above cost (04:00 IST), bought AVAX (0.14) and, at the one-time re-sync seed (07:00 IST, `#fil-resync-seed-2026-10-06`), ETH (0.125); FIL had left the rule's path by then. Sleeve rode FIL, PUMP, WLD.
 - 07:31 IST (`b13ee9b`, `#sleeve-wide-ride-2026-10-06`): the cash sleeve now rides ride1_wide's rule (1% trigger, 64-coin venue universe) with a one-time 27,000 top-up (budget 34,000, 3 slots of about 11.3k); host keeps about 7k cash. Handover only when the host's target covers the whole ride.
