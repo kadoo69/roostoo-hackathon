@@ -168,7 +168,8 @@ class CashSleeveRegimeBot(RegimeLSBot):
             if len(close) > 3 and close.index[-1] == last_closed:
                 ev = cash_sleeve.decide(led, close, high, cfg["ride"], px, host | self.host_target,
                                         float(cfg["stop_equity_frac"]), cfg["ladder"],
-                                        no_loss_exit=bool(cfg.get("no_loss_exit")))
+                                        no_loss_exit=bool(cfg.get("no_loss_exit")),
+                                        weightless=set(cfg.get("weightless_rides") or []))
                 led.save(self.sleeve_path)
                 if ev["entered"] or ev["exited"] or ev["skimmed"] or ev["loss_kept"]:
                     self.journal.write("signals", {"event": "cash_sleeve_decision", **ev,

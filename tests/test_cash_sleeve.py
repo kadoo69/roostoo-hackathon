@@ -180,3 +180,14 @@ def test_no_loss_exit_keeps_an_expired_ride_below_entry_and_lets_one_above_go():
     led2 = Ledger(cash=0.0, budget=6000.0, units={"AAAUSDT": 20.0}, target={"AAAUSDT": 20.0}, ref={"AAAUSDT": 1e9},
                   held={"AAAUSDT": held["AAAUSDT"]})
     assert cash_sleeve.decide(led2, close, high, RIDE, px, set(), 0.0, LADDER)["exited"] == ["AAAUSDT"]
+
+
+def test_weightless_legacy_rides_keep_riding_but_free_their_slot_weight():
+    close, high = frames({"AAAUSDT": 0.03, "BBBUSDT": 0.03})
+    px = {s: float(close[s].iloc[-1]) for s in close}
+    young = str(close.index[-10])
+    led = Ledger(cash=60000.0, budget=66000.0, units={"CCCUSDT": 20.0}, target={"CCCUSDT": 20.0},
+                 ref={"CCCUSDT": 1e9}, held={"CCCUSDT": [young, 1e6, 10.0, 0.1]})
+    cfg = {**RIDE, "n": 2}
+    ev = cash_sleeve.decide(led, close, high, cfg, px, set(), 0.0, LADDER, weightless={"CCCUSDT"})
+    assert ev["entered"] == ["AAAUSDT", "BBBUSDT"] and "CCCUSDT" in led.held and led.target["CCCUSDT"] == 20.0

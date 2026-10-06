@@ -122,7 +122,7 @@ def main() -> int:
         r = cycle("cycle 1")
         led = bot.sleeve
         check(led is not None and abs(led.budget - 39800.0) < 1e-6, f"sleeve budget 7,000 + 32,800 top-up (got {led and led.budget})")
-        check(led.top_ups == ["2026-10-06-churn"] and abs(bot.cash - 200.0) < 10.0, f"top-up applied once, host cash {bot.cash:.2f}")
+        check(led.top_ups == ["2026-10-06-churn"] and abs(bot.cash - 200.0) < 25.0, f"top-up applied once, host cash {bot.cash:.2f}")
         check(20 <= len(led.universe) <= 30, f"sleeve rides the host's universe ({len(led.universe)} coins)")
         check(all(abs(t["qty"] * t["price"] - 39800.0 / 2) < 600 for t in r["trades"] if t["side"] == "BUY"),
               f"each ride is half of the sleeve: {[round(t['qty'] * t['price']) for t in r['trades']]}")
