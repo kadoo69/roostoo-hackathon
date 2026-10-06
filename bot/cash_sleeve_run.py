@@ -117,11 +117,12 @@ class CashSleeveRegimeBot(RegimeLSBot):
         DECISIONS.md#no-loss-escalation-2026-10-06, DECISIONS.md#no-sale-below-cost-anywhere-2026-10-06"""
         led = self.sleeve
         if led is not None and symbol in led.owned():
-            rec = led.held.get(symbol)
-            if not self.sleeve_cfg.get("no_loss_exit") or not rec:
+            if not self.sleeve_cfg.get("no_loss_exit"):
                 return None
-            cost = max(float(rec[1]), self.entry_prices().get(symbol, 0.0))
-            return 0.0, cost * (1.0 + NO_LOSS_FEE_BUFFER)
+            # A ride the rule already exited has left `held` but may still be unsold; its fills still say its cost.
+            rec = led.held.get(symbol)
+            cost = max(float(rec[1]) if rec else 0.0, self.entry_prices().get(symbol, 0.0))
+            return (0.0, cost * (1.0 + NO_LOSS_FEE_BUFFER)) if cost > 0 else None
         return super().exit_band(symbol)
 
     def mark(self, quotes: dict) -> tuple[float, dict[str, float]]:

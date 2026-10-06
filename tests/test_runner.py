@@ -168,7 +168,7 @@ def test_competition_r4_is_the_long_only_regime_rule_on_the_comp_keys():
     assert bot_class(r4).__name__ == "CashSleeveRegimeBot" and issubclass(bot_class(r4), RegimeLSBot)
     seed = {"seed_bar", "seed_ref", "live_min_hold_bars", "live_min_hold_ref", "live_hold_no_trim",
             "live_no_loss_exit_max", "live_no_loss_exit_ref", "live_hold_below_cost",
-            "live_entry_pause_below", "live_entry_pause_ref"}
+            "live_entry_pause_below", "live_entry_pause_ref", "live_hold_all_below", "live_hold_all_ref"}
     assert {k: v for k, v in r4["contenders"].items() if k not in seed} == paper["contenders"]
     assert r4["strategy"] == paper["strategy"]
     assert r4["regime"] == paper["regime"]

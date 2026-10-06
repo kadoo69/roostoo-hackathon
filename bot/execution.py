@@ -52,6 +52,9 @@ class Executor:
         self.quotes: dict = {}
         # True only in a cycle whose drawdown kill switch fired: the one case a sale inside the band may go.
         self.allow_loss_exits = False
+        # The account equity floor below which no SELL is sent at all, set each cycle by the bot; None = off.
+        # DECISIONS.md#hold-all-below-102k-2026-10-06
+        self.hold_all_below: float | None = None
 
     def spec(self, symbol: str) -> PairSpec | None:
         return self.by_symbol.get(symbol)
@@ -182,9 +185,15 @@ class Executor:
         """The no-loss band check every SELL passes before it is sent, whatever produced it: the rule's exit,
         a skim, a guard's resize, an escalation or a sleeve exit. Inside the symbol's band (`exit_band`, from
         the book's no-loss guard) the order is not sent; a MARKET sale is judged at the bid, a LIMIT at its
-        price, and a sale with no price to judge is held. Only a drawdown halt (`allow_loss_exits`) passes.
-        DECISIONS.md#no-sale-below-cost-anywhere-2026-10-06"""
-        if plan.get("side") != "SELL" or not self.exit_band or self.allow_loss_exits:
+        price, and a sale with no price to judge is held. While `hold_all_below` is set (the account is under
+        its hold floor) no SELL goes at all. Only a drawdown halt (`allow_loss_exits`) passes either check.
+        DECISIONS.md#no-sale-below-cost-anywhere-2026-10-06, DECISIONS.md#hold-all-below-102k-2026-10-06"""
+        if plan.get("side") != "SELL" or self.allow_loss_exits:
+            return None
+        if self.hold_all_below is not None:
+            return {"skipped": "hold_all_below_target", "floor": self.hold_all_below,
+                    "ref": "DECISIONS.md#hold-all-below-102k-2026-10-06"}
+        if not self.exit_band:
             return None
         band = self.exit_band(plan.get("symbol"))
         if not band:

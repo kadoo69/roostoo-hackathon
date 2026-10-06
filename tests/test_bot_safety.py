@@ -460,3 +460,15 @@ def test_no_sell_of_any_kind_leaves_inside_the_band_unless_the_drawdown_halt_fir
     assert ex.below_cost(sell) is None
     ex.allow_loss_exits = False
     assert ex.below_cost({**sell, "price": 100.3}) is None
+
+
+def test_below_the_hold_floor_no_sell_goes_at_any_price(tmp_path):
+    """DECISIONS.md#hold-all-below-102k-2026-10-06"""
+    ex, spec = executor(tmp_path)
+    ex.settings = replace(settings(), dry_run=False)
+    ex.hold_all_below = 102_000.0
+    sell = {"pair": spec.pair, "symbol": "BTCUSDT", "side": "SELL", "quantity": 1.0, "price": 150.0, "type": "LIMIT"}
+    assert ex.send(sell)["skipped"] == "hold_all_below_target"
+    assert ex.below_cost({**sell, "side": "BUY"}) is None
+    ex.allow_loss_exits = True
+    assert ex.below_cost(sell) is None

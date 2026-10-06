@@ -241,3 +241,14 @@ def test_a_paused_sleeve_opens_no_ride():
     led = Ledger(cash=6000.0, budget=6000.0)
     ev = cash_sleeve.decide(led, close, high, RIDE, px, set(), 0.8, LADDER, paused=True)
     assert ev["entered"] == [] and not led.target and led.cash == 6000.0
+
+
+def test_an_exited_but_unsold_ride_keeps_its_cost_band():
+    """DECISIONS.md#hold-all-below-102k-2026-10-06: a ride the rule exited while sales were held must not
+    later be sold below its fills."""
+    from types import SimpleNamespace
+
+    from bot.cash_sleeve_run import CashSleeveRegimeBot
+    led = Ledger(cash=0.0, budget=1.0, units={"NEARUSDT": 10.0}, target={"NEARUSDT": 0.0})
+    bot = SimpleNamespace(sleeve=led, sleeve_cfg={"no_loss_exit": True}, entry_prices=lambda: {"NEARUSDT": 5.234})
+    assert CashSleeveRegimeBot.exit_band(bot, "NEARUSDT")[1] == pytest.approx(5.234 * 1.002)
