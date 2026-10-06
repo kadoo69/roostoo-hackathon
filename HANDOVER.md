@@ -2,7 +2,17 @@
 
 Current state only. The full history of sessions to 2026-09-23 is archived at `docs/archive/HANDOVER_2026-09-23.md`; older section references in code and configs point there.
 
-## CURRENT STATE 2026-10-06 14:55 IST / 09:25Z (read this first; everything below is history)
+## CURRENT STATE 2026-10-06 15:15 IST / 09:45Z (read this first; everything below is history)
+
+### Live: EC2 at `8e89151`, config sha `95d6d864a6510309`
+- **No sale below cost at any depth** (operator 15:10 IST, `#no-loss-any-depth-2026-10-06`): `live_no_loss_exit_max` 0.05 -> 1.0. The no-loss line is cost plus a 0.2% fee round trip (`#no-loss-net-of-fees-2026-10-06`), and a stale exit is never market-escalated inside it (`#no-loss-escalation-2026-10-06`). The sleeve never exits a ride below its entry plus fees either. There is no stop now; only the 25% drawdown kill switch remains.
+- Bugs fixed today at 15:10 IST (`0008aa2`): FIL was bought twice because a resting fill landed between the wallet read and the pending query (`#pending-before-wallet-2026-10-06`; pending is now read first). AAVE's above-cost exit escalated to a -0.52% market sale. ETH was sold at cost for -0.10% net.
+- FIL outcome: the lend never fired. The duplicate buy instead put FIL at about 11.2k (0.43 of the host book against a 0.50 target, which counts as complete under the 25% rule). It overdrew 3,157 of the sleeve's cash (host cash -3,157, wallet cash 0). The sleeve then filled its second slot with ADA (28.4k at 0.2808, 14:45 IST), so there is no free slot and no cash. The account is fully invested.
+- Equity 97,739 at 15:15 IST. Positions as account weights: NEAR 0.37 and ADA 0.29 (sleeve rides), AVAX 0.12, FIL 0.11, ENA 0.07, PUMP and WLD 0.02 each.
+- Dashboard defect, not fixed: the sleeve rides ADA and NEAR show the host's old entry time and the 10-bar-low exit text.
+- Open strategy question for the operator: the 2.5-sigma sleeve trigger has averaged -0.19% a ride since the open; ADA was bought at the top of a 5m burst. Still under the freeze.
+
+## CURRENT STATE 2026-10-06 14:55 IST / 09:25Z (superseded)
 
 ### The competition account
 - Unit `roostoo-live@competition_r4` on EC2 at `c2f9581`, bot class `CashSleeveRegimeBot` (`bot/cash_sleeve_run.py`). Equity about 99,000 (-1.0% since the 100k start) at 14:31 IST; leaderboard 00:09 IST had us #54 of 55 at -2.8% with the top-20 cut near 0.0%.
