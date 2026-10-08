@@ -8,6 +8,7 @@ Current state only. The full history of sessions to 2026-09-23 is archived at `d
 - Equity 93,995 at 11:27 IST. NEAR is 0.34 of the account (5,872 units; its ride ends 15:50 IST and sells only above 5.244), ADA 0.27, FIL 0.11, AVAX 0.08, ENA 0.06, PUMP and WLD 0.02 each. Wallet cash 8,981 belongs to the sleeve (both slots full); host cash is about -2.1k.
 - Sold today: the NEAR +3% skim, 1,036.2 at 5.343 (cost 5.234), 09:25 IST.
 - Cloud email routine expired at 00:07 IST 10-07 and was not renewed; AWS SSO lapses about every 8 h.
+- 22:05 IST: equity 87,102 (-12.9%). Positions: SUI 0.33 (bought 18:50 at 1.1044), ADA 0.27, FIL 0.11, PEPE 0.10, AVAX 0.08, ENA 0.06, PUMP and WLD 0.02. NEAR sold 15:55 at 5.251, about breakeven. Operator: just hold, no account stop (`#hold-through-drawdown-2026-10-08`). The kill switch fires near 72,600. The '111% invested' on the desk is the host book alone, which owes the sleeve 2,058 since the FIL double-buy.
 
 ## CURRENT STATE 2026-10-07 19:00 IST / 13:30Z (superseded)
 
