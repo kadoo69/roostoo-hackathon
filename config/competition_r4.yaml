@@ -41,8 +41,7 @@ contenders:
   live_hold_no_trim: true
   live_no_loss_exit_max: 1.0
   live_no_loss_exit_ref: 'DECISIONS.md#no-loss-any-depth-2026-10-06 (was 0.05)'
-  live_entry_pause_below: 100000
-  live_entry_pause_ref: DECISIONS.md#entry-pause-below-100k-2026-10-06
+  live_entry_pause_lifted_ref: DECISIONS.md#buys-resume-2026-10-08 (was live_entry_pause_below 100000)
   live_hold_all_lifted_ref: DECISIONS.md#profit-sales-allowed-2026-10-08 (was live_hold_all_below 102000)
   live_hold_below_cost:
   - ENAUSDT

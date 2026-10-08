@@ -252,4 +252,4 @@ def test_the_live_book_sells_in_profit_but_never_below_cost():
     import yaml
     cc = yaml.safe_load(open("config/competition_r4.yaml"))["contenders"]
     assert cc.get("live_hold_all_below") is None
-    assert float(cc["live_no_loss_exit_max"]) == 1.0 and float(cc["live_entry_pause_below"]) == 100000
+    assert float(cc["live_no_loss_exit_max"]) == 1.0 and cc.get("live_entry_pause_below") is None
