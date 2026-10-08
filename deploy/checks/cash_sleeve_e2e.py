@@ -196,6 +196,9 @@ def main() -> int:
             # In profit past the fee line, so the no-loss exit lets the hold expiry sell it
             # (DECISIONS.md#no-loss-net-of-fees-2026-10-06).
             led.held[s][1] = float(led.held[s][1]) * 0.99
+        # The cost band also reads the fills (DECISIONS.md#no-sale-below-cost-anywhere-2026-10-06); put them at the
+        # same 1% below, so the phase does not depend on where the market went since the entry.
+        bot.entry_prices = lambda: {s: float(led.held[s][1]) for s in led.held}
         led.bar = None
         r = cycle("cycle 4 (hold expired)")
         sells = [t for t in r["trades"] if t["side"] == "SELL"]
@@ -231,9 +234,9 @@ def main() -> int:
         check(again == [], f"no second {fresh_coin} buy while the first was filling ({again})")
         r = cycle("cycle 8")
         again = [t for t in r["trades"] if t["pair"].split("/")[0] + "USDT" == fresh_coin and t["side"] == "BUY"]
-        held_usd = bot.holdings.get(fresh_coin, 0.0) * bot.sleeve_px[fresh_coin]
-        check(again == [] and abs(held_usd - first[0]["qty"] * first[0]["price"]) < 1.0,
-              f"{fresh_coin} held once ({held_usd:.0f} USD), nothing re-sent")
+        held_units = bot.holdings.get(fresh_coin, 0.0)
+        check(again == [] and abs(held_units - first[0]["qty"]) < 1e-6,
+              f"{fresh_coin} held once ({held_units} units for one {first[0]['qty']}-unit order), nothing re-sent")
         venue.rest_buys = False
 
         rows = [json.loads(x) for f in d.glob("orders-*.jsonl") for x in f.read_text().splitlines()]
