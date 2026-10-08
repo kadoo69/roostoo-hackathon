@@ -2,7 +2,14 @@
 
 Current state only. The full history of sessions to 2026-09-23 is archived at `docs/archive/HANDOVER_2026-09-23.md`; older section references in code and configs point there.
 
-## CURRENT STATE 2026-10-07 19:00 IST / 13:30Z (read this first; everything below is history)
+## CURRENT STATE 2026-10-08 11:30 IST / 06:00Z (read this first; everything below is history)
+
+- Live is `73fa36f`. Both books buy under their own rules again (`#buys-resume-2026-10-08`), and every SELL, for old positions and new buys alike, goes only above cost plus 0.2% fees, at any depth (`#no-sale-below-cost-anywhere-2026-10-06`). The hold-all floor is off (`#profit-sales-allowed-2026-10-08`); the only stop is the 25% drawdown halt.
+- Equity 93,995 at 11:27 IST. NEAR is 0.34 of the account (5,872 units; its ride ends 15:50 IST and sells only above 5.244), ADA 0.27, FIL 0.11, AVAX 0.08, ENA 0.06, PUMP and WLD 0.02 each. Wallet cash 8,981 belongs to the sleeve (both slots full); host cash is about -2.1k.
+- Sold today: the NEAR +3% skim, 1,036.2 at 5.343 (cost 5.234), 09:25 IST.
+- Cloud email routine expired at 00:07 IST 10-07 and was not renewed; AWS SSO lapses about every 8 h.
+
+## CURRENT STATE 2026-10-07 19:00 IST / 13:30Z (superseded)
 
 - Live is unchanged: `7158817`, config sha `5f707e7d0b6d4a3a`. No SELL of any kind while account equity is below 102,000, and no BUY below 100,000. Equity was 92,815 at 18:37 IST (-7.2%; low 91,218). NEAR 0.38 and ADA 0.28 of the account; cash 3,447. The hold blocked AVAX and PUMP sells overnight.
 - Day-3 check done (`#day3-fleet-forward-outcome`). The declared script scored a stopped unit; recomputed against the real account, live is the worst book (-7.83% vs market -2%), and ride_5m, ride_z3_5m and split_tilt_5m pass. The operator chose to keep holding until 102k.
