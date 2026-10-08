@@ -3,8 +3,8 @@
 Runs the real `CashSleeveRegimeBot` cycle (host `competition_r4` rule, guards and ladder, plus the sleeve) in
 live mode against a simulated Roostoo wallet: public endpoints (prices, pair specs, server time) are the real
 venue and Binance bars are real; balance, orders and fills are simulated, every order filling at its limit price
-with a 0.1% fee. The host starts with the live book's coins and 7,289 USD cash. The sleeve's trigger is lowered
-to 0.05% so it enters on the current bar. Phases: entry, steady state, host handover, exit, and a resting entry
+with a 0.1% fee. The host starts with the live book's coins and 7,289 USD cash. The sleeve's trigger is set
+below zero so it enters on the current bar whatever the market did. Phases: entry, steady state, host handover, exit, and a resting entry
 that fills between the bot's pending-order and wallet reads (DECISIONS.md#pending-before-wallet-2026-10-06).
 Checks every cycle: the reported equity equals the wallet's value at the marks, sleeve cash plus host cash equals
 the wallet's cash, and the host never trades a sleeve coin. Writes only to temporary live/e2e_* and config files,
@@ -94,7 +94,9 @@ def main() -> int:
     run.make_client = lambda settings: venue
     cfg = yaml.safe_load((ROOT / "config/competition_r4.yaml").read_text())
     cfg["meta"]["name"] = NAME
-    cfg["cash_sleeve"]["ride"]["sigma_k"] = 0.05
+    # A negative trigger fires on every coin whose 3-bar return is above -5 std, so entries no longer depend on some
+    # coin rising in the last 15 minutes (it failed on a falling market, 2026-10-08 11:25 IST); z still ranks them.
+    cfg["cash_sleeve"]["ride"]["sigma_k"] = -5.0
     cfg["cash_sleeve"]["ride"].pop("trim_churn", None)
     cfg_path = ROOT / "config" / f"{NAME}.yaml"
     d = ROOT / "live" / NAME
